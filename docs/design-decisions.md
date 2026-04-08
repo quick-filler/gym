@@ -408,6 +408,92 @@ right below. We want the history, not a clean slate.
 - **Revisit when** — A pre-commit hook becomes worth it (probably after
   the second or third "I forgot to regen the schema" merge conflict).
 
+### 4.7 Demo mode toggle (mock-vs-API at build time)
+
+- **Decision** — The website ships with a `NEXT_PUBLIC_USE_MOCKS` flag
+  (default `true`) that routes every data-fetching hook through typed
+  fixtures in `src/lib/mock-data.ts` instead of Apollo. The Apollo
+  provider degrades to a React pass-through in mock mode so no client
+  is instantiated against a missing endpoint.
+- **Context** — When we ported all the marketing and admin pages from
+  `mockups/`, a fresh clone couldn't render anything without also
+  booting Strapi + Postgres. That's too much friction for design review
+  iterations, Figma-to-code comparisons, and newcomers cloning the repo
+  to poke at the UI.
+- **Rationale** — The `app/` project already solved this in commit
+  `18f8c22` with the same pattern (`EXPO_PUBLIC_USE_MOCKS`,
+  `lib/mock-data.ts`, conditional hook exports). Copying the pattern
+  verbatim keeps both frontends consistent and means the same mental
+  model applies across the monorepo. Build-time flag (not runtime) is
+  deliberate: Next.js inlines `NEXT_PUBLIC_*` so the branch is stable
+  across renders and satisfies rules-of-hooks.
+- **Consequences** — Every page-level hook lives in `src/lib/hooks.ts`
+  and has two branches: `useMocked(MOCK_X)` and a `notImplemented()`
+  stub for the API path. When a page gets real data wiring, its hook's
+  API branch is replaced with an Apollo `useQuery` call and a mapper
+  into the domain shape from `src/lib/types.ts`. The mock shapes are
+  decoupled from the GraphQL schema on purpose — they're the shape a
+  component wants to render, not the shape the backend emits.
+- **Revisit when** — Every hook has a real API branch and mock mode
+  becomes pure dead code. At that point we can either delete the
+  toggle or keep it as a Storybook-style preview mode. Probably keep
+  it — a zero-dep "clone and see the app" workflow is worth ~200 lines
+  of fixture data.
+
+### 4.8 Hand-rolled UI primitives (no shadcn/ui, for now)
+
+- **Decision** — `src/components/ui/` is a small, hand-rolled set of
+  primitives (`Button`, `Card`, `Pill`, `Icon`, `Field`, `Eyebrow`,
+  `SectionHeader`, `Brand`) built directly on Tailwind v4 utility
+  classes and the paper/ink/flame tokens.
+- **Context** — The earlier website CLAUDE.md named shadcn/ui as a
+  planned dependency. When porting the mockups, every primitive needed
+  the exact paper/ink/flame aesthetic, the exact rounded-full buttons,
+  the mono eyebrows, the `grain::before` texture, etc. Every shadcn
+  primitive would have had to be overridden anyway.
+- **Rationale** — shadcn/ui shines when you want a solid default that
+  you occasionally customise. Our mockups are not "default + tweaks" —
+  they're a very opinionated design system. Starting from primitives
+  that already look wrong costs more than writing eight small React
+  components. Accessibility-critical primitives (`Dialog`, `Popover`,
+  `Combobox`) will almost certainly come from Radix when we need them,
+  but that's incremental — we don't need the whole shadcn scaffolding
+  to add one Radix primitive.
+- **Consequences** — New primitives are added as needed in
+  `src/components/ui/`. When we hit a complex interaction (focus trap,
+  keyboard navigation, portal-based popover) that would be expensive
+  to hand-roll, the fix is to install the specific Radix package and
+  wrap it — not to install the full shadcn CLI.
+- **Revisit when** — We need 3+ primitives with complex a11y
+  requirements (Dialog + Popover + Combobox), OR the hand-rolled
+  primitives start drifting out of sync with the design system.
+
+### 4.9 Tailwind v4 `@theme` as the token source of truth
+
+- **Decision** — All design tokens (colors, radii, fonts, shadows)
+  live inside a single `@theme` block at the top of
+  `src/app/globals.css`. Tailwind v4 turns these into utility classes
+  (`bg-paper`, `text-flame`, `rounded-[var(--radius-lg)]`) and CSS
+  custom properties that are accessible from any `style` attribute.
+- **Context** — `mockups/design-system.css` already had ~40 CSS
+  variables. We considered two alternatives: (1) a `tailwind.config.ts`
+  with a JS `theme.extend.colors` mapping, or (2) a shared CSS module
+  with utility classes layered on top of Tailwind.
+- **Rationale** — Tailwind v4 explicitly recommends `@theme` as the
+  config mechanism — JS config is now the fallback. `@theme` lets us
+  keep tokens as plain CSS variables (so they also work from inline
+  styles in the white-label preview, which reads `primaryColor` from
+  the academy config at runtime). A single source of truth prevents
+  drift between "CSS variables for inline styles" and "Tailwind config
+  for utilities".
+- **Consequences** — Color names surface as both `var(--color-flame)`
+  and `bg-flame` / `text-flame` utilities with no extra mapping code.
+  Components that need a runtime color (the settings page phone
+  preview) use the CSS variable directly. Components with a static
+  color use Tailwind utilities.
+- **Revisit when** — Tailwind v4's config story changes again, or we
+  hit a token we can't express with `@theme`.
+
 ---
 
 ## 5. Student app (Expo)
@@ -984,3 +1070,13 @@ Explicit no's so we don't re-argue them.
   copies so `ts.getParsedCommandLineOfConfigFile` finds matching
   `include` globs. They are load-bearing for the tsconfig parser
   only; Strapi itself still reads everything from `dist/`.
+- **2026-04-08** — Implemented every mockup page in `website/`
+  (landing, pricing, features, about, contact, login + admin
+  dashboard, students, finance, schedule, settings) using hand-rolled
+  UI primitives and Tailwind v4 `@theme` tokens ported from
+  `mockups/design-system.css`. Added `sitemap.ts`, `robots.ts`,
+  `llms.txt`, and JSON-LD structured data via `src/lib/seo.tsx`.
+  Added the demo-mode toggle (§4.7) mirroring the `app/` pattern so a
+  fresh clone renders the full UI without Strapi. Added §4.7
+  (demo-mode toggle), §4.8 (no shadcn/ui for now), and §4.9 (Tailwind
+  v4 `@theme` as token source of truth).

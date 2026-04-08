@@ -41,13 +41,19 @@ gym/
 └── CLAUDE.md         ← you are here
 ```
 
-All three sub-projects are scaffolded and compile cleanly:
+All three sub-projects compile cleanly and ship running UI:
 
 - `backend/` — Strapi v5 running against a local Postgres (`gym`/`secret`)
-- `website/` — Next.js 16 with Apollo Client 4 + codegen wired;
-  `npm run build` passes
-- `app/` — Expo + React Native with Apollo Client 4 + codegen wired;
-  `npx tsc --noEmit` clean
+- `website/` — Next.js 16 with Apollo Client 4 + codegen. Every
+  mockup page is live (`/`, `/pricing`, `/features`, `/about`,
+  `/contact`, `/login`, plus `/admin/dashboard`, `/admin/students`,
+  `/admin/finance`, `/admin/schedule`, `/admin/settings`). Ships with
+  demo-mode fixtures so a fresh clone renders without the backend —
+  see [`website/CLAUDE.md#demo-mode`](./website/CLAUDE.md#demo-mode).
+  `npm run build` passes with 13 static routes.
+- `app/` — Expo + React Native with Apollo Client 4 + codegen. Same
+  mock-vs-API toggle pattern (`EXPO_PUBLIC_USE_MOCKS`), the website
+  toggle is deliberately a port of this.
 - `dev.sh` detects each project and spawns its own tmux pane
 
 **[`docs/design-decisions.md`](./docs/design-decisions.md)** is the

@@ -70,9 +70,21 @@ After boot:
 - **Strapi admin**: http://localhost:1337/admin
 - **GraphQL playground** (dev only): http://localhost:1337/graphql
 - **Asaas webhook**: `POST http://localhost:1337/api/payments/webhook`
-- **Website**: http://localhost:3000
+- **Website**: http://localhost:3000 — landing, pricing, features,
+  about, contact, login, and the admin panel (dashboard, students,
+  finance, schedule, settings). All pages ship with demo-mode fixtures
+  so a fresh clone works without a running backend.
 - **Student app (Expo)**: press `w` in the `app` pane for the web
   preview, or scan the QR with Expo Go on a phone
+
+### Demo mode
+
+Both `website/` and `app/` default to `NEXT_PUBLIC_USE_MOCKS=true` /
+`EXPO_PUBLIC_USE_MOCKS=true` in their `.env.local` / `.env`. Flip to
+`false` and restart the dev server to hit the real Strapi GraphQL API.
+See [`website/CLAUDE.md#demo-mode`](./website/CLAUDE.md#demo-mode) and
+[`docs/design-decisions.md §4.7`](./docs/design-decisions.md) for the
+rationale.
 
 On the first backend boot, `SEED_DEMO=true` creates the **Gym Demo**
 academy with 2 plans, 3 students, 2 class schedules and a sample workout

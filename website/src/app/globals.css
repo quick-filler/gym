@@ -1,26 +1,143 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================
+   Gym — design tokens (ported from mockups/design-system.css)
+   Single source of truth for colors, radii, fonts, shadows.
+   ============================================================ */
+
+@theme {
+  /* Paper / ink palette */
+  --color-paper-50: #fdfcfa;
+  --color-paper: #faf8f5;
+  --color-paper-2: #f3efe8;
+  --color-paper-3: #e7e2d9;
+
+  --color-ink-50: #f8f7f5;
+  --color-ink-200: #d6d3ce;
+  --color-ink-300: #a8a29e;
+  --color-ink-400: #78716c;
+  --color-ink-500: #57534e;
+  --color-ink-600: #44403c;
+  --color-ink-700: #292524;
+  --color-ink-900: #0c0a09;
+
+  /* Accent — flame (desaturated tangerine) */
+  --color-flame: #e8551c;
+  --color-flame-dark: #c2410c;
+  --color-flame-50: #fff7f1;
+  --color-flame-100: #ffe7d6;
+
+  /* Secondary — pine (sparingly) */
+  --color-pine: #0f766e;
+  --color-pine-50: #ecfdf5;
+
+  /* Status */
+  --color-emerald: #059669;
+  --color-emerald-50: #ecfdf5;
+  --color-rose: #be123c;
+  --color-rose-50: #fff1f2;
+  --color-amber: #d97706;
+  --color-amber-50: #fffbeb;
+  --color-sky: #0369a1;
+  --color-sky-50: #f0f9ff;
+
+  /* Lines */
+  --color-line: #e7e2d9;
+  --color-line-strong: #d6d3ce;
+
+  /* Radii */
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 28px;
+  --radius-xl: 40px;
+
+  /* Tinted shadows — never pure black */
+  --shadow-gym-1: 0 1px 2px rgba(28, 25, 23, 0.04);
+  --shadow-gym-2:
+    0 1px 3px rgba(28, 25, 23, 0.05),
+    0 12px 32px -12px rgba(28, 25, 23, 0.1);
+  --shadow-gym-3:
+    0 4px 8px rgba(28, 25, 23, 0.06),
+    0 32px 64px -16px rgba(28, 25, 23, 0.15);
+
+  /* Fonts — set via next/font in layout.tsx */
+  --font-display: var(--font-outfit), "Outfit", system-ui, -apple-system,
+    sans-serif;
+  --font-sans: var(--font-geist-sans), -apple-system, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", "SF Mono",
+    monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ===== Base ===== */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  background: var(--color-paper);
+  color: var(--color-ink-900);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: var(--color-ink-900);
+  font-weight: 600;
+}
+
+/* ===== Paper grain (fixed, subtle) ===== */
+.grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  mix-blend-mode: multiply;
+}
+
+/* ===== Icon sprite ===== */
+.icon {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: -0.125em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.icon-lg {
+  width: 1.5em;
+  height: 1.5em;
+}
+.icon-xl {
+  width: 2em;
+  height: 2em;
+}
+
+/* ===== Eyebrow pulse animation ===== */
+@keyframes gym-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+.animate-gym-pulse {
+  animation: gym-pulse 2.4s infinite;
 }

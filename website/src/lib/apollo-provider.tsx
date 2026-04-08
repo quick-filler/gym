@@ -13,7 +13,16 @@
 import { ApolloProvider } from '@apollo/client/react';
 import type { ReactNode } from 'react';
 import { apolloClient } from './apollo';
+import { USE_MOCKS } from './config';
 
+/**
+ * In mock mode the Apollo provider degrades to a pass-through so demo
+ * mode can render without a running backend. Apollo is still imported
+ * (we're in the same module graph) but its client is never used.
+ */
 export function ApolloClientProvider({ children }: { children: ReactNode }) {
+  if (USE_MOCKS) {
+    return <>{children}</>;
+  }
   return <ApolloProvider client={apolloClient}>{children}</ApolloProvider>;
 }

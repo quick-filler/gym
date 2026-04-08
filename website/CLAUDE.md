@@ -10,13 +10,14 @@ authenticated session for admins coming straight from `/login`.
   `create-next-app@latest` picked (16.2.x at scaffold time)
 - **React 19**
 - **TypeScript** (strict)
-- **Tailwind CSS v4** + CSS variables
-- **Apollo Client 4** — every data call goes through GraphQL
+- **Tailwind CSS v4** + CSS variables via `@theme` in `globals.css`
+- **Apollo Client 4** — every data call goes through GraphQL (or mocks in demo mode)
 - **@graphql-codegen/cli** + `@graphql-codegen/client-preset` — fully typed
   `graphql()` function generated from the backend's SDL
-- **shadcn/ui** (to be added)
-- **React Hook Form + Zod** (to be added)
-- **date-fns** with PT-BR locale (to be added)
+- **Fonts**: Outfit (display), Geist (body), JetBrains Mono (mono) via `next/font`
+- **UI primitives**: hand-rolled (`src/components/ui/`) using Tailwind utilities
+  and the paper/ink/flame design tokens. No shadcn/ui dependency yet —
+  the mockup-driven aesthetic is too opinionated to get value from it.
 
 > Why Apollo (not TanStack Query)? The backend exposes GraphQL only — see
 > [`backend/CLAUDE.md → GraphQL Schema`](../backend/CLAUDE.md#graphql-schema).
@@ -29,15 +30,15 @@ authenticated session for admins coming straight from `/login`.
 ```bash
 cd website
 npm install
-cp .env.local.example .env.local    # override the endpoint if needed
+cp .env.local.example .env.local    # defaults ship in demo mode
 npm run codegen                     # generates src/gql/
 npm run dev                         # http://localhost:3000
 ```
 
-Dependencies were installed during the initial scaffold
-(`create-next-app@latest` + Apollo Client 4 + codegen). Additional
-libraries (shadcn/ui, react-hook-form, date-fns) are added on-demand as
-pages come online.
+Demo mode (`NEXT_PUBLIC_USE_MOCKS=true`) is the default so a fresh clone
+renders the entire UI — marketing and admin — without booting the
+backend. See [Demo mode](#demo-mode) below for how to switch to the real
+Strapi GraphQL API.
 
 ## Structure
 
@@ -45,39 +46,79 @@ pages come online.
 website/
 ├── src/
 │   ├── app/
-│   │   ├── (marketing)/        # Public landing pages
+│   │   ├── (marketing)/        # Public landing pages — route group with Nav + Footer
 │   │   │   ├── page.tsx        # /
-│   │   │   ├── pricing/
-│   │   │   ├── features/
-│   │   │   ├── about/
-│   │   │   ├── contact/
-│   │   │   └── layout.tsx
-│   │   ├── admin/              # Authenticated admin panel
-│   │   │   ├── login/
+│   │   │   ├── pricing/page.tsx + PricingClient.tsx
+│   │   │   ├── features/page.tsx
+│   │   │   ├── about/page.tsx
+│   │   │   ├── contact/page.tsx + ContactForm.tsx
+│   │   │   └── layout.tsx      # Nav + MarketingFooter
+│   │   ├── admin/              # Authenticated admin panel (noindex)
+│   │   │   ├── page.tsx        # redirect → /admin/dashboard
 │   │   │   ├── dashboard/
 │   │   │   ├── students/
 │   │   │   ├── finance/
 │   │   │   ├── schedule/
-│   │   │   ├── plans/
 │   │   │   ├── settings/
-│   │   │   └── layout.tsx      # Sidebar + topbar
-│   │   ├── layout.tsx          # Root (Apollo provider, fonts, theme)
+│   │   │   └── layout.tsx      # Sidebar + topbar shell
+│   │   ├── login/              # Split-screen login (outside marketing group)
+│   │   │   └── page.tsx + LoginClient.tsx
+│   │   ├── layout.tsx          # Root (fonts, Apollo provider, metadata)
 │   │   ├── sitemap.ts
 │   │   ├── robots.ts
-│   │   └── globals.css
+│   │   └── globals.css         # Tailwind v4 @theme with paper/ink/flame tokens
 │   ├── components/
-│   │   ├── ui/                 # shadcn/ui primitives
-│   │   ├── marketing/          # Hero, Features, Pricing, FAQ, Footer, …
-│   │   └── admin/              # Sidebar, MetricsCard, StudentTable, …
+│   │   ├── ui/                 # Primitives: Button, Card, Pill, Icon, Field, …
+│   │   ├── marketing/          # Nav, Footer, Wrap
+│   │   └── admin/              # Sidebar, Topbar, PageHeader, MetricCard, Avatar, StatusPill
 │   ├── lib/
 │   │   ├── apollo.ts           # Apollo Client (httpLink + authLink)
-│   │   ├── auth.ts             # JWT helpers
-│   │   ├── seo.ts              # Metadata + JSON-LD helpers
-│   │   └── utils.ts
+│   │   ├── apollo-provider.tsx # Pass-through in mock mode, ApolloProvider otherwise
+│   │   ├── config.ts           # USE_MOCKS, GRAPHQL_ENDPOINT, SITE_ORIGIN, APP_DOMAIN
+│   │   ├── types.ts            # Domain model shapes (decoupled from GraphQL)
+│   │   ├── mock-data.ts        # Typed fixtures matching the Gym Demo seed
+│   │   ├── hooks.ts            # useDashboard / useStudents / … (mock-or-API branching)
+│   │   ├── seo.tsx             # pageMetadata(), JsonLd, Organization + FAQ schemas
+│   │   └── utils.ts            # cn(), formatBRL(), formatDate()
 │   ├── graphql/                # .graphql query files (codegen target)
-│   └── types/                  # Generated GraphQL types
+│   └── gql/                    # Generated GraphQL types (committed)
 └── public/
+    ├── icons.svg               # SVG sprite (ported from mockups/_icons.svg)
+    └── llms.txt                # LLM-search crawler guidance
 ```
+
+## Demo mode
+
+The website ships with a **mock-vs-API toggle** that mirrors the `app/`
+project pattern so a fresh clone renders the full UI — marketing pages,
+admin dashboard, students, finance, schedule, settings — without a
+running Strapi backend.
+
+- **Flag**: `NEXT_PUBLIC_USE_MOCKS` (default `true`).
+- **Config**: `src/lib/config.ts` reads the env var at build time.
+  Because Next.js inlines `NEXT_PUBLIC_*` vars, you must restart the dev
+  server after flipping the flag.
+- **Provider**: `src/lib/apollo-provider.tsx` degrades to a React
+  pass-through in mock mode so Apollo's client never runs against a
+  missing endpoint. The real `ApolloProvider` is only mounted when
+  `USE_MOCKS=false`.
+- **Hooks**: `src/lib/hooks.ts` exposes `useDashboard`, `useStudents`,
+  `useFinance`, `useSchedule`, `useAcademy`, `usePricingPlans`. Each
+  returns a stable `DataSourceResult<T>` shape (`{ data, loading, error,
+  refetch? }`) regardless of branch. The API-mode branches are stubs
+  today — they return a clear error. Wiring them to Apollo `useQuery`
+  calls is the last-mile work once the backend list resolvers are
+  locked.
+- **Fixtures**: `src/lib/mock-data.ts` holds typed objects
+  (`MOCK_DASHBOARD`, `MOCK_STUDENTS`, `MOCK_FINANCE`, …) whose identity
+  (`Gym Demo`) matches the `SEED_DEMO=true` academy, so switching modes
+  against a seeded backend should show the same data set.
+- **Login**: in mock mode, `/login` accepts any credentials and drops
+  `gym_jwt=mock-demo-token` into `localStorage`, then redirects to
+  `/admin/dashboard`. In API mode, it POSTs to `/api/auth/local` on the
+  Strapi users-permissions plugin.
+- **Why this shape?** See
+  [docs/design-decisions.md §14](../docs/design-decisions.md).
 
 ## Apollo Client + Codegen
 
@@ -132,29 +173,35 @@ When the backend schema changes, boot Strapi once (or run `npm run build`
 in `backend/`) and the artifact is regenerated at
 `backend/schema.graphql`. Commit the diff alongside the code change.
 
-## Pages (marketing)
+## Pages (marketing) — all implemented
 
-| Path | Description |
-|---|---|
-| `/` | Landing — hero, features, how-it-works, pricing, testimonials, FAQ, CTA |
-| `/pricing` | Detailed plan comparison + FAQ |
-| `/features` | Feature deep-dive (one section per product surface) |
-| `/about` | Story, team, values |
-| `/contact` | Contact form (sales / support) |
-| `/login` | Admin login |
+| Path | Description | Status |
+|---|---|---|
+| `/` | Landing — hero, trust bar, bento features, how-it-works, pricing preview, testimonials, FAQ, CTA banner | ✅ |
+| `/pricing` | 3 plans + monthly/annual toggle + comparison table + FAQ | ✅ |
+| `/features` | 5 zig-zag feature rows with live visuals (finance, schedule, workouts, white-label, reports) | ✅ |
+| `/about` | Stats grid + story + values + team | ✅ |
+| `/contact` | Split layout with channels + client-side contact form (mock submission) | ✅ |
+| `/login` | Split-screen login with SSO buttons, demo-mode banner | ✅ |
 
-## Pages (admin)
+Every marketing page ships JSON-LD (Organization / SoftwareApplication /
+FAQPage / AboutPage / ContactPage) via `src/lib/seo.tsx → JsonLd`.
 
-| Path | Description |
-|---|---|
-| `/admin/login` | Admin login (academy_admin role) |
-| `/admin/dashboard` | Metrics overview (active students, MRR, overdue, classes today) |
-| `/admin/students` | Students table (filters, bulk actions) |
-| `/admin/students/[id]` | Student detail (timeline, enrollments, payments, workouts, assessments) |
-| `/admin/finance` | Receivables, payments, invoices |
-| `/admin/schedule` | Weekly calendar grid + class CRUD |
-| `/admin/plans` | Membership plans CRUD |
-| `/admin/settings` | Identity (logo, colors), academy profile, integrations |
+## Pages (admin) — all implemented
+
+| Path | Description | Status |
+|---|---|---|
+| `/admin` | Redirects to `/admin/dashboard` | ✅ |
+| `/admin/dashboard` | 4 metric cards + recent students table + today's classes + upcoming payments | ✅ |
+| `/admin/students` | Filter chips + search + students table with status pills and payment method | ✅ |
+| `/admin/finance` | 4 KPI cards (first highlighted) + charges table + payment method breakdown with bar charts | ✅ |
+| `/admin/schedule` | Week navigator + 7-column weekly grid + side stats + upcoming classes | ✅ |
+| `/admin/settings` | Identity/Appearance/Integration tabs + live white-label phone preview | ✅ |
+| `/admin/students/[id]` | Student detail | — future |
+| `/admin/plans` | Plans CRUD | — future |
+
+Admin routes are marked `robots: { index: false, follow: false }` via
+`src/app/admin/layout.tsx`.
 
 ## SEO
 
@@ -177,29 +224,45 @@ academia" / "app aluno academia".
 
 The admin panel is `noindex, nofollow` since it's authenticated.
 
-## White-label theming
+## Design system
 
-The website itself uses the default Gym branding (indigo / violet). Per-academy
-white-labeling is a concern of the **app/** project — see
-[`app/CLAUDE.md`](../app/CLAUDE.md).
+Ported from `mockups/design-system.css` into Tailwind v4 via `@theme` in
+`src/app/globals.css`. The palette is intentionally warm (paper / ink /
+flame) — not the scaffold's default indigo. Key tokens:
+
+- **Colors**: `paper-50/paper/paper-2/paper-3`, `ink-50/200/300/400/500/600/700/900`,
+  `flame/flame-dark/flame-50/flame-100`, `pine/pine-50`,
+  `emerald/rose/amber/sky`, `line/line-strong`
+- **Radii**: `--radius-sm: 10px`, `--radius: 16px`, `--radius-lg: 28px`, `--radius-xl: 40px`
+- **Shadows**: `--shadow-gym-1/2/3` (tinted warm, never pure black)
+- **Fonts**: `--font-display` (Outfit), `--font-sans` (Geist), `--font-mono` (JetBrains Mono)
+
+The website itself uses the Gym brand palette. Per-academy white-label
+theming lives in the **app/** project — see
+[`app/CLAUDE.md`](../app/CLAUDE.md). The admin settings page renders a
+live phone preview that reads `primaryColor` + `secondaryColor` from the
+`useAcademy` hook to simulate the white-label effect.
 
 ## Implementation Order
 
-1. Project scaffold + Apollo Client + shadcn primitives
-2. `src/lib/seo.ts` (metadata + JSON-LD helpers)
-3. Landing page (`/`) — adapt the existing `mockups/landing.html`
-4. Other marketing pages (`/pricing`, `/features`, `/about`, `/contact`)
-5. `app/sitemap.ts`, `app/robots.ts`, OG images
-6. Admin login + auth flow
-7. Admin dashboard, students list/detail, finance, schedule, plans, settings
-8. Connect every page to the Strapi GraphQL API (codegen the types)
+1. ✅ Project scaffold + Apollo Client + codegen
+2. ✅ Design tokens in `globals.css` + UI primitives in `src/components/ui/`
+3. ✅ Demo mode (`config.ts` + `types.ts` + `mock-data.ts` + `hooks.ts`)
+4. ✅ Marketing layout + all marketing pages (landing, pricing, features, about, contact)
+5. ✅ `/login` (demo-accepting in mock mode, REST auth in API mode)
+6. ✅ Admin layout + admin pages (dashboard, students, finance, schedule, settings)
+7. ✅ `sitemap.ts`, `robots.ts`, `llms.txt`, `seo.tsx` helpers with JSON-LD
+8. ⏳ Wire `src/lib/hooks.ts` API branches to Apollo `useQuery` (once backend list resolvers are locked)
+9. ⏳ `/admin/students/[id]`, `/admin/plans`
+10. ⏳ OG images under `public/og/`
 
 ## UI/UX Notes
 
 - Language: **PT-BR** throughout
-- Date format: `DD/MM/YYYY` (`date-fns/locale/pt-BR`)
-- Currency: `R$ 1.234,56` (`Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })`)
+- Date format: `DD/MM/YYYY` (formatted via `src/lib/utils.ts → formatDate`)
+- Currency: `R$ 1.234,56` (formatted via `formatBRL`)
 - Mobile-first marketing, desktop-first admin
-- Loading: shadcn `Skeleton`
-- Errors: shadcn `Sonner`
-- Modals: shadcn `Dialog` (never `window.alert/confirm/prompt`)
+- Loading: inline text states today (skeletons are cheap to add per page later)
+- Error: inline error text; no toasts yet — form success in contact uses
+  an inline "Mensagem enviada" state
+- Never use `window.alert/confirm/prompt` — use inline React state
