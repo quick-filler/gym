@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym — Gerencie sua academia do jeito certo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #fff; color: #1e1b4b; }
+
+  /* NAVBAR */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 4rem; background: rgba(15,15,26,0.85);
+    backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .nav-logo { font-size: 1.4rem; font-weight: 800; color: #fff; text-decoration: none; }
+  .nav-links { display: flex; gap: 2rem; }
+  .nav-links a { color: rgba(255,255,255,0.75); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+  .nav-links a:hover { color: #fff; }
+  .btn-primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff; border: none; padding: 0.6rem 1.4rem;
+    border-radius: 8px; font-weight: 600; font-size: 0.9rem;
+    cursor: pointer; text-decoration: none;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.4);
+  }
+  .btn-outline {
+    background: transparent; color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    padding: 0.6rem 1.4rem; border-radius: 8px;
+    font-weight: 600; font-size: 0.9rem; cursor: pointer; text-decoration: none;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh; background: linear-gradient(135deg, #0f0f1a 0%, #1a1040 50%, #0f172a 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 8rem 2rem 4rem; text-align: center; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3);
+    color: #a5b4fc; padding: 0.4rem 1rem; border-radius: 999px;
+    font-size: 0.8rem; font-weight: 600; margin-bottom: 2rem;
+  }
+  .hero h1 {
+    font-size: clamp(2.5rem, 6vw, 5rem); font-weight: 900; color: #fff;
+    line-height: 1.1; max-width: 800px; margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #fff 40%, #a5b4fc);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p {
+    font-size: 1.2rem; color: rgba(255,255,255,0.6);
+    max-width: 540px; line-height: 1.7; margin-bottom: 2.5rem;
+  }
+  .hero-ctas { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-bottom: 4rem; }
+  .hero-ctas .btn-primary { padding: 0.9rem 2rem; font-size: 1rem; }
+  .hero-ctas .btn-outline { padding: 0.9rem 2rem; font-size: 1rem; }
+
+  /* DASHBOARD MOCKUP */
+  .mockup-frame {
+    width: 100%; max-width: 900px;
+    background: #fff; border-radius: 16px;
+    box-shadow: 0 50px 100px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);
+    overflow: hidden;
+  }
+  .mockup-bar {
+    background: #e5e7eb; padding: 0.75rem 1rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .mockup-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .mockup-content {
+    display: flex; height: 380px;
+  }
+  .mockup-sidebar {
+    width: 200px; background: #1e1b4b; padding: 1.5rem 1rem;
+    display: flex; flex-direction: column; gap: 0.5rem; flex-shrink: 0;
+  }
+  .mockup-logo { color: #fff; font-weight: 800; font-size: 1.1rem; margin-bottom: 1rem; padding: 0.5rem; }
+  .mockup-nav-item {
+    padding: 0.6rem 0.75rem; border-radius: 8px; color: rgba(255,255,255,0.6);
+    font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem;
+  }
+  .mockup-nav-item.active { background: rgba(99,102,241,0.3); color: #fff; }
+  .mockup-main { flex: 1; background: #f8f9fa; padding: 1.5rem; overflow: hidden; }
+  .mockup-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
+  .mockup-card {
+    background: #fff; border-radius: 10px; padding: 0.9rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .mockup-card-label { font-size: 0.65rem; color: #9ca3af; font-weight: 600; text-transform: uppercase; }
+  .mockup-card-value { font-size: 1.3rem; font-weight: 800; color: #1e1b4b; margin-top: 0.25rem; }
+  .mockup-card-value.green { color: #10b981; }
+  .mockup-card-value.red { color: #ef4444; }
+  .mockup-card-value.purple { color: #8b5cf6; }
+  .mockup-table { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .mockup-table-header { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr; gap: 1rem; padding: 0.75rem 1rem; background: #f3f4f6; font-size: 0.65rem; font-weight: 700; color: #6b7280; text-transform: uppercase; }
+  .mockup-table-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr; gap: 1rem; padding: 0.6rem 1rem; border-bottom: 1px solid #f3f4f6; font-size: 0.72rem; color: #374151; align-items: center; }
+  .badge { padding: 0.2rem 0.5rem; border-radius: 999px; font-size: 0.6rem; font-weight: 700; }
+  .badge.green { background: #d1fae5; color: #065f46; }
+  .badge.red { background: #fee2e2; color: #991b1b; }
+
+  /* SECTIONS COMMON */
+  section { padding: 6rem 2rem; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .section-label { color: #6366f1; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.75rem; }
+  .section-title { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; color: #1e1b4b; line-height: 1.2; margin-bottom: 1rem; }
+  .section-subtitle { font-size: 1.1rem; color: #6b7280; max-width: 540px; line-height: 1.7; }
+  .text-center { text-align: center; }
+  .text-center .section-subtitle { margin: 0 auto; }
+
+  /* FEATURES */
+  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3rem; }
+  .feature-card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 1.75rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(99,102,241,0.12); }
+  .feature-icon { font-size: 2rem; margin-bottom: 1rem; }
+  .feature-title { font-size: 1.05rem; font-weight: 700; color: #1e1b4b; margin-bottom: 0.5rem; }
+  .feature-desc { font-size: 0.9rem; color: #6b7280; line-height: 1.6; }
+
+  /* HOW IT WORKS */
+  .how-bg { background: linear-gradient(135deg, #f5f3ff, #ede9fe); }
+  .steps { display: flex; gap: 2rem; margin-top: 3rem; align-items: flex-start; }
+  .step { flex: 1; text-align: center; position: relative; }
+  .step:not(:last-child)::after {
+    content: '→'; position: absolute; top: 28px; right: -1rem;
+    font-size: 1.5rem; color: #c4b5fd;
+  }
+  .step-num {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff; font-size: 1.3rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem; box-shadow: 0 8px 20px rgba(99,102,241,0.4);
+  }
+  .step h3 { font-size: 1.1rem; font-weight: 700; color: #1e1b4b; margin-bottom: 0.5rem; }
+  .step p { font-size: 0.9rem; color: #6b7280; line-height: 1.6; }
+
+  /* PRICING */
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3rem; }
+  .price-card {
+    background: #fff; border: 1.5px solid #e5e7eb; border-radius: 20px;
+    padding: 2rem; position: relative; transition: transform 0.2s;
+  }
+  .price-card:hover { transform: translateY(-4px); }
+  .price-card.featured {
+    border-color: #6366f1;
+    background: linear-gradient(160deg, #faf5ff, #fff);
+    box-shadow: 0 20px 40px rgba(99,102,241,0.15);
+  }
+  .popular-badge {
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff; font-size: 0.75rem; font-weight: 700;
+    padding: 0.3rem 1rem; border-radius: 999px; white-space: nowrap;
+  }
+  .plan-name { font-size: 0.85rem; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+  .plan-price { font-size: 2.5rem; font-weight: 900; color: #1e1b4b; line-height: 1; }
+  .plan-price span { font-size: 1rem; font-weight: 500; color: #9ca3af; }
+  .plan-desc { font-size: 0.85rem; color: #6b7280; margin: 0.75rem 0 1.5rem; }
+  .plan-features { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.75rem; }
+  .plan-features li { font-size: 0.88rem; color: #374151; display: flex; align-items: center; gap: 0.5rem; }
+  .plan-features li::before { content: '✓'; color: #10b981; font-weight: 700; }
+  .btn-plan {
+    display: block; width: 100%; text-align: center;
+    padding: 0.8rem; border-radius: 10px; font-weight: 700; font-size: 0.9rem;
+    text-decoration: none; cursor: pointer; transition: opacity 0.2s;
+  }
+  .btn-plan.primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; }
+  .btn-plan.outline { background: transparent; color: #6366f1; border: 2px solid #6366f1; }
+  .btn-plan:hover { opacity: 0.9; }
+
+  /* CTA BANNER */
+  .cta-banner {
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    padding: 5rem 2rem; text-align: center; position: relative; overflow: hidden;
+  }
+  .cta-banner::before {
+    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse, rgba(99,102,241,0.3) 0%, transparent 70%);
+  }
+  .cta-banner h2 { font-size: 2.5rem; font-weight: 900; color: #fff; margin-bottom: 0.75rem; position: relative; }
+  .cta-banner p { color: rgba(255,255,255,0.6); margin-bottom: 2rem; position: relative; }
+  .cta-banner .btn-primary { padding: 1rem 2.5rem; font-size: 1rem; position: relative; }
+
+  /* FOOTER */
+  footer {
+    background: #0f0f1a; color: rgba(255,255,255,0.5);
+    padding: 3rem 2rem; text-align: center; font-size: 0.85rem;
+  }
+  .footer-logo { font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 1rem; }
+  .footer-links { display: flex; gap: 2rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .footer-links a { color: rgba(255,255,255,0.5); text-decoration: none; }
+  .footer-links a:hover { color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="#" class="nav-logo">🏋️ Gym</a>
+  <div class="nav-links">
+    <a href="#">Funcionalidades</a>
+    <a href="#">Preços</a>
+    <a href="#">Demo</a>
+  </div>
+  <a href="#" class="btn-primary">Começar grátis</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🚀 Plataforma white-label para academias</div>
+  <h1>Gerencie sua academia<br>do jeito certo</h1>
+  <p>Plataforma completa para controle de alunos, pagamentos, aulas e treinos — com o app na identidade visual da sua academia.</p>
+  <div class="hero-ctas">
+    <a href="#" class="btn-primary">Teste grátis por 14 dias</a>
+    <a href="#" class="btn-outline">Ver demonstração</a>
+  </div>
+
+  <!-- Dashboard Mockup -->
+  <div class="mockup-frame">
+    <div class="mockup-bar">
+      <div class="mockup-dot" style="background:#ff5f57"></div>
+      <div class="mockup-dot" style="background:#febc2e"></div>
+      <div class="mockup-dot" style="background:#28c840"></div>
+      <div style="flex:1;background:#fff;border-radius:4px;margin:0 1rem;height:20px;display:flex;align-items:center;padding:0 0.75rem;font-size:0.7rem;color:#9ca3af;">app.gym.com.br/admin/dashboard</div>
+    </div>
+    <div class="mockup-content">
+      <div class="mockup-sidebar">
+        <div class="mockup-logo">🏋️ Gym</div>
+        <div class="mockup-nav-item active">📊 Dashboard</div>
+        <div class="mockup-nav-item">👥 Alunos</div>
+        <div class="mockup-nav-item">💰 Financeiro</div>
+        <div class="mockup-nav-item">📅 Agenda</div>
+        <div class="mockup-nav-item">⚙️ Configurações</div>
+      </div>
+      <div class="mockup-main">
+        <div class="mockup-metrics">
+          <div class="mockup-card">
+            <div class="mockup-card-label">Alunos Ativos</div>
+            <div class="mockup-card-value">248</div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-card-label">Receita Mês</div>
+            <div class="mockup-card-value green">R$18.4k</div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-card-label">Inadimplentes</div>
+            <div class="mockup-card-value red">12</div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-card-label">Aulas Hoje</div>
+            <div class="mockup-card-value purple">8</div>
+          </div>
+        </div>
+        <div class="mockup-table">
+          <div class="mockup-table-header">
+            <span>Aluno</span><span>Plano</span><span>Status</span><span>Vencimento</span>
+          </div>
+          <div class="mockup-table-row">
+            <span>João Silva</span><span>Mensal</span><span><span class="badge green">Ativo</span></span><span>15/05</span>
+          </div>
+          <div class="mockup-table-row">
+            <span>Ana Costa</span><span>Trimestral</span><span><span class="badge green">Ativo</span></span><span>01/06</span>
+          </div>
+          <div class="mockup-table-row">
+            <span>Carlos Souza</span><span>Mensal</span><span><span class="badge red">Inadim.</span></span><span>10/04</span>
+          </div>
+          <div class="mockup-table-row">
+            <span>Maria Lima</span><span>Anual</span><span><span class="badge green">Ativo</span></span><span>01/01/27</span>
+          </div>
+          <div class="mockup-table-row">
+            <span>Pedro Mota</span><span>Mensal</span><span><span class="badge green">Ativo</span></span><span>20/05</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section>
+  <div class="container text-center">
+    <div class="section-label">Funcionalidades</div>
+    <h2 class="section-title">Tudo que sua academia precisa</h2>
+    <p class="section-subtitle">Ferramentas pensadas para simplificar a gestão e melhorar a experiência dos seus alunos.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <div class="feature-title">Agenda de Aulas</div>
+        <div class="feature-desc">Grade semanal, reservas online e controle de presença sem esforço.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <div class="feature-title">Gestão de Alunos</div>
+        <div class="feature-desc">Cadastro completo, histórico de pagamentos, avaliações físicas e status.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💰</div>
+        <div class="feature-title">Financeiro</div>
+        <div class="feature-desc">Cobranças automáticas via PIX, boleto e cartão. DRE sempre atualizado.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💪</div>
+        <div class="feature-title">Fichas de Treino</div>
+        <div class="feature-desc">Treinos personalizados direto no app do aluno, criados pelo instrutor.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <div class="feature-title">App White-Label</div>
+        <div class="feature-desc">O aluno acessa com a logo e as cores da sua academia. Sua marca, sempre.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Relatórios</div>
+        <div class="feature-desc">Inadimplência, frequência e receita em tempo real para decisões certeiras.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-bg">
+  <div class="container text-center">
+    <div class="section-label">Como funciona</div>
+    <h2 class="section-title">Comece em minutos</h2>
+    <p class="section-subtitle">Três passos simples para lançar o app da sua academia.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Personalize</h3>
+        <p>Coloque a logo e as cores da sua academia. Seu app, do seu jeito.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Configure</h3>
+        <p>Cadastre seus planos, turmas, instrutores e alunos.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Lance</h3>
+        <p>Compartilhe o link com seus alunos e comece a cobrar automaticamente.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section>
+  <div class="container text-center">
+    <div class="section-label">Preços</div>
+    <h2 class="section-title">Plano para cada fase</h2>
+    <p class="section-subtitle">Sem surpresas. Cancele quando quiser. 14 dias grátis em todos os planos.</p>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">R$99<span>/mês</span></div>
+        <div class="plan-desc">Para academias que estão começando</div>
+        <ul class="plan-features">
+          <li>Até 50 alunos</li>
+          <li>Agenda de aulas</li>
+          <li>Cobranças básicas (PIX + boleto)</li>
+          <li>App white-label</li>
+          <li>Suporte por e-mail</li>
+        </ul>
+        <a href="#" class="btn-plan outline">Começar grátis</a>
+      </div>
+      <div class="price-card featured">
+        <div class="popular-badge">⭐ Mais popular</div>
+        <div class="plan-name">Business</div>
+        <div class="plan-price">R$199<span>/mês</span></div>
+        <div class="plan-desc">Para academias em crescimento</div>
+        <ul class="plan-features">
+          <li>Até 200 alunos</li>
+          <li>Tudo do Starter</li>
+          <li>Relatórios completos (DRE)</li>
+          <li>Cartão de crédito</li>
+          <li>Marketing automatizado</li>
+          <li>Suporte prioritário</li>
+        </ul>
+        <a href="#" class="btn-plan primary">Começar grátis</a>
+      </div>
+      <div class="price-card">
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">R$399<span>/mês</span></div>
+        <div class="plan-desc">Para redes e multi-unidades</div>
+        <ul class="plan-features">
+          <li>Alunos ilimitados</li>
+          <li>Tudo do Business</li>
+          <li>Multi-unidades</li>
+          <li>CRM + funil de vendas</li>
+          <li>API personalizada</li>
+          <li>Gerente de conta dedicado</li>
+        </ul>
+        <a href="#" class="btn-plan outline">Falar com vendas</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<div class="cta-banner">
+  <h2>Comece agora, sem cartão de crédito</h2>
+  <p>14 dias grátis. Cancele quando quiser. Sem complicação.</p>
+  <a href="#" class="btn-primary">Criar conta grátis →</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">🏋️ Gym</div>
+  <div class="footer-links">
+    <a href="#">Funcionalidades</a>
+    <a href="#">Preços</a>
+    <a href="#">Demo</a>
+    <a href="#">Blog</a>
+    <a href="#">Suporte</a>
+    <a href="#">Termos</a>
+    <a href="#">Privacidade</a>
+  </div>
+  <p>© 2026 Gym. Todos os direitos reservados.</p>
+</footer>
+
+</body>
+</html>

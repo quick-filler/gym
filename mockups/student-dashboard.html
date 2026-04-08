@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CrossFit SP — App do Aluno</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* White-label: primary color = #ef4444 (red) — demonstrating the theming works */
+  :root {
+    --primary: #ef4444;
+    --primary-dark: #dc2626;
+    --primary-light: #fef2f2;
+    --primary-subtle: rgba(239,68,68,0.1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif; background: #f1f5f9;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 2rem;
+  }
+
+  /* PHONE FRAME */
+  .phone {
+    width: 390px; background: #fff; border-radius: 44px;
+    box-shadow: 0 50px 100px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05),
+                inset 0 0 0 2px #e5e7eb;
+    overflow: hidden; position: relative;
+  }
+
+  /* STATUS BAR */
+  .status-bar {
+    background: var(--primary); padding: 0.5rem 1.5rem 0.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.72rem; font-weight: 600; color: rgba(255,255,255,0.9);
+  }
+
+  /* HEADER */
+  .app-header {
+    background: var(--primary); padding: 1rem 1.5rem 1.5rem;
+    position: relative;
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+  .academy-brand { display: flex; align-items: center; gap: 0.75rem; }
+  .academy-logo {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: rgba(255,255,255,0.2); display: flex;
+    align-items: center; justify-content: center; font-size: 1.3rem;
+  }
+  .academy-name { color: #fff; font-weight: 800; font-size: 1.05rem; }
+  .academy-tagline { color: rgba(255,255,255,0.7); font-size: 0.72rem; }
+  .header-icons { display: flex; gap: 0.75rem; }
+  .header-icon-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; cursor: pointer; position: relative;
+  }
+  .notif-dot {
+    position: absolute; top: 6px; right: 6px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #fbbf24; border: 2px solid var(--primary);
+  }
+  .welcome-text { color: rgba(255,255,255,0.8); font-size: 0.85rem; }
+  .welcome-name { color: #fff; font-size: 1.5rem; font-weight: 800; }
+
+  /* CONTENT */
+  .content {
+    background: #f8fafc; border-radius: 24px 24px 0 0;
+    margin-top: -16px; padding: 1.25rem; padding-bottom: 80px;
+    position: relative; min-height: 500px;
+    max-height: 580px; overflow-y: auto;
+  }
+
+  /* CARDS */
+  .card {
+    background: #fff; border-radius: 16px; padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 1rem;
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+  .card-label { font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; }
+  .card-title { font-size: 0.95rem; font-weight: 700; color: #1e1b4b; margin-top: 0.15rem; }
+
+  /* NEXT CLASS CARD */
+  .class-card {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem;
+    color: #fff; position: relative; overflow: hidden;
+  }
+  .class-card::after {
+    content: '🏋️'; position: absolute; right: 1rem; top: 50%;
+    transform: translateY(-50%); font-size: 3.5rem; opacity: 0.15;
+  }
+  .class-badge {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: rgba(255,255,255,0.2); padding: 0.25rem 0.65rem;
+    border-radius: 999px; font-size: 0.7rem; font-weight: 700; margin-bottom: 0.75rem;
+  }
+  .class-name { font-size: 1.15rem; font-weight: 800; margin-bottom: 0.3rem; }
+  .class-meta { font-size: 0.8rem; color: rgba(255,255,255,0.8); display: flex; gap: 1rem; }
+  .class-meta span { display: flex; align-items: center; gap: 0.3rem; }
+  .book-btn {
+    margin-top: 1rem; background: rgba(255,255,255,0.2);
+    border: 1.5px solid rgba(255,255,255,0.5);
+    color: #fff; padding: 0.55rem 1.25rem; border-radius: 999px;
+    font-weight: 700; font-size: 0.82rem; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 0.4rem;
+  }
+
+  /* PAYMENT CARD */
+  .payment-status { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+  .status-badge {
+    padding: 0.25rem 0.65rem; border-radius: 999px;
+    font-size: 0.72rem; font-weight: 700;
+  }
+  .status-green { background: #d1fae5; color: #065f46; }
+  .status-red { background: #fee2e2; color: #991b1b; }
+  .payment-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #f8fafc; }
+  .payment-row:last-child { border-bottom: none; }
+  .payment-key { font-size: 0.8rem; color: #94a3b8; }
+  .payment-val { font-size: 0.85rem; font-weight: 600; color: #1e1b4b; }
+  .payment-val.amount { color: var(--primary); font-weight: 800; }
+
+  /* QUICK ACTIONS */
+  .quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
+  .action-btn {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 14px;
+    padding: 1rem 0.5rem; text-align: center; cursor: pointer;
+    transition: all 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .action-btn:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(239,68,68,0.15); }
+  .action-icon { font-size: 1.4rem; margin-bottom: 0.4rem; }
+  .action-label { font-size: 0.72rem; font-weight: 600; color: #64748b; }
+
+  /* WORKOUT CARD */
+  .workout-header {
+    display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;
+    padding-bottom: 0.75rem; border-bottom: 1px solid #f1f5f9;
+  }
+  .workout-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--primary-light); display: flex; align-items: center;
+    justify-content: center; font-size: 1.2rem; flex-shrink: 0;
+  }
+  .workout-name { font-weight: 700; color: #1e1b4b; font-size: 0.9rem; }
+  .workout-meta { font-size: 0.75rem; color: #94a3b8; margin-top: 0.1rem; }
+  .exercise-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.65rem 0; border-bottom: 1px solid #f8fafc;
+  }
+  .exercise-row:last-child { border-bottom: none; }
+  .exercise-left { display: flex; align-items: center; gap: 0.65rem; }
+  .exercise-num {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: var(--primary-subtle); color: var(--primary);
+    font-size: 0.72rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .exercise-name { font-size: 0.85rem; font-weight: 600; color: #1e1b4b; }
+  .exercise-detail { font-size: 0.72rem; color: #94a3b8; }
+  .exercise-load { font-size: 0.8rem; font-weight: 700; color: var(--primary); }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: #fff; border-top: 1px solid #f1f5f9;
+    padding: 0.75rem 1.5rem 1.25rem;
+    display: flex; justify-content: space-around; align-items: center;
+  }
+  .nav-tab { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; cursor: pointer; }
+  .nav-tab-icon { font-size: 1.2rem; }
+  .nav-tab-label { font-size: 0.62rem; font-weight: 600; color: #94a3b8; }
+  .nav-tab.active .nav-tab-label { color: var(--primary); }
+  .nav-tab.active .nav-tab-icon { filter: none; }
+  .nav-active-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--primary); margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>●●●●● WiFi 🔋</span>
+  </div>
+
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="header-top">
+      <div class="academy-brand">
+        <div class="academy-logo">🔥</div>
+        <div>
+          <div class="academy-name">CrossFit SP</div>
+          <div class="academy-tagline">Unidade Vila Mariana</div>
+        </div>
+      </div>
+      <div class="header-icons">
+        <div class="header-icon-btn">🔔<div class="notif-dot"></div></div>
+        <div class="header-icon-btn">👤</div>
+      </div>
+    </div>
+    <div class="welcome-text">Bem-vindo de volta,</div>
+    <div class="welcome-name">João! 💪</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- NEXT CLASS -->
+    <div class="class-card">
+      <div class="class-badge">📅 Próxima Aula</div>
+      <div class="class-name">Musculação Turma A</div>
+      <div class="class-meta">
+        <span>🕕 Hoje, 18:00</span>
+        <span>📍 Sala 1</span>
+        <span>👥 3 vagas</span>
+      </div>
+      <button class="book-btn">✓ Já reservado</button>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="quick-actions">
+      <div class="action-btn">
+        <div class="action-icon">📅</div>
+        <div class="action-label">Agendar Aula</div>
+      </div>
+      <div class="action-btn">
+        <div class="action-icon">💪</div>
+        <div class="action-label">Ver Treino</div>
+      </div>
+      <div class="action-btn">
+        <div class="action-icon">💳</div>
+        <div class="action-label">Pagamentos</div>
+      </div>
+    </div>
+
+    <!-- PAYMENT STATUS -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-label">Financeiro</div>
+          <div class="card-title">Situação do Plano</div>
+        </div>
+        <span class="status-badge status-green">✓ Em dia</span>
+      </div>
+      <div class="payment-row">
+        <span class="payment-key">Plano</span>
+        <span class="payment-val">Mensal</span>
+      </div>
+      <div class="payment-row">
+        <span class="payment-key">Valor</span>
+        <span class="payment-val amount">R$ 99,00</span>
+      </div>
+      <div class="payment-row">
+        <span class="payment-key">Vencimento</span>
+        <span class="payment-val">15/05/2026</span>
+      </div>
+      <div class="payment-row">
+        <span class="payment-key">Forma de pag.</span>
+        <span class="payment-val">PIX</span>
+      </div>
+    </div>
+
+    <!-- WORKOUT -->
+    <div class="card">
+      <div class="card-label" style="margin-bottom:0.75rem">Treino Atual</div>
+      <div class="workout-header">
+        <div class="workout-icon">🏋️</div>
+        <div>
+          <div class="workout-name">Treino A — Peito e Tríceps</div>
+          <div class="workout-meta">Criado por: Instrutor Rafael • 4 semanas atrás</div>
+        </div>
+      </div>
+      <div class="exercise-row">
+        <div class="exercise-left">
+          <div class="exercise-num">1</div>
+          <div>
+            <div class="exercise-name">Supino Reto</div>
+            <div class="exercise-detail">4 séries × 12 reps</div>
+          </div>
+        </div>
+        <div class="exercise-load">60 kg</div>
+      </div>
+      <div class="exercise-row">
+        <div class="exercise-left">
+          <div class="exercise-num">2</div>
+          <div>
+            <div class="exercise-name">Crucifixo Inclinado</div>
+            <div class="exercise-detail">3 séries × 15 reps</div>
+          </div>
+        </div>
+        <div class="exercise-load">16 kg</div>
+      </div>
+      <div class="exercise-row">
+        <div class="exercise-left">
+          <div class="exercise-num">3</div>
+          <div>
+            <div class="exercise-name">Tríceps Corda</div>
+            <div class="exercise-detail">4 séries × 12 reps</div>
+          </div>
+        </div>
+        <div class="exercise-load">25 kg</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-tab active">
+      <div class="nav-tab-icon">🏠</div>
+      <div class="nav-tab-label" style="color:var(--primary)">Início</div>
+      <div class="nav-active-dot"></div>
+    </div>
+    <div class="nav-tab">
+      <div class="nav-tab-icon">📅</div>
+      <div class="nav-tab-label">Agenda</div>
+    </div>
+    <div class="nav-tab">
+      <div class="nav-tab-icon">💪</div>
+      <div class="nav-tab-label">Treinos</div>
+    </div>
+    <div class="nav-tab">
+      <div class="nav-tab-icon">💳</div>
+      <div class="nav-tab-label">Finanças</div>
+    </div>
+    <div class="nav-tab">
+      <div class="nav-tab-icon">👤</div>
+      <div class="nav-tab-label">Perfil</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

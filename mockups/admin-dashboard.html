@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #f1f5f9; display: flex; height: 100vh; overflow: hidden; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px; background: #1e1b4b; display: flex; flex-direction: column;
+    padding: 0; flex-shrink: 0; height: 100vh;
+  }
+  .sidebar-header {
+    padding: 1.5rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-logo { font-size: 1.25rem; font-weight: 800; color: #fff; }
+  .sidebar-tagline { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 0.2rem; }
+  .sidebar-section-label {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; color: rgba(255,255,255,0.3);
+    padding: 1.25rem 1.25rem 0.5rem;
+  }
+  .sidebar-nav { display: flex; flex-direction: column; padding: 0 0.75rem; gap: 0.2rem; }
+  .nav-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.65rem 0.75rem; border-radius: 8px;
+    color: rgba(255,255,255,0.6); font-size: 0.875rem; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; text-decoration: none;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  .nav-item.active { background: rgba(99,102,241,0.25); color: #fff; }
+  .nav-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+  .nav-item .badge-count {
+    margin-left: auto; background: #ef4444;
+    color: #fff; font-size: 0.65rem; font-weight: 700;
+    padding: 0.15rem 0.45rem; border-radius: 999px;
+  }
+  .sidebar-footer {
+    margin-top: auto; padding: 1rem 0.75rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .user-row {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.65rem 0.75rem; border-radius: 8px; cursor: pointer;
+  }
+  .user-row:hover { background: rgba(255,255,255,0.07); }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+  }
+  .user-name { color: #fff; font-size: 0.8rem; font-weight: 600; }
+  .user-role { color: rgba(255,255,255,0.4); font-size: 0.7rem; }
+
+  /* MAIN */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* TOP BAR */
+  .topbar {
+    background: #fff; padding: 0 1.75rem;
+    height: 60px; display: flex; align-items: center;
+    border-bottom: 1px solid #e2e8f0; gap: 1rem; flex-shrink: 0;
+  }
+  .topbar-title { font-size: 1rem; font-weight: 700; color: #1e1b4b; flex: 1; }
+  .topbar-search {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+    padding: 0.45rem 0.9rem 0.45rem 2.2rem; font-size: 0.85rem;
+    color: #64748b; width: 240px; outline: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: 0.7rem center;
+  }
+  .btn-add {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff; border: none; padding: 0.5rem 1rem;
+    border-radius: 8px; font-weight: 600; font-size: 0.85rem;
+    cursor: pointer; display: flex; align-items: center; gap: 0.4rem;
+  }
+  .notif-btn {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 1rem; position: relative;
+  }
+  .notif-dot {
+    position: absolute; top: 6px; right: 6px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ef4444; border: 2px solid #fff;
+  }
+  .topbar-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 0.8rem; cursor: pointer;
+  }
+
+  /* CONTENT */
+  .content { flex: 1; overflow-y: auto; padding: 1.75rem; }
+
+  /* PAGE HEADER */
+  .page-header { margin-bottom: 1.5rem; }
+  .page-title { font-size: 1.4rem; font-weight: 800; color: #1e1b4b; }
+  .page-subtitle { color: #64748b; font-size: 0.875rem; margin-top: 0.25rem; }
+
+  /* METRICS */
+  .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .metric-card {
+    background: #fff; border-radius: 14px; padding: 1.25rem 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.04);
+    display: flex; flex-direction: column; gap: 0.75rem;
+  }
+  .metric-header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .metric-label { font-size: 0.8rem; font-weight: 600; color: #64748b; }
+  .metric-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+  }
+  .metric-icon.blue { background: #eff6ff; }
+  .metric-icon.green { background: #f0fdf4; }
+  .metric-icon.red { background: #fef2f2; }
+  .metric-icon.purple { background: #faf5ff; }
+  .metric-value { font-size: 1.75rem; font-weight: 800; color: #1e1b4b; }
+  .metric-change {
+    font-size: 0.75rem; display: flex; align-items: center; gap: 0.3rem;
+  }
+  .metric-change.up { color: #10b981; }
+  .metric-change.down { color: #ef4444; }
+
+  /* GRID 2COL */
+  .grid-2col { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+
+  /* CHART CARD */
+  .chart-card {
+    background: #fff; border-radius: 14px; padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04);
+  }
+  .card-title { font-size: 0.95rem; font-weight: 700; color: #1e1b4b; margin-bottom: 0.25rem; }
+  .card-subtitle { font-size: 0.78rem; color: #94a3b8; margin-bottom: 1.25rem; }
+  .chart-area { height: 160px; position: relative; }
+  .chart-svg { width: 100%; height: 100%; }
+  .chart-labels { display: flex; justify-content: space-between; margin-top: 0.5rem; }
+  .chart-label { font-size: 0.7rem; color: #94a3b8; }
+
+  /* MINI STATS */
+  .mini-stats { display: flex; flex-direction: column; gap: 1rem; }
+  .mini-stat {
+    background: #fff; border-radius: 14px; padding: 1.25rem 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .mini-stat-label { font-size: 0.8rem; color: #64748b; font-weight: 500; }
+  .mini-stat-value { font-size: 1.1rem; font-weight: 800; color: #1e1b4b; }
+  .progress-bar { height: 6px; background: #f1f5f9; border-radius: 999px; margin-top: 0.4rem; width: 120px; }
+  .progress-fill { height: 100%; border-radius: 999px; }
+
+  /* TABLE CARD */
+  .table-card {
+    background: #fff; border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .table-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
+  .view-all { font-size: 0.8rem; color: #6366f1; font-weight: 600; text-decoration: none; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 0.75rem 1.5rem; text-align: left;
+    font-size: 0.72rem; font-weight: 700; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    background: #f8fafc; border-bottom: 1px solid #f1f5f9;
+  }
+  tbody td { padding: 0.875rem 1.5rem; font-size: 0.85rem; color: #374151; border-bottom: 1px solid #f8fafc; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: #fafbff; }
+  .student-name { font-weight: 600; color: #1e1b4b; }
+  .student-email { font-size: 0.75rem; color: #94a3b8; }
+  .student-cell { display: flex; align-items: center; gap: 0.75rem; }
+  .s-avatar {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; color: #fff;
+  }
+  .badge {
+    padding: 0.25rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700;
+  }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .action-btn {
+    background: transparent; border: 1px solid #e2e8f0; border-radius: 6px;
+    padding: 0.3rem 0.65rem; font-size: 0.75rem; color: #64748b;
+    cursor: pointer; font-weight: 500;
+  }
+  .action-btn:hover { background: #f8fafc; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">🏋️ Gym</div>
+    <div class="sidebar-tagline">CrossFit SP — Painel Admin</div>
+  </div>
+  <div class="sidebar-section-label">Principal</div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item active"><span class="icon">📊</span> Dashboard</a>
+    <a href="#" class="nav-item"><span class="icon">👥</span> Alunos <span class="badge-count">3</span></a>
+    <a href="#" class="nav-item"><span class="icon">💰</span> Financeiro</a>
+    <a href="#" class="nav-item"><span class="icon">📅</span> Agenda</a>
+    <a href="#" class="nav-item"><span class="icon">💪</span> Treinos</a>
+  </nav>
+  <div class="sidebar-section-label">Configurações</div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item"><span class="icon">📱</span> App White-Label</a>
+    <a href="#" class="nav-item"><span class="icon">📋</span> Planos</a>
+    <a href="#" class="nav-item"><span class="icon">⚙️</span> Configurações</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="avatar">CS</div>
+      <div>
+        <div class="user-name">CrossFit SP</div>
+        <div class="user-role">Administrador</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">Dashboard</div>
+    <input class="topbar-search" type="text" placeholder="Buscar alunos, pagamentos...">
+    <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+    <button class="btn-add">+ Adicionar Aluno</button>
+    <div class="topbar-avatar">CS</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="page-header">
+      <div class="page-title">Visão Geral</div>
+      <div class="page-subtitle">Segunda-feira, 07 de abril de 2026</div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-label">Alunos Ativos</div>
+          <div class="metric-icon blue">👥</div>
+        </div>
+        <div class="metric-value">248</div>
+        <div class="metric-change up">↑ 12 este mês</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-label">Receita do Mês</div>
+          <div class="metric-icon green">💰</div>
+        </div>
+        <div class="metric-value" style="color:#10b981">R$18.420</div>
+        <div class="metric-change up">↑ 8.2% vs mês anterior</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-label">Inadimplentes</div>
+          <div class="metric-icon red">⚠️</div>
+        </div>
+        <div class="metric-value" style="color:#ef4444">12</div>
+        <div class="metric-change down">↑ 3 vs mês anterior</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-label">Aulas Hoje</div>
+          <div class="metric-icon purple">📅</div>
+        </div>
+        <div class="metric-value" style="color:#8b5cf6">8</div>
+        <div class="metric-change up">94% de ocupação</div>
+      </div>
+    </div>
+
+    <!-- CHART + MINI STATS -->
+    <div class="grid-2col">
+      <div class="chart-card">
+        <div class="card-title">Receita Mensal</div>
+        <div class="card-subtitle">Últimos 6 meses</div>
+        <div class="chart-area">
+          <svg class="chart-svg" viewBox="0 0 500 160" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#6366f1;stop-opacity:0.3"/>
+                <stop offset="100%" style="stop-color:#6366f1;stop-opacity:0"/>
+              </linearGradient>
+            </defs>
+            <!-- Grid lines -->
+            <line x1="0" y1="40" x2="500" y2="40" stroke="#f1f5f9" stroke-width="1"/>
+            <line x1="0" y1="80" x2="500" y2="80" stroke="#f1f5f9" stroke-width="1"/>
+            <line x1="0" y1="120" x2="500" y2="120" stroke="#f1f5f9" stroke-width="1"/>
+            <!-- Area fill -->
+            <path d="M0,130 L83,110 L166,90 L249,100 L332,65 L415,45 L500,30 L500,160 L0,160 Z" fill="url(#grad)"/>
+            <!-- Line -->
+            <path d="M0,130 L83,110 L166,90 L249,100 L332,65 L415,45 L500,30" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Dots -->
+            <circle cx="0" cy="130" r="4" fill="#6366f1"/>
+            <circle cx="83" cy="110" r="4" fill="#6366f1"/>
+            <circle cx="166" cy="90" r="4" fill="#6366f1"/>
+            <circle cx="249" cy="100" r="4" fill="#6366f1"/>
+            <circle cx="332" cy="65" r="4" fill="#6366f1"/>
+            <circle cx="415" cy="45" r="4" fill="#6366f1"/>
+            <circle cx="500" cy="30" r="5" fill="#6366f1" stroke="#fff" stroke-width="2"/>
+            <!-- Tooltip for last point -->
+            <rect x="440" y="5" width="58" height="22" rx="6" fill="#1e1b4b"/>
+            <text x="469" y="20" text-anchor="middle" fill="white" font-size="11" font-family="Inter" font-weight="700">R$18.4k</text>
+          </svg>
+        </div>
+        <div class="chart-labels">
+          <span class="chart-label">Nov</span>
+          <span class="chart-label">Dez</span>
+          <span class="chart-label">Jan</span>
+          <span class="chart-label">Fev</span>
+          <span class="chart-label">Mar</span>
+          <span class="chart-label">Abr</span>
+        </div>
+      </div>
+
+      <div class="mini-stats">
+        <div class="mini-stat">
+          <div>
+            <div class="metric-label">Taxa de Ocupação</div>
+            <div style="font-size:1.2rem;font-weight:800;color:#1e1b4b;margin-top:0.25rem">94%</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:94%;background:#6366f1"></div></div>
+          </div>
+          <div style="font-size:1.5rem">📈</div>
+        </div>
+        <div class="mini-stat">
+          <div>
+            <div class="metric-label">Retenção de Alunos</div>
+            <div style="font-size:1.2rem;font-weight:800;color:#1e1b4b;margin-top:0.25rem">87%</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:87%;background:#10b981"></div></div>
+          </div>
+          <div style="font-size:1.5rem">💚</div>
+        </div>
+        <div class="mini-stat">
+          <div>
+            <div class="metric-label">Inadimplência</div>
+            <div style="font-size:1.2rem;font-weight:800;color:#1e1b4b;margin-top:0.25rem">4.8%</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:4.8%;background:#ef4444"></div></div>
+          </div>
+          <div style="font-size:1.5rem">⚠️</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STUDENTS TABLE -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="card-title">Alunos Recentes</div>
+        <a href="#" class="view-all">Ver todos →</a>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Aluno</th>
+            <th>Plano</th>
+            <th>Status</th>
+            <th>Vencimento</th>
+            <th>Check-in</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="student-cell">
+                <div class="s-avatar" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">JS</div>
+                <div><div class="student-name">João Silva</div><div class="student-email">joao@email.com</div></div>
+              </div>
+            </td>
+            <td>Mensal — R$99</td>
+            <td><span class="badge badge-green">Ativo</span></td>
+            <td>15/05/2026</td>
+            <td>Hoje, 07:30</td>
+            <td><button class="action-btn">Ver perfil</button></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="student-cell">
+                <div class="s-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">AC</div>
+                <div><div class="student-name">Ana Costa</div><div class="student-email">ana@email.com</div></div>
+              </div>
+            </td>
+            <td>Trimestral — R$249</td>
+            <td><span class="badge badge-green">Ativo</span></td>
+            <td>01/06/2026</td>
+            <td>Ontem, 18:15</td>
+            <td><button class="action-btn">Ver perfil</button></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="student-cell">
+                <div class="s-avatar" style="background:linear-gradient(135deg,#ef4444,#f97316)">CS</div>
+                <div><div class="student-name">Carlos Souza</div><div class="student-email">carlos@email.com</div></div>
+              </div>
+            </td>
+            <td>Mensal — R$99</td>
+            <td><span class="badge badge-red">Inadimplente</span></td>
+            <td>10/04/2026 ⚠️</td>
+            <td>3 dias atrás</td>
+            <td><button class="action-btn">Cobrar</button></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="student-cell">
+                <div class="s-avatar" style="background:linear-gradient(135deg,#10b981,#06b6d4)">ML</div>
+                <div><div class="student-name">Maria Lima</div><div class="student-email">maria@email.com</div></div>
+              </div>
+            </td>
+            <td>Anual — R$890</td>
+            <td><span class="badge badge-green">Ativo</span></td>
+            <td>01/01/2027</td>
+            <td>Hoje, 06:00</td>
+            <td><button class="action-btn">Ver perfil</button></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="student-cell">
+                <div class="s-avatar" style="background:linear-gradient(135deg,#8b5cf6,#ec4899)">PM</div>
+                <div><div class="student-name">Pedro Mota</div><div class="student-email">pedro@email.com</div></div>
+              </div>
+            </td>
+            <td>Mensal — R$99</td>
+            <td><span class="badge badge-yellow">Pendente</span></td>
+            <td>20/05/2026</td>
+            <td>2 dias atrás</td>
+            <td><button class="action-btn">Ver perfil</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
