@@ -23,17 +23,26 @@ gym/
 
 ## Quick Start
 
-```bash
-# Backend
-cd backend
-npm install
-npm run develop
+Install dependencies once, then launch everything in a single tmux session:
 
-# Frontend
-cd frontend
-npm install
-npm run dev
+```bash
+cd backend && npm install && cd ..   # website/ and app/ will be added later
+./dev.sh                               # splits every scaffolded service into its own tmux pane
 ```
+
+`dev.sh` detects which of `backend/`, `website/`, and `app/` are scaffolded
+(checks for `package.json`) and creates one pane per service. Missing
+directories are skipped, so the script works today and keeps working as new
+services come online.
+
+```bash
+./dev.sh             # start and attach
+./dev.sh --detach    # start in the background
+./dev.sh --kill      # stop the running session
+```
+
+Prerequisites: `tmux`, Node.js 20+, and a running PostgreSQL with the
+credentials from `backend/.env`.
 
 ## Links
 
