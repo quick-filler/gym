@@ -3,10 +3,15 @@
  *
  * Roles created/maintained:
  *   - Authenticated (default — kept as-is, used as fallback)
- *   - Public (default — granted public reads on academy.findBySlug)
- *   - academy_admin — full CRUD on their academy's data
+ *   - Public (default — granted access to the Asaas webhook endpoint)
+ *   - academy_admin — full CRUD on their academy's data (via REST/Strapi admin)
  *   - instructor    — read students, manage schedules, write assessments
  *   - student       — read own data, book classes, view own workouts
+ *
+ * Note on GraphQL: authorization for the /graphql surface is enforced by
+ * the per-resolver `resolversConfig.auth` entries in src/extensions/graphql,
+ * NOT by these users-permissions actions. The actions below only gate the
+ * REST CRUD that the Strapi admin UI uses internally.
  *
  * The setup is idempotent: it checks for existing roles before creating.
  */
@@ -22,8 +27,8 @@ const ROLE_BLUEPRINT = [
       'api::student.student': ['find', 'findOne', 'create', 'update', 'delete'],
       'api::plan.plan': ['find', 'findOne', 'create', 'update', 'delete'],
       'api::enrollment.enrollment': ['find', 'findOne', 'create', 'update', 'delete'],
-      'api::class-schedule.class-schedule': ['find', 'findOne', 'create', 'update', 'delete', 'bookings'],
-      'api::class-booking.class-booking': ['find', 'findOne', 'create', 'update', 'delete', 'checkIn'],
+      'api::class-schedule.class-schedule': ['find', 'findOne', 'create', 'update', 'delete'],
+      'api::class-booking.class-booking': ['find', 'findOne', 'create', 'update', 'delete'],
       'api::payment.payment': ['find', 'findOne', 'create', 'update'],
       'api::workout-plan.workout-plan': ['find', 'findOne', 'create', 'update', 'delete'],
       'api::body-assessment.body-assessment': ['find', 'findOne', 'create', 'update', 'delete'],
@@ -34,8 +39,8 @@ const ROLE_BLUEPRINT = [
     description: 'Manages schedules, writes assessments and workouts',
     permissions: {
       'api::student.student': ['find', 'findOne'],
-      'api::class-schedule.class-schedule': ['find', 'findOne', 'create', 'update', 'bookings'],
-      'api::class-booking.class-booking': ['find', 'findOne', 'update', 'checkIn'],
+      'api::class-schedule.class-schedule': ['find', 'findOne', 'create', 'update'],
+      'api::class-booking.class-booking': ['find', 'findOne', 'update'],
       'api::workout-plan.workout-plan': ['find', 'findOne', 'create', 'update'],
       'api::body-assessment.body-assessment': ['find', 'findOne', 'create', 'update'],
     },
@@ -45,7 +50,7 @@ const ROLE_BLUEPRINT = [
     description: 'Can view own data, book classes, view own workouts',
     permissions: {
       'api::academy.academy': ['findOne'],
-      'api::student.student': ['me'],
+      'api::student.student': ['findOne'],
       'api::class-schedule.class-schedule': ['find', 'findOne'],
       'api::class-booking.class-booking': ['find', 'findOne', 'create', 'update'],
       'api::workout-plan.workout-plan': ['find', 'findOne'],
@@ -57,8 +62,9 @@ const ROLE_BLUEPRINT = [
   },
 ];
 
+// Only the Asaas webhook is public — it's called by the external payment
+// gateway with a shared secret header. Everything else requires auth.
 const PUBLIC_PERMISSIONS = {
-  'api::academy.academy': ['findBySlug'],
   'api::payment.payment': ['webhook'],
 };
 
