@@ -62,13 +62,23 @@ ENV NODE_ENV=production \
 # In a TypeScript project, `strapi start` reads every file — config,
 # schema JSON, compiled JS — from `dist/`. It locates that directory by
 # looking up `outDir` in `tsconfig.json`, so the tsconfig MUST be present
-# in the runner or Strapi falls back to the root `config/` (which would
-# hold `.ts` files) and crashes with "Cannot destructure property 'client'
-# of 'db.config.connection'". `typescript` itself is a runtime dep for the
+# in the runner or Strapi falls back to the root `config/` (which holds
+# `.ts` files) and crashes with "Cannot destructure property 'client' of
+# 'db.config.connection'". `typescript` itself is a runtime dep for the
 # same reason (@strapi/typescript-utils requires it during start).
+#
+# `src/` and `config/` are copied even though Strapi ignores them in TS
+# mode: @strapi/typescript-utils parses the full tsconfig via
+# ts.getParsedCommandLineOfConfigFile, which refuses to parse the file
+# with TS18003 "No inputs were found" if the `include` globs match zero
+# files. Since `dist/` is in `exclude`, only the root-level TS sources
+# can satisfy the include globs. They're ~550K combined — cheaper than
+# maintaining a runtime-specific minimal tsconfig.
 COPY --from=prod-deps --chown=node:node /opt/app/node_modules ./node_modules
 COPY --from=builder   --chown=node:node /opt/app/package.json ./package.json
 COPY --from=builder   --chown=node:node /opt/app/tsconfig.json ./tsconfig.json
+COPY --from=builder   --chown=node:node /opt/app/src ./src
+COPY --from=builder   --chown=node:node /opt/app/config ./config
 COPY --from=builder   --chown=node:node /opt/app/public ./public
 COPY --from=builder   --chown=node:node /opt/app/database ./database
 COPY --from=builder   --chown=node:node /opt/app/dist ./dist

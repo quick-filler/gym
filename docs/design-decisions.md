@@ -841,14 +841,14 @@ will be redesigned when they're ported to Next.js/Expo).
   Next.js changes its standalone output layout (the `COPY` of
   `.next/standalone` + `.next/static` + `public` is the contract).
 
-### 9.9 Strapi v5 TypeScript runtime: ship `tsconfig.json` + `typescript` in production
+### 9.9 Strapi v5 TypeScript runtime: ship `tsconfig.json`, TS sources, and `typescript` in production
 
 - **Decision** — `backend/Dockerfile`'s runtime stage copies
-  `tsconfig.json` alongside `dist/`, and `typescript` lives in
-  `dependencies` (not `devDependencies`) so `npm ci --omit=dev`
-  installs it. The runtime image does **not** copy the TS source
-  `config/` or `src/` directories — Strapi reads everything from
-  `dist/` in TS mode.
+  `tsconfig.json`, `src/`, `config/`, and `dist/`. `typescript` lives
+  in `dependencies` (not `devDependencies`) so `npm ci --omit=dev`
+  installs it. Strapi reads configs and schemas from `dist/` in TS
+  mode; the root-level `src/` and `config/` copies are *only* there
+  to satisfy TypeScript's config parser.
 - **Context** — The first production deploy crashed on boot with
   `Cannot destructure property 'client' of 'db.config.connection'`
   preceded by six `Config file not loaded, extension must be one of
@@ -857,33 +857,46 @@ will be redesigned when they're ported to Next.js/Expo).
   checks for `tsconfig.json`. Without it, Strapi treats the project
   as plain JS, sets `distDir = appDir`, and the config loader reads
   `/opt/app/config/*.ts` (skipping every file because `.ts` is not
-  in `VALID_EXTENSIONS = ['.js', '.json']`). With `tsconfig.json`
-  present, `resolveOutDir()` parses it via `require('typescript')`
-  to learn the `outDir`, so the `typescript` package must also be
-  installed at runtime — even though nothing compiles on boot.
-- **Rationale** — Both requirements come from Strapi internals we
-  don't control (`packages/core/core/src/configuration/index.js`
-  line 56: `const configDir = path.resolve(distDir || process.cwd(),
-  'config')`). The alternative — compiling config separately and
-  hardcoding paths — would diverge from Strapi's expected layout
-  and break on the next upgrade. Shipping `tsconfig.json` + the
-  `typescript` package is ~70 MB of overhead but keeps the runtime
-  aligned with upstream.
+  in `VALID_EXTENSIONS = ['.js', '.json']`).
+- **The follow-on trap** — adding `tsconfig.json` alone isn't
+  enough. `@strapi/typescript-utils` calls
+  `ts.getParsedCommandLineOfConfigFile` on the tsconfig at start
+  time, and TypeScript refuses to return a parsed config with
+  `errors.length === 0` if the `include` globs match zero files
+  (error TS18003 "No inputs were found"). `backend/tsconfig.json`
+  excludes `dist/` and includes the root source tree, so if the
+  runtime image is "cleaned up" to only ship `dist/`, the parser
+  finds zero matches and Strapi exits with code 1. The root-level
+  `src/` and `config/` must be present — **even though Strapi
+  never reads them** — purely to keep TypeScript happy. They're
+  ~550 KB combined, cheaper than maintaining a runtime-specific
+  minimal tsconfig with `"files": ["dist/src/index.js"]`.
+- **Rationale** — Every requirement here comes from Strapi
+  internals we don't control
+  (`packages/core/core/src/configuration/index.js` line 56:
+  `const configDir = path.resolve(distDir || process.cwd(),
+  'config')`). Shipping `tsconfig.json` + the `typescript` package
+  + the TS source tree is ~70 MB of overhead but keeps the runtime
+  aligned with upstream. The alternative — patching tsconfig at
+  build time or hardcoding `distDir` — diverges from Strapi's
+  expected layout and would break on the next upgrade.
 - **Consequences** —
   - `typescript` is a runtime dependency in `backend/package.json`.
     This differs from the `create-strapi-app` default, which puts
     it in `devDependencies` — that default is wrong for any Docker
     deploy that runs `npm ci --omit=dev`.
-  - The runner never sees the TS source under `config/` or `src/`.
-    If you add a file that must be readable at runtime, put it in a
-    directory the Dockerfile explicitly copies (`public/`,
-    `database/`, or let the TS compiler emit it into `dist/`).
-  - Schema JSONs live at `dist/src/api/*/content-types/*/schema.json`
-    in TS mode, not `src/`. Don't "helpfully" add `src/` back to the
-    runner COPY list.
+  - The runtime image ships the TS source even though it's never
+    read at boot. If you're tempted to delete the `COPY src` and
+    `COPY config` lines: don't. They exist to feed TypeScript's
+    include globs, not Strapi.
+  - Schema JSONs Strapi actually uses live at
+    `dist/src/api/*/content-types/*/schema.json`, not
+    `/opt/app/src/...`. The copies at the root are load-bearing
+    only for the `tsconfig.json` parse step.
 - **Revisit when** — Strapi v6 changes how `distDir` / `outDir` is
-  resolved, or `@strapi/typescript-utils` stops `require()`-ing the
-  `typescript` package during start.
+  resolved, `@strapi/typescript-utils` stops `require()`-ing the
+  `typescript` package during start, or `ts.getParsedCommandLineOfConfigFile`
+  gains an option to skip input-file validation.
 
 ---
 
@@ -966,3 +979,8 @@ Explicit no's so we don't re-argue them.
   'client' of 'db.config.connection'`) caused by Strapi falling back to
   the TS source `config/` when `tsconfig.json` was missing from the
   runtime image.
+- **2026-04-08** — Expanded §9.9 after a follow-on TS18003 crash: the
+  runtime image also has to keep the `src/` and `config/` TS source
+  copies so `ts.getParsedCommandLineOfConfigFile` finds matching
+  `include` globs. They are load-bearing for the tsconfig parser
+  only; Strapi itself still reads everything from `dist/`.
