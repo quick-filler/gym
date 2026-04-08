@@ -1,0 +1,50 @@
+{
+  "kind": "collectionType",
+  "collectionName": "payments",
+  "info": {
+    "singularName": "payment",
+    "pluralName": "payments",
+    "displayName": "Payment",
+    "description": "An individual payment instalment for an enrollment."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "enrollment": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::enrollment.enrollment",
+      "inversedBy": "payments"
+    },
+    "amount": {
+      "type": "decimal",
+      "required": true
+    },
+    "dueDate": {
+      "type": "date",
+      "required": true
+    },
+    "paidAt": {
+      "type": "datetime"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["pending", "paid", "overdue", "cancelled"],
+      "default": "pending",
+      "required": true
+    },
+    "method": {
+      "type": "enumeration",
+      "enum": ["pix", "credit_card", "boleto"],
+      "default": "pix"
+    },
+    "externalId": {
+      "type": "string"
+    },
+    "receiptUrl": {
+      "type": "string"
+    }
+  }
+}

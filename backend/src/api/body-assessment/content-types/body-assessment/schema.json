@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "body_assessments",
+  "info": {
+    "singularName": "body-assessment",
+    "pluralName": "body-assessments",
+    "displayName": "Body Assessment",
+    "description": "Physical evaluation (avaliação física) snapshot."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "student": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::student.student",
+      "inversedBy": "assessments"
+    },
+    "instructor": {
+      "type": "string"
+    },
+    "date": {
+      "type": "date",
+      "required": true
+    },
+    "weight": {
+      "type": "decimal"
+    },
+    "height": {
+      "type": "decimal"
+    },
+    "bodyFat": {
+      "type": "decimal"
+    },
+    "measurements": {
+      "type": "json"
+    },
+    "notes": {
+      "type": "text"
+    }
+  }
+}

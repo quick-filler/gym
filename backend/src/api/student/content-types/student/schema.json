@@ -1,0 +1,79 @@
+{
+  "kind": "collectionType",
+  "collectionName": "students",
+  "info": {
+    "singularName": "student",
+    "pluralName": "students",
+    "displayName": "Student",
+    "description": "Academy member (aluno)."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "phone": {
+      "type": "string"
+    },
+    "photo": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "birthdate": {
+      "type": "date"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["active", "inactive", "suspended"],
+      "default": "active",
+      "required": true
+    },
+    "notes": {
+      "type": "text"
+    },
+    "academy": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::academy.academy",
+      "inversedBy": "students"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "enrollments": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::enrollment.enrollment",
+      "mappedBy": "student"
+    },
+    "bookings": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::class-booking.class-booking",
+      "mappedBy": "student"
+    },
+    "workoutPlans": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::workout-plan.workout-plan",
+      "mappedBy": "student"
+    },
+    "assessments": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::body-assessment.body-assessment",
+      "mappedBy": "student"
+    }
+  }
+}

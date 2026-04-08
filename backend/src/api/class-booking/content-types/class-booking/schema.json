@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "class_bookings",
+  "info": {
+    "singularName": "class-booking",
+    "pluralName": "class-bookings",
+    "displayName": "Class Booking",
+    "description": "A student's booking for a specific class on a specific date."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "student": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::student.student",
+      "inversedBy": "bookings"
+    },
+    "classSchedule": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::class-schedule.class-schedule",
+      "inversedBy": "bookings"
+    },
+    "date": {
+      "type": "date",
+      "required": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["confirmed", "cancelled", "attended", "missed"],
+      "default": "confirmed",
+      "required": true
+    },
+    "checkedInAt": {
+      "type": "datetime"
+    }
+  }
+}

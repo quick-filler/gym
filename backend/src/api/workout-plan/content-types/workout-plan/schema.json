@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "workout_plans",
+  "info": {
+    "singularName": "workout-plan",
+    "pluralName": "workout-plans",
+    "displayName": "Workout Plan",
+    "description": "Personalised workout (ficha de treino) for a student."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "student": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::student.student",
+      "inversedBy": "workoutPlans"
+    },
+    "instructor": {
+      "type": "string"
+    },
+    "exercises": {
+      "type": "json"
+    },
+    "validFrom": {
+      "type": "date"
+    },
+    "validTo": {
+      "type": "date"
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

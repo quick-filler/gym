@@ -1,0 +1,55 @@
+{
+  "kind": "collectionType",
+  "collectionName": "plans",
+  "info": {
+    "singularName": "plan",
+    "pluralName": "plans",
+    "displayName": "Plan",
+    "description": "Membership plan (plano de matrícula) that students subscribe to."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "price": {
+      "type": "decimal",
+      "required": true
+    },
+    "billingCycle": {
+      "type": "enumeration",
+      "enum": ["monthly", "quarterly", "annual"],
+      "default": "monthly",
+      "required": true
+    },
+    "maxStudents": {
+      "type": "integer"
+    },
+    "features": {
+      "type": "json"
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "academy": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::academy.academy",
+      "inversedBy": "plans"
+    },
+    "enrollments": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::enrollment.enrollment",
+      "mappedBy": "plan"
+    }
+  }
+}

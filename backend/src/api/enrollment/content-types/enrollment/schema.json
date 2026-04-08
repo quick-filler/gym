@@ -1,0 +1,60 @@
+{
+  "kind": "collectionType",
+  "collectionName": "enrollments",
+  "info": {
+    "singularName": "enrollment",
+    "pluralName": "enrollments",
+    "displayName": "Enrollment",
+    "description": "Links a student to a membership plan (matrícula)."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "student": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::student.student",
+      "inversedBy": "enrollments"
+    },
+    "plan": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::plan.plan",
+      "inversedBy": "enrollments"
+    },
+    "startDate": {
+      "type": "date",
+      "required": true
+    },
+    "endDate": {
+      "type": "date"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["active", "cancelled", "expired"],
+      "default": "active",
+      "required": true
+    },
+    "paymentMethod": {
+      "type": "enumeration",
+      "enum": ["pix", "credit_card", "boleto"],
+      "default": "pix"
+    },
+    "asaasCustomerId": {
+      "type": "string",
+      "private": true
+    },
+    "asaasSubId": {
+      "type": "string",
+      "private": true
+    },
+    "payments": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::payment.payment",
+      "mappedBy": "enrollment"
+    }
+  }
+}

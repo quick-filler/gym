@@ -1,0 +1,61 @@
+{
+  "kind": "collectionType",
+  "collectionName": "class_schedules",
+  "info": {
+    "singularName": "class-schedule",
+    "pluralName": "class-schedules",
+    "displayName": "Class Schedule",
+    "description": "A recurring class slot in the academy schedule (grade de aulas)."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "instructor": {
+      "type": "string"
+    },
+    "modality": {
+      "type": "enumeration",
+      "enum": ["presential", "online"],
+      "default": "presential",
+      "required": true
+    },
+    "weekdays": {
+      "type": "json"
+    },
+    "startTime": {
+      "type": "string"
+    },
+    "endTime": {
+      "type": "string"
+    },
+    "maxCapacity": {
+      "type": "integer",
+      "default": 20
+    },
+    "room": {
+      "type": "string"
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "academy": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::academy.academy",
+      "inversedBy": "schedules"
+    },
+    "bookings": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::class-booking.class-booking",
+      "mappedBy": "classSchedule"
+    }
+  }
+}
