@@ -201,6 +201,33 @@ is disabled, so the entire `/graphql` surface is defined explicitly under
 - **List queries are academy-scoped** when the caller is linked to a
   Student record (see `helpers.ts → resolveUserAcademyId`). Super-admins
   bypass the scope.
+- **Nexus arg API:** use `nexus.nonNull(nexus.idArg())` and
+  `nexus.nonNull(nexus.arg({ type: 'X' }))` — never
+  `nexus.nonNull.idArg()`. That second shape is only valid on output
+  fields (`t.nonNull.id('field')`), not on top-level args. TypeScript
+  does **not** catch the mistake; the first real Strapi boot will.
+
+### `schema.graphql` is regenerated on every schema change
+
+The full SDL is emitted to `backend/schema.graphql` on every Strapi
+boot via `graphql.artifacts.schema = true` (see `config/plugins.ts`).
+That file is tracked in git and is the source of truth for the
+frontend codegen pipelines in `website/` and `app/`.
+
+**Every commit that changes a GraphQL type module OR a content type
+schema must include the regenerated `schema.graphql` diff.** The
+workflow:
+
+```bash
+cd backend
+npm run develop          # let it boot once, then Ctrl-C when the
+                         # "To access the server" banner appears
+git add schema.graphql
+```
+
+No pre-commit hook enforces this today — reviewers catch a missed
+regen. See
+[`docs/design-decisions.md §9.6`](../docs/design-decisions.md#96-backendschemagraphql-regenerated-on-every-schema-change).
 
 ### File layout
 

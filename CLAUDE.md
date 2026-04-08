@@ -5,16 +5,17 @@ subdomain, logo, colors, and data isolation.
 
 ## Stack
 
-| Layer     | Technology                                              |
-|-----------|---------------------------------------------------------|
-| Backend   | Strapi v5 + PostgreSQL + TypeScript                     |
-| API       | GraphQL (explicit schema, `shadowCRUD` disabled)        |
-| Website   | Next.js 14 (App Router) + Apollo Client 4 + shadcn/ui   |
-| App       | Next.js 14 (App Router) + Apollo Client 4 + shadcn/ui   |
-| Styling   | Tailwind CSS + CSS variables (for per-academy theming)  |
-| Payments  | Asaas (Brazilian gateway — PIX, boleto, credit card)    |
-| Storage   | @strapi/provider-upload-aws-s3 (S3-compatible)          |
-| i18n      | pt-BR throughout                                        |
+| Layer     | Technology                                                         |
+|-----------|--------------------------------------------------------------------|
+| Backend   | Strapi v5 + PostgreSQL + TypeScript                                |
+| API       | GraphQL (explicit schema, `shadowCRUD` disabled)                   |
+| Website   | Next.js 16 (App Router, Turbopack) + React 19 + Tailwind v4        |
+| Student app | Expo SDK 54 + React Native 0.81 + TypeScript                     |
+| Data layer | Apollo Client 4 + `@graphql-codegen/cli` (client preset)          |
+| Styling   | Tailwind CSS v4 (website) / NativeWind (app) + per-academy CSS vars |
+| Payments  | Asaas (Brazilian gateway — PIX, boleto, credit card)               |
+| Storage   | @strapi/provider-upload-aws-s3 (S3-compatible)                     |
+| i18n      | pt-BR throughout                                                   |
 
 ### Strapi plugins enabled
 
@@ -40,14 +41,94 @@ gym/
 └── CLAUDE.md         ← you are here
 ```
 
-- `backend/` is live.
-- `website/` and `app/` are the planned frontend split — `dev.sh` detects
-  each and adds a tmux pane when their `package.json` exists.
-- **[`docs/design-decisions.md`](./docs/design-decisions.md)** is the
-  single source of truth for *why* things are the way they are (stack
-  choices, GraphQL conventions, palette, typography, anti-slop rules,
-  SEO strategy, rejected options). Always check there before reopening
-  a settled question.
+All three sub-projects are scaffolded and compile cleanly:
+
+- `backend/` — Strapi v5 running against a local Postgres (`gym`/`secret`)
+- `website/` — Next.js 16 with Apollo Client 4 + codegen wired;
+  `npm run build` passes
+- `app/` — Expo + React Native with Apollo Client 4 + codegen wired;
+  `npx tsc --noEmit` clean
+- `dev.sh` detects each project and spawns its own tmux pane
+
+**[`docs/design-decisions.md`](./docs/design-decisions.md)** is the
+single source of truth for *why* things are the way they are (stack
+choices, GraphQL conventions, palette, typography, anti-slop rules,
+SEO strategy, rejected options). Always check there before reopening
+a settled question — and keep it updated as new decisions ship (see
+[Working conventions](#working-conventions) below).
+
+## Working conventions
+
+These are hard rules for any agent or human touching the repo. They
+exist to keep the project self-explanatory as it grows, so a fresh
+clone (or a Claude session with no prior context) can reconstruct
+*why* every choice was made without re-interviewing anyone.
+
+### 1. Design decisions are always documented
+
+**Any non-obvious technical decision goes into
+[`docs/design-decisions.md`](./docs/design-decisions.md).**
+
+A "non-obvious" decision is anything where:
+- You chose one option over a defensible alternative.
+- You rejected something the reader might reasonably expect you to use.
+- You accepted a tradeoff that will matter in the next 6 months.
+- A future session would otherwise have to rediscover the reasoning.
+
+Decisions are logged in the mini-ADR format already established there:
+**Decision / Context / Rationale / Consequences / Revisit when**.
+Rejected options go in `§10` so they are not re-argued. Do not delete
+old entries when revisiting — mark them `[SUPERSEDED]` and add the
+replacement inline.
+
+If you are making the decision during an implementation commit, add
+the `docs/design-decisions.md` update **to the same commit**. Never
+leave documentation for "later" — "later" is how drift happens.
+
+### 2. README, root CLAUDE.md, sub-project CLAUDE.md stay in sync
+
+When any of the following change, every affected doc updates in the
+same commit:
+
+- Repo structure (new top-level folder)
+- Stack choice (framework, database, key plugin)
+- Setup commands (install order, env vars, required local services)
+- The GraphQL schema (regenerate `backend/schema.graphql` and commit)
+
+Sub-project docs (`backend/CLAUDE.md`, `website/CLAUDE.md`,
+`app/CLAUDE.md`) hold the detail. The root `CLAUDE.md` and `README.md`
+hold the summary + links. None of them should lie about the others.
+
+### 3. Every commit that changes the GraphQL schema also regenerates it
+
+The file `backend/schema.graphql` is the source of truth that the
+frontend codegen reads. When you add or modify a backend GraphQL type:
+
+```bash
+cd backend && npm run develop        # let it boot once, then Ctrl-C
+# (or `npx strapi ts:generate-types` if Postgres is available)
+git add schema.graphql
+```
+
+Commit the schema diff alongside the code diff in the same commit.
+A PR that touches the backend schema but not `schema.graphql` is
+incomplete.
+
+### 4. Frontend data calls go through GraphQL + Apollo, period
+
+The only REST exceptions are users-permissions auth endpoints and the
+Asaas webhook. Every data query/mutation from `website/` and `app/`
+goes through a `.graphql` document → `graphql()` from the generated
+`gql/` → `useQuery` / `useMutation`. If you find yourself reaching
+for `fetch()` against `/api/…` for something that isn't auth,
+stop — it belongs in the GraphQL schema.
+
+### 5. `npm run codegen` is idempotent and committed
+
+Running `npm run codegen` in `website/` or `app/` produces no git diff
+when the schema and queries are unchanged. The generated `gql/` folder
+is committed so fresh clones and CI can type-check without running
+codegen first.
 
 ## Multi-tenancy Model
 

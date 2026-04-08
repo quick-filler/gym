@@ -7,9 +7,9 @@ gets their own subdomain, logo, colors, and data isolation.
 ## Stack
 
 - **Backend:** Strapi v5 + PostgreSQL + GraphQL (explicit schema, `shadowCRUD` off)
-- **Website:** Next.js 14 (marketing landing + admin panel) + Apollo Client 4
-- **App:** Next.js 14 (student-facing white-label) + Apollo Client 4
-- **Styling:** Tailwind CSS + CSS variables (per-academy theming)
+- **Website:** Next.js 16 (App Router, Turbopack) + React 19 + Tailwind v4
+- **Student app:** Expo SDK 54 + React Native 0.81 + TypeScript
+- **Data layer:** Apollo Client 4 + `@graphql-codegen/cli` (client preset)
 - **Payments:** Asaas (PIX, boleto, credit card)
 - **Storage:** S3-compatible upload provider
 - **Language:** PT-BR throughout
@@ -18,33 +18,45 @@ gets their own subdomain, logo, colors, and data isolation.
 
 ```
 gym/
-├── backend/          # Strapi v5 API + GraphQL schema  → backend/CLAUDE.md
-├── website/          # Marketing + admin (Next.js)     → website/CLAUDE.md
-├── app/              # Student-facing white-label app  → app/CLAUDE.md
+├── backend/          # Strapi v5 API + GraphQL schema     → backend/CLAUDE.md
+├── website/          # Next.js — marketing + admin        → website/CLAUDE.md
+├── app/              # Expo — student white-label app     → app/CLAUDE.md
 ├── mockups/          # Static HTML prototypes
+├── docs/             # Long-form docs (design decisions)
 ├── dev.sh            # tmux launcher for every scaffolded service
-├── CLAUDE.md         # Root architecture overview
+├── CLAUDE.md         # Root architecture + working conventions
 └── README.md
 ```
 
-> Status: `backend/` is live. `website/` and `app/` are scaffolded as
-> documentation only — `dev.sh` skips them until they have a `package.json`.
+All three sub-projects are scaffolded and compile cleanly as of the
+latest commit (`backend` boots against local Postgres, `website` builds
+on Next.js 16, `app` type-checks via Expo + TS).
 
 ## Quick Start
 
 ```bash
-# 1. Make sure PostgreSQL is running with the credentials in backend/.env
-# 2. Install backend dependencies once
-cd backend && npm install && cd ..
+# 1. Create the local Postgres user + database (one-time)
+#    — adjust if you already have a gym role locally
+PGPASSWORD=foobar psql -h localhost -U root -d postgres \
+  -c "CREATE USER gym WITH PASSWORD 'secret' CREATEDB;" \
+  -c "CREATE DATABASE gym OWNER gym;"
 
-# 3. Launch every scaffolded service in a single tmux session
+# 2. Install dependencies in each project (one-time)
+cd backend && cp .env.example .env   && npm install && cd ..
+cd website && cp .env.local.example .env.local && npm install && cd ..
+cd app     && cp .env.example .env              && npm install && cd ..
+
+# 3. Regenerate the GraphQL types the frontends use
+cd website && npm run codegen && cd ..
+cd app     && npm run codegen && cd ..
+
+# 4. Launch everything
 ./dev.sh
 ```
 
-`dev.sh` detects which of `backend/`, `website/`, and `app/` are scaffolded
-(checks for `package.json`) and creates one pane per service. Missing
-directories are skipped, so the script works today and keeps working as
-new services come online.
+`dev.sh` detects which of `backend/`, `website/`, and `app/` are
+scaffolded (checks for `package.json`) and creates one pane per service.
+Missing directories are skipped.
 
 ```bash
 ./dev.sh             # start and attach
@@ -55,13 +67,16 @@ new services come online.
 
 After boot:
 
-- Strapi admin: http://localhost:1337/admin
-- GraphQL playground (dev only): http://localhost:1337/graphql
-- Asaas webhook: `POST http://localhost:1337/api/payments/webhook`
+- **Strapi admin**: http://localhost:1337/admin
+- **GraphQL playground** (dev only): http://localhost:1337/graphql
+- **Asaas webhook**: `POST http://localhost:1337/api/payments/webhook`
+- **Website**: http://localhost:3000
+- **Student app (Expo)**: press `w` in the `app` pane for the web
+  preview, or scan the QR with Expo Go on a phone
 
-On the first backend boot, `SEED_DEMO=true` will create the **Gym Demo**
-academy along with two plans, three students, two class schedules and a
-sample workout plan — set `SEED_DEMO=false` afterwards.
+On the first backend boot, `SEED_DEMO=true` creates the **Gym Demo**
+academy with 2 plans, 3 students, 2 class schedules and a sample workout
+plan — set `SEED_DEMO=false` in `backend/.env` afterwards.
 
 ## API
 
@@ -73,13 +88,52 @@ the only public surface is `Query.academyBySlug`, used by the
 white-label theming.
 
 REST is reserved for users-permissions auth (`/api/auth/local`, etc.)
-and the Asaas webhook.
+and the Asaas webhook. **No app data calls use REST.**
+
+### Adding a GraphQL operation
+
+```tsx
+// 1. Add the query to src/graphql/<domain>.graphql (website)
+//    or graphql/<domain>.graphql (app)
+query AcademyBranding($slug: String!) {
+  academyBySlug(slug: $slug) { documentId name primaryColor }
+}
+
+// 2. Regenerate types
+// $ npm run codegen
+
+// 3. Use it in a component
+import { useQuery } from '@apollo/client/react';
+import { graphql } from '@/gql'; // or '../gql' in app/
+const ACADEMY = graphql(`query AcademyBranding(...) { ... }`);
+const { data, loading } = useQuery(ACADEMY, { variables: { slug } });
+```
+
+Data is fully typed — no annotations, no casts.
+
+## Documentation layout
+
+- **[Root CLAUDE.md](./CLAUDE.md)** — architecture overview + working
+  conventions (including the rule that every design decision must be
+  documented).
+- **[docs/design-decisions.md](./docs/design-decisions.md)** — every
+  non-obvious technical choice in mini-ADR format
+  (Decision / Context / Rationale / Consequences). The first place to
+  check before reopening a settled question.
+- **[backend/CLAUDE.md](./backend/CLAUDE.md)** — content types,
+  GraphQL schema layout, Asaas integration, bootstrap/seed, plugins.
+- **[website/CLAUDE.md](./website/CLAUDE.md)** — Next.js project
+  layout, Apollo + codegen wiring, page map, SEO strategy.
+- **[app/CLAUDE.md](./app/CLAUDE.md)** — Expo project layout, Apollo
+  + codegen wiring, white-label theming, EAS Update channels.
+- **[mockups/README.md](./mockups/README.md)** — static HTML
+  prototypes and the shared design system file.
 
 ## Mockups
 
-Static HTML prototypes live under `mockups/` and are linked to from
-`mockups/README.md`. Use them as the visual reference when scaffolding
-the website / app pages.
+Static HTML prototypes live under `mockups/` and are linked from
+`mockups/README.md`. Use them as the visual reference when building the
+real website / app pages.
 
 ## Links
 

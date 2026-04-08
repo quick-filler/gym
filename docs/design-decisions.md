@@ -1,8 +1,24 @@
 # Gym — Design Decisions
 
 The single source of truth for **why** things are the way they are. Every
-non-obvious choice made during the scaffold + mockup phase lives here so
-future iterations don't have to re-argue the same ground.
+non-obvious choice lives here so future iterations don't have to re-argue
+the same ground.
+
+> ### Keeping this file current is a hard rule.
+>
+> This file is not a retrospective document — it is updated **in the same
+> commit** that introduces a new decision. See
+> [`CLAUDE.md → Working conventions → 1. Design decisions are always
+> documented`](../CLAUDE.md#working-conventions) for the full rule.
+>
+> A "non-obvious decision" is anything where:
+> - You chose one option over a defensible alternative.
+> - You rejected something the reader might reasonably expect you to use.
+> - You accepted a tradeoff that will matter in the next 6 months.
+> - A future session would otherwise have to rediscover the reasoning.
+>
+> If any of those are true, add the entry. Don't batch. Don't leave it
+> for "later". "Later" is how drift happens.
 
 Format per entry:
 - **Decision** — one sentence.
@@ -721,10 +737,78 @@ will be redesigned when they're ported to Next.js/Expo).
 ### 9.4 `.env` is gitignored; `.env.example` is canonical
 
 - **Decision** — `backend/.env` is in `.gitignore`. Every non-secret
-  default lives in `backend/.env.example`, which is tracked.
+  default lives in `backend/.env.example`, which is tracked. Same
+  pattern for `website/.env.local.example` and `app/.env.example`.
 - **Rationale** — Secrets never enter git. The example file is the
   source of truth for "which vars exist" and ships with placeholder
   values that crash loudly if forgotten.
+
+### 9.5 Design decisions are a hard documentation rule
+
+- **Decision** — Every non-obvious technical decision gets an entry in
+  this file, in the **same commit** that introduces it. The rule is
+  enforced at the project level via [`CLAUDE.md → Working
+  conventions`](../CLAUDE.md#working-conventions) and is saved as a
+  feedback memory so future Claude sessions apply it automatically.
+- **Context** — Over the scaffold + mockup + codegen phase we made
+  dozens of non-obvious choices (GraphQL-only, Expo not Next.js,
+  `shadowCRUD: false`, flame-tangerine palette, etc.). Each time the
+  rationale was captured after the fact. That cost time and risked
+  drift — the next session had to re-derive the "why" from git log +
+  code.
+- **Rationale** — A decision log is worthless if it lags behind the
+  code. Putting the doc update in the same commit as the code change
+  means:
+  - The PR review covers both — reviewers can push back on the *why*,
+    not just the *what*.
+  - `git blame` on the decision log leads straight to the
+    implementing commit.
+  - Future sessions (human or Claude) never have to reconstruct
+    intent from scratch.
+- **Consequences** — Commits are slightly larger (usually ~30-80 more
+  lines in `docs/design-decisions.md`). Acceptable.
+- **Revisit when** — Never. This rule is load-bearing.
+
+### 9.6 `backend/schema.graphql` regenerated on every schema change
+
+- **Decision** — Every backend schema edit ships with a regenerated
+  `backend/schema.graphql` in the same commit. The file is the source
+  of truth for frontend codegen.
+- **Context** — The website and app both run `@graphql-codegen/cli`
+  against `../backend/schema.graphql`. If the SDL diverges from the
+  runtime schema, the frontends type-check against stale types and
+  fail at runtime.
+- **Rationale** — Committing the SDL means:
+  - Fresh clones can run `npm run codegen` without booting Strapi.
+  - CI type-checks without a running backend.
+  - Schema changes show up as line diffs in PRs — API breakage is
+    reviewable.
+- **Consequences** — When you change a content type or GraphQL type
+  module, you have to boot the backend once (or run
+  `npx strapi ts:generate-types` against an available Postgres) so
+  Nexus re-emits the file. No pre-commit hook enforces this today —
+  reviewers catch it.
+- **Revisit when** — We get burned by a PR that forgot to regen. Then
+  add a husky pre-commit hook that runs the regen and stages the
+  diff.
+
+### 9.7 Nexus API: `nonNull` is a function, not a namespace
+
+- **Decision** — In `src/extensions/graphql/types/*.ts`, arg wrappers
+  use `nexus.nonNull(nexus.idArg())` and `nexus.nonNull(nexus.arg({
+  type: 'X' }))`. Never `nexus.nonNull.idArg()` (that's a namespace
+  that doesn't exist in Nexus v1).
+- **Context** — The initial schema was written based on muscle memory
+  from `t.nonNull.id('field')` (which *is* valid on output types,
+  where `nonNull` is a fluent chain off `t`). The same shape does not
+  exist on the top-level `nexus` import — `nexus.nonNull` is a
+  function that wraps an arg/type.
+- **Consequences** — The whole schema builds at boot time. This was
+  caught by the first real Strapi boot that got past the Postgres
+  auth check. Fixed across all 9 type modules in one pass.
+- **Lesson** — When in doubt, run `npm run develop` early. Static
+  type checks (`tsc --noEmit`) do **not** catch Nexus API misuse
+  because the types are heavily overloaded.
 
 ---
 
@@ -796,3 +880,8 @@ Explicit no's so we don't re-argue them.
 
 - **2026-04-08** — Initial version. Captures the scaffold + mockup +
   doc work up to commit `3c9aa07`.
+- **2026-04-08** — Added §4.5 (codegen client preset), §4.6 (committed
+  SDL), §9.5 (documentation-discipline hard rule), §9.6 (schema regen
+  workflow), §9.7 (Nexus API gotcha). Rewrote §4.1 (Next.js 16 + React
+  19 + Tailwind v4 — the actual scaffold, not the earlier 14 pin).
+  Up to commit `e4b7804` plus the current docs commit.
