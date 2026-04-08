@@ -59,11 +59,16 @@ ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=1337
 
-# Strapi reads content-type schema JSON from src/ at runtime, so src/ stays.
+# In a TypeScript project, `strapi start` reads every file — config,
+# schema JSON, compiled JS — from `dist/`. It locates that directory by
+# looking up `outDir` in `tsconfig.json`, so the tsconfig MUST be present
+# in the runner or Strapi falls back to the root `config/` (which would
+# hold `.ts` files) and crashes with "Cannot destructure property 'client'
+# of 'db.config.connection'". `typescript` itself is a runtime dep for the
+# same reason (@strapi/typescript-utils requires it during start).
 COPY --from=prod-deps --chown=node:node /opt/app/node_modules ./node_modules
 COPY --from=builder   --chown=node:node /opt/app/package.json ./package.json
-COPY --from=builder   --chown=node:node /opt/app/config ./config
-COPY --from=builder   --chown=node:node /opt/app/src ./src
+COPY --from=builder   --chown=node:node /opt/app/tsconfig.json ./tsconfig.json
 COPY --from=builder   --chown=node:node /opt/app/public ./public
 COPY --from=builder   --chown=node:node /opt/app/database ./database
 COPY --from=builder   --chown=node:node /opt/app/dist ./dist

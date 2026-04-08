@@ -841,6 +841,50 @@ will be redesigned when they're ported to Next.js/Expo).
   Next.js changes its standalone output layout (the `COPY` of
   `.next/standalone` + `.next/static` + `public` is the contract).
 
+### 9.9 Strapi v5 TypeScript runtime: ship `tsconfig.json` + `typescript` in production
+
+- **Decision** — `backend/Dockerfile`'s runtime stage copies
+  `tsconfig.json` alongside `dist/`, and `typescript` lives in
+  `dependencies` (not `devDependencies`) so `npm ci --omit=dev`
+  installs it. The runtime image does **not** copy the TS source
+  `config/` or `src/` directories — Strapi reads everything from
+  `dist/` in TS mode.
+- **Context** — The first production deploy crashed on boot with
+  `Cannot destructure property 'client' of 'db.config.connection'`
+  preceded by six `Config file not loaded, extension must be one of
+  .js,.json): <name>.ts` warnings. Root cause: `strapi start` calls
+  `@strapi/typescript-utils → isUsingTypeScript(appDir)` which only
+  checks for `tsconfig.json`. Without it, Strapi treats the project
+  as plain JS, sets `distDir = appDir`, and the config loader reads
+  `/opt/app/config/*.ts` (skipping every file because `.ts` is not
+  in `VALID_EXTENSIONS = ['.js', '.json']`). With `tsconfig.json`
+  present, `resolveOutDir()` parses it via `require('typescript')`
+  to learn the `outDir`, so the `typescript` package must also be
+  installed at runtime — even though nothing compiles on boot.
+- **Rationale** — Both requirements come from Strapi internals we
+  don't control (`packages/core/core/src/configuration/index.js`
+  line 56: `const configDir = path.resolve(distDir || process.cwd(),
+  'config')`). The alternative — compiling config separately and
+  hardcoding paths — would diverge from Strapi's expected layout
+  and break on the next upgrade. Shipping `tsconfig.json` + the
+  `typescript` package is ~70 MB of overhead but keeps the runtime
+  aligned with upstream.
+- **Consequences** —
+  - `typescript` is a runtime dependency in `backend/package.json`.
+    This differs from the `create-strapi-app` default, which puts
+    it in `devDependencies` — that default is wrong for any Docker
+    deploy that runs `npm ci --omit=dev`.
+  - The runner never sees the TS source under `config/` or `src/`.
+    If you add a file that must be readable at runtime, put it in a
+    directory the Dockerfile explicitly copies (`public/`,
+    `database/`, or let the TS compiler emit it into `dist/`).
+  - Schema JSONs live at `dist/src/api/*/content-types/*/schema.json`
+    in TS mode, not `src/`. Don't "helpfully" add `src/` back to the
+    runner COPY list.
+- **Revisit when** — Strapi v6 changes how `distDir` / `outDir` is
+  resolved, or `@strapi/typescript-utils` stops `require()`-ing the
+  `typescript` package during start.
+
 ---
 
 ## 10. Rejected options
@@ -916,3 +960,9 @@ Explicit no's so we don't re-argue them.
   workflow), §9.7 (Nexus API gotcha). Rewrote §4.1 (Next.js 16 + React
   19 + Tailwind v4 — the actual scaffold, not the earlier 14 pin).
   Up to commit `e4b7804` plus the current docs commit.
+- **2026-04-08** — Added §9.9 documenting why `backend/Dockerfile` must
+  ship `tsconfig.json` and why `typescript` lives in `dependencies`.
+  Triggered by a production boot crash (`Cannot destructure property
+  'client' of 'db.config.connection'`) caused by Strapi falling back to
+  the TS source `config/` when `tsconfig.json` was missing from the
+  runtime image.
