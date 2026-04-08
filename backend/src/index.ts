@@ -1,13 +1,17 @@
 import type { Core } from '@strapi/strapi';
 import { setupRolesAndPermissions } from './bootstrap/permissions';
 import { seedDemoData } from './bootstrap/seed';
+import { registerGraphQL } from './extensions/graphql';
 
 export default {
   /**
-   * register runs before Strapi initializes — use it to extend code, register
-   * plugin hooks, etc. We don't need anything here right now.
+   * register runs before Strapi initializes — use it to register the explicit
+   * GraphQL schema. shadowCRUD is disabled, so the entire /graphql surface
+   * comes from src/extensions/graphql.
    */
-  register(/* { strapi }: { strapi: Core.Strapi } */) {},
+  register({ strapi }: { strapi: Core.Strapi }) {
+    registerGraphQL(strapi);
+  },
 
   /**
    * bootstrap runs after the database is connected but before the HTTP server
