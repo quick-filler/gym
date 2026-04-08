@@ -34,6 +34,7 @@ gym/
 ├── website/          # Marketing landing + academy admin panel — see website/CLAUDE.md
 ├── app/              # Student-facing white-label app — see app/CLAUDE.md
 ├── mockups/          # Static HTML prototypes (landing, admin, student)
+├── docs/             # Long-form docs — design decisions, ADRs
 ├── dev.sh            # tmux launcher for every scaffolded service
 ├── README.md
 └── CLAUDE.md         ← you are here
@@ -42,6 +43,11 @@ gym/
 - `backend/` is live.
 - `website/` and `app/` are the planned frontend split — `dev.sh` detects
   each and adds a tmux pane when their `package.json` exists.
+- **[`docs/design-decisions.md`](./docs/design-decisions.md)** is the
+  single source of truth for *why* things are the way they are (stack
+  choices, GraphQL conventions, palette, typography, anti-slop rules,
+  SEO strategy, rejected options). Always check there before reopening
+  a settled question.
 
 ## Multi-tenancy Model
 
