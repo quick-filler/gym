@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0c0a09">
+<title>Contato — Gym | Fale com a gente</title>
+<meta name="description" content="Quer conversar antes de assinar? A gente responde rápido. WhatsApp, e-mail ou agendar uma demonstração de 20 minutos.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://gym.app/contact">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gym.app/contact">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="Contato — Gym">
+<meta property="og:description" content="WhatsApp, e-mail ou demo agendada — sem vendedor.">
+<meta property="og:image" content="https://gym.app/og/contact.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  "name": "Contato — Gym",
+  "url": "https://gym.app/contact",
+  "mainEntity": {
+    "@type": "Organization",
+    "name": "Gym",
+    "url": "https://gym.app",
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "contactType": "sales",
+        "email": "vendas@gym.app",
+        "telephone": "+55-11-99999-0000",
+        "areaServed": "BR",
+        "availableLanguage": ["pt-BR"]
+      },
+      {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "suporte@gym.app",
+        "areaServed": "BR",
+        "availableLanguage": ["pt-BR"]
+      }
+    ]
+  }
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system.css">
+
+<style>
+  .contact {
+    display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 5rem;
+    padding: 5rem 0; align-items: start;
+  }
+  @media (max-width: 980px) { .contact { grid-template-columns: 1fr; gap: 3rem; padding: 3rem 0; } }
+
+  .contact-side h1 {
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    line-height: 0.98; letter-spacing: -0.035em;
+    max-width: 14ch;
+  }
+  .contact-side h1 em { font-style: normal; color: var(--flame); font-weight: 500; }
+  .contact-side p {
+    color: var(--ink-500); font-size: 1.05rem; line-height: 1.6;
+    margin: 1.5rem 0 2.5rem; max-width: 30rem;
+  }
+
+  .channels { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line); }
+  .channel {
+    display: grid; grid-template-columns: 44px 1fr auto;
+    gap: 1.25rem; align-items: center;
+    padding: 1.5rem 0; border-bottom: 1px solid var(--line);
+    text-decoration: none; color: inherit;
+    transition: padding 0.18s;
+  }
+  .channel:hover { padding-left: 0.5rem; }
+  .channel-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--paper-2); color: var(--ink-700);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .channel-icon.flame { background: var(--flame); color: #fff; }
+  .channel-name { font-weight: 600; color: var(--ink-900); font-size: 1rem; }
+  .channel-detail { font-size: 0.85rem; color: var(--ink-400); margin-top: 0.15rem; font-family: var(--font-mono); }
+  .channel-arrow { color: var(--ink-300); }
+
+  /* Form card */
+  .form-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-2);
+  }
+  .form-card h2 { font-size: 1.5rem; letter-spacing: -0.02em; margin-bottom: 0.6rem; }
+  .form-card .lead { color: var(--ink-500); font-size: 0.95rem; margin-bottom: 2rem; }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 720px) { .field-row { grid-template-columns: 1fr; } }
+
+  .form-card label .req { color: var(--flame); margin-left: 0.15rem; }
+
+  .form-cta { width: 100%; justify-content: center; padding: 1rem; }
+
+  .privacy-note {
+    font-size: 0.78rem; color: var(--ink-400); margin-top: 1rem; text-align: center;
+  }
+  .privacy-note a { color: var(--ink-700); text-decoration: underline; }
+</style>
+</head>
+<body class="grain">
+
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></symbol>
+    <symbol id="i-whatsapp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3.6-7.2L21 3l-1.8 3.6A9 9 0 0 1 21 12zM8 11s.5 2 2 3.5S13 17 14 16l1-1-2-2-1 .5s-1.5-1-2-2l.5-1-2-2z"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-dumbbell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.4 14.4 9.6 9.6m9.4 4.8 1.4 1.4M3.6 8.2l1.4 1.4M6 18l1.4-1.4M16.6 6 18 7.4M22 22l-4.4-4.4m0-11.2L22 2M2 22l4.4-4.4"/></symbol>
+    <symbol id="i-instagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a href="landing.html" class="brand"><span class="brand-mark"><svg class="icon"><use href="#i-dumbbell"/></svg></span>Gym</a>
+    <nav class="nav-links" aria-label="Principal">
+      <a href="features.html">Recursos</a>
+      <a href="pricing.html">Preços</a>
+      <a href="about.html">A plataforma</a>
+      <a href="contact.html" aria-current="page">Contato</a>
+    </nav>
+    <div class="nav-cta">
+      <button class="btn btn-ghost">Entrar</button>
+      <button class="btn btn-ink">Teste grátis <svg class="icon"><use href="#i-arrow-right"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="contact">
+
+      <aside class="contact-side">
+        <span class="eyebrow"><span class="eyebrow-dot"></span> Contato direto</span>
+        <h1 style="margin-top: 1.5rem;">Sem vendedor.<br><em>A gente responde.</em></h1>
+        <p>Não temos SDR, BDR, nem fila de vendas. Você manda mensagem e cai direto numa pessoa do time. Resposta média em 47 minutos durante o horário comercial.</p>
+
+        <nav class="channels" aria-label="Canais de contato">
+          <a href="https://wa.me/5511999990000" class="channel">
+            <span class="channel-icon flame"><svg class="icon icon-lg"><use href="#i-whatsapp"/></svg></span>
+            <div>
+              <div class="channel-name">WhatsApp</div>
+              <div class="channel-detail">+55 11 99999-0000</div>
+            </div>
+            <svg class="icon icon-lg channel-arrow"><use href="#i-arrow-right"/></svg>
+          </a>
+          <a href="mailto:vendas@gym.app" class="channel">
+            <span class="channel-icon"><svg class="icon icon-lg"><use href="#i-mail"/></svg></span>
+            <div>
+              <div class="channel-name">E-mail comercial</div>
+              <div class="channel-detail">vendas@gym.app</div>
+            </div>
+            <svg class="icon icon-lg channel-arrow"><use href="#i-arrow-right"/></svg>
+          </a>
+          <a href="mailto:suporte@gym.app" class="channel">
+            <span class="channel-icon"><svg class="icon icon-lg"><use href="#i-mail"/></svg></span>
+            <div>
+              <div class="channel-name">Suporte (clientes)</div>
+              <div class="channel-detail">suporte@gym.app</div>
+            </div>
+            <svg class="icon icon-lg channel-arrow"><use href="#i-arrow-right"/></svg>
+          </a>
+          <a href="#" class="channel">
+            <span class="channel-icon"><svg class="icon icon-lg"><use href="#i-calendar"/></svg></span>
+            <div>
+              <div class="channel-name">Demo de 20 minutos</div>
+              <div class="channel-detail">cal.gym.app/demo</div>
+            </div>
+            <svg class="icon icon-lg channel-arrow"><use href="#i-arrow-right"/></svg>
+          </a>
+          <a href="#" class="channel">
+            <span class="channel-icon"><svg class="icon icon-lg"><use href="#i-pin"/></svg></span>
+            <div>
+              <div class="channel-name">Onde estamos</div>
+              <div class="channel-detail">São Paulo · Vila Mariana</div>
+            </div>
+            <svg class="icon icon-lg channel-arrow"><use href="#i-arrow-right"/></svg>
+          </a>
+        </nav>
+      </aside>
+
+      <section class="form-card" aria-labelledby="form-title">
+        <h2 id="form-title">Mande uma mensagem</h2>
+        <p class="lead">A gente responde no mesmo dia útil — geralmente em menos de 1 hora.</p>
+
+        <form>
+          <div class="field-row">
+            <div class="field">
+              <label for="name">Nome <span class="req">*</span></label>
+              <input id="name" name="name" type="text" placeholder="Como te chamamos?" required>
+            </div>
+            <div class="field">
+              <label for="academy">Academia</label>
+              <input id="academy" name="academy" type="text" placeholder="Nome da sua academia">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="email">E-mail <span class="req">*</span></label>
+              <input id="email" name="email" type="email" placeholder="voce@academia.com.br" required>
+            </div>
+            <div class="field">
+              <label for="phone">WhatsApp</label>
+              <input id="phone" name="phone" type="tel" placeholder="(11) 99999-0000">
+            </div>
+          </div>
+          <div class="field">
+            <label for="size">Quantos alunos ativos?</label>
+            <select id="size" name="size">
+              <option>Menos de 50</option>
+              <option>50 — 200</option>
+              <option>200 — 500</option>
+              <option>Mais de 500</option>
+              <option>Ainda não abri</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="message">O que você quer saber? <span class="req">*</span></label>
+            <textarea id="message" name="message" rows="5" placeholder="Pode ser específico — quanto mais contexto, melhor a resposta." required></textarea>
+            <span class="field-help">Se for migração de outro sistema, conta qual.</span>
+          </div>
+
+          <button type="submit" class="btn btn-flame btn-block form-cta">Enviar mensagem <svg class="icon"><use href="#i-arrow-right"/></svg></button>
+          <p class="privacy-note">Ao enviar, você concorda com nossa <a href="#">Política de Privacidade</a> (LGPD).</p>
+        </form>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+<footer class="marketing-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="landing.html" class="brand"><span class="brand-mark"><svg class="icon"><use href="#i-dumbbell"/></svg></span>Gym</a>
+        <p>Sistema de gestão para academias brasileiras que querem voltar a olhar pros alunos, não pra planilha.</p>
+      </div>
+      <div class="footer-col"><h5>Produto</h5><ul><li><a href="features.html">Recursos</a></li><li><a href="pricing.html">Preços</a></li><li><a href="#">App do aluno</a></li><li><a href="#">Integração Asaas</a></li></ul></div>
+      <div class="footer-col"><h5>Empresa</h5><ul><li><a href="about.html">Sobre</a></li><li><a href="#">Blog</a></li><li><a href="contact.html">Contato</a></li><li><a href="#">Carreiras</a></li></ul></div>
+      <div class="footer-col"><h5>Legal</h5><ul><li><a href="#">Termos de uso</a></li><li><a href="#">Privacidade (LGPD)</a></li><li><a href="#">Status</a></li><li><a href="#">Suporte</a></li></ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Gym. Todos os direitos reservados.</span>
+      <div style="display: flex; gap: 1rem;"><a href="#" aria-label="Instagram"><svg class="icon icon-lg"><use href="#i-instagram"/></svg></a><a href="https://wa.me/5511999990000" aria-label="WhatsApp"><svg class="icon icon-lg"><use href="#i-whatsapp"/></svg></a></div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

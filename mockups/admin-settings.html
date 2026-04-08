@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0c0a09">
+<title>Configurações — Gym Admin</title>
+<meta name="description" content="Identidade visual, dados da academia, integrações.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system.css">
+<style>
+  body { display: flex; height: 100dvh; overflow: hidden; background: var(--paper-50); }
+
+  /* Shared admin chrome */
+  .sidebar { width: 248px; background: var(--ink-900); color: var(--paper); flex-shrink: 0; height: 100dvh; display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,0.05); }
+  .sidebar-head { padding: 1.5rem 1.25rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .sidebar-head .brand { color: var(--paper); }
+  .sidebar-head .brand-mark { background: var(--flame); color: #fff; }
+  .sidebar-tagline { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500; color: rgba(250, 248, 245, 0.4); margin-top: 0.4rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  .sidebar-section { padding: 1.25rem 1.25rem 0.5rem; font-family: var(--font-mono); font-size: 0.65rem; font-weight: 500; color: rgba(250,248,245,0.35); text-transform: uppercase; letter-spacing: 0.12em; }
+  .sidebar-nav { display: flex; flex-direction: column; padding: 0 0.65rem; gap: 2px; }
+  .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.85rem; border-radius: 9px; color: rgba(250, 248, 245, 0.6); font-size: 0.88rem; font-weight: 500; text-decoration: none; cursor: pointer; }
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--paper); }
+  .nav-item.active { background: rgba(232,85,28,0.16); color: var(--flame); box-shadow: inset 2px 0 0 var(--flame); }
+  .nav-item .icon { width: 18px; height: 18px; }
+  .nav-badge { margin-left: auto; background: var(--flame); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 999px; font-family: var(--font-mono); }
+  .sidebar-foot { margin-top: auto; padding: 1rem; border-top: 1px solid rgba(255,255,255,0.06); }
+  .user-tile { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem; border-radius: 10px; cursor: pointer; }
+  .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--flame), var(--flame-dark)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.78rem; flex-shrink: 0; }
+  .user-name { color: var(--paper); font-weight: 600; font-size: 0.85rem; }
+  .user-role { color: rgba(250,248,245,0.4); font-size: 0.72rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: var(--paper); border-bottom: 1px solid var(--line); padding: 0 2rem; height: 64px; display: flex; align-items: center; gap: 1.25rem; flex-shrink: 0; }
+  .topbar-title { font-family: var(--font-display); font-weight: 600; font-size: 1rem; flex: 1; }
+  .topbar-icon-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--paper-50); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-700); position: relative; }
+  .topbar-icon-btn .dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--flame); border: 2px solid var(--paper); }
+  .content { flex: 1; overflow-y: auto; padding: 2rem; }
+
+  .page-h { display: flex; justify-content: space-between; align-items: end; margin-bottom: 1.5rem; }
+  .page-h h1 { font-family: var(--font-display); font-size: 2rem; letter-spacing: -0.025em; line-height: 1; }
+  .page-h .meta { color: var(--ink-400); font-size: 0.88rem; margin-top: 0.4rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 0; border-bottom: 1px solid var(--line);
+    margin-bottom: 2rem; overflow-x: auto;
+  }
+  .tab {
+    padding: 1rem 1.5rem; border: none; background: transparent;
+    font-family: var(--font-body); font-weight: 500; font-size: 0.88rem;
+    color: var(--ink-400); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--ink-700); }
+  .tab.active { color: var(--ink-900); border-bottom-color: var(--flame); }
+
+  /* Settings layout: form left, preview right */
+  .layout { display: grid; grid-template-columns: 1fr 380px; gap: 2rem; }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 2rem; }
+  .panel h3 { font-family: var(--font-display); font-size: 1.15rem; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+  .panel p.lead { color: var(--ink-500); font-size: 0.88rem; margin-bottom: 1.75rem; }
+
+  /* Logo upload */
+  .logo-upload {
+    display: flex; align-items: center; gap: 1.5rem;
+    padding: 1.5rem; border: 1.5px dashed var(--line-strong);
+    border-radius: 18px; background: var(--paper-50);
+  }
+  .logo-current {
+    width: 80px; height: 80px; border-radius: 18px;
+    background: var(--ink-900); color: var(--flame);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 1.6rem;
+    flex-shrink: 0;
+  }
+  .logo-info { flex: 1; }
+  .logo-info h4 { font-size: 0.95rem; margin-bottom: 0.2rem; }
+  .logo-info p { font-size: 0.78rem; color: var(--ink-400); font-family: var(--font-mono); }
+
+  /* Color pickers */
+  .colors-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+  .color-pick {
+    background: #fff; border: 1px solid var(--line); border-radius: 14px;
+    padding: 1rem 1.25rem; display: flex; align-items: center; gap: 0.85rem;
+  }
+  .color-swatch {
+    width: 44px; height: 44px; border-radius: 10px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+  }
+  .color-info { flex: 1; }
+  .color-name { font-size: 0.78rem; color: var(--ink-400); text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--font-mono); }
+  .color-hex { font-family: var(--font-mono); font-weight: 600; color: var(--ink-900); margin-top: 0.15rem; }
+
+  /* Subdomain field */
+  .subd {
+    margin-top: 1.5rem; display: flex; align-items: stretch;
+    border: 1px solid var(--line-strong); border-radius: 12px; overflow: hidden;
+    background: #fff;
+  }
+  .subd input { flex: 1; padding: 0.85rem 1rem; border: none; outline: none; font-size: 0.95rem; color: var(--ink-900); }
+  .subd .suffix { padding: 0.85rem 1rem; background: var(--paper-50); border-left: 1px solid var(--line); font-family: var(--font-mono); font-size: 0.85rem; color: var(--ink-500); }
+
+  /* Save bar */
+  .save-bar {
+    margin-top: 2rem; padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    display: flex; gap: 0.75rem; justify-content: flex-end;
+  }
+  .btn-flame, .btn-line {
+    padding: 0.75rem 1.4rem; font-size: 0.88rem;
+  }
+
+  /* Right preview */
+  .preview-stack { position: sticky; top: 1rem; }
+  .preview-label { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-400); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+  .preview-card {
+    background: var(--ink-900); border-radius: 32px; overflow: hidden;
+    box-shadow: 0 30px 60px -20px rgba(28,25,23,0.25);
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+  .preview-header { background: var(--flame); padding: 1.5rem; color: #fff; }
+  .preview-header .label { font-size: 0.7rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.08em; }
+  .preview-header .name { font-family: var(--font-display); font-weight: 600; font-size: 1.5rem; margin-top: 0.3rem; }
+  .preview-body { background: #fff; padding: 1.25rem; }
+  .preview-row { padding: 0.7rem 0; border-bottom: 1px solid var(--paper-3); display: flex; justify-content: space-between; font-size: 0.85rem; }
+  .preview-row:last-child { border-bottom: none; }
+  .preview-row strong { color: var(--ink-900); }
+  .preview-row span { color: var(--ink-500); }
+  .preview-cta {
+    margin: 1.25rem; padding: 0.85rem;
+    background: var(--flame); color: #fff;
+    border-radius: 12px; text-align: center; font-weight: 600;
+    font-size: 0.88rem;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; }
+  .field label { font-size: 0.82rem; font-weight: 500; color: var(--ink-700); }
+  .field input, .field textarea { padding: 0.85rem 1rem; border-radius: 12px; border: 1px solid var(--line-strong); background: #fff; font-size: 0.95rem; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+</style>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-money" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8M12 6v2m0 8v2"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-dumbbell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.4 14.4 9.6 9.6m9.4 4.8 1.4 1.4M3.6 8.2l1.4 1.4M6 18l1.4-1.4M16.6 6 18 7.4M22 22l-4.4-4.4m0-11.2L22 2M2 22l4.4-4.4"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  </defs>
+</svg>
+
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <a href="admin-dashboard.html" class="brand"><span class="brand-mark"><svg class="icon"><use href="#i-dumbbell"/></svg></span>Gym</a>
+    <div class="sidebar-tagline">CrossFit SP · Admin</div>
+  </div>
+  <div class="sidebar-section">Operação</div>
+  <nav class="sidebar-nav">
+    <a href="admin-dashboard.html" class="nav-item"><svg class="icon"><use href="#i-grid"/></svg> Visão geral</a>
+    <a href="admin-students.html" class="nav-item"><svg class="icon"><use href="#i-users"/></svg> Alunos <span class="nav-badge">248</span></a>
+    <a href="admin-finance.html" class="nav-item"><svg class="icon"><use href="#i-money"/></svg> Financeiro <span class="nav-badge">12</span></a>
+    <a href="admin-schedule.html" class="nav-item"><svg class="icon"><use href="#i-calendar"/></svg> Agenda</a>
+    <a href="#" class="nav-item"><svg class="icon"><use href="#i-dumbbell"/></svg> Treinos</a>
+  </nav>
+  <div class="sidebar-section">Configuração</div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item"><svg class="icon"><use href="#i-phone"/></svg> App white-label</a>
+    <a href="admin-settings.html" class="nav-item active"><svg class="icon"><use href="#i-settings"/></svg> Configurações</a>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="user-tile">
+      <div class="user-avatar">RV</div>
+      <div><div class="user-name">Rafael Vasconcellos</div><div class="user-role">ADMIN</div></div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="topbar-title">Configurações</div>
+    <div class="topbar-icon-btn"><svg class="icon"><use href="#i-bell"/></svg><span class="dot"></span></div>
+  </header>
+
+  <div class="content">
+    <div class="page-h">
+      <div>
+        <h1>Configurações</h1>
+        <div class="meta">CROSSFIT SP · UNIDADE VILA MARIANA</div>
+      </div>
+    </div>
+
+    <nav class="tabs" aria-label="Seções">
+      <button class="tab active">Identidade visual</button>
+      <button class="tab">Dados da academia</button>
+      <button class="tab">Planos</button>
+      <button class="tab">Integrações</button>
+      <button class="tab">Notificações</button>
+      <button class="tab">Equipe</button>
+    </nav>
+
+    <div class="layout">
+      <section class="panel">
+        <h3>Identidade visual</h3>
+        <p class="lead">Personalize como o seu app aparece pros alunos. Logo, cores e o subdomínio que eles vão acessar.</p>
+
+        <div class="logo-upload">
+          <div class="logo-current">CFS</div>
+          <div class="logo-info">
+            <h4>logo-crossfit-sp.svg</h4>
+            <p>SVG · 12KB · ATUALIZADO 03/04/2026</p>
+          </div>
+          <button class="btn btn-line" style="padding: 0.6rem 1.1rem; font-size: 0.85rem;"><svg class="icon"><use href="#i-upload"/></svg> Trocar</button>
+        </div>
+
+        <div class="colors-row">
+          <div class="color-pick">
+            <div class="color-swatch" style="background: #ef4444;"></div>
+            <div class="color-info">
+              <div class="color-name">Cor primária</div>
+              <div class="color-hex">#EF4444</div>
+            </div>
+          </div>
+          <div class="color-pick">
+            <div class="color-swatch" style="background: #dc2626;"></div>
+            <div class="color-info">
+              <div class="color-name">Cor secundária</div>
+              <div class="color-hex">#DC2626</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subd">
+          <input value="crossfit-sp">
+          <span class="suffix">.gym.app</span>
+        </div>
+
+        <div class="field" style="margin-top: 1.5rem;">
+          <label>Domínio próprio (CNAME)</label>
+          <input placeholder="app.suaacademia.com.br" value="app.crossfitsp.com.br">
+          <span style="font-size: 0.78rem; color: var(--ink-400);">Disponível no plano Business e Pro. <a href="#" style="color: var(--flame);">Como configurar</a></span>
+        </div>
+
+        <div class="save-bar">
+          <button class="btn btn-line">Cancelar</button>
+          <button class="btn btn-flame">Salvar alterações</button>
+        </div>
+      </section>
+
+      <aside class="preview-stack">
+        <div class="preview-label">PRÉ-VISUALIZAÇÃO · APP DO ALUNO</div>
+        <div class="preview-card">
+          <div class="preview-header">
+            <div class="label">CROSSFIT SP — VILA MARIANA</div>
+            <div class="name">Bem-vindo, João</div>
+          </div>
+          <div class="preview-body">
+            <div class="preview-row"><span>Próxima aula</span><strong>Hoje, 18:00</strong></div>
+            <div class="preview-row"><span>Plano</span><strong>Mensal · R$ 99</strong></div>
+            <div class="preview-row"><span>Vencimento</span><strong>15/05/2026</strong></div>
+            <div class="preview-row"><span>Treino atual</span><strong>Treino A</strong></div>
+          </div>
+          <div class="preview-cta">Reservar próxima aula</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

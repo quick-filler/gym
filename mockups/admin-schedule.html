@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0c0a09">
+<title>Agenda — Gym Admin</title>
+<meta name="description" content="Grade semanal de aulas, reservas e check-ins.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system.css">
+<style>
+  body { display: flex; height: 100dvh; overflow: hidden; background: var(--paper-50); }
+
+  /* Shared admin chrome */
+  .sidebar { width: 248px; background: var(--ink-900); color: var(--paper); flex-shrink: 0; height: 100dvh; display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,0.05); }
+  .sidebar-head { padding: 1.5rem 1.25rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .sidebar-head .brand { color: var(--paper); }
+  .sidebar-head .brand-mark { background: var(--flame); color: #fff; }
+  .sidebar-tagline { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500; color: rgba(250, 248, 245, 0.4); margin-top: 0.4rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  .sidebar-section { padding: 1.25rem 1.25rem 0.5rem; font-family: var(--font-mono); font-size: 0.65rem; font-weight: 500; color: rgba(250,248,245,0.35); text-transform: uppercase; letter-spacing: 0.12em; }
+  .sidebar-nav { display: flex; flex-direction: column; padding: 0 0.65rem; gap: 2px; }
+  .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.85rem; border-radius: 9px; color: rgba(250, 248, 245, 0.6); font-size: 0.88rem; font-weight: 500; text-decoration: none; cursor: pointer; transition: background 0.18s, color 0.18s; }
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--paper); }
+  .nav-item.active { background: rgba(232,85,28,0.16); color: var(--flame); box-shadow: inset 2px 0 0 var(--flame); }
+  .nav-item .icon { width: 18px; height: 18px; }
+  .nav-badge { margin-left: auto; background: var(--flame); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 999px; font-family: var(--font-mono); }
+  .sidebar-foot { margin-top: auto; padding: 1rem; border-top: 1px solid rgba(255,255,255,0.06); }
+  .user-tile { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem; border-radius: 10px; cursor: pointer; }
+  .user-tile:hover { background: rgba(255,255,255,0.04); }
+  .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--flame), var(--flame-dark)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.78rem; flex-shrink: 0; }
+  .user-name { color: var(--paper); font-weight: 600; font-size: 0.85rem; }
+  .user-role { color: rgba(250,248,245,0.4); font-size: 0.72rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: var(--paper); border-bottom: 1px solid var(--line); padding: 0 2rem; height: 64px; display: flex; align-items: center; gap: 1.25rem; flex-shrink: 0; }
+  .topbar-title { font-family: var(--font-display); font-weight: 600; font-size: 1rem; flex: 1; }
+  .topbar-icon-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--paper-50); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-700); position: relative; }
+  .topbar-icon-btn .dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--flame); border: 2px solid var(--paper); }
+  .content { flex: 1; overflow-y: auto; padding: 2rem; }
+
+  .page-h { display: flex; justify-content: space-between; align-items: end; margin-bottom: 1.5rem; }
+  .page-h h1 { font-family: var(--font-display); font-size: 2rem; letter-spacing: -0.025em; line-height: 1; }
+  .page-h .meta { color: var(--ink-400); font-size: 0.88rem; margin-top: 0.4rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* Week navigator */
+  .week-nav { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+  .week-nav button {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--paper);
+    cursor: pointer; color: var(--ink-700);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .week-nav .label {
+    font-family: var(--font-display); font-weight: 600; font-size: 1.1rem;
+  }
+  .week-nav .label .num { font-family: var(--font-mono); color: var(--flame); margin-left: 0.4rem; font-size: 0.95rem; font-weight: 500; }
+  .week-nav-right { margin-left: auto; display: flex; gap: 0.5rem; }
+
+  /* WEEK GRID */
+  .grid {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 70px repeat(6, 1fr);
+  }
+
+  .grid-h {
+    background: var(--paper-50);
+    padding: 1rem 0.75rem;
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    text-align: center;
+  }
+  .grid-h:last-child { border-right: none; }
+  .grid-h .day { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 500; color: var(--ink-400); text-transform: uppercase; letter-spacing: 0.1em; }
+  .grid-h .num { font-family: var(--font-display); font-size: 1.4rem; font-weight: 600; color: var(--ink-900); margin-top: 0.3rem; line-height: 1; }
+  .grid-h.today .num { color: var(--flame); }
+
+  .grid-time {
+    padding: 0.85rem 0.5rem 0.85rem 0.65rem;
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    background: var(--paper-50);
+    font-family: var(--font-mono); font-size: 0.7rem;
+    color: var(--ink-400); text-align: right;
+  }
+
+  .grid-cell {
+    padding: 6px;
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    min-height: 86px;
+    position: relative;
+  }
+  .grid-cell:nth-last-child(-n+6) { border-bottom: none; }
+  .grid-cell:nth-child(7n) { border-right: none; }
+
+  .class-block {
+    background: var(--ink-900); color: var(--paper);
+    border-radius: 10px; padding: 0.6rem 0.7rem;
+    font-size: 0.78rem; height: 100%;
+    display: flex; flex-direction: column; gap: 0.25rem;
+    cursor: pointer; transition: transform 0.15s;
+  }
+  .class-block:hover { transform: translateY(-2px); }
+  .class-block.flame { background: var(--flame); }
+  .class-block.pine  { background: var(--pine); }
+  .class-block.ink   { background: var(--ink-700); }
+  .class-block .name { font-weight: 600; font-size: 0.78rem; line-height: 1.2; }
+  .class-block .meta { font-family: var(--font-mono); font-size: 0.62rem; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.06em; }
+  .class-block .cap { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 0.3rem; border-top: 1px solid rgba(255,255,255,0.12); font-family: var(--font-mono); font-size: 0.62rem; }
+
+  /* Side stats */
+  .layout { display: grid; grid-template-columns: 1fr 280px; gap: 1.25rem; }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+
+  .side { display: flex; flex-direction: column; gap: 1rem; }
+  .side-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 1.5rem; }
+  .side-card h4 { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-400); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; margin-bottom: 0.6rem; }
+  .side-card .big { font-family: var(--font-display); font-size: 2.2rem; font-weight: 600; line-height: 1; letter-spacing: -0.03em; }
+  .side-card .delta { font-size: 0.78rem; color: var(--emerald); margin-top: 0.4rem; }
+
+  .next-up { display: flex; flex-direction: column; gap: 0.75rem; }
+  .next-row { display: flex; gap: 0.85rem; padding: 0.85rem; background: var(--paper-50); border-radius: 12px; align-items: center; border: 1px solid var(--line); }
+  .next-time { font-family: var(--font-mono); font-size: 0.85rem; color: var(--flame); font-weight: 600; min-width: 50px; }
+  .next-name { font-weight: 600; color: var(--ink-900); font-size: 0.9rem; }
+  .next-meta { font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-400); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.15rem; }
+</style>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6 6-6-6 6-6"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-money" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8M12 6v2m0 8v2"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-dumbbell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.4 14.4 9.6 9.6m9.4 4.8 1.4 1.4M3.6 8.2l1.4 1.4M6 18l1.4-1.4M16.6 6 18 7.4M22 22l-4.4-4.4m0-11.2L22 2M2 22l4.4-4.4"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  </defs>
+</svg>
+
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <a href="admin-dashboard.html" class="brand"><span class="brand-mark"><svg class="icon"><use href="#i-dumbbell"/></svg></span>Gym</a>
+    <div class="sidebar-tagline">CrossFit SP · Admin</div>
+  </div>
+  <div class="sidebar-section">Operação</div>
+  <nav class="sidebar-nav">
+    <a href="admin-dashboard.html" class="nav-item"><svg class="icon"><use href="#i-grid"/></svg> Visão geral</a>
+    <a href="admin-students.html" class="nav-item"><svg class="icon"><use href="#i-users"/></svg> Alunos <span class="nav-badge">248</span></a>
+    <a href="admin-finance.html" class="nav-item"><svg class="icon"><use href="#i-money"/></svg> Financeiro <span class="nav-badge">12</span></a>
+    <a href="admin-schedule.html" class="nav-item active"><svg class="icon"><use href="#i-calendar"/></svg> Agenda</a>
+    <a href="#" class="nav-item"><svg class="icon"><use href="#i-dumbbell"/></svg> Treinos</a>
+  </nav>
+  <div class="sidebar-section">Configuração</div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item"><svg class="icon"><use href="#i-phone"/></svg> App white-label</a>
+    <a href="admin-settings.html" class="nav-item"><svg class="icon"><use href="#i-settings"/></svg> Configurações</a>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="user-tile">
+      <div class="user-avatar">RV</div>
+      <div><div class="user-name">Rafael Vasconcellos</div><div class="user-role">ADMIN</div></div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="topbar-title">Agenda</div>
+    <div class="topbar-icon-btn"><svg class="icon"><use href="#i-bell"/></svg><span class="dot"></span></div>
+    <button class="btn btn-flame" style="padding: 0.55rem 1.1rem; font-size: 0.85rem;"><svg class="icon"><use href="#i-plus"/></svg> Nova aula</button>
+  </header>
+
+  <div class="content">
+    <div class="page-h">
+      <div>
+        <h1>Agenda</h1>
+        <div class="meta">SEMANA · 06 → 12 ABRIL 2026</div>
+      </div>
+    </div>
+
+    <nav class="week-nav" aria-label="Navegação semanal">
+      <button aria-label="Anterior"><svg class="icon"><use href="#i-arrow-left"/></svg></button>
+      <button aria-label="Próxima"><svg class="icon"><use href="#i-arrow-right"/></svg></button>
+      <span class="label">Abril 2026 <span class="num">SEM 15</span></span>
+      <div class="week-nav-right">
+        <button class="chip" style="padding: 0.5rem 0.85rem; border-radius: 999px; background: var(--paper); border: 1px solid var(--line-strong); font-size: 0.82rem; color: var(--ink-700); cursor: pointer;">Hoje</button>
+      </div>
+    </nav>
+
+    <div class="layout">
+      <div class="grid">
+        <div class="grid-h" style="background: var(--paper-50);"></div>
+        <div class="grid-h"><div class="day">Seg</div><div class="num">07</div></div>
+        <div class="grid-h"><div class="day">Ter</div><div class="num">08</div></div>
+        <div class="grid-h today"><div class="day">Qua</div><div class="num">09</div></div>
+        <div class="grid-h"><div class="day">Qui</div><div class="num">10</div></div>
+        <div class="grid-h"><div class="day">Sex</div><div class="num">11</div></div>
+        <div class="grid-h"><div class="day">Sáb</div><div class="num">12</div></div>
+
+        <div class="grid-time">06h</div>
+        <div class="grid-cell"><div class="class-block flame"><div class="name">Musculação A</div><div class="meta">RAFAEL · S1</div><div class="cap"><span>06:00 → 07:00</span><span>14/20</span></div></div></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"><div class="class-block flame"><div class="name">Musculação A</div><div class="meta">RAFAEL · S1</div><div class="cap"><span>06:00 → 07:00</span><span>18/20</span></div></div></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"><div class="class-block flame"><div class="name">Musculação A</div><div class="meta">RAFAEL · S1</div><div class="cap"><span>06:00 → 07:00</span><span>16/20</span></div></div></div>
+        <div class="grid-cell"></div>
+
+        <div class="grid-time">07h</div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"><div class="class-block pine"><div class="name">Pilates Manhã</div><div class="meta">BEATRIZ · S2</div><div class="cap"><span>07:00 → 08:00</span><span>10/12</span></div></div></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"><div class="class-block pine"><div class="name">Pilates Manhã</div><div class="meta">BEATRIZ · S2</div><div class="cap"><span>07:00 → 08:00</span><span>11/12</span></div></div></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"><div class="class-block ink"><div class="name">Funcional</div><div class="meta">DIEGO · S1</div><div class="cap"><span>07:00 → 08:00</span><span>22/25</span></div></div></div>
+
+        <div class="grid-time">12h</div>
+        <div class="grid-cell"><div class="class-block ink"><div class="name">Almoço express</div><div class="meta">DIEGO · S1</div><div class="cap"><span>12:00 → 13:00</span><span>12/15</span></div></div></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"><div class="class-block ink"><div class="name">Almoço express</div><div class="meta">DIEGO · S1</div><div class="cap"><span>12:00 → 13:00</span><span>15/15</span></div></div></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"><div class="class-block ink"><div class="name">Almoço express</div><div class="meta">DIEGO · S1</div><div class="cap"><span>12:00 → 13:00</span><span>13/15</span></div></div></div>
+        <div class="grid-cell"></div>
+
+        <div class="grid-time">18h</div>
+        <div class="grid-cell"><div class="class-block flame"><div class="name">Musculação B</div><div class="meta">RAFAEL · S1</div><div class="cap"><span>18:00 → 19:00</span><span>20/20</span></div></div></div>
+        <div class="grid-cell"><div class="class-block pine"><div class="name">Yoga</div><div class="meta">LETÍCIA · S2</div><div class="cap"><span>18:00 → 19:00</span><span>14/15</span></div></div></div>
+        <div class="grid-cell"><div class="class-block flame"><div class="name">Musculação B</div><div class="meta">RAFAEL · S1</div><div class="cap"><span>18:00 → 19:00</span><span>19/20</span></div></div></div>
+        <div class="grid-cell"><div class="class-block pine"><div class="name">Yoga</div><div class="meta">LETÍCIA · S2</div><div class="cap"><span>18:00 → 19:00</span><span>13/15</span></div></div></div>
+        <div class="grid-cell"><div class="class-block flame"><div class="name">Musculação B</div><div class="meta">RAFAEL · S1</div><div class="cap"><span>18:00 → 19:00</span><span>20/20</span></div></div></div>
+        <div class="grid-cell"></div>
+
+        <div class="grid-time">19h</div>
+        <div class="grid-cell"><div class="class-block ink"><div class="name">CrossFit Open</div><div class="meta">RAFAEL · BOX</div><div class="cap"><span>19:00 → 20:30</span><span>11/16</span></div></div></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"><div class="class-block ink"><div class="name">CrossFit Open</div><div class="meta">RAFAEL · BOX</div><div class="cap"><span>19:00 → 20:30</span><span>14/16</span></div></div></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"><div class="class-block ink"><div class="name">CrossFit Open</div><div class="meta">RAFAEL · BOX</div><div class="cap"><span>19:00 → 20:30</span><span>15/16</span></div></div></div>
+        <div class="grid-cell"></div>
+      </div>
+
+      <aside class="side">
+        <div class="side-card">
+          <h4>Aulas hoje</h4>
+          <div class="big">8</div>
+          <div class="delta">94% de ocupação média</div>
+        </div>
+        <div class="side-card">
+          <h4>Próximas (hoje)</h4>
+          <div class="next-up">
+            <div class="next-row">
+              <div class="next-time">12:00</div>
+              <div>
+                <div class="next-name">Almoço express</div>
+                <div class="next-meta">DIEGO · 15/15 · LISTA DE ESPERA: 3</div>
+              </div>
+            </div>
+            <div class="next-row">
+              <div class="next-time">18:00</div>
+              <div>
+                <div class="next-name">Musculação B</div>
+                <div class="next-meta">RAFAEL · 19/20</div>
+              </div>
+            </div>
+            <div class="next-row">
+              <div class="next-time">18:00</div>
+              <div>
+                <div class="next-name">Yoga</div>
+                <div class="next-meta">LETÍCIA · 13/15</div>
+              </div>
+            </div>
+            <div class="next-row">
+              <div class="next-time">19:00</div>
+              <div>
+                <div class="next-name">CrossFit Open</div>
+                <div class="next-meta">RAFAEL · 14/16</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <h4>Instrutores ativos</h4>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;"><span>Rafael</span><span style="font-family: var(--font-mono); color: var(--ink-400);">12 / SEM</span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;"><span>Beatriz</span><span style="font-family: var(--font-mono); color: var(--ink-400);">8 / SEM</span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;"><span>Diego</span><span style="font-family: var(--font-mono); color: var(--ink-400);">10 / SEM</span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;"><span>Letícia</span><span style="font-family: var(--font-mono); color: var(--ink-400);">6 / SEM</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

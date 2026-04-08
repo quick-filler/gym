@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0c0a09">
+<title>Recursos — Gym | Tudo que sua academia precisa para crescer</title>
+<meta name="description" content="Cobrança recorrente via PIX e boleto, agenda de aulas com reservas, fichas de treino, avaliações físicas e app white-label. Gestão completa para academias brasileiras.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://gym.app/features">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gym.app/features">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="Recursos — Gym">
+<meta property="og:description" content="Tudo que sua academia precisa para crescer, num só lugar.">
+<meta property="og:image" content="https://gym.app/og/features.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Recursos — Gym",
+  "description": "Lista completa de recursos do sistema de gestão Gym.",
+  "url": "https://gym.app/features",
+  "isPartOf": { "@type": "WebSite", "name": "Gym", "url": "https://gym.app" },
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Início", "item": "https://gym.app/" },
+      { "@type": "ListItem", "position": 2, "name": "Recursos", "item": "https://gym.app/features" }
+    ]
+  }
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system.css">
+
+<style>
+  .features-hero {
+    padding: 5rem 0 2rem;
+  }
+  .features-hero-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 4rem; align-items: end; }
+  @media (max-width: 880px) { .features-hero-grid { grid-template-columns: 1fr; } }
+  .features-hero h1 {
+    font-size: clamp(2.6rem, 5vw, 4.2rem);
+    letter-spacing: -0.035em; line-height: 0.98;
+  }
+  .features-hero h1 em { font-style: normal; color: var(--flame); font-weight: 500; }
+  .features-hero p {
+    color: var(--ink-500); font-size: 1.18rem; line-height: 1.55;
+    max-width: 30rem;
+  }
+
+  /* Alternating zig-zag rows */
+  .feature-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4rem;
+    align-items: center; padding: 4rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 880px) { .feature-row { grid-template-columns: 1fr; gap: 2rem; padding: 3rem 0; } }
+  .feature-row.reverse .feature-text { order: 2; }
+  @media (max-width: 880px) { .feature-row.reverse .feature-text { order: 0; } }
+  .feature-text .num {
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 500;
+    color: var(--flame); text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 1.25rem; display: block;
+  }
+  .feature-text h2 {
+    font-size: clamp(2rem, 3.4vw, 2.6rem);
+    font-weight: 600; letter-spacing: -0.03em; line-height: 1.05;
+  }
+  .feature-text h2 em { font-style: normal; color: var(--flame); font-weight: 500; }
+  .feature-text > p {
+    color: var(--ink-500); font-size: 1.05rem; margin-top: 1.25rem; line-height: 1.6;
+  }
+  .feature-text ul { list-style: none; margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
+  .feature-text ul li { display: flex; gap: 0.6rem; font-size: 0.95rem; color: var(--ink-700); }
+  .feature-text ul li .icon { color: var(--emerald); margin-top: 0.25em; flex-shrink: 0; }
+
+  .feature-visual {
+    background: #fff; border: 1px solid var(--line);
+    border-radius: var(--r-lg); padding: 2rem;
+    box-shadow: var(--shadow-2);
+    min-height: 360px;
+    display: flex; flex-direction: column; gap: 1rem;
+  }
+
+  /* Visual: payment list */
+  .pay-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.95rem 1.1rem; background: var(--paper-50);
+    border-radius: 14px; font-size: 0.88rem;
+  }
+  .pay-row .who { font-weight: 600; color: var(--ink-900); }
+  .pay-row .desc { font-size: 0.75rem; color: var(--ink-400); margin-top: 0.1rem; }
+
+  /* Visual: calendar */
+  .cal {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+    background: var(--paper-50); padding: 1rem; border-radius: 18px;
+    flex: 1;
+  }
+  .cal .h { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 500; color: var(--ink-400); text-align: center; padding: 0.4rem 0; text-transform: uppercase; letter-spacing: 0.08em; }
+  .cal .d {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-600);
+    background: #fff; border-radius: 8px;
+  }
+  .cal .d.has { background: var(--ink-900); color: #fff; }
+  .cal .d.has-flame { background: var(--flame); color: #fff; }
+  .cal .d.outside { color: var(--ink-300); background: transparent; }
+
+  /* Visual: workout */
+  .ex-row {
+    display: flex; align-items: center; gap: 0.8rem;
+    padding: 0.8rem 0; border-bottom: 1px solid var(--line);
+  }
+  .ex-row:last-child { border-bottom: none; }
+  .ex-num {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--flame-50); color: var(--flame);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .ex-name { font-weight: 600; color: var(--ink-900); flex: 1; font-size: 0.92rem; }
+  .ex-meta { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-400); }
+
+  /* Visual: white-label preview */
+  .wl-card {
+    border-radius: 18px; overflow: hidden;
+    background: var(--ink-900); flex: 1;
+    display: flex; flex-direction: column;
+  }
+  .wl-card.flame { background: var(--flame); }
+  .wl-header { padding: 1.4rem 1.4rem 1.6rem; color: #fff; }
+  .wl-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.7; }
+  .wl-name { font-family: var(--font-display); font-weight: 600; font-size: 1.5rem; margin-top: 0.2rem; }
+  .wl-body { background: #fff; padding: 1.25rem; flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+  .wl-row { display: flex; justify-content: space-between; padding: 0.5rem 0; font-size: 0.85rem; color: var(--ink-600); border-bottom: 1px solid var(--paper-3); }
+  .wl-row:last-child { border-bottom: none; }
+  .wl-row strong { color: var(--ink-900); }
+
+  /* Big stat */
+  .big-stat {
+    display: flex; flex-direction: column; gap: 0.5rem;
+    padding: 1.5rem 1.75rem; background: var(--paper-50); border-radius: 18px;
+  }
+  .big-stat .label { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-400); }
+  .big-stat .value { font-family: var(--font-display); font-size: 2.4rem; font-weight: 600; letter-spacing: -0.03em; line-height: 1; }
+  .big-stat .delta { font-size: 0.78rem; color: var(--emerald); font-weight: 600; }
+
+  /* CTA strip */
+  .cta-strip {
+    background: var(--ink-900); color: var(--paper);
+    border-radius: var(--r-xl); padding: 4rem 3rem;
+    display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; align-items: center;
+  }
+  @media (max-width: 880px) { .cta-strip { grid-template-columns: 1fr; padding: 3rem 2rem; text-align: center; } }
+  .cta-strip h2 { font-size: clamp(1.8rem, 3vw, 2.4rem); color: var(--paper); font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
+  .cta-strip h2 em { font-style: normal; color: var(--flame); font-weight: 500; }
+  .cta-strip-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
+  @media (max-width: 880px) { .cta-strip-actions { justify-content: center; } }
+</style>
+</head>
+<body class="grain">
+
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></symbol>
+    <symbol id="i-dumbbell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.4 14.4 9.6 9.6m9.4 4.8 1.4 1.4M3.6 8.2l1.4 1.4M6 18l1.4-1.4M16.6 6 18 7.4M22 22l-4.4-4.4m0-11.2L22 2M2 22l4.4-4.4"/></symbol>
+    <symbol id="i-instagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></symbol>
+    <symbol id="i-whatsapp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3.6-7.2L21 3l-1.8 3.6A9 9 0 0 1 21 12zM8 11s.5 2 2 3.5S13 17 14 16l1-1-2-2-1 .5s-1.5-1-2-2l.5-1-2-2z"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a href="landing.html" class="brand"><span class="brand-mark"><svg class="icon"><use href="#i-dumbbell"/></svg></span>Gym</a>
+    <nav class="nav-links" aria-label="Principal">
+      <a href="features.html" aria-current="page">Recursos</a>
+      <a href="pricing.html">Preços</a>
+      <a href="about.html">A plataforma</a>
+      <a href="contact.html">Contato</a>
+    </nav>
+    <div class="nav-cta">
+      <button class="btn btn-ghost">Entrar</button>
+      <button class="btn btn-ink">Teste grátis <svg class="icon"><use href="#i-arrow-right"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="features-hero">
+  <div class="wrap">
+    <div class="features-hero-grid">
+      <div>
+        <span class="eyebrow"><span class="eyebrow-dot"></span> Recursos · 100% incluso</span>
+        <h1 style="margin-top: 1.75rem;">Tudo que sua academia precisa.<br><em>Nada que ela não use.</em></h1>
+      </div>
+      <p>Da matrícula à cobrança, da agenda ao treino, do app do aluno aos relatórios — o Gym entrega o caminho inteiro sem te empurrar dezenas de módulos que ninguém abre.</p>
+    </div>
+  </div>
+</section>
+
+<section style="padding: 0;">
+  <div class="wrap">
+
+    <article class="feature-row">
+      <div class="feature-text">
+        <span class="num">01 — Financeiro</span>
+        <h2>Cobrança que <em>roda sozinha</em></h2>
+        <p>Integração nativa com Asaas. PIX, boleto, cartão recorrente. O sistema cria, envia, cobra atrasados e atualiza o status do aluno automaticamente. Você só olha o painel.</p>
+        <ul>
+          <li><svg class="icon"><use href="#i-check"/></svg> PIX, boleto e cartão de crédito</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Régua de cobrança automática</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Conciliação automática via webhook</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Recibos enviados por e-mail e WhatsApp</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Sem taxa em cima das transações</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="big-stat">
+          <span class="label">Receita do mês</span>
+          <span class="value">R$ 18.420</span>
+          <span class="delta">+8,2% vs mês anterior</span>
+        </div>
+        <div class="pay-row"><div><div class="who">João Silva</div><div class="desc">Mensal · PIX</div></div><span class="pill pill-emerald">PAGO</span></div>
+        <div class="pay-row"><div><div class="who">Ana Costa</div><div class="desc">Trimestral · Cartão</div></div><span class="pill pill-emerald">PAGO</span></div>
+        <div class="pay-row"><div><div class="who">Carlos Souza</div><div class="desc">Mensal · Boleto</div></div><span class="pill pill-amber">PENDENTE</span></div>
+      </div>
+    </article>
+
+    <article class="feature-row reverse">
+      <div class="feature-text">
+        <span class="num">02 — Operação</span>
+        <h2>Agenda + reservas<br><em>numa interface só</em></h2>
+        <p>Crie a grade semanal por turma, defina capacidade, e deixe os alunos reservarem direto pelo app. Você acompanha presença em tempo real e evita salas lotadas.</p>
+        <ul>
+          <li><svg class="icon"><use href="#i-check"/></svg> Grade semanal por instrutor e sala</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Reserva pelo app do aluno</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Check-in via QR Code ou manual</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Lista de espera automática</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Notificações push 1h antes da aula</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div><div class="big-stat" style="background: transparent; padding: 0;"><span class="label">Abril 2026</span><span class="value" style="font-size: 1.5rem;">94% de ocupação</span></div></div>
+          <span class="pill pill-flame">8 AULAS HOJE</span>
+        </div>
+        <div class="cal">
+          <div class="h">D</div><div class="h">S</div><div class="h">T</div><div class="h">Q</div><div class="h">Q</div><div class="h">S</div><div class="h">S</div>
+          <div class="d outside">30</div><div class="d">31</div><div class="d has">1</div><div class="d">2</div><div class="d has">3</div><div class="d">4</div><div class="d">5</div>
+          <div class="d">6</div><div class="d has">7</div><div class="d has-flame">8</div><div class="d has">9</div><div class="d">10</div><div class="d has">11</div><div class="d">12</div>
+          <div class="d">13</div><div class="d has">14</div><div class="d has">15</div><div class="d has">16</div><div class="d">17</div><div class="d has">18</div><div class="d">19</div>
+          <div class="d">20</div><div class="d has">21</div><div class="d has">22</div><div class="d has">23</div><div class="d">24</div><div class="d has">25</div><div class="d">26</div>
+          <div class="d">27</div><div class="d has">28</div><div class="d has">29</div><div class="d has">30</div><div class="d outside">1</div><div class="d outside">2</div><div class="d outside">3</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="feature-row">
+      <div class="feature-text">
+        <span class="num">03 — Treinos</span>
+        <h2>Fichas de treino<br><em>sem PDF, sem WhatsApp</em></h2>
+        <p>Crie treinos personalizados pro aluno direto no painel. Ele acessa pelo app, marca os exercícios feitos, vê o histórico. O instrutor atualiza, o aluno recebe na hora.</p>
+        <ul>
+          <li><svg class="icon"><use href="#i-check"/></svg> Editor de fichas com biblioteca de exercícios</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Vídeos demonstrativos por exercício</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Histórico de carga e progresso</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Atualização sem precisar reenviar</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line);">
+          <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--flame-50); display: flex; align-items: center; justify-content: center; color: var(--flame);"><svg class="icon icon-lg"><use href="#i-dumbbell"/></svg></div>
+          <div>
+            <div style="font-family: var(--font-display); font-weight: 600;">Treino A — Peito e Tríceps</div>
+            <div style="font-size: 0.78rem; color: var(--ink-400); font-family: var(--font-mono);">RAFAEL · ATUALIZADO 03/04</div>
+          </div>
+        </div>
+        <div class="ex-row"><div class="ex-num">1</div><div class="ex-name">Supino reto</div><div class="ex-meta">4×12 · 60kg</div></div>
+        <div class="ex-row"><div class="ex-num">2</div><div class="ex-name">Crucifixo inclinado</div><div class="ex-meta">3×15 · 16kg</div></div>
+        <div class="ex-row"><div class="ex-num">3</div><div class="ex-name">Tríceps corda</div><div class="ex-meta">4×12 · 25kg</div></div>
+        <div class="ex-row"><div class="ex-num">4</div><div class="ex-name">Mergulho assistido</div><div class="ex-meta">3×10</div></div>
+      </div>
+    </article>
+
+    <article class="feature-row reverse">
+      <div class="feature-text">
+        <span class="num">04 — Marca</span>
+        <h2>App white-label.<br><em>Seu, não nosso.</em></h2>
+        <p>O aluno baixa o app da sua academia, com a sua logo, as suas cores, o seu subdomínio. A gente fica invisível. Para ele, é só "o app da CrossFit SP" — e essa é exatamente a ideia.</p>
+        <ul>
+          <li><svg class="icon"><use href="#i-check"/></svg> Logo + duas cores principais</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Subdomínio próprio (suaacademia.gym.app)</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Domínio próprio via CNAME (Business)</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> PWA instalável (sem ir pra loja)</li>
+        </ul>
+      </div>
+      <div class="feature-visual" style="padding: 0;">
+        <div class="wl-card flame">
+          <div class="wl-header">
+            <div class="wl-label">CROSSFIT SP — APP DO ALUNO</div>
+            <div class="wl-name">Bem-vindo, João</div>
+          </div>
+          <div class="wl-body">
+            <div class="wl-row"><span>Próxima aula</span><strong>Hoje, 18:00</strong></div>
+            <div class="wl-row"><span>Plano</span><strong>Mensal · R$ 99</strong></div>
+            <div class="wl-row"><span>Vencimento</span><strong>15/05/2026</strong></div>
+            <div class="wl-row"><span>Treino atual</span><strong>Treino A</strong></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="feature-row" style="border-bottom: none;">
+      <div class="feature-text">
+        <span class="num">05 — Inteligência</span>
+        <h2>Relatórios que respondem<br><em>perguntas de verdade</em></h2>
+        <p>Quem é seu aluno mais engajado? Qual instrutor lota mais aula? Em que mês a inadimplência sobe? Tudo com filtros, exportação CSV e gráficos que cabem na tela do celular do dono.</p>
+        <ul>
+          <li><svg class="icon"><use href="#i-check"/></svg> MRR, churn e retenção mês a mês</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Frequência por aluno, instrutor e modalidade</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Inadimplência por plano e por canal</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Exportação CSV e dashboards salvos</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div class="big-stat"><span class="label">Alunos ativos</span><span class="value">248</span><span class="delta">+12 este mês</span></div>
+          <div class="big-stat"><span class="label">Retenção 90d</span><span class="value">87%</span><span class="delta">+2,1pp</span></div>
+        </div>
+        <div class="big-stat" style="margin-top: 0.75rem;">
+          <span class="label">Receita últimos 6 meses</span>
+          <svg viewBox="0 0 320 80" preserveAspectRatio="none" style="width: 100%; height: 80px; margin-top: 0.4rem;">
+            <defs>
+              <linearGradient id="gz" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8551c" stop-opacity="0.22"/><stop offset="100%" stop-color="#e8551c" stop-opacity="0"/></linearGradient>
+            </defs>
+            <path d="M0,60 L53,55 L106,48 L160,52 L213,38 L266,28 L320,12 L320,80 L0,80 Z" fill="url(#gz)"/>
+            <path d="M0,60 L53,55 L106,48 L160,52 L213,38 L266,28 L320,12" fill="none" stroke="#e8551c" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<section style="background: var(--paper-50); border-top: 1px solid var(--line);">
+  <div class="wrap">
+    <div class="cta-strip">
+      <h2>Pronto pra ver isso<br>rodando na <em>sua academia?</em></h2>
+      <div class="cta-strip-actions">
+        <button class="btn btn-flame">Começar grátis <svg class="icon"><use href="#i-arrow-right"/></svg></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="marketing-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="landing.html" class="brand"><span class="brand-mark"><svg class="icon"><use href="#i-dumbbell"/></svg></span>Gym</a>
+        <p>Sistema de gestão para academias brasileiras que querem voltar a olhar pros alunos, não pra planilha.</p>
+      </div>
+      <div class="footer-col"><h5>Produto</h5><ul><li><a href="features.html">Recursos</a></li><li><a href="pricing.html">Preços</a></li><li><a href="#">App do aluno</a></li><li><a href="#">Integração Asaas</a></li></ul></div>
+      <div class="footer-col"><h5>Empresa</h5><ul><li><a href="about.html">Sobre</a></li><li><a href="#">Blog</a></li><li><a href="contact.html">Contato</a></li><li><a href="#">Carreiras</a></li></ul></div>
+      <div class="footer-col"><h5>Legal</h5><ul><li><a href="#">Termos de uso</a></li><li><a href="#">Privacidade (LGPD)</a></li><li><a href="#">Status</a></li><li><a href="#">Suporte</a></li></ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Gym. Todos os direitos reservados.</span>
+      <div style="display: flex; gap: 1rem;"><a href="#" aria-label="Instagram"><svg class="icon icon-lg"><use href="#i-instagram"/></svg></a><a href="#" aria-label="WhatsApp"><svg class="icon icon-lg"><use href="#i-whatsapp"/></svg></a></div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

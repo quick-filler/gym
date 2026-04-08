@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0c0a09">
+<title>A plataforma — Gym | Sobre nós</title>
+<meta name="description" content="O Gym foi feito por gente que treina, em diálogo com donos de academia brasileiros. Conheça o time, a história e por que apostamos em white-label desde o primeiro dia.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://gym.app/about">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gym.app/about">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="A plataforma — Gym">
+<meta property="og:description" content="A história e a equipe por trás do sistema.">
+<meta property="og:image" content="https://gym.app/og/about.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "name": "A plataforma — Gym",
+  "url": "https://gym.app/about",
+  "mainEntity": {
+    "@type": "Organization",
+    "name": "Gym",
+    "url": "https://gym.app",
+    "logo": "https://gym.app/logo.svg",
+    "description": "Plataforma white-label de gestão para academias brasileiras.",
+    "foundingDate": "2025",
+    "numberOfEmployees": { "@type": "QuantitativeValue", "value": 6 },
+    "areaServed": { "@type": "Country", "name": "Brasil" }
+  }
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system.css">
+
+<style>
+  .about-hero { padding: 6rem 0 4rem; }
+  .about-hero h1 {
+    font-size: clamp(2.8rem, 6vw, 5rem);
+    letter-spacing: -0.04em; line-height: 0.96;
+    max-width: 18ch;
+  }
+  .about-hero h1 em { font-style: normal; color: var(--flame); font-weight: 500; }
+  .about-hero p {
+    color: var(--ink-500); font-size: 1.18rem; line-height: 1.55;
+    margin-top: 2rem; max-width: 38rem;
+  }
+
+  /* Big stats grid */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    margin-top: 4rem;
+  }
+  @media (max-width: 720px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat {
+    padding: 2.5rem 1.75rem; border-right: 1px solid var(--line);
+  }
+  .stat:last-child { border-right: none; }
+  @media (max-width: 720px) { .stat:nth-child(2) { border-right: none; } .stat { border-bottom: 1px solid var(--line); } .stat:nth-last-child(-n+2) { border-bottom: none; } }
+  .stat-num { font-family: var(--font-display); font-size: 3rem; font-weight: 600; letter-spacing: -0.035em; line-height: 1; }
+  .stat-label { font-size: 0.85rem; color: var(--ink-500); margin-top: 0.5rem; }
+
+  /* Story */
+  .story {
+    display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 5rem;
+    align-items: start;
+  }
+  @media (max-width: 980px) { .story { grid-template-columns: 1fr; gap: 3rem; } }
+  .story-side { position: sticky; top: 100px; }
+  .story-side h2 {
+    font-size: clamp(2rem, 3.4vw, 2.6rem);
+    letter-spacing: -0.03em; line-height: 1.05;
+  }
+  .story-side h2 em { font-style: normal; color: var(--flame); font-weight: 500; }
+  .story-content p {
+    color: var(--ink-600); font-size: 1.05rem; line-height: 1.7;
+    max-width: 38rem; margin-bottom: 1.5rem;
+  }
+  .story-content p strong { color: var(--ink-900); }
+
+  .pull-quote {
+    border-left: 3px solid var(--flame);
+    padding: 0.5rem 0 0.5rem 1.5rem;
+    margin: 2.5rem 0;
+    font-family: var(--font-display);
+    font-size: 1.5rem; line-height: 1.3;
+    font-weight: 500; color: var(--ink-900); letter-spacing: -0.015em;
+  }
+
+  /* Values grid */
+  .values {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+  }
+  @media (max-width: 880px) { .values { grid-template-columns: 1fr; } }
+  .value {
+    padding: 2rem;
+    background: #fff; border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+  }
+  .value-num {
+    font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500;
+    color: var(--flame); text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 1.25rem;
+  }
+  .value h3 { font-size: 1.3rem; margin-bottom: 0.6rem; letter-spacing: -0.02em; }
+  .value p { font-size: 0.92rem; color: var(--ink-500); line-height: 1.55; }
+
+  /* Team */
+  .team {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;
+  }
+  @media (max-width: 880px) { .team { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .team { grid-template-columns: 1fr; } }
+  .member {
+    display: flex; flex-direction: column; gap: 0.65rem;
+  }
+  .member-avatar {
+    aspect-ratio: 1; border-radius: var(--r-lg);
+    background: linear-gradient(135deg, var(--paper-2), var(--paper-3));
+    position: relative; overflow: hidden;
+    display: flex; align-items: end; padding: 1.5rem;
+  }
+  .member-avatar.flame { background: linear-gradient(155deg, var(--flame), var(--flame-dark)); color: #fff; }
+  .member-avatar.ink { background: var(--ink-900); color: var(--paper); }
+  .member-avatar .initials {
+    font-family: var(--font-display); font-weight: 600; font-size: 3rem;
+    letter-spacing: -0.04em; line-height: 1;
+  }
+  .member-name { font-weight: 600; color: var(--ink-900); font-size: 1rem; }
+  .member-role { font-size: 0.82rem; color: var(--ink-400); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; }
+</style>
+</head>
+<body class="grain">
+
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-dumbbell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.4 14.4 9.6 9.6m9.4 4.8 1.4 1.4M3.6 8.2l1.4 1.4M6 18l1.4-1.4M16.6 6 18 7.4M22 22l-4.4-4.4m0-11.2L22 2M2 22l4.4-4.4"/></symbol>
+    <symbol id="i-instagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></symbol>
+    <symbol id="i-whatsapp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3.6-7.2L21 3l-1.8 3.6A9 9 0 0 1 21 12zM8 11s.5 2 2 3.5S13 17 14 16l1-1-2-2-1 .5s-1.5-1-2-2l.5-1-2-2z"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a href="landing.html" class="brand"><span class="brand-mark"><svg class="icon"><use href="#i-dumbbell"/></svg></span>Gym</a>
+    <nav class="nav-links" aria-label="Principal">
+      <a href="features.html">Recursos</a>
+      <a href="pricing.html">Preços</a>
+      <a href="about.html" aria-current="page">A plataforma</a>
+      <a href="contact.html">Contato</a>
+    </nav>
+    <div class="nav-cta">
+      <button class="btn btn-ghost">Entrar</button>
+      <button class="btn btn-ink">Teste grátis <svg class="icon"><use href="#i-arrow-right"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="about-hero">
+  <div class="wrap">
+    <span class="eyebrow"><span class="eyebrow-dot"></span> A plataforma · Desde 2025</span>
+    <h1 style="margin-top: 1.75rem;">Software pra academia,<br>feito por gente que <em>treina.</em></h1>
+    <p>O Gym começou numa academia de Vila Mariana em São Paulo, com um instrutor reclamando da planilha. A gente respondeu uma mensagem no Instagram e nunca mais parou de conversar com donos de academia.</p>
+  </div>
+
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat"><div class="stat-num">240+</div><div class="stat-label">Academias ativas</div></div>
+      <div class="stat"><div class="stat-num">38k</div><div class="stat-label">Alunos cadastrados</div></div>
+      <div class="stat"><div class="stat-num">R$ 4,8M</div><div class="stat-label">Em cobranças/mês</div></div>
+      <div class="stat"><div class="stat-num">99,97%</div><div class="stat-label">Uptime trimestral</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="story">
+      <aside class="story-side">
+        <span class="section-eyebrow">Nossa história</span>
+        <h2>Porque <em>white-label</em> não é detalhe — é o produto.</h2>
+      </aside>
+      <div class="story-content">
+        <p>A primeira versão era literalmente uma planilha turbinada. Daí o Rafael, dono da CrossFit SP, falou: <strong>"o problema não é a planilha, é que o aluno me liga toda hora."</strong> A gente passou três meses só falando com aluno. O resultado: o app é a primeira coisa, o painel é a segunda.</p>
+        <p>A gente percebeu cedo que a maioria dos sistemas brasileiros entregava um "app do aluno" com a logo deles, não da academia. Pra quem tá começando a montar a marca, isso é pedir pra dar errado. Por isso o Gym é white-label desde a primeira versão — o aluno baixa o app da <strong>CrossFit SP</strong>, não do Gym. A gente fica invisível.</p>
+        <div class="pull-quote">
+          "O dono da academia não quer aparecer no nosso app. Quer que o aluno dele se sinta na casa dele. A gente é a casa-máquina."
+        </div>
+        <p>Hoje somos seis pessoas em São Paulo, todo mundo treinando em alguma das academias clientes (a gente revesa). A roadmap pública é discutida em um grupo de WhatsApp com os donos. As próximas três features sempre vêm de lá — não de uma reunião nossa.</p>
+        <p>Não temos rodada de investimento. Não temos pressa de virar unicórnio. Temos pressa de fazer o aluno do Carlos Souza encontrar a próxima aula sem ter que ligar pra recepção.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background: var(--paper-50); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+  <div class="wrap">
+    <header class="section-header">
+      <span class="section-eyebrow">Princípios</span>
+      <h2 class="section-title">Como a gente decide<br>o que vai (e o que não vai).</h2>
+    </header>
+
+    <div class="values">
+      <article class="value">
+        <div class="value-num">01</div>
+        <h3>Funciona, depois fica bonito.</h3>
+        <p>A gente prefere lançar uma feature feia que resolve um problema do que polir três meses uma feature que ninguém vai usar. Bonito vem na segunda iteração.</p>
+      </article>
+      <article class="value">
+        <div class="value-num">02</div>
+        <h3>O aluno vem antes do dono.</h3>
+        <p>Sim, o dono paga. Mas se o app do aluno trava, o dono perde aluno. Otimizar a experiência do aluno é otimizar o LTV do dono. A ordem importa.</p>
+      </article>
+      <article class="value">
+        <div class="value-num">03</div>
+        <h3>Sem dark patterns. Sem surpresa.</h3>
+        <p>Cancelar é um clique. Os dados são exportáveis a qualquer momento. A gente não tem fidelidade, não esconde botão de cancelamento, não cobra fee surpresa em transação.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <header class="section-header">
+      <span class="section-eyebrow">Time</span>
+      <h2 class="section-title">Quem tá por trás disso.</h2>
+      <p class="section-sub">Seis pessoas, todas em São Paulo, todas treinando em academias clientes. A gente conhece de perto o que constrói.</p>
+    </header>
+
+    <div class="team">
+      <div class="member">
+        <div class="member-avatar flame"><span class="initials">RV</span></div>
+        <div class="member-name">Rafael Vasconcellos</div>
+        <div class="member-role">CO-FUNDADOR · PRODUTO</div>
+      </div>
+      <div class="member">
+        <div class="member-avatar ink"><span class="initials">BO</span></div>
+        <div class="member-name">Beatriz Okamoto</div>
+        <div class="member-role">CO-FUNDADORA · ENG</div>
+      </div>
+      <div class="member">
+        <div class="member-avatar"><span class="initials" style="color: var(--ink-700);">DF</span></div>
+        <div class="member-name">Diego Ferraz</div>
+        <div class="member-role">DESIGN</div>
+      </div>
+      <div class="member">
+        <div class="member-avatar"><span class="initials" style="color: var(--ink-700);">MG</span></div>
+        <div class="member-name">Mariana Guedes</div>
+        <div class="member-role">SUCESSO DO CLIENTE</div>
+      </div>
+      <div class="member">
+        <div class="member-avatar"><span class="initials" style="color: var(--ink-700);">TM</span></div>
+        <div class="member-name">Tiago Maciel</div>
+        <div class="member-role">ENG · BACKEND</div>
+      </div>
+      <div class="member">
+        <div class="member-avatar flame"><span class="initials">LH</span></div>
+        <div class="member-name">Letícia Hwang</div>
+        <div class="member-role">FINANCEIRO · OPS</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top: 2rem;">
+  <div class="wrap">
+    <div style="background: var(--ink-900); color: var(--paper); border-radius: var(--r-xl); padding: 5rem 3rem; text-align: center; position: relative; overflow: hidden;">
+      <div style="position: absolute; inset: 0; background: radial-gradient(circle at 50% 100%, rgba(232,85,28,0.18) 0%, transparent 60%); pointer-events: none;"></div>
+      <h2 style="font-size: clamp(2rem, 4.5vw, 3.4rem); color: var(--paper); font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; max-width: 18ch; margin: 0 auto; position: relative;">Quer conversar com a gente?</h2>
+      <p style="color: rgba(250, 248, 245, 0.55); font-size: 1.05rem; margin: 1.5rem auto 2.5rem; max-width: 32rem; position: relative;">Bate um papo de 20 minutos, sem compromisso. A gente entende a sua academia e te mostra se faz sentido — sem pitch, sem vendedor.</p>
+      <a href="contact.html" class="btn btn-flame" style="position: relative;">Marcar conversa <svg class="icon"><use href="#i-arrow-right"/></svg></a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="marketing-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="landing.html" class="brand"><span class="brand-mark"><svg class="icon"><use href="#i-dumbbell"/></svg></span>Gym</a>
+        <p>Sistema de gestão para academias brasileiras que querem voltar a olhar pros alunos, não pra planilha.</p>
+      </div>
+      <div class="footer-col"><h5>Produto</h5><ul><li><a href="features.html">Recursos</a></li><li><a href="pricing.html">Preços</a></li><li><a href="#">App do aluno</a></li><li><a href="#">Integração Asaas</a></li></ul></div>
+      <div class="footer-col"><h5>Empresa</h5><ul><li><a href="about.html">Sobre</a></li><li><a href="#">Blog</a></li><li><a href="contact.html">Contato</a></li><li><a href="#">Carreiras</a></li></ul></div>
+      <div class="footer-col"><h5>Legal</h5><ul><li><a href="#">Termos de uso</a></li><li><a href="#">Privacidade (LGPD)</a></li><li><a href="#">Status</a></li><li><a href="#">Suporte</a></li></ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Gym. Todos os direitos reservados.</span>
+      <div style="display: flex; gap: 1rem;"><a href="#" aria-label="Instagram"><svg class="icon icon-lg"><use href="#i-instagram"/></svg></a><a href="#" aria-label="WhatsApp"><svg class="icon icon-lg"><use href="#i-whatsapp"/></svg></a></div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

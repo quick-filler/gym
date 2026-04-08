@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0c0a09">
+<title>Preços — Gym | Sistema de gestão para academias</title>
+<meta name="description" content="Planos a partir de R$ 99/mês. PIX, boleto e cartão inclusos. 14 dias grátis sem cartão de crédito. Cancele quando quiser, sem fidelidade.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://gym.app/pricing">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gym.app/pricing">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="Gym">
+<meta property="og:title" content="Preços — Gym">
+<meta property="og:description" content="Planos a partir de R$ 99/mês. 14 dias grátis sem cartão.">
+<meta property="og:image" content="https://gym.app/og/pricing.png">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Preços — Gym">
+<meta name="twitter:description" content="Planos a partir de R$ 99/mês. 14 dias grátis sem cartão.">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Gym — Sistema de gestão para academias",
+  "description": "Software white-label para academias brasileiras com cobrança recorrente, agenda e fichas de treino.",
+  "brand": { "@type": "Brand", "name": "Gym" },
+  "offers": [
+    { "@type": "Offer", "name": "Starter",  "price": "99.00",  "priceCurrency": "BRL", "url": "https://gym.app/pricing#starter",  "availability": "https://schema.org/InStock", "category": "SaaS subscription" },
+    { "@type": "Offer", "name": "Business", "price": "199.00", "priceCurrency": "BRL", "url": "https://gym.app/pricing#business", "availability": "https://schema.org/InStock", "category": "SaaS subscription" },
+    { "@type": "Offer", "name": "Pro",      "price": "399.00", "priceCurrency": "BRL", "url": "https://gym.app/pricing#pro",      "availability": "https://schema.org/InStock", "category": "SaaS subscription" }
+  ],
+  "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "127" }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Início", "item": "https://gym.app/" },
+    { "@type": "ListItem", "position": 2, "name": "Preços", "item": "https://gym.app/pricing" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Posso cancelar quando quiser?", "acceptedAnswer": { "@type": "Answer", "text": "Sim, sem fidelidade nem multa. Os dados ficam disponíveis para exportação por mais 30 dias após o cancelamento." } },
+    { "@type": "Question", "name": "Os 14 dias grátis exigem cartão de crédito?", "acceptedAnswer": { "@type": "Answer", "text": "Não. Você cria a conta com e-mail e senha e tem acesso completo por 14 dias sem cadastrar cartão." } },
+    { "@type": "Question", "name": "O que acontece quando eu ultrapasso o limite de alunos?", "acceptedAnswer": { "@type": "Answer", "text": "Você recebe um aviso e pode optar por fazer upgrade. O sistema não bloqueia automaticamente — a gente conversa antes." } }
+  ]
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system.css">
+
+<style>
+  /* page-specific */
+  .pricing-hero {
+    padding: 5rem 0 2rem;
+    text-align: center;
+  }
+  .pricing-hero h1 {
+    font-size: clamp(2.6rem, 5vw, 4rem);
+    letter-spacing: -0.035em; line-height: 1;
+    max-width: 16ch; margin: 0 auto 1.5rem;
+  }
+  .pricing-hero h1 em { font-style: normal; color: var(--flame); font-weight: 500; }
+  .pricing-hero p {
+    color: var(--ink-500); font-size: 1.15rem;
+    max-width: 40rem; margin: 0 auto;
+  }
+  .toggle {
+    margin: 2.5rem auto 0; display: inline-flex;
+    background: var(--paper-2); padding: 4px; border-radius: 999px;
+    border: 1px solid var(--line-strong);
+  }
+  .toggle button {
+    padding: 0.6rem 1.4rem; border-radius: 999px;
+    background: transparent; border: none; cursor: pointer;
+    font-weight: 500; font-size: 0.88rem; color: var(--ink-500);
+  }
+  .toggle button.active { background: var(--ink-900); color: var(--paper); }
+  .toggle .save { font-family: var(--font-mono); font-size: 0.7rem; color: var(--flame); margin-left: 0.4rem; }
+
+  .plans-row {
+    display: grid; grid-template-columns: 1fr 1.1fr 1fr; gap: 1.5rem;
+    margin-top: 3rem; align-items: start;
+  }
+  @media (max-width: 980px) { .plans-row { grid-template-columns: 1fr; } }
+  .plan {
+    background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg);
+    padding: 2.5rem 2.25rem; display: flex; flex-direction: column;
+  }
+  .plan-name { font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; margin-bottom: 0.4rem; }
+  .plan-tag { color: var(--ink-400); font-size: 0.88rem; margin-bottom: 1.5rem; }
+  .plan-price { font-family: var(--font-display); font-size: 3.2rem; font-weight: 600; line-height: 1; letter-spacing: -0.035em; }
+  .plan-price .currency { font-size: 1.4rem; vertical-align: 0.95rem; color: var(--ink-400); margin-right: 0.2rem; font-weight: 500; }
+  .plan-price .period { font-size: 1rem; color: var(--ink-400); font-weight: 400; }
+  .plan ul {
+    list-style: none; margin: 2rem 0;
+    padding-top: 1.5rem; border-top: 1px solid var(--line);
+    display: flex; flex-direction: column; gap: 0.85rem;
+  }
+  .plan ul li { font-size: 0.93rem; color: var(--ink-600); display: flex; align-items: flex-start; gap: 0.6rem; }
+  .plan ul li .icon { color: var(--emerald); flex-shrink: 0; margin-top: 0.18em; }
+  .plan ul li.muted { color: var(--ink-300); }
+  .plan ul li.muted .icon { color: var(--ink-300); }
+  .plan-cta {
+    margin-top: auto; padding: 1rem; border-radius: 12px;
+    background: var(--ink-900); color: var(--paper);
+    text-align: center; font-weight: 500; font-size: 0.95rem;
+    border: none; cursor: pointer; transition: background 0.18s, transform 0.18s;
+    font-family: var(--font-body);
+  }
+  .plan-cta:hover { background: var(--ink-700); }
+  .plan.featured {
+    background: var(--ink-900); color: var(--paper); border-color: var(--ink-900);
+    transform: translateY(-12px); box-shadow: var(--shadow-3);
+  }
+  .plan.featured .plan-name, .plan.featured .plan-price { color: var(--paper); }
+  .plan.featured .plan-tag { color: rgba(250, 248, 245, 0.55); }
+  .plan.featured .plan-price .currency, .plan.featured .plan-price .period { color: rgba(250, 248, 245, 0.55); }
+  .plan.featured ul { border-top-color: rgba(255,255,255,0.1); }
+  .plan.featured ul li { color: rgba(250, 248, 245, 0.78); }
+  .plan.featured ul li .icon { color: var(--flame); }
+  .plan.featured .plan-cta { background: var(--flame); color: #fff; }
+  .plan.featured .plan-cta:hover { background: var(--flame-dark); }
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.3rem 0.7rem; background: var(--flame); color: #fff;
+    border-radius: 999px; font-size: 0.7rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem;
+  }
+
+  /* Comparison table */
+  .compare {
+    margin-top: 5rem; background: #fff; border: 1px solid var(--line);
+    border-radius: var(--r-lg); overflow: hidden;
+  }
+  .compare table { width: 100%; border-collapse: collapse; }
+  .compare th, .compare td {
+    padding: 1.1rem 1.5rem; text-align: left; font-size: 0.92rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .compare thead th {
+    background: var(--paper-50); font-weight: 600;
+    font-family: var(--font-display);
+  }
+  .compare thead th:first-child { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 500; color: var(--ink-400); text-transform: uppercase; letter-spacing: 0.08em; }
+  .compare th.featured { background: var(--ink-900); color: var(--paper); }
+  .compare td.featured { background: rgba(12, 10, 9, 0.025); font-weight: 600; }
+  .compare td.center { text-align: center; }
+  .compare td .icon { color: var(--emerald); }
+  .compare td .icon.no { color: var(--ink-200); }
+  .compare tbody tr:last-child td { border-bottom: none; }
+  .compare .group {
+    background: var(--paper-50);
+    font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500;
+    color: var(--ink-400); text-transform: uppercase; letter-spacing: 0.1em;
+  }
+
+  .faq-light .faq-list details { border-top: 1px solid var(--line); padding: 1.5rem 0; cursor: pointer; }
+  .faq-light .faq-list details:last-child { border-bottom: 1px solid var(--line); }
+  .faq-light .faq-list summary {
+    font-family: var(--font-display); font-size: 1.1rem; font-weight: 500;
+    list-style: none; display: flex; justify-content: space-between; align-items: center;
+    padding-right: 32px; position: relative;
+  }
+  .faq-light .faq-list summary::-webkit-details-marker { display: none; }
+  .faq-light .faq-list summary::after {
+    content: ""; width: 18px; height: 2px; background: var(--ink-900);
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+  }
+  .faq-light .faq-list summary::before {
+    content: ""; width: 2px; height: 18px; background: var(--ink-900);
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%); transition: transform 0.2s;
+  }
+  .faq-light .faq-list details[open] summary::before { transform: translateY(-50%) rotate(90deg); }
+  .faq-light .faq-list details p { margin-top: 1rem; color: var(--ink-500); font-size: 0.95rem; line-height: 1.6; }
+</style>
+</head>
+<body class="grain">
+
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-dumbbell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.4 14.4 9.6 9.6m9.4 4.8 1.4 1.4M3.6 8.2l1.4 1.4M6 18l1.4-1.4M16.6 6 18 7.4M22 22l-4.4-4.4m0-11.2L22 2M2 22l4.4-4.4"/></symbol>
+    <symbol id="i-instagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></symbol>
+    <symbol id="i-whatsapp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3.6-7.2L21 3l-1.8 3.6A9 9 0 0 1 21 12zM8 11s.5 2 2 3.5S13 17 14 16l1-1-2-2-1 .5s-1.5-1-2-2l.5-1-2-2z"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a href="landing.html" class="brand"><span class="brand-mark"><svg class="icon"><use href="#i-dumbbell"/></svg></span>Gym</a>
+    <nav class="nav-links" aria-label="Principal">
+      <a href="features.html">Recursos</a>
+      <a href="pricing.html" aria-current="page">Preços</a>
+      <a href="about.html">A plataforma</a>
+      <a href="contact.html">Contato</a>
+    </nav>
+    <div class="nav-cta">
+      <button class="btn btn-ghost">Entrar</button>
+      <button class="btn btn-ink">Teste grátis <svg class="icon"><use href="#i-arrow-right"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="pricing-hero">
+  <div class="wrap wrap-tight">
+    <span class="eyebrow"><span class="eyebrow-dot"></span> 14 dias grátis · Sem cartão</span>
+    <h1 style="margin-top:1.75rem;">Preços <em>justos</em>. Sem letras miúdas.</h1>
+    <p>Você paga por mês, sem fidelidade, sem taxa por aluno e sem fee em cima das transações do Asaas. Mude de plano ou cancele quando quiser.</p>
+    <div class="toggle" role="tablist">
+      <button class="active" role="tab">Mensal</button>
+      <button role="tab">Anual <span class="save">−2 meses</span></button>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top: 0;">
+  <div class="wrap">
+    <div class="plans-row">
+      <article class="plan" id="starter">
+        <div class="plan-name">Starter</div>
+        <p class="plan-tag">Para academias começando do zero</p>
+        <div class="plan-price"><span class="currency">R$</span>99<span class="period">/mês</span></div>
+        <ul>
+          <li><svg class="icon"><use href="#i-check"/></svg> Até 50 alunos ativos</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Agenda + reservas</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Cobrança PIX e boleto</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> App white-label</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Fichas de treino</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Suporte por e-mail</li>
+        </ul>
+        <button class="plan-cta">Começar grátis</button>
+      </article>
+
+      <article class="plan featured" id="business">
+        <span class="badge">Mais escolhido</span>
+        <div class="plan-name">Business</div>
+        <p class="plan-tag">Para crescer com confiança</p>
+        <div class="plan-price"><span class="currency">R$</span>199<span class="period">/mês</span></div>
+        <ul>
+          <li><svg class="icon"><use href="#i-check"/></svg> Até 200 alunos ativos</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Tudo do Starter, mais:</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Cartão recorrente</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Cobrança automática de inadimplentes</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Relatórios financeiros e de retenção</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Avaliações físicas + histórico</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Suporte WhatsApp prioritário</li>
+        </ul>
+        <button class="plan-cta">Começar grátis</button>
+      </article>
+
+      <article class="plan" id="pro">
+        <div class="plan-name">Pro</div>
+        <p class="plan-tag">Para academias com várias unidades</p>
+        <div class="plan-price"><span class="currency">R$</span>399<span class="period">/mês</span></div>
+        <ul>
+          <li><svg class="icon"><use href="#i-check"/></svg> Alunos ilimitados</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Tudo do Business, mais:</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Multi-unidade</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> CRM integrado</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> API + webhooks</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Single Sign-On (SSO)</li>
+          <li><svg class="icon"><use href="#i-check"/></svg> Gerente de conta dedicado</li>
+        </ul>
+        <button class="plan-cta">Falar com vendas</button>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section style="background: var(--paper-50); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+  <div class="wrap">
+    <header class="section-header">
+      <span class="section-eyebrow">Comparativo</span>
+      <h2 class="section-title">Tudo o que está em cada plano,<br>sem surpresas.</h2>
+    </header>
+
+    <div class="compare">
+      <table>
+        <thead>
+          <tr>
+            <th>Recurso</th>
+            <th>Starter</th>
+            <th class="featured">Business</th>
+            <th>Pro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="4" class="group">Alunos e usuários</td></tr>
+          <tr><td>Alunos ativos</td><td>50</td><td class="featured">200</td><td>Ilimitado</td></tr>
+          <tr><td>Instrutores</td><td>2</td><td class="featured">10</td><td>Ilimitado</td></tr>
+          <tr><td>Administradores</td><td>1</td><td class="featured">3</td><td>Ilimitado</td></tr>
+
+          <tr><td colspan="4" class="group">Cobrança</td></tr>
+          <tr><td>PIX e boleto</td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td><td class="center featured"><svg class="icon"><use href="#i-check"/></svg></td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td></tr>
+          <tr><td>Cartão recorrente</td><td class="center"><svg class="icon no"><use href="#i-x"/></svg></td><td class="center featured"><svg class="icon"><use href="#i-check"/></svg></td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td></tr>
+          <tr><td>Régua de cobrança</td><td class="center"><svg class="icon no"><use href="#i-x"/></svg></td><td class="center featured"><svg class="icon"><use href="#i-check"/></svg></td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td></tr>
+          <tr><td>Conciliação automática</td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td><td class="center featured"><svg class="icon"><use href="#i-check"/></svg></td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td></tr>
+
+          <tr><td colspan="4" class="group">Operação</td></tr>
+          <tr><td>Agenda e reservas</td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td><td class="center featured"><svg class="icon"><use href="#i-check"/></svg></td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td></tr>
+          <tr><td>Fichas de treino</td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td><td class="center featured"><svg class="icon"><use href="#i-check"/></svg></td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td></tr>
+          <tr><td>Avaliações físicas</td><td class="center"><svg class="icon no"><use href="#i-x"/></svg></td><td class="center featured"><svg class="icon"><use href="#i-check"/></svg></td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td></tr>
+          <tr><td>Multi-unidade</td><td class="center"><svg class="icon no"><use href="#i-x"/></svg></td><td class="center featured"><svg class="icon no"><use href="#i-x"/></svg></td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td></tr>
+
+          <tr><td colspan="4" class="group">App white-label</td></tr>
+          <tr><td>Logo + cores customizadas</td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td><td class="center featured"><svg class="icon"><use href="#i-check"/></svg></td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td></tr>
+          <tr><td>Subdomínio próprio</td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td><td class="center featured"><svg class="icon"><use href="#i-check"/></svg></td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td></tr>
+          <tr><td>Domínio próprio (CNAME)</td><td class="center"><svg class="icon no"><use href="#i-x"/></svg></td><td class="center featured"><svg class="icon"><use href="#i-check"/></svg></td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td></tr>
+
+          <tr><td colspan="4" class="group">Integrações</td></tr>
+          <tr><td>Asaas (gratuito)</td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td><td class="center featured"><svg class="icon"><use href="#i-check"/></svg></td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td></tr>
+          <tr><td>API REST + Webhooks</td><td class="center"><svg class="icon no"><use href="#i-x"/></svg></td><td class="center featured"><svg class="icon no"><use href="#i-x"/></svg></td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td></tr>
+          <tr><td>SSO (Google, Microsoft)</td><td class="center"><svg class="icon no"><use href="#i-x"/></svg></td><td class="center featured"><svg class="icon no"><use href="#i-x"/></svg></td><td class="center"><svg class="icon"><use href="#i-check"/></svg></td></tr>
+
+          <tr><td colspan="4" class="group">Suporte</td></tr>
+          <tr><td>Canal</td><td>E-mail</td><td class="featured">WhatsApp</td><td>Gerente dedicado</td></tr>
+          <tr><td>SLA de resposta</td><td>48h</td><td class="featured">4h úteis</td><td>1h</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="faq-light">
+  <div class="wrap">
+    <header class="section-header">
+      <span class="section-eyebrow">Dúvidas</span>
+      <h2 class="section-title">Antes de você perguntar.</h2>
+    </header>
+    <div class="faq-list">
+      <details>
+        <summary>Posso cancelar quando quiser?</summary>
+        <p>Sim, sem fidelidade nem multa. A cobrança para no próximo ciclo. Os dados ficam disponíveis para exportação por mais 30 dias.</p>
+      </details>
+      <details>
+        <summary>Os 14 dias grátis exigem cartão de crédito?</summary>
+        <p>Não. Você cria a conta com e-mail e senha e tem acesso completo por 14 dias. Sem cadastro de cartão, sem cobrança automática quando o trial acaba.</p>
+      </details>
+      <details>
+        <summary>O que acontece se eu ultrapassar o limite de alunos?</summary>
+        <p>Você recebe um aviso amigável. O sistema não bloqueia automaticamente — a gente conversa antes de qualquer cobrança extra. Se foi um pico pontual, sem stress.</p>
+      </details>
+      <details>
+        <summary>Vocês cobram fee em cima das transações do Asaas?</summary>
+        <p>Não. Zero. Você só paga as taxas normais do Asaas (1,99% no PIX, R$ 1,99 no boleto). Nada vai pra gente em cima disso.</p>
+      </details>
+      <details>
+        <summary>Como funciona o desconto anual?</summary>
+        <p>Pagando o ano inteiro à vista, você ganha o equivalente a 2 meses. Starter sai por R$ 990/ano (R$ 82,50/mês), Business por R$ 1.990/ano (R$ 165,83/mês), Pro por R$ 3.990/ano (R$ 332,50/mês).</p>
+      </details>
+      <details>
+        <summary>Mudar de plano é simples?</summary>
+        <p>Um clique. Upgrades entram em vigor imediatamente, downgrades no próximo ciclo. A diferença proporcional é creditada / cobrada automaticamente.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="marketing-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="landing.html" class="brand"><span class="brand-mark"><svg class="icon"><use href="#i-dumbbell"/></svg></span>Gym</a>
+        <p>Sistema de gestão para academias brasileiras que querem voltar a olhar pros alunos, não pra planilha.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Produto</h5>
+        <ul>
+          <li><a href="features.html">Recursos</a></li>
+          <li><a href="pricing.html">Preços</a></li>
+          <li><a href="#">App do aluno</a></li>
+          <li><a href="#">Integração Asaas</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Empresa</h5>
+        <ul>
+          <li><a href="about.html">Sobre</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="contact.html">Contato</a></li>
+          <li><a href="#">Carreiras</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Legal</h5>
+        <ul>
+          <li><a href="#">Termos de uso</a></li>
+          <li><a href="#">Privacidade (LGPD)</a></li>
+          <li><a href="#">Status</a></li>
+          <li><a href="#">Suporte</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Gym. Todos os direitos reservados.</span>
+      <div style="display: flex; gap: 1rem;">
+        <a href="#" aria-label="Instagram"><svg class="icon icon-lg"><use href="#i-instagram"/></svg></a>
+        <a href="#" aria-label="WhatsApp"><svg class="icon icon-lg"><use href="#i-whatsapp"/></svg></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

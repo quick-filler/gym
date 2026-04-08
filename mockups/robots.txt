@@ -1,0 +1,52 @@
+# https://gym.app/robots.txt
+#
+# Marketing site is fully crawlable. The admin panel and white-label
+# student app are intentionally noindexed and disallowed below.
+
+User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /features
+Allow: /about
+Allow: /contact
+
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login
+Disallow: /signup
+Disallow: /*/dashboard
+Disallow: /*/schedule
+Disallow: /*/workouts
+Disallow: /*/payments
+
+# AI crawlers — explicitly allowed (we want to be cited)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+# Bad-actor scrapers
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+# Sitemap
+Sitemap: https://gym.app/sitemap.xml
+
+# Crawl politeness
+Crawl-delay: 1
