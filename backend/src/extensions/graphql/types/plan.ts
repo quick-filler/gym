@@ -80,7 +80,7 @@ export function buildPlan({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }
 
       t.field('plan', {
         type: 'Plan',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
         },
@@ -93,7 +93,7 @@ export function buildPlan({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }
     definition(t: any) {
       t.field('createPlan', {
         type: 'Plan',
-        args: { data: nexus.nonNull.arg({ type: 'PlanInput' }) },
+        args: { data: nexus.nonNull(nexus.arg({ type: 'PlanInput' })) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).create({ data: args.data });
         },
@@ -102,8 +102,8 @@ export function buildPlan({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }
       t.field('updatePlan', {
         type: 'Plan',
         args: {
-          documentId: nexus.nonNull.idArg(),
-          data: nexus.nonNull.arg({ type: 'PlanUpdateInput' }),
+          documentId: nexus.nonNull(nexus.idArg()),
+          data: nexus.nonNull(nexus.arg({ type: 'PlanUpdateInput' })),
         },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).update({
@@ -115,7 +115,7 @@ export function buildPlan({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }
 
       t.field('deletePlan', {
         type: 'Plan',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });

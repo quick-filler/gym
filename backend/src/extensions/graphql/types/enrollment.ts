@@ -96,7 +96,7 @@ export function buildEnrollment({ nexus, strapi }: { nexus: any; strapi: Core.St
 
       t.field('enrollment', {
         type: 'Enrollment',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
         },
@@ -109,7 +109,7 @@ export function buildEnrollment({ nexus, strapi }: { nexus: any; strapi: Core.St
     definition(t: any) {
       t.field('createEnrollment', {
         type: 'Enrollment',
-        args: { data: nexus.nonNull.arg({ type: 'EnrollmentInput' }) },
+        args: { data: nexus.nonNull(nexus.arg({ type: 'EnrollmentInput' })) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).create({ data: args.data });
         },
@@ -118,8 +118,8 @@ export function buildEnrollment({ nexus, strapi }: { nexus: any; strapi: Core.St
       t.field('updateEnrollment', {
         type: 'Enrollment',
         args: {
-          documentId: nexus.nonNull.idArg(),
-          data: nexus.nonNull.arg({ type: 'EnrollmentUpdateInput' }),
+          documentId: nexus.nonNull(nexus.idArg()),
+          data: nexus.nonNull(nexus.arg({ type: 'EnrollmentUpdateInput' })),
         },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).update({
@@ -131,7 +131,7 @@ export function buildEnrollment({ nexus, strapi }: { nexus: any; strapi: Core.St
 
       t.field('deleteEnrollment', {
         type: 'Enrollment',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });

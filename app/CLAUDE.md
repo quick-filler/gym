@@ -27,15 +27,22 @@ by the GraphQL API.
 - **react-hook-form** + `zod` for forms
 - **date-fns** with the `pt-BR` locale
 
-## Setup
+## Setup (for a fresh clone)
 
 ```bash
 cd app
-npx create-expo-app@latest . --template tabs   # picks expo-router + ts + tabs
-npm install @apollo/client@4 graphql zod react-hook-form @hookform/resolvers \
-            date-fns nativewind expo-secure-store expo-notifications expo-image
-npx tailwindcss init                            # NativeWind config
+npm install
+cp .env.example .env          # override EXPO_PUBLIC_GRAPHQL_ENDPOINT if needed
+npm run codegen               # generates gql/
+npm run start                 # starts the Metro bundler
 ```
+
+The initial scaffold used `create-expo-app@latest` with the
+`blank-typescript` template, plus `@apollo/client@4`, `graphql`,
+`expo-secure-store`, `@graphql-codegen/cli` and
+`@graphql-codegen/client-preset`. Additional libraries (NativeWind,
+expo-router, expo-notifications, expo-image, zod, react-hook-form) will
+be added on-demand as screens are built.
 
 `app.json` should set:
 - `expo.scheme` (deep links, e.g. `gymapp`)
@@ -139,37 +146,51 @@ export function ThemeProvider({ slug, children }: { slug: string; children: Reac
 phone-frame layout, the way the header colour cascades into the card
 borders and bottom-nav active state.
 
-## Apollo Client
+## Apollo Client + Codegen
 
-Same setup as the website, but the JWT is stored in `expo-secure-store`
-instead of `localStorage`:
+Identical pipeline to the website — GraphQL-only, documentId-keyed
+normalized cache, codegen from the canonical backend SDL — with two
+differences for native:
 
-```ts
-// lib/apollo.ts
-import { ApolloClient, InMemoryCache, HttpLink, from } from '@apollo/client';
-import { setContext } from '@apollo/client/link/context';
-import * as SecureStore from 'expo-secure-store';
+1. **JWT storage** uses `expo-secure-store` (iOS keychain / Android
+   EncryptedStore), not `localStorage`. Secrets belong in the keychain.
+2. **Auth middleware is async** because SecureStore reads are async. The
+   `ApolloLink` uses `Observable` to await the token before forwarding
+   the operation.
 
-const httpLink = new HttpLink({ uri: process.env.EXPO_PUBLIC_GRAPHQL_ENDPOINT });
+### Files
 
-const authLink = setContext(async (_, { headers }) => {
-  const token = await SecureStore.getItemAsync('jwt');
-  return { headers: { ...headers, ...(token ? { authorization: `Bearer ${token}` } : {}) } };
-});
+- **`lib/apollo.ts`** — the Apollo Client instance, auth middleware, and
+  the `setAuthToken` / `clearAuthToken` helpers that call SecureStore +
+  invalidate the Apollo cache on logout.
+- **`codegen.ts`** — `@graphql-codegen/cli` config with the `client`
+  preset. Reads `../backend/schema.graphql`, scans `graphql/**/*.graphql`
+  + all `.ts`/`.tsx` files. Writes `gql/` at the repo root (Expo's Metro
+  doesn't mind, and we don't use a `src/` folder here).
+- **`graphql/*.graphql`** — one file per domain. `academy.graphql`
+  ships with the public `AcademyBySlug` query, the authenticated
+  `MyDashboard` query (the single round-trip that powers the home tab)
+  and the `CheckInBooking` mutation.
 
-export const apolloClient = new ApolloClient({
-  link: from([authLink, httpLink]),
-  cache: new InMemoryCache({
-    typePolicies: {
-      Academy: { keyFields: ['documentId'] },
-      Student: { keyFields: ['documentId'] },
-      ClassSchedule: { keyFields: ['documentId'] },
-      ClassBooking: { keyFields: ['documentId'] },
-      WorkoutPlan: { keyFields: ['documentId'] },
-      Payment: { keyFields: ['documentId'] },
-    },
-  }),
-});
+### How to add a new query
+
+Same as the website — either add it to a `.graphql` file or inline it in
+a component with the generated `graphql()` helper, then run
+`npm run codegen`. The generated types appear in `gql/` and are
+committed.
+
+```tsx
+import { useQuery } from '@apollo/client/react';
+import { graphql } from '../gql';
+
+const MY_DASHBOARD = graphql(`
+  query MyDashboard { me { documentId name academy { primaryColor } } }
+`);
+
+export function DashboardScreen() {
+  const { data, loading } = useQuery(MY_DASHBOARD);
+  // data.me is fully typed.
+}
 ```
 
 ## Screens

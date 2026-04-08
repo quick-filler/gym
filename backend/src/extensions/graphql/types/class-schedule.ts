@@ -90,7 +90,7 @@ export function buildClassSchedule({ nexus, strapi }: { nexus: any; strapi: Core
 
       t.field('classSchedule', {
         type: 'ClassSchedule',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
         },
@@ -100,7 +100,7 @@ export function buildClassSchedule({ nexus, strapi }: { nexus: any; strapi: Core
         type: 'ClassBooking',
         description: 'Bookings for a given class schedule, optionally filtered by date.',
         args: {
-          documentId: nexus.nonNull.idArg(),
+          documentId: nexus.nonNull(nexus.idArg()),
           date: nexus.stringArg(),
         },
         resolve: async (_root: any, args: any) => {
@@ -121,7 +121,7 @@ export function buildClassSchedule({ nexus, strapi }: { nexus: any; strapi: Core
     definition(t: any) {
       t.field('createClassSchedule', {
         type: 'ClassSchedule',
-        args: { data: nexus.nonNull.arg({ type: 'ClassScheduleInput' }) },
+        args: { data: nexus.nonNull(nexus.arg({ type: 'ClassScheduleInput' })) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).create({ data: args.data });
         },
@@ -130,8 +130,8 @@ export function buildClassSchedule({ nexus, strapi }: { nexus: any; strapi: Core
       t.field('updateClassSchedule', {
         type: 'ClassSchedule',
         args: {
-          documentId: nexus.nonNull.idArg(),
-          data: nexus.nonNull.arg({ type: 'ClassScheduleUpdateInput' }),
+          documentId: nexus.nonNull(nexus.idArg()),
+          data: nexus.nonNull(nexus.arg({ type: 'ClassScheduleUpdateInput' })),
         },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).update({
@@ -143,7 +143,7 @@ export function buildClassSchedule({ nexus, strapi }: { nexus: any; strapi: Core
 
       t.field('deleteClassSchedule', {
         type: 'ClassSchedule',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });

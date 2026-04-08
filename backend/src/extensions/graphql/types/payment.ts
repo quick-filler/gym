@@ -62,7 +62,7 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
 
       t.field('payment', {
         type: 'Payment',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
         },
@@ -76,8 +76,8 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.field('updatePayment', {
         type: 'Payment',
         args: {
-          documentId: nexus.nonNull.idArg(),
-          data: nexus.nonNull.arg({ type: 'PaymentUpdateInput' }),
+          documentId: nexus.nonNull(nexus.idArg()),
+          data: nexus.nonNull(nexus.arg({ type: 'PaymentUpdateInput' })),
         },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).update({

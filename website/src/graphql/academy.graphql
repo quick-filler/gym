@@ -1,0 +1,30 @@
+# Public branding lookup — the only auth-free GraphQL query. Used to
+# theme the page from the subdomain before the admin logs in.
+query AcademyBySlug($slug: String!) {
+  academyBySlug(slug: $slug) {
+    documentId
+    name
+    slug
+    primaryColor
+    secondaryColor
+    plan
+    isActive
+    logo {
+      url
+      alternativeText
+    }
+  }
+}
+
+# Authenticated — list every academy this session can see. For the
+# platform super-admin today; will be scoped by users-permissions role
+# once the admin panel ships.
+query Academies($pagination: PaginationInput) {
+  academies(pagination: $pagination) {
+    documentId
+    name
+    slug
+    plan
+    isActive
+  }
+}

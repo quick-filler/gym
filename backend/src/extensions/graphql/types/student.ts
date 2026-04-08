@@ -120,7 +120,7 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
 
       t.field('student', {
         type: 'Student',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
         },
@@ -153,7 +153,7 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
     definition(t: any) {
       t.field('createStudent', {
         type: 'Student',
-        args: { data: nexus.nonNull.arg({ type: 'StudentInput' }) },
+        args: { data: nexus.nonNull(nexus.arg({ type: 'StudentInput' })) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).create({ data: args.data });
         },
@@ -162,8 +162,8 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.field('updateStudent', {
         type: 'Student',
         args: {
-          documentId: nexus.nonNull.idArg(),
-          data: nexus.nonNull.arg({ type: 'StudentUpdateInput' }),
+          documentId: nexus.nonNull(nexus.idArg()),
+          data: nexus.nonNull(nexus.arg({ type: 'StudentUpdateInput' })),
         },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).update({
@@ -175,7 +175,7 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
 
       t.field('deleteStudent', {
         type: 'Student',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });

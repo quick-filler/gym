@@ -1,0 +1,59 @@
+# Paginated student list for the admin students page. Academy-scoped
+# automatically on the backend by `resolveUserAcademyId`.
+query Students($pagination: PaginationInput) {
+  students(pagination: $pagination) {
+    documentId
+    name
+    email
+    phone
+    status
+    photo {
+      url
+    }
+  }
+}
+
+# Single student detail — used by /admin/students/[id]
+query StudentById($documentId: ID!) {
+  student(documentId: $documentId) {
+    documentId
+    name
+    email
+    phone
+    birthdate
+    status
+    notes
+    photo {
+      url
+    }
+    enrollments {
+      documentId
+      status
+      startDate
+      endDate
+      paymentMethod
+      plan {
+        documentId
+        name
+        price
+        billingCycle
+      }
+    }
+    workoutPlans {
+      documentId
+      name
+      instructor
+      isActive
+    }
+  }
+}
+
+# Mutation used by the "New student" modal in the admin panel.
+mutation CreateStudent($data: StudentInput!) {
+  createStudent(data: $data) {
+    documentId
+    name
+    email
+    status
+  }
+}

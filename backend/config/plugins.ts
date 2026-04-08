@@ -28,6 +28,16 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin =>
       apolloServer: {
         tracing: false,
       },
+      // Emit the built SDL to disk on every boot so the website and app
+      // codegen can read it directly — no introspection round-trip, no
+      // running backend required for `npm run codegen`.
+      //
+      // Written to: src/extensions/graphql/schema/schema.graphql
+      // (tracked in git so fresh clones can codegen without booting Strapi)
+      artifacts: {
+        schema: true,
+        typegen: false,
+      },
     },
   },
 

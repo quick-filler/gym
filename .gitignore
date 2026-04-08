@@ -5,17 +5,26 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Next.js
-frontend/.next/
-frontend/out/
-frontend/.vercel
+# Next.js (website/)
+website/.next/
+website/out/
+website/.vercel
+website/next-env.d.ts
 
-# Strapi
+# Expo (app/)
+app/.expo/
+app/dist/
+app/web-build/
+app/expo-env.d.ts
+
+# Strapi (backend/)
 backend/.tmp/
 backend/.cache/
 backend/dist/
 backend/build/
 backend/exports/
+backend/.strapi/
+backend/.strapi-updater.json
 
 # Environment
 .env
@@ -24,7 +33,8 @@ backend/exports/
 .env.test.local
 .env.production.local
 backend/.env
-frontend/.env.local
+website/.env.local
+app/.env.local
 
 # OS
 .DS_Store

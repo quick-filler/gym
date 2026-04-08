@@ -1,0 +1,77 @@
+# Public — the only auth-free query. Fetched on app launch (before
+# login) to theme the screen with the academy's branding.
+query AcademyBySlug($slug: String!) {
+  academyBySlug(slug: $slug) {
+    documentId
+    name
+    slug
+    primaryColor
+    secondaryColor
+    logo {
+      url
+      alternativeText
+    }
+  }
+}
+
+# The authenticated student's full dashboard payload. Wraps Query.me
+# with deep population so the dashboard tab renders in one round-trip.
+query MyDashboard {
+  me {
+    documentId
+    name
+    email
+    phone
+    status
+    photo {
+      url
+    }
+    academy {
+      documentId
+      name
+      slug
+      primaryColor
+      secondaryColor
+      logo {
+        url
+      }
+    }
+    enrollments {
+      documentId
+      status
+      startDate
+      endDate
+      paymentMethod
+      plan {
+        documentId
+        name
+        price
+        billingCycle
+      }
+    }
+    workoutPlans {
+      documentId
+      name
+      instructor
+      isActive
+      validFrom
+      exercises {
+        name
+        sets
+        reps
+        load
+        notes
+      }
+    }
+  }
+}
+
+# Mark a booking as attended. Fires when the student taps the "Estou aqui"
+# button on the schedule screen.
+mutation CheckInBooking($documentId: ID!) {
+  checkInBooking(documentId: $documentId) {
+    documentId
+    status
+    checkedInAt
+  }
+}

@@ -295,16 +295,25 @@ right below. We want the history, not a clean slate.
 
 ## 4. Website (marketing + admin)
 
-### 4.1 Next.js 14, not 16
+### 4.1 Next.js 16 (Tailwind v4, React 19)
 
-- **Decision** — The project pins Next.js 14. The global CLAUDE.md
-  preference is Next.js 16; the gym project's own CLAUDE.md overrides
-  to 14.
-- **Rationale** — Next.js 14 is stable, well-documented, and Tailwind
-  v3 + shadcn/ui have mature presets for it. 16 would be chasing a
-  moving target.
-- **Revisit when** — Next.js 15 / 16 become the most-recommended stable
-  version (probably late 2026).
+- **Decision** — The website is scaffolded with `create-next-app@latest`,
+  which at scaffold time resolved to **Next.js 16.2.x** with **Tailwind
+  CSS v4**, **React 19**, and Turbopack as the dev/build engine.
+- **Context** — An earlier draft of the website doc pinned Next.js 14.
+  When we actually scaffolded, `create-next-app@latest` jumped to 16 and
+  `npm run build` succeeded on the first try with Apollo Client + codegen
+  already wired in.
+- **Rationale** — 16 is the current stable, the App Router mental model
+  is unchanged from 14, Turbopack is now the default, and React 19 plays
+  cleanly with Apollo Client 4. Downgrading to 14 would mean fighting
+  the tooling for no concrete benefit.
+- **Consequences** — Tailwind v4 has a slightly different config story
+  (`@tailwindcss/postcss` plugin instead of `tailwind.config.js`), and
+  some shadcn/ui presets still default to v3. Acceptable — we'll tune
+  per-component as we add shadcn primitives.
+- **Revisit when** — Next.js 17+ changes the App Router in a
+  breaking way, or a shadcn/ui compatibility issue blocks us on v4.
 
 ### 4.2 Apollo Client 4, not TanStack Query
 
@@ -341,6 +350,47 @@ right below. We want the history, not a clean slate.
   caching would silently break.
 - **Consequences** — One-line per content type in the cache config.
 - **Revisit when** — Never.
+
+### 4.5 GraphQL Code Generator with the `client` preset
+
+- **Decision** — Both `website/` and `app/` use `@graphql-codegen/cli`
+  with `@graphql-codegen/client-preset`. Config lives in `codegen.ts`
+  at each project root, output lands in `src/gql/` (website) and
+  `gql/` (app). The `graphql()` helper is imported from there and used
+  to tag query strings — Apollo Client 4's `useQuery` picks up the
+  generated types automatically.
+- **Context** — Two alternatives were considered:
+  1. Per-operation plugins (`typescript`, `typescript-operations`,
+     `typescript-react-apollo`) that emit a named hook per query.
+  2. Client preset — emits a single `graphql()` function that you wrap
+     your query strings in. Types flow through from there.
+- **Rationale** — The client preset is the modern default from the
+  GraphQL Code Generator maintainers and plays perfectly with Apollo
+  Client 4. It's less verbose, avoids the "useXxxQuery" hook explosion,
+  and co-locates the query text with the component that uses it
+  without losing type safety.
+- **Consequences** — Every new query goes through `npm run codegen`
+  (or the `codegen:watch` variant during dev). The `gql/` output is
+  committed so fresh clones and CI don't need codegen to run before
+  type-checking.
+- **Revisit when** — The client preset stops being the GraphQL codegen
+  team's recommended pattern.
+
+### 4.6 Canonical GraphQL schema committed as `backend/schema.graphql`
+
+- **Decision** — The Strapi GraphQL plugin is configured with
+  `artifacts.schema: true`. Every backend boot writes the full SDL to
+  `backend/schema.graphql`. That file is tracked in git.
+- **Rationale** — Frontend codegen needs a schema source. Introspection
+  against a running backend is fragile (CI has to boot Strapi first,
+  dev has to remember the backend is running); committing the SDL
+  makes codegen deterministic and reviewable. Schema changes show up
+  as line diffs in pull requests — API breakage is impossible to miss.
+- **Consequences** — When a backend schema edit ships, the author has
+  to regenerate the artifact (by running Strapi once) and commit the
+  diff. There's no automatic pre-commit hook for this today.
+- **Revisit when** — A pre-commit hook becomes worth it (probably after
+  the second or third "I forgot to regen the schema" merge conflict).
 
 ---
 

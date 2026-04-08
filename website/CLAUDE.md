@@ -6,31 +6,38 @@ authenticated session for admins coming straight from `/login`.
 
 ## Stack
 
-- **Next.js 14** (App Router)
+- **Next.js 16** (App Router, Turbopack) — pinned to whatever
+  `create-next-app@latest` picked (16.2.x at scaffold time)
+- **React 19**
 - **TypeScript** (strict)
-- **Tailwind CSS** + CSS variables
+- **Tailwind CSS v4** + CSS variables
 - **Apollo Client 4** — every data call goes through GraphQL
-- **shadcn/ui** (Radix-based components)
-- **React Hook Form + Zod**
-- **date-fns** (PT-BR locale)
+- **@graphql-codegen/cli** + `@graphql-codegen/client-preset` — fully typed
+  `graphql()` function generated from the backend's SDL
+- **shadcn/ui** (to be added)
+- **React Hook Form + Zod** (to be added)
+- **date-fns** with PT-BR locale (to be added)
 
 > Why Apollo (not TanStack Query)? The backend exposes GraphQL only — see
 > [`backend/CLAUDE.md → GraphQL Schema`](../backend/CLAUDE.md#graphql-schema).
-> Apollo's normalized cache + subscriptions are a better fit than building
-> the same machinery on top of plain `fetch`.
+> Apollo's normalized cache is a better fit than rebuilding the same
+> machinery on top of plain `fetch`. Decision documented in
+> [`docs/design-decisions.md §3.1 / §4.2`](../docs/design-decisions.md).
 
-## Setup
+## Setup (fresh clone)
 
 ```bash
 cd website
-npx create-next-app@latest . --typescript --tailwind --app --src-dir --import-alias "@/*"
-npm install @apollo/client@4 graphql zod react-hook-form @hookform/resolvers date-fns
-npx shadcn@latest init
+npm install
+cp .env.local.example .env.local    # override the endpoint if needed
+npm run codegen                     # generates src/gql/
+npm run dev                         # http://localhost:3000
 ```
 
-Then add the recommended shadcn primitives (`button`, `card`, `dialog`,
-`form`, `input`, `select`, `table`, `tabs`, `dropdown-menu`, `sheet`,
-`skeleton`, `sonner`).
+Dependencies were installed during the initial scaffold
+(`create-next-app@latest` + Apollo Client 4 + codegen). Additional
+libraries (shadcn/ui, react-hook-form, date-fns) are added on-demand as
+pages come online.
 
 ## Structure
 
@@ -72,36 +79,58 @@ website/
 └── public/
 ```
 
-## Apollo Client setup
+## Apollo Client + Codegen
 
-```ts
-// src/lib/apollo.ts
-import { ApolloClient, InMemoryCache, HttpLink, from } from '@apollo/client';
-import { setContext } from '@apollo/client/link/context';
+The data pipeline is wired end-to-end and verified by a working
+`npm run build`:
 
-const httpLink = new HttpLink({
-  uri: process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT!,
-});
+- **`src/lib/apollo.ts`** — `ApolloClient` with an `HttpLink` pointing at
+  `NEXT_PUBLIC_GRAPHQL_ENDPOINT` and an `ApolloLink` middleware that
+  reads the JWT from `localStorage` and attaches it as
+  `Authorization: Bearer …`. Cache is `InMemoryCache` with explicit
+  `keyFields: ['documentId']` for every content type.
+- **`src/lib/apollo-provider.tsx`** — `'use client'` wrapper exposing
+  `<ApolloClientProvider>`. Wired into `src/app/layout.tsx`.
+- **`codegen.ts`** — `@graphql-codegen/cli` config with the `client`
+  preset. Reads `../backend/schema.graphql` (emitted at every Strapi
+  boot, tracked in git) and scans `src/**/*.{ts,tsx}` +
+  `src/graphql/**/*.graphql`. Writes `src/gql/` which is the import
+  surface for every typed operation.
+- **`src/graphql/*.graphql`** — one file per domain. Ships today with
+  `academy.graphql` (public `AcademyBySlug` + authenticated `Academies`)
+  and `students.graphql` (admin student list + detail + create).
 
-const authLink = setContext((_, { headers }) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('jwt') : null;
-  return { headers: { ...headers, ...(token ? { authorization: `Bearer ${token}` } : {}) } };
-});
+### How to add a new query
 
-export const apolloClient = new ApolloClient({
-  link: from([authLink, httpLink]),
-  cache: new InMemoryCache({
-    typePolicies: {
-      Academy: { keyFields: ['documentId'] },
-      Student: { keyFields: ['documentId'] },
-      // …one per content type
-    },
-  }),
-});
+```tsx
+import { useQuery } from '@apollo/client/react';
+import { graphql } from '@/gql';
+
+const ACADEMIES_LIST = graphql(`
+  query AcademiesList {
+    academies { documentId name slug plan }
+  }
+`);
+
+export function AcademiesList() {
+  const { data, loading } = useQuery(ACADEMIES_LIST);
+  // data is fully typed — no annotations, no casts.
+}
 ```
 
-The cache is keyed on `documentId` so Strapi v5's stable IDs round-trip
-correctly through Apollo's normalized store.
+Then run `npm run codegen` (or `npm run codegen:watch` alongside
+`npm run dev`). The generated types appear in `src/gql/` and are
+committed — fresh clones don't need to re-run codegen just to build.
+
+### Why a committed SDL file, not introspection
+
+- Fresh clones can run `npm run codegen` without booting Strapi first.
+- CI can type-check the website without a running backend.
+- Schema diffs show up as line diffs in PRs — API changes are reviewable.
+
+When the backend schema changes, boot Strapi once (or run `npm run build`
+in `backend/`) and the artifact is regenerated at
+`backend/schema.graphql`. Commit the diff alongside the code change.
 
 ## Pages (marketing)
 

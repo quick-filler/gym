@@ -87,7 +87,7 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
 
       t.field('academy', {
         type: 'Academy',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
         },
@@ -96,7 +96,7 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.field('academyBySlug', {
         type: 'Academy',
         description: 'Public — returns branding config for the given slug.',
-        args: { slug: nexus.nonNull.stringArg() },
+        args: { slug: nexus.nonNull(nexus.stringArg()) },
         resolve: async (_root: any, args: any) => {
           const results: any[] = await strapi.documents(UID).findMany({
             filters: { slug: args.slug, isActive: true },
@@ -113,7 +113,7 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
     definition(t: any) {
       t.field('createAcademy', {
         type: 'Academy',
-        args: { data: nexus.nonNull.arg({ type: 'AcademyInput' }) },
+        args: { data: nexus.nonNull(nexus.arg({ type: 'AcademyInput' })) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).create({ data: args.data });
         },
@@ -122,8 +122,8 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.field('updateAcademy', {
         type: 'Academy',
         args: {
-          documentId: nexus.nonNull.idArg(),
-          data: nexus.nonNull.arg({ type: 'AcademyUpdateInput' }),
+          documentId: nexus.nonNull(nexus.idArg()),
+          data: nexus.nonNull(nexus.arg({ type: 'AcademyUpdateInput' })),
         },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).update({
@@ -135,7 +135,7 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
 
       t.field('deleteAcademy', {
         type: 'Academy',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });

@@ -100,7 +100,7 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
 
       t.field('workoutPlan', {
         type: 'WorkoutPlan',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
         },
@@ -113,7 +113,7 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
     definition(t: any) {
       t.field('createWorkoutPlan', {
         type: 'WorkoutPlan',
-        args: { data: nexus.nonNull.arg({ type: 'WorkoutPlanInput' }) },
+        args: { data: nexus.nonNull(nexus.arg({ type: 'WorkoutPlanInput' })) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).create({ data: args.data });
         },
@@ -122,8 +122,8 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
       t.field('updateWorkoutPlan', {
         type: 'WorkoutPlan',
         args: {
-          documentId: nexus.nonNull.idArg(),
-          data: nexus.nonNull.arg({ type: 'WorkoutPlanUpdateInput' }),
+          documentId: nexus.nonNull(nexus.idArg()),
+          data: nexus.nonNull(nexus.arg({ type: 'WorkoutPlanUpdateInput' })),
         },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).update({
@@ -135,7 +135,7 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
 
       t.field('deleteWorkoutPlan', {
         type: 'WorkoutPlan',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });

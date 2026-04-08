@@ -81,7 +81,7 @@ export function buildClassBooking({ nexus, strapi }: { nexus: any; strapi: Core.
 
       t.field('classBooking', {
         type: 'ClassBooking',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
         },
@@ -94,7 +94,7 @@ export function buildClassBooking({ nexus, strapi }: { nexus: any; strapi: Core.
     definition(t: any) {
       t.field('createClassBooking', {
         type: 'ClassBooking',
-        args: { data: nexus.nonNull.arg({ type: 'ClassBookingInput' }) },
+        args: { data: nexus.nonNull(nexus.arg({ type: 'ClassBookingInput' })) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).create({ data: args.data });
         },
@@ -103,8 +103,8 @@ export function buildClassBooking({ nexus, strapi }: { nexus: any; strapi: Core.
       t.field('updateClassBooking', {
         type: 'ClassBooking',
         args: {
-          documentId: nexus.nonNull.idArg(),
-          data: nexus.nonNull.arg({ type: 'ClassBookingUpdateInput' }),
+          documentId: nexus.nonNull(nexus.idArg()),
+          data: nexus.nonNull(nexus.arg({ type: 'ClassBookingUpdateInput' })),
         },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).update({
@@ -116,7 +116,7 @@ export function buildClassBooking({ nexus, strapi }: { nexus: any; strapi: Core.
 
       t.field('deleteClassBooking', {
         type: 'ClassBooking',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });
@@ -127,7 +127,7 @@ export function buildClassBooking({ nexus, strapi }: { nexus: any; strapi: Core.
       t.field('checkInBooking', {
         type: 'ClassBooking',
         description: 'Mark a booking as attended and stamp checkedInAt.',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).update({
             documentId: args.documentId,

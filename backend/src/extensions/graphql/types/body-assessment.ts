@@ -106,7 +106,7 @@ export function buildBodyAssessment({ nexus, strapi }: { nexus: any; strapi: Cor
 
       t.field('bodyAssessment', {
         type: 'BodyAssessment',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
         },
@@ -119,7 +119,7 @@ export function buildBodyAssessment({ nexus, strapi }: { nexus: any; strapi: Cor
     definition(t: any) {
       t.field('createBodyAssessment', {
         type: 'BodyAssessment',
-        args: { data: nexus.nonNull.arg({ type: 'BodyAssessmentInput' }) },
+        args: { data: nexus.nonNull(nexus.arg({ type: 'BodyAssessmentInput' })) },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).create({ data: args.data });
         },
@@ -128,8 +128,8 @@ export function buildBodyAssessment({ nexus, strapi }: { nexus: any; strapi: Cor
       t.field('updateBodyAssessment', {
         type: 'BodyAssessment',
         args: {
-          documentId: nexus.nonNull.idArg(),
-          data: nexus.nonNull.arg({ type: 'BodyAssessmentUpdateInput' }),
+          documentId: nexus.nonNull(nexus.idArg()),
+          data: nexus.nonNull(nexus.arg({ type: 'BodyAssessmentUpdateInput' })),
         },
         resolve: async (_root: any, args: any) => {
           return await strapi.documents(UID).update({
@@ -141,7 +141,7 @@ export function buildBodyAssessment({ nexus, strapi }: { nexus: any; strapi: Cor
 
       t.field('deleteBodyAssessment', {
         type: 'BodyAssessment',
-        args: { documentId: nexus.nonNull.idArg() },
+        args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any) => {
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });
