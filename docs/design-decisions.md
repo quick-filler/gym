@@ -810,6 +810,37 @@ will be redesigned when they're ported to Next.js/Expo).
   type checks (`tsc --noEmit`) do **not** catch Nexus API misuse
   because the types are heavily overloaded.
 
+### 9.8 Dockerfiles: BuildKit cache mounts + Next.js standalone output
+
+- **Decision** — `backend/Dockerfile` and `website/Dockerfile` are
+  BuildKit-only (`# syntax=docker/dockerfile:1.7`) and use
+  `--mount=type=cache` on `/root/.npm` and (for the website) on
+  `/app/.next/cache`. The website enables `output: "standalone"` in
+  `next.config.ts` so the runtime image ships the traced server bundle
+  only — no full `node_modules`, no source.
+- **Context** — The goal was "build fast first, then small". Cache
+  mounts keep npm downloads and the Next incremental build cache warm
+  between rebuilds, which is where the bulk of CI/local rebuild time
+  goes. Standalone output is the single largest win for image size
+  on Next.js (hundreds of MB → tens of MB).
+- **Rationale** — Both optimizations are pure wins for production
+  builds, and standalone is the approach Vercel explicitly recommends
+  for Docker. The cache mounts are scoped to BuildKit, which has been
+  the default builder for years — no portability concern.
+- **Consequences** —
+  - `docker build` must run under BuildKit (it does by default in
+    Docker ≥ 23, and CI runners already honor it).
+  - The website's runtime CMD is `node server.js` against the
+    standalone bundle, not `npm run start`. `next start` would still
+    work if standalone were disabled, but re-introducing it would
+    balloon the image.
+  - The backend runtime uses the `vips` apk package (runtime libvips
+    only), not `vips-dev`. If a future Strapi plugin needs libvips
+    headers at runtime, swap them back.
+- **Revisit when** — we need to target a non-BuildKit builder, or
+  Next.js changes its standalone output layout (the `COPY` of
+  `.next/standalone` + `.next/static` + `public` is the contract).
+
 ---
 
 ## 10. Rejected options
