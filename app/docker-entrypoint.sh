@@ -44,33 +44,45 @@ if [ -n "${METRO_PUBLIC_URL}" ]; then
   # Advertised mode — a Traefik router fronts Metro with TLS.
   #
   # Parse the URL into its parts. The `exp://` URL we build for the QR
-  # has to match EXACTLY what @expo/cli would produce when
-  # EXPO_PACKAGER_PROXY_URL is set and scheme='exp' is requested. See
-  # node_modules/expo/node_modules/@expo/cli/build/src/start/server/
-  #   {UrlCreator,BundlerDevServer}.js
-  # The logic there is:
-  #   - protocol stays "exp" (so the phone deep-links into Expo Go)
-  #   - port is taken from the proxy URL; if empty and the proxy URL is
-  #     https:// then it's forced to 443
-  # The resulting URL looks like `exp://host:443`. Encoding anything else
-  # in the QR (like a bare https:// URL) makes the phone camera open it
-  # in a browser instead of Expo Go.
+  # has to match what Expo Go actually understands. There are TWO url
+  # generators in @expo/cli: the ngrok-tunnel path (which produces
+  # `exp://host` with NO port) and the proxy-url path (which produces
+  # `exp://host:443`). Only the no-port variant actually works with
+  # Expo Go over HTTPS — the `:443` variant makes Expo Go connect via
+  # plain HTTP on port 443, which Traefik rejects with a 404.
+  #
+  # Why: Expo Go's URL parser sees `exp://host:<port>` and connects
+  # via plain HTTP on that port. It doesn't auto-upgrade to HTTPS just
+  # because the port is 443. The no-port variant (`exp://host`) is
+  # what ngrok tunnels emit, and Expo Go special-cases it to use
+  # HTTPS against the host.
+  #
+  # So: if the user gave us an HTTPS URL with no explicit port, emit
+  # `exp://host` (no port). If they gave us an explicit port, honour
+  # it. If they gave us HTTP, fall back to `exp://host:80`.
+  #
+  # References (on this image):
+  #   node_modules/expo/node_modules/@expo/cli/build/src/start/server/
+  #     UrlCreator.js                (getUrlComponentsFromProxyUrl)
+  #     AsyncNgrok.js                (tunnel URL generator)
   METRO_SCHEME=$(printf '%s' "${METRO_PUBLIC_URL}" | sed -E 's|^([a-zA-Z]+)://.*$|\1|')
   METRO_HOST=$(printf '%s' "${METRO_PUBLIC_URL}" | sed -E 's|^[a-zA-Z]+://||; s|/.*$||; s|:[0-9]+$||')
   METRO_EXPLICIT_PORT=$(printf '%s' "${METRO_PUBLIC_URL}" | sed -nE 's|^[a-zA-Z]+://[^/]+:([0-9]+).*$|\1|p')
-  if [ -n "${METRO_EXPLICIT_PORT}" ]; then
-    METRO_ADVERTISED_PORT="${METRO_EXPLICIT_PORT}"
-  elif [ "${METRO_SCHEME}" = "https" ]; then
-    METRO_ADVERTISED_PORT="443"
-  else
-    METRO_ADVERTISED_PORT="80"
-  fi
 
   export REACT_NATIVE_PACKAGER_HOSTNAME="${METRO_HOST}"
   export EXPO_PACKAGER_PROXY_URL="${METRO_PUBLIC_URL}"
 
-  # `exp://` scheme is what makes the phone deep-link into Expo Go.
-  EXP_URL="exp://${METRO_HOST}:${METRO_ADVERTISED_PORT}"
+  if [ -n "${METRO_EXPLICIT_PORT}" ]; then
+    # User explicitly asked for a specific port — honour it verbatim.
+    EXP_URL="exp://${METRO_HOST}:${METRO_EXPLICIT_PORT}"
+  elif [ "${METRO_SCHEME}" = "https" ]; then
+    # HTTPS default — emit `exp://host` with NO port (matches ngrok
+    # tunnel behaviour, which is the known-working HTTPS path).
+    EXP_URL="exp://${METRO_HOST}"
+  else
+    # Plain HTTP — port 80 is the default.
+    EXP_URL="exp://${METRO_HOST}:80"
+  fi
   BUNDLER_LABEL="${METRO_PUBLIC_URL}"
 else
   # Legacy mode — no separate Metro subdomain. Expo Go connects directly
