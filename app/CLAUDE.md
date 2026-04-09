@@ -243,6 +243,43 @@ container rebuild. Use a personal access token instead.
    auto-authenticated — the CLI reads `EXPO_TOKEN` before falling
    back to any on-disk state.
 
+### Two-domain layout for the dev server (`PUBLIC_HOST` + `METRO_PUBLIC_URL`)
+
+The Docker image runs **two** services on different ports and expects
+two public hostnames fronted by Traefik/Dokploy:
+
+| Port | Service | Role | Env var |
+|---|---|---|---|
+| 80   | `busybox-extras httpd` | QR-code landing page (HTML + PNG) | `PUBLIC_HOST` |
+| 8081 | `expo start --host lan` | Metro bundler — Expo Go connects here | `METRO_PUBLIC_URL` |
+
+The landing page lives on the "bare" hostname (e.g. `expo.gym.app`)
+and the bundler lives on a sub-hostname (e.g. `expo.app.gym.app`). In
+Dokploy add two routers for the same service:
+
+1. `expo.gym.app` → container port **80**, HTTPS via Let's Encrypt
+2. `expo.app.gym.app` → container port **8081**, HTTPS via Let's Encrypt
+
+Then set the env vars on the service:
+
+```env
+PUBLIC_HOST=expo.gym.app
+METRO_PUBLIC_URL=https://expo.app.gym.app
+```
+
+When `METRO_PUBLIC_URL` is set, the entrypoint exports
+`EXPO_PACKAGER_PROXY_URL=$METRO_PUBLIC_URL` — this is the undocumented
+knob in `@expo/cli`'s `UrlCreator.js` that tells Metro to advertise
+that exact URL as the manifest URL, with **no port appended**. The QR
+code PNG on the landing page also encodes the HTTPS URL, so scanning
+it in Expo Go jumps straight to the bundler without `:8081`.
+
+If `METRO_PUBLIC_URL` is not set, the entrypoint falls back to the
+legacy `exp://${PUBLIC_HOST}:8081` URL and you have to expose port
+8081 publicly. Use the two-domain mode whenever TLS is available —
+Expo Go refuses self-signed certs, so Traefik must have a valid
+Let's Encrypt cert for both hostnames before phones will connect.
+
 ## SEO / discoverability
 
 Native apps don't index in Google, but the app **does** export a static

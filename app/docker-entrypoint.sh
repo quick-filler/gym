@@ -2,26 +2,65 @@
 #
 # Entrypoint for the gym Expo dev server.
 #
-# 1. Validates PUBLIC_HOST (the hostname or IP testers will reach) and
-#    pins it into REACT_NATIVE_PACKAGER_HOSTNAME so Metro bakes it into
-#    the exp:// URL instead of its own container IP.
-# 2. Generates a QR code PNG + landing page at /srv/www.
-# 3. Starts busybox httpd in the background on :80 to serve the page.
-# 4. Execs `expo start` in the foreground so signals reach Metro.
+# The container runs two things on two ports:
+#
+#   :80    busybox-extras httpd — serves /srv/www, the QR-code landing
+#          page with instructions for opening the app in Expo Go.
+#   :8081  Metro bundler (via `expo start --go`) — Expo Go connects here
+#          to download the manifest and JS bundle.
+#
+# Hostnames:
+#
+#   PUBLIC_HOST       (required)  hostname where the QR landing page is
+#                                 reachable from a browser. Usually fronted
+#                                 by Traefik/Dokploy with TLS → container:80.
+#
+#   METRO_PUBLIC_URL  (optional)  full URL where Metro is reachable from
+#                                 phones, e.g. `https://expo.app.gym.app`.
+#                                 When set, Metro advertises this exact URL
+#                                 as the manifest URL (no :8081 port). The
+#                                 QR code encodes it too. Point a second
+#                                 Traefik router at container:8081 with TLS.
+#                                 When unset, we fall back to the legacy
+#                                 `exp://${PUBLIC_HOST}:8081` — no separate
+#                                 subdomain, no TLS.
 
 set -eu
 
 if [ -z "${PUBLIC_HOST:-}" ]; then
   echo "error: PUBLIC_HOST env var is required" >&2
-  echo "       set it to the public hostname or IP testers will reach" >&2
-  echo "       e.g. -e PUBLIC_HOST=expo.gym.app" >&2
+  echo "       set it to the hostname of the QR landing page, e.g." >&2
+  echo "       -e PUBLIC_HOST=expo.gym.app" >&2
   exit 1
 fi
 
 PORT_METRO="${PORT_METRO:-8081}"
-EXP_URL="exp://${PUBLIC_HOST}:${PORT_METRO}"
 
-export REACT_NATIVE_PACKAGER_HOSTNAME="${PUBLIC_HOST}"
+# Strip a single trailing slash from METRO_PUBLIC_URL for consistency.
+METRO_PUBLIC_URL="${METRO_PUBLIC_URL:-}"
+METRO_PUBLIC_URL="${METRO_PUBLIC_URL%/}"
+
+if [ -n "${METRO_PUBLIC_URL}" ]; then
+  # Advertised mode — a fronted HTTPS URL hands the manifest to Expo Go.
+  # Parse the bare hostname out of the URL so REACT_NATIVE_PACKAGER_HOSTNAME
+  # (which only accepts host, no scheme/port) stays valid.
+  METRO_HOST=$(printf '%s' "${METRO_PUBLIC_URL}" | sed -E 's|^[a-zA-Z]+://||; s|/.*$||; s|:[0-9]+$||')
+  export REACT_NATIVE_PACKAGER_HOSTNAME="${METRO_HOST}"
+
+  # EXPO_PACKAGER_PROXY_URL is what @expo/cli's UrlCreator uses verbatim
+  # as the manifest URL — no port is appended. Seen in
+  # node_modules/expo/node_modules/@expo/cli/build/src/start/server/UrlCreator.js:204
+  export EXPO_PACKAGER_PROXY_URL="${METRO_PUBLIC_URL}"
+
+  EXP_URL="${METRO_PUBLIC_URL}"
+  BUNDLER_LABEL="${METRO_PUBLIC_URL}"
+else
+  # Legacy mode — no separate Metro subdomain. Expo Go connects directly
+  # to the bundler at exp://PUBLIC_HOST:8081 (needs the port open).
+  export REACT_NATIVE_PACKAGER_HOSTNAME="${PUBLIC_HOST}"
+  EXP_URL="exp://${PUBLIC_HOST}:${PORT_METRO}"
+  BUNDLER_LABEL="${PUBLIC_HOST}:${PORT_METRO}"
+fi
 
 mkdir -p /srv/www
 qrencode -o /srv/www/qr.png -s 10 -m 2 "${EXP_URL}"
@@ -77,7 +116,7 @@ cat >/srv/www/index.html <<HTML
   </ol>
 
   <p style="margin-top:2rem;color:#6b7280;font-size:.85rem;">
-    Bundler host: <code>${PUBLIC_HOST}:${PORT_METRO}</code>
+    Bundler host: <code>${BUNDLER_LABEL}</code>
   </p>
 </body>
 </html>
@@ -85,6 +124,9 @@ HTML
 
 echo ">> serving QR page at http://${PUBLIC_HOST}/"
 echo ">>   exp URL = ${EXP_URL}"
+if [ -n "${METRO_PUBLIC_URL}" ]; then
+  echo ">>   metro advertised as ${METRO_PUBLIC_URL} (EXPO_PACKAGER_PROXY_URL)"
+fi
 
 # Show whether the CLI is authenticated. We only check for the presence
 # of the env var — no network call, no token contents printed. Serving
