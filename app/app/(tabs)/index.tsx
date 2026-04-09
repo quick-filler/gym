@@ -1,26 +1,23 @@
 /**
- * Gym — student app home screen (single-screen demo).
+ * Dashboard (home) tab — the screen previously at `App.tsx`.
  *
  * Architecture:
- *   1. The `<Root>` wrapper conditionally installs an Apollo provider
- *      when the app is in API mode — mocks mode skips Apollo entirely
- *      so the dev bundle is smaller.
- *   2. `<HomeScreen>` consumes `useDashboard()` which returns the same
- *      shape regardless of data source. It renders one of three states:
+ *   1. `useDashboard()` is the single data entrypoint — it hides the
+ *      mock / API branch and returns the same shape either way.
+ *   2. This screen renders one of four states:
  *        - loading  → <SkeletonHome>
  *        - error    → <ErrorHome>
+ *        - empty    → <EmptyHome>
  *        - success  → <DashboardHome>
  *   3. API mode NEVER falls back to mocks. If the query fails, the
  *      user sees an error card with a retry button — full stop.
  *
- * To flip modes: set `EXPO_PUBLIC_USE_MOCKS=false` in `app/.env` and
- * restart the dev server. The env var is inlined at build time, so
- * the branch is fixed for the lifetime of the bundle.
+ * The bottom navigation lives in `(tabs)/_layout.tsx`, so this file
+ * only renders the screen content — no `<View style={styles.bottomNav}>`.
  */
 
 import React from 'react';
 import {
-  SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -28,54 +25,30 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  Bell,
+  Calendar,
+  CreditCard,
+  Dumbbell,
+  type LucideIcon,
+} from 'lucide-react-native';
 
-import { USE_MOCKS } from './lib/config';
-import { useDashboard } from './hooks/useDashboard';
-import { Skeleton, SkeletonLines } from './components/Skeleton';
-import type { DashboardData } from './lib/types';
-
-// Only imported in API mode. Kept as a conditional import pattern so
-// mocks-mode bundles don't pull Apollo into the JS bundle at all.
-const { ApolloClientProvider } = USE_MOCKS
-  ? { ApolloClientProvider: PassThroughProvider }
-  : require('./lib/apollo-provider');
-
-/* ==================================================================
- * ROOT
- * ================================================================ */
-export default function App() {
-  return (
-    <ApolloClientProvider>
-      <HomeScreen />
-    </ApolloClientProvider>
-  );
-}
-
-function PassThroughProvider({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}
+import { useDashboard } from '../../hooks/useDashboard';
+import { Skeleton, SkeletonLines } from '../../components/Skeleton';
+import { USE_MOCKS } from '../../lib/config';
+import { theme, withAlpha } from '../../lib/theme';
+import type { DashboardData } from '../../lib/types';
 
 /* ==================================================================
- * HOME SCREEN — loading / error / success switch
+ * ROOT SCREEN — loading / error / empty / success switch
  * ================================================================ */
-function HomeScreen() {
+export default function DashboardScreen() {
   const { data, loading, error, refetch } = useDashboard();
 
-  // Loading state (API mode only — mocks resolve synchronously)
-  if (loading && !data) {
-    return <SkeletonHome />;
-  }
-
-  // Error state — no fallback to mocks, ever.
-  if (error) {
-    return <ErrorHome error={error} onRetry={refetch} />;
-  }
-
-  // Empty state — the query succeeded but returned nothing.
-  if (!data) {
-    return <EmptyHome />;
-  }
-
+  if (loading && !data) return <SkeletonHome />;
+  if (error) return <ErrorHome error={error} onRetry={refetch} />;
+  if (!data) return <EmptyHome />;
   return <DashboardHome data={data} />;
 }
 
@@ -87,9 +60,13 @@ function DashboardHome({ data }: { data: DashboardData }) {
   const accentDark = data.academy.primaryDark;
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.paper }]}>
+    <SafeAreaView
+      edges={['top']}
+      style={[styles.safe, { backgroundColor: accent }]}
+    >
       <StatusBar barStyle="light-content" backgroundColor={accent} />
       <ScrollView
+        style={{ backgroundColor: theme.paper }}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
@@ -107,13 +84,17 @@ function DashboardHome({ data }: { data: DashboardData }) {
                 ) : null}
               </View>
             </View>
-            <View style={styles.iconBtn}>
+            <TouchableOpacity
+              style={styles.iconBtn}
+              activeOpacity={0.7}
+              accessibilityLabel="Notificações"
+            >
               <View style={[styles.notifDot, { borderColor: accent }]} />
-              <Text style={styles.iconBtnText}>●</Text>
-            </View>
+              <Bell size={18} color="#fff" strokeWidth={2.2} />
+            </TouchableOpacity>
           </View>
           <Text style={styles.welcome}>Bem-vindo de volta,</Text>
-          <Text style={styles.welcomeName}>{data.student.name} 💪</Text>
+          <Text style={styles.welcomeName}>{data.student.name}</Text>
         </View>
 
         {/* CONTENT */}
@@ -147,18 +128,21 @@ function DashboardHome({ data }: { data: DashboardData }) {
 
           {/* QUICK ACTIONS */}
           <View style={styles.actionsRow}>
-            {[
-              { label: 'Agenda',   emoji: '📅' },
-              { label: 'Treino',   emoji: '💪' },
-              { label: 'Finanças', emoji: '💳' },
-            ].map((item) => (
+            {QUICK_ACTIONS.map(({ label, Icon }) => (
               <TouchableOpacity
-                key={item.label}
+                key={label}
                 style={styles.actionBtn}
                 activeOpacity={0.7}
               >
-                <Text style={styles.actionEmoji}>{item.emoji}</Text>
-                <Text style={styles.actionLabel}>{item.label}</Text>
+                <View
+                  style={[
+                    styles.actionIconBox,
+                    { backgroundColor: withAlpha(accent, 0.1) },
+                  ]}
+                >
+                  <Icon size={20} color={accent} strokeWidth={2.2} />
+                </View>
+                <Text style={styles.actionLabel}>{label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -191,7 +175,7 @@ function DashboardHome({ data }: { data: DashboardData }) {
                     { backgroundColor: withAlpha(accent, 0.1) },
                   ]}
                 >
-                  <Text style={styles.workoutIconText}>🏋️</Text>
+                  <Dumbbell size={22} color={accent} strokeWidth={2.2} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.workoutName}>{data.workout.name}</Text>
@@ -231,39 +215,6 @@ function DashboardHome({ data }: { data: DashboardData }) {
           </View>
         </View>
       </ScrollView>
-
-      {/* BOTTOM NAV */}
-      <View style={styles.bottomNav}>
-        {[
-          { label: 'Início',   emoji: '🏠', active: true  },
-          { label: 'Agenda',   emoji: '📅', active: false },
-          { label: 'Treinos',  emoji: '💪', active: false },
-          { label: 'Finanças', emoji: '💳', active: false },
-          { label: 'Perfil',   emoji: '👤', active: false },
-        ].map((tab) => (
-          <View key={tab.label} style={styles.navTab}>
-            <Text
-              style={[
-                styles.navEmoji,
-                tab.active && { opacity: 1 },
-              ]}
-            >
-              {tab.emoji}
-            </Text>
-            <Text
-              style={[
-                styles.navLabel,
-                tab.active && { color: accent },
-              ]}
-            >
-              {tab.label}
-            </Text>
-            {tab.active ? (
-              <View style={[styles.navDot, { backgroundColor: accent }]} />
-            ) : null}
-          </View>
-        ))}
-      </View>
     </SafeAreaView>
   );
 }
@@ -273,14 +224,16 @@ function DashboardHome({ data }: { data: DashboardData }) {
  * ================================================================ */
 function SkeletonHome() {
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.paper }]}>
+    <SafeAreaView
+      edges={['top']}
+      style={[styles.safe, { backgroundColor: theme.paper2 }]}
+    >
       <StatusBar barStyle="dark-content" backgroundColor={theme.paper2} />
       <ScrollView
+        style={{ backgroundColor: theme.paper }}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* HEADER SKELETON — paper-toned instead of accent since we
-            don't know the academy color yet */}
         <View style={[styles.header, { backgroundColor: theme.paper2 }]}>
           <View style={styles.headerTop}>
             <View style={styles.brand}>
@@ -297,45 +250,22 @@ function SkeletonHome() {
         </View>
 
         <View style={styles.content}>
-          {/* HERO CLASS SKELETON */}
           <View style={styles.skeletonHeroCard}>
             <Skeleton width={110} height={18} radius={999} />
-            <Skeleton
-              width="70%"
-              height={22}
-              radius={6}
-              style={{ marginTop: 10 }}
-            />
-            <Skeleton
-              width="55%"
-              height={12}
-              radius={4}
-              style={{ marginTop: 8 }}
-            />
-            <Skeleton
-              width={150}
-              height={36}
-              radius={999}
-              style={{ marginTop: 16 }}
-            />
+            <Skeleton width="70%" height={22} radius={6} style={{ marginTop: 10 }} />
+            <Skeleton width="55%" height={12} radius={4} style={{ marginTop: 8 }} />
+            <Skeleton width={150} height={36} radius={999} style={{ marginTop: 16 }} />
           </View>
 
-          {/* ACTIONS */}
           <View style={styles.actionsRow}>
             {[0, 1, 2].map((i) => (
               <View key={i} style={styles.actionBtn}>
-                <Skeleton width={28} height={28} radius={8} />
-                <Skeleton
-                  width={50}
-                  height={10}
-                  radius={3}
-                  style={{ marginTop: 8 }}
-                />
+                <Skeleton width={40} height={40} radius={12} />
+                <Skeleton width={50} height={10} radius={3} style={{ marginTop: 8 }} />
               </View>
             ))}
           </View>
 
-          {/* PAYMENT CARD */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={{ gap: 6 }}>
@@ -347,7 +277,6 @@ function SkeletonHome() {
             <SkeletonLines lines={4} gap={14} />
           </View>
 
-          {/* WORKOUT CARD */}
           <View style={styles.card}>
             <Skeleton width={90} height={10} radius={3} />
             <View style={[styles.workoutHeader, { marginTop: 12 }]}>
@@ -379,7 +308,10 @@ function SkeletonHome() {
  * ================================================================ */
 function ErrorHome({ error, onRetry }: { error: Error; onRetry: () => void }) {
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.paper }]}>
+    <SafeAreaView
+      edges={['top']}
+      style={[styles.safe, { backgroundColor: theme.paper }]}
+    >
       <StatusBar barStyle="dark-content" backgroundColor={theme.paper} />
       <View style={styles.errorContainer}>
         <View style={styles.errorIcon}>
@@ -413,11 +345,15 @@ function ErrorHome({ error, onRetry }: { error: Error; onRetry: () => void }) {
  * ================================================================ */
 function EmptyHome() {
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.paper }]}>
+    <SafeAreaView
+      edges={['top']}
+      style={[styles.safe, { backgroundColor: theme.paper }]}
+    >
       <View style={styles.errorContainer}>
         <Text style={styles.errorTitle}>Nada por aqui ainda</Text>
         <Text style={styles.errorBody}>
-          Sua conta ainda não tem matrícula ativa nem ficha de treino. Fale com a recepção da sua academia.
+          Sua conta ainda não tem matrícula ativa nem ficha de treino. Fale
+          com a recepção da sua academia.
         </Text>
       </View>
     </SafeAreaView>
@@ -427,6 +363,12 @@ function EmptyHome() {
 /* ==================================================================
  * SUB-COMPONENTS
  * ================================================================ */
+
+const QUICK_ACTIONS: Array<{ label: string; Icon: LucideIcon }> = [
+  { label: 'Agenda',   Icon: Calendar },
+  { label: 'Treino',   Icon: Dumbbell },
+  { label: 'Finanças', Icon: CreditCard },
+];
 
 function StatusPill({
   status,
@@ -465,7 +407,11 @@ function Row({
       <Text
         style={[
           styles.rowV,
-          emphasize && { color: accent ?? theme.ink900, fontSize: 15, fontWeight: '800' },
+          emphasize && {
+            color: accent ?? theme.ink900,
+            fontSize: 15,
+            fontWeight: '800',
+          },
         ]}
       >
         {v}
@@ -504,40 +450,12 @@ function ExerciseRow({
 }
 
 /* ==================================================================
- * UTILS
+ * STYLES
  * ================================================================ */
-
-function withAlpha(hex: string, alpha: number): string {
-  const h = hex.replace('#', '');
-  if (h.length !== 6) return `rgba(239, 68, 68, ${alpha})`;
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-/* ==================================================================
- * THEME + STYLES
- * ================================================================ */
-
-const theme = {
-  paper:     '#faf8f5',
-  paper2:    '#f3efe8',
-  paper3:    '#e7e2d9',
-  ink900:    '#0c0a09',
-  ink700:    '#292524',
-  ink600:    '#44403c',
-  ink500:    '#57534e',
-  ink400:    '#78716c',
-  ink300:    '#a8a29e',
-  emerald:   '#059669',
-  emerald50: '#ecfdf5',
-  line:      '#e7e2d9',
-};
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  scroll: { paddingBottom: 100 },
+  scroll: { paddingBottom: 32 },
 
   header: {
     paddingTop: 16,
@@ -570,12 +488,12 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     position: 'relative',
   },
-  iconBtnText: { color: '#fff', fontSize: 16 },
   notifDot: {
     position: 'absolute', top: 6, right: 6,
     width: 8, height: 8, borderRadius: 4,
     backgroundColor: '#fbbf24',
     borderWidth: 2,
+    zIndex: 1,
   },
   welcome: { color: 'rgba(255,255,255,0.78)', fontSize: 14 },
   welcomeName: {
@@ -653,7 +571,14 @@ const styles = StyleSheet.create({
     borderColor: theme.line,
     alignItems: 'center',
   },
-  actionEmoji: { fontSize: 22, marginBottom: 4 },
+  actionIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
   actionLabel: { fontSize: 12, fontWeight: '600', color: theme.ink600 },
 
   card: {
@@ -718,9 +643,13 @@ const styles = StyleSheet.create({
     width: 44, height: 44, borderRadius: 12,
     alignItems: 'center', justifyContent: 'center',
   },
-  workoutIconText: { fontSize: 20 },
-  workoutName: { fontSize: 14, fontWeight: '700', color: theme.ink900, letterSpacing: -0.2 },
-  workoutMeta: { fontSize: 10, color: theme.ink400, marginTop: 2, letterSpacing: 0.4, fontWeight: '600' },
+  workoutName: {
+    fontSize: 14, fontWeight: '700', color: theme.ink900, letterSpacing: -0.2,
+  },
+  workoutMeta: {
+    fontSize: 10, color: theme.ink400, marginTop: 2,
+    letterSpacing: 0.4, fontWeight: '600',
+  },
 
   exRow: {
     flexDirection: 'row',
@@ -752,27 +681,6 @@ const styles = StyleSheet.create({
   },
   modeBannerBody: {
     fontSize: 12, color: theme.ink500, lineHeight: 17,
-  },
-
-  /* Bottom nav */
-  bottomNav: {
-    position: 'absolute',
-    bottom: 0, left: 0, right: 0,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: theme.line,
-    paddingTop: 10,
-    paddingBottom: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  navTab: { alignItems: 'center', gap: 3, paddingHorizontal: 10 },
-  navEmoji: { fontSize: 19, opacity: 0.35 },
-  navLabel: {
-    fontSize: 10, fontWeight: '600', color: theme.ink300, letterSpacing: 0.3,
-  },
-  navDot: {
-    width: 4, height: 4, borderRadius: 2, marginTop: 2,
   },
 
   /* Error state */

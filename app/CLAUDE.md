@@ -15,17 +15,22 @@ by the GraphQL API.
 
 ## Stack
 
-- **Expo SDK 51+** (React Native)
+- **Expo SDK 54** (React Native 0.81)
 - **TypeScript** (strict)
-- **expo-router** (file-system routing — same mental model as Next.js)
+- **expo-router 6** (file-system routing — same mental model as Next.js)
 - **Apollo Client 4** + `graphql` — every data call goes through GraphQL
-- **NativeWind** (Tailwind for React Native) for styling
-- **react-native-reanimated** + `react-native-gesture-handler` for motion
+- **Plain `StyleSheet`** with a shared token module at `lib/theme.ts`
+  (no NativeWind — see [design-decisions §4.10](../docs/design-decisions.md))
+- **lucide-react-native** + `react-native-svg` for icons
+- **react-native-safe-area-context** for notch-aware layouts
 - **expo-secure-store** for the JWT (NOT AsyncStorage — secrets belong in the keychain)
-- **expo-notifications** for class reminders + payment alerts
-- **expo-image** for fast image rendering
-- **react-hook-form** + `zod` for forms
-- **date-fns** with the `pt-BR` locale
+- **@graphql-codegen/cli** (client preset) for type-safe queries
+
+Planned on-demand:
+- `expo-notifications` for class reminders + payment alerts
+- `expo-image` for fast image rendering
+- `react-hook-form` + `zod` for forms
+- `date-fns` with the `pt-BR` locale
 
 ## Setup (for a fresh clone)
 
@@ -38,15 +43,18 @@ npm run start                 # starts the Metro bundler
 ```
 
 The initial scaffold used `create-expo-app@latest` with the
-`blank-typescript` template, plus `@apollo/client@4`, `graphql`,
-`expo-secure-store`, `@graphql-codegen/cli` and
-`@graphql-codegen/client-preset`. Additional libraries (NativeWind,
-expo-router, expo-notifications, expo-image, zod, react-hook-form) will
-be added on-demand as screens are built.
+`blank-typescript` template. Since then we've added `@apollo/client@4`,
+`graphql`, `expo-secure-store`, `@graphql-codegen/cli` +
+`@graphql-codegen/client-preset`, `expo-router` (+ `expo-linking`,
+`expo-constants`, `react-native-safe-area-context`,
+`react-native-screens`) and `lucide-react-native` +
+`react-native-svg`.
 
-`app.json` should set:
-- `expo.scheme` (deep links, e.g. `gymapp`)
-- `expo.web.bundler = "metro"`
+`app.json` already sets:
+- `expo.scheme = "gymapp"` (deep links)
+- `expo.plugins` includes `expo-router` and `expo-secure-store`
+
+Still to add when we need them:
 - `expo.notification` icon + color (per default branding)
 - `expo.ios.bundleIdentifier = "app.gym.student"`
 - `expo.android.package = "app.gym.student"`
@@ -56,91 +64,71 @@ be added on-demand as screens are built.
 ```
 app/
 ├── app/                          # expo-router (file-based)
-│   ├── _layout.tsx               # Root: Apollo provider, theme provider, fonts
-│   ├── index.tsx                 # Subdomain picker / academy not selected
-│   ├── (academy)/
-│   │   ├── _layout.tsx           # WhiteLabelProvider (fetches academyBySlug)
-│   │   ├── login.tsx
-│   │   ├── (tabs)/
-│   │   │   ├── _layout.tsx       # Bottom tab bar
-│   │   │   ├── index.tsx         # Dashboard
-│   │   │   ├── schedule.tsx
-│   │   │   ├── workouts.tsx
-│   │   │   ├── payments.tsx
-│   │   │   └── profile.tsx
-│   │   ├── workout/[id].tsx      # Workout detail
-│   │   ├── booking/[id].tsx      # Class booking detail
-│   │   └── payment/[id].tsx      # Payment receipt detail
-│   └── +not-found.tsx
+│   ├── _layout.tsx               # Root: Apollo provider + safe-area provider + Stack
+│   └── (tabs)/
+│       ├── _layout.tsx           # Custom tab bar with lucide icons (BrandedTabBar)
+│       ├── index.tsx             # Dashboard (home)
+│       ├── schedule.tsx          # Agenda (placeholder)
+│       ├── workouts.tsx          # Treinos (placeholder)
+│       ├── payments.tsx          # Finanças (placeholder)
+│       └── profile.tsx           # Perfil (placeholder)
 ├── components/
-│   ├── BrandHeader.tsx           # Academy logo + name (themed)
-│   ├── ClassCard.tsx
-│   ├── PaymentBadge.tsx
-│   ├── WorkoutCard.tsx
-│   ├── ExerciseRow.tsx
-│   └── ui/                       # Buttons, Cards, Inputs (NativeWind primitives)
+│   ├── Skeleton.tsx              # Animated skeleton placeholder
+│   └── PlaceholderScreen.tsx     # Shared "em breve" layout for unwired tabs
+├── hooks/
+│   └── useDashboard.ts           # Single data entrypoint — mock or Apollo
 ├── lib/
 │   ├── apollo.ts                 # Apollo Client (httpLink + authLink)
-│   ├── auth.ts                   # SecureStore wrappers
-│   ├── theme.tsx                 # ThemeProvider — sets per-academy colors
-│   ├── notifications.ts          # expo-notifications helpers
-│   └── format.ts                 # Currency / date formatters (pt-BR)
-├── hooks/
-│   ├── useAcademy.ts             # Wraps Query.academyBySlug
-│   ├── useMe.ts                  # Wraps Query.me
-│   └── useBookings.ts
+│   ├── apollo-provider.tsx       # Mock-aware provider (pass-through in demo mode)
+│   ├── config.ts                 # EXPO_PUBLIC_* env reader, USE_MOCKS flag
+│   ├── mock-data.ts              # Fixtures for demo mode
+│   ├── theme.ts                  # Paper/ink palette + withAlpha helper
+│   └── types.ts                  # Domain shape consumed by every screen
 ├── graphql/                      # .graphql query files (codegen target)
+├── gql/                          # Generated types (committed)
 ├── assets/                       # Default icons, splash, fonts
 ├── app.json
-├── tailwind.config.js            # NativeWind
-├── babel.config.js
+├── codegen.ts
 └── tsconfig.json
 ```
 
+### Still to scaffold
+
+- `/login` route + `(academy)` group (white-label picker)
+- `workout/[id]`, `booking/[id]`, `payment/[id]` detail routes
+- `lib/auth.ts` (SecureStore wrappers), `lib/notifications.ts`,
+  `lib/format.ts` (currency + date helpers)
+
 ## White-label theming
 
-The app reads the academy slug from one of:
-1. A deep link query param (`gymapp://?slug=crossfit-sp`)
-2. A previously-stored value in SecureStore (`academy_slug`)
-3. The login screen's "select your academy" picker (apex case)
-
-It then calls the public `Query.academyBySlug` (no auth required — that's
-why the resolver is the only `auth: false` entry in the GraphQL schema)
-and applies the result to a `ThemeProvider`. NativeWind picks up the
-colors from CSS variables on web and from a `useTheme()` hook on native.
+Neutral tokens (paper / ink / line / emerald) live in `lib/theme.ts` as
+a plain `const` object — imported by every screen and the custom tab
+bar. The per-academy accent color arrives via the dashboard query and
+is threaded through props: `useDashboard()` returns
+`data.academy.primaryColor`, which the dashboard and the tab bar both
+read. No context provider is needed yet — Apollo's normalized cache
+deduplicates the second `useDashboard()` call in the tab bar.
 
 ```ts
-// lib/theme.tsx
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
-import { ACADEMY_BY_SLUG } from '@/graphql/academy';
-
-const DEFAULT_THEME = {
-  primary: '#0c0a09',
-  primaryDark: '#000',
-  primaryContrast: '#ffffff',
+// lib/theme.ts
+export const theme = {
   paper: '#faf8f5',
-};
+  ink900: '#0c0a09',
+  ink300: '#a8a29e',
+  line: '#e7e2d9',
+  // ...etc
+} as const;
 
-export const ThemeContext = createContext(DEFAULT_THEME);
-export const useTheme = () => useContext(ThemeContext);
-
-export function ThemeProvider({ slug, children }: { slug: string; children: React.ReactNode }) {
-  const { data } = useQuery(ACADEMY_BY_SLUG, { variables: { slug } });
-  const academy = data?.academyBySlug;
-
-  const theme = academy
-    ? {
-        primary: academy.primaryColor,
-        primaryDark: shade(academy.primaryColor, -0.15),
-        primaryContrast: contrastOn(academy.primaryColor),
-        paper: '#faf8f5',
-      }
-    : DEFAULT_THEME;
-
-  return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
+export function withAlpha(hex: string, alpha: number): string {
+  // Used for accent-tinted icon backdrops — the quick-actions row and
+  // the workout icon box both rely on this.
 }
 ```
+
+Once we add the `/login` flow and the subdomain picker, theming will
+graduate to a proper `WhiteLabelProvider` that fetches `academyBySlug`
+from SecureStore-persisted state. Until then, the dashboard query
+(`MyDashboard`) is the single source of truth for the active academy.
 
 `mockups/student-dashboard.html` is the visual reference — note the
 phone-frame layout, the way the header colour cascades into the card
@@ -230,6 +218,31 @@ app stores. The release channels are:
 eas update --branch production --message "fix payment receipt formatting"
 ```
 
+### Authenticating on a server (`EXPO_TOKEN`)
+
+Serving the dev bundle via the Docker image (`expo start --go`) is
+anonymous — it does not need an Expo login. But any EAS call (`eas
+update`, `eas build`, `eas submit`) does.
+
+**Never run interactive `expo login` inside a container**: the
+credentials land in `/root/.expo/state.json`, which is lost on every
+container rebuild. Use a personal access token instead.
+
+1. Generate a token at
+   <https://expo.dev/settings/access-tokens>. The value is shown once
+   — paste it into the server's `.env`, **not** the repo.
+2. `.env.example` declares `EXPO_TOKEN=` (empty). Fill it in on the
+   server only.
+3. `docker run --env-file .env ...` (or the equivalent compose
+   `env_file:`) forwards it into the container. The `Dockerfile`
+   declares `ENV EXPO_TOKEN=""` so the variable exists but the real
+   value is never baked into an image layer.
+4. The entrypoint prints `expo auth = token present (N chars)` at
+   boot so you can confirm it arrived without exposing the value.
+5. Every subsequent `docker exec <container> npx eas ...` call is
+   auto-authenticated — the CLI reads `EXPO_TOKEN` before falling
+   back to any on-disk state.
+
 ## SEO / discoverability
 
 Native apps don't index in Google, but the app **does** export a static
@@ -255,14 +268,17 @@ the marketing site (`website/`) is the only SEO-relevant surface.
 
 ## Implementation Order
 
-1. `npx create-expo-app` with the tabs template
-2. NativeWind + theme provider + Apollo Client
-3. Login screen + secure JWT storage
-4. White-label theming (academyBySlug query → ThemeProvider)
-5. Dashboard tab (mirrors `mockups/student-dashboard.html`)
-6. Schedule tab (weekly calendar + booking flow)
-7. Workouts tab (list + detail)
-8. Payments tab (history + receipt)
-9. Profile tab (settings, body assessments)
-10. Push notifications wiring
-11. EAS build + OTA update channels
+- [x] `create-expo-app` with the blank TypeScript template
+- [x] Apollo Client 4 + GraphQL codegen
+- [x] Mock-vs-API toggle (`EXPO_PUBLIC_USE_MOCKS`)
+- [x] Dashboard screen (mirrors `mockups/student-dashboard.html`)
+- [x] expo-router + `(tabs)` layout with a custom `BrandedTabBar`
+- [x] lucide-react-native icons everywhere (no more emoji)
+- [ ] Login screen + secure JWT storage (SecureStore wrappers)
+- [ ] Academy picker + proper `WhiteLabelProvider`
+- [ ] Schedule tab content (weekly calendar + booking flow)
+- [ ] Workouts tab content (list + detail)
+- [ ] Payments tab content (history + receipt)
+- [ ] Profile tab content (settings, body assessments)
+- [ ] Push notifications wiring
+- [ ] EAS build + OTA update channels

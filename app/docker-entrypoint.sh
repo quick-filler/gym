@@ -86,6 +86,17 @@ HTML
 echo ">> serving QR page at http://${PUBLIC_HOST}/"
 echo ">>   exp URL = ${EXP_URL}"
 
+# Show whether the CLI is authenticated. We only check for the presence
+# of the env var — no network call, no token contents printed. Serving
+# the dev bundle via `expo start --go` does not need a token; this line
+# exists so you can confirm EXPO_TOKEN reached the container before
+# running `eas update` / `eas build` inside it.
+if [ -n "${EXPO_TOKEN:-}" ]; then
+  echo ">>   expo auth = token present (${#EXPO_TOKEN} chars)"
+else
+  echo ">>   expo auth = anonymous (no EXPO_TOKEN set)"
+fi
+
 # Tiny static server for the QR landing page. `-f` keeps it foregrounded
 # in the subshell so we can background the whole thing cleanly.
 busybox httpd -f -p 0.0.0.0:80 -h /srv/www &

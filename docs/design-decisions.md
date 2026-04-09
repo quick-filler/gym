@@ -507,13 +507,18 @@ right below. We want the history, not a clean slate.
   escape hatch.
 - **Revisit when** — Never, unless expo-router breaks stability.
 
-### 5.2 NativeWind, not StyleSheet
+### 5.2 NativeWind, not StyleSheet  [SUPERSEDED — see §5.6]
 
 - **Decision** — Tailwind classes on React Native via NativeWind.
 - **Rationale** — Same Tailwind config as the website (minus web-only
   utilities). Component copy-paste between projects *almost* works.
 - **Consequences** — NativeWind occasionally lags the latest Tailwind
   features. Acceptable.
+- **Superseded** — Never actually installed. When the dashboard was
+  built we reached for `StyleSheet.create` first (lower friction for
+  the fast iteration loop), and that happened to match the website's
+  decision to skip shadcn/ui in favour of hand-rolled primitives
+  (§4.8). §5.6 makes that the new official position.
 
 ### 5.3 `expo-secure-store` for the JWT, not AsyncStorage
 
@@ -542,6 +547,62 @@ right below. We want the history, not a clean slate.
 - **Consequences** — An unauthenticated user with an academy slug can
   fetch name/colors/logo. Acceptable — that info is already on the
   academy's public Instagram.
+
+### 5.6 Plain `StyleSheet` + shared `lib/theme.ts` (no NativeWind)
+
+- **Decision** — The student app styles components with
+  `StyleSheet.create` and imports a shared `theme` object + `withAlpha`
+  helper from `lib/theme.ts`. No Tailwind, no NativeWind, no CSS-in-JS
+  library.
+- **Context** — The mockups at `mockups/student-dashboard.html` use a
+  very specific paper/ink/accent palette with precise shadows,
+  rounded-corner ratios, and alpha-blended icon backdrops. Every
+  screen ported from the mockups uses the same five or six base
+  styles over and over.
+- **Rationale** — NativeWind's pitch (copy-pasteable Tailwind classes
+  between website and app) evaporates once you realise (a) the website
+  ships hand-rolled primitives not shadcn (see §4.8), so there's
+  nothing to copy; (b) the dashboard needs runtime accent colors from
+  the academy query, which means either passing the color through a
+  prop (which works identically with `StyleSheet` via inline style
+  arrays) or plumbing it through `className` with a dynamic CSS var
+  (more ceremony). Plain `StyleSheet` gives us the RN perf story, the
+  smallest bundle, and zero build-time surprises.
+- **Consequences** — `lib/theme.ts` is the only place neutral tokens
+  live. Components reach for `theme.ink900` directly; the per-academy
+  `primaryColor` threads through via `useDashboard()`. If we ever need
+  NativeWind later (e.g., sharing one component between website and
+  app), the migration is mechanical because every style is already an
+  object.
+- **Revisit when** — We need to share actual component source between
+  `website/` and `app/`, OR we have more than ~15 screens and the
+  style definitions start feeling repetitive.
+
+### 5.7 `lucide-react-native` for icons (no emoji)
+
+- **Decision** — All UI icons come from `lucide-react-native`
+  (backed by `react-native-svg`). Emoji are never used as icons in
+  interactive elements — they remain acceptable only inside
+  user-generated content or marketing copy.
+- **Context** — The initial dashboard shipped with emoji placeholders
+  (`📅`, `💪`, `💳`, `🏋️`, `●` for the bell). On iOS they render as
+  Apple's colorful emoji, on Android as Google's, and on web as
+  whatever the OS serves — none of which match the paper/ink
+  aesthetic, and none of which respect a stroke color or a hover
+  state. The bottom nav also looked broken because the "active" state
+  was "same emoji at full opacity", which is not a state change a
+  user notices.
+- **Rationale** — lucide is the same icon family the website uses
+  (`lucide-react`), same names, same visual weight. `react-native-svg`
+  is a first-class Expo dep — zero native config. The icons inherit
+  `color` and `strokeWidth` props, so the per-academy accent flows
+  through naturally and the active tab gets a bolder stroke.
+- **Consequences** — Every new screen imports named icons from
+  `lucide-react-native` (`import { Home, Dumbbell } from
+  'lucide-react-native'`). Bundle cost is ~per-icon tree-shaken. No
+  icon font, no sprite sheet to maintain.
+- **Revisit when** — We need an icon lucide doesn't have and custom
+  SVG is faster than asking the design pass upstream.
 
 ---
 
@@ -984,6 +1045,31 @@ will be redesigned when they're ported to Next.js/Expo).
   `typescript` package during start, or `ts.getParsedCommandLineOfConfigFile`
   gains an option to skip input-file validation.
 
+### 9.10 `app/` typecheck uses `node --stack-size=8000`
+
+- **Decision** — `app/package.json` exposes a `typecheck` script that
+  runs `node --stack-size=8000 node_modules/typescript/lib/tsc.js
+  --noEmit` rather than a bare `tsc --noEmit`. Anything measuring the
+  app's type health (CI, pre-commit hooks, local verification) calls
+  `npm run typecheck`.
+- **Context** — After wiring expo-router, `npx tsc --noEmit` started
+  crashing with `RangeError: Maximum call stack size exceeded` deep
+  inside `checkNonNullExpression` → `getTypeAtFlowCall`. No source
+  error — TypeScript's own control-flow analysis was recursing past
+  the default V8 stack size while resolving the generic router types
+  that expo-router + `@react-navigation/*` pipe through.
+- **Rationale** — Doubling the V8 stack is cheap (a handful of MB per
+  tsc invocation) and turns the failure into a clean pass. The
+  alternative — manually annotating every crossing of the router type
+  boundary to break the inference chain — is architectural clutter
+  for a pure tooling problem.
+- **Consequences** — Never run `npx tsc --noEmit` directly inside
+  `app/`. If a new tool invokes tsc without the flag, it will
+  spuriously fail until it's taught to call `npm run typecheck`.
+- **Revisit when** — expo-router or TypeScript ships a fix that
+  makes the recursion bounded, OR a future refactor makes the router
+  types shallow enough that default stack space is sufficient.
+
 ---
 
 ## 10. Rejected options
@@ -1080,3 +1166,15 @@ Explicit no's so we don't re-argue them.
   fresh clone renders the full UI without Strapi. Added §4.7
   (demo-mode toggle), §4.8 (no shadcn/ui for now), and §4.9 (Tailwind
   v4 `@theme` as token source of truth).
+- **2026-04-08** — Migrated `app/` from a single-screen `App.tsx` to a
+  proper expo-router tree: `app/_layout.tsx` (Apollo provider +
+  safe-area root) and `app/(tabs)/_layout.tsx` with a custom
+  `BrandedTabBar` that matches the mockup's paper-background + accent
+  dot aesthetic. Ported the dashboard to `(tabs)/index.tsx` and added
+  four placeholder screens (`schedule`, `workouts`, `payments`,
+  `profile`) sharing a new `components/PlaceholderScreen.tsx`.
+  Swapped every emoji icon (`📅`, `💪`, `💳`, `🏋️`, `●`) for
+  `lucide-react-native` components — same family as the website's
+  `lucide-react`. Marked §5.2 (NativeWind) as SUPERSEDED and added
+  §5.6 (plain `StyleSheet` + shared `lib/theme.ts`) and §5.7
+  (`lucide-react-native` for icons, no emoji).

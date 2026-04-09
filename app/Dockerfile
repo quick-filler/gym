@@ -21,6 +21,13 @@ ENV NPM_CONFIG_FUND=false \
     EXPO_NO_TELEMETRY=1 \
     CI=1
 
+# EXPO_TOKEN is consumed by the Expo CLI for any authenticated operation
+# (eas update / build / submit). It is NEVER baked into the image — pass
+# it at runtime with `-e EXPO_TOKEN=...` or `--env-file .env`. Declaring
+# it here only documents the contract and lets the entrypoint warn
+# cleanly when it's missing for commands that need it.
+ENV EXPO_TOKEN=""
+
 # libqrencode-tools → `qrencode` CLI used by the entrypoint
 # busybox → already in the base image but apk ensures `httpd` applet is present
 # git     → some npm postinstalls still need it
