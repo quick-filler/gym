@@ -41,18 +41,36 @@ METRO_PUBLIC_URL="${METRO_PUBLIC_URL:-}"
 METRO_PUBLIC_URL="${METRO_PUBLIC_URL%/}"
 
 if [ -n "${METRO_PUBLIC_URL}" ]; then
-  # Advertised mode — a fronted HTTPS URL hands the manifest to Expo Go.
-  # Parse the bare hostname out of the URL so REACT_NATIVE_PACKAGER_HOSTNAME
-  # (which only accepts host, no scheme/port) stays valid.
+  # Advertised mode — a Traefik router fronts Metro with TLS.
+  #
+  # Parse the URL into its parts. The `exp://` URL we build for the QR
+  # has to match EXACTLY what @expo/cli would produce when
+  # EXPO_PACKAGER_PROXY_URL is set and scheme='exp' is requested. See
+  # node_modules/expo/node_modules/@expo/cli/build/src/start/server/
+  #   {UrlCreator,BundlerDevServer}.js
+  # The logic there is:
+  #   - protocol stays "exp" (so the phone deep-links into Expo Go)
+  #   - port is taken from the proxy URL; if empty and the proxy URL is
+  #     https:// then it's forced to 443
+  # The resulting URL looks like `exp://host:443`. Encoding anything else
+  # in the QR (like a bare https:// URL) makes the phone camera open it
+  # in a browser instead of Expo Go.
+  METRO_SCHEME=$(printf '%s' "${METRO_PUBLIC_URL}" | sed -E 's|^([a-zA-Z]+)://.*$|\1|')
   METRO_HOST=$(printf '%s' "${METRO_PUBLIC_URL}" | sed -E 's|^[a-zA-Z]+://||; s|/.*$||; s|:[0-9]+$||')
-  export REACT_NATIVE_PACKAGER_HOSTNAME="${METRO_HOST}"
+  METRO_EXPLICIT_PORT=$(printf '%s' "${METRO_PUBLIC_URL}" | sed -nE 's|^[a-zA-Z]+://[^/]+:([0-9]+).*$|\1|p')
+  if [ -n "${METRO_EXPLICIT_PORT}" ]; then
+    METRO_ADVERTISED_PORT="${METRO_EXPLICIT_PORT}"
+  elif [ "${METRO_SCHEME}" = "https" ]; then
+    METRO_ADVERTISED_PORT="443"
+  else
+    METRO_ADVERTISED_PORT="80"
+  fi
 
-  # EXPO_PACKAGER_PROXY_URL is what @expo/cli's UrlCreator uses verbatim
-  # as the manifest URL — no port is appended. Seen in
-  # node_modules/expo/node_modules/@expo/cli/build/src/start/server/UrlCreator.js:204
+  export REACT_NATIVE_PACKAGER_HOSTNAME="${METRO_HOST}"
   export EXPO_PACKAGER_PROXY_URL="${METRO_PUBLIC_URL}"
 
-  EXP_URL="${METRO_PUBLIC_URL}"
+  # `exp://` scheme is what makes the phone deep-link into Expo Go.
+  EXP_URL="exp://${METRO_HOST}:${METRO_ADVERTISED_PORT}"
   BUNDLER_LABEL="${METRO_PUBLIC_URL}"
 else
   # Legacy mode — no separate Metro subdomain. Expo Go connects directly
