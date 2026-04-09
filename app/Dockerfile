@@ -28,10 +28,15 @@ ENV NPM_CONFIG_FUND=false \
 # cleanly when it's missing for commands that need it.
 ENV EXPO_TOKEN=""
 
-# libqrencode-tools → `qrencode` CLI used by the entrypoint
-# busybox → already in the base image but apk ensures `httpd` applet is present
-# git     → some npm postinstalls still need it
-RUN apk add --no-cache libc6-compat git libqrencode-tools
+# libqrencode-tools → `qrencode` CLI used by the entrypoint to draw the QR PNG
+# busybox-extras    → adds the `httpd` applet that the entrypoint uses to
+#                     serve /srv/www. The base `busybox` in node:22-alpine
+#                     does NOT ship httpd; installing this package provides
+#                     a second binary at /usr/bin/busybox-extras with the
+#                     extra applets enabled. Must be invoked explicitly as
+#                     `busybox-extras httpd ...` (no bare `httpd` symlink).
+# git               → some npm postinstalls still need it
+RUN apk add --no-cache libc6-compat git libqrencode-tools busybox-extras
 
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \

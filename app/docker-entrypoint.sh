@@ -99,7 +99,11 @@ fi
 
 # Tiny static server for the QR landing page. `-f` keeps it foregrounded
 # in the subshell so we can background the whole thing cleanly.
-busybox httpd -f -p 0.0.0.0:80 -h /srv/www &
+#
+# The `httpd` applet is NOT in node:22-alpine's default busybox — it lives
+# in the `busybox-extras` package which the Dockerfile installs. Invoke
+# via `busybox-extras httpd` explicitly; there is no bare `httpd` symlink.
+busybox-extras httpd -f -p 0.0.0.0:80 -h /srv/www &
 
 # Metro bundler + Expo CLI in the foreground. --host lan tells Metro to
 # bind on 0.0.0.0 and use REACT_NATIVE_PACKAGER_HOSTNAME for URLs.
