@@ -453,3 +453,97 @@ worth adding manually as performance grows:
 - [x] Demo seed (Gym Demo academy)
 - [ ] Multi-language Plan fields (i18n plugin) — not requested yet
 - [ ] Dataloader on relation field resolvers — defer until N+1 hurts
+
+---
+
+## 📋 v2 — Módulo de Controle de Custos
+
+> Planejado para após o MVP. Disponível nos planos **Business** e **Pro**.
+
+### Novo Content Type: `Expense` (Despesa)
+
+| Field         | Type     | Notes                                                              |
+|---------------|----------|--------------------------------------------------------------------|
+| description   | String   | Ex: "Aluguel de outubro", "Conta de luz"                          |
+| amount        | Decimal  | Valor em R$                                                        |
+| date          | Date     | Data da despesa/competência                                        |
+| category      | Enum     | Ver categorias abaixo                                              |
+| type          | Enum     | `fixed` (fixo) / `variable` (variável)                            |
+| recurrent     | Boolean  | Se é uma despesa que se repete todo mês                           |
+| recurrenceDay | Integer  | Dia do mês para despesas recorrentes (ex: 5 = dia 5 de cada mês) |
+| notes         | Text     | Observações livres                                                 |
+| receipt       | Media    | Foto/PDF do comprovante (opcional)                                 |
+| academy       | Relation | manyToOne Academy                                                  |
+
+**Categorias (`category` enum):**
+- `rent` — Aluguel
+- `utilities` — Água, luz, internet, telefone
+- `payroll` — Salários e encargos
+- `equipment` — Equipamentos e manutenção
+- `marketing` — Publicidade e marketing
+- `supplies` — Material de limpeza e consumo
+- `taxes` — Impostos e taxas
+- `software` — Sistemas e assinaturas
+- `other` — Outros
+
+### Novo Content Type: `FinancialSummary` (cache mensal — opcional)
+
+Tabela de cache para o DRE. Recalculada via cron mensal ou on-demand.
+
+| Field          | Type     | Notes                         |
+|----------------|----------|-------------------------------|
+| academy        | Relation | manyToOne Academy             |
+| month          | Integer  | 1–12                          |
+| year           | Integer  | Ex: 2026                      |
+| totalRevenue   | Decimal  | Soma de payments pagos no mês |
+| totalExpenses  | Decimal  | Soma de expenses do mês       |
+| netProfit      | Decimal  | totalRevenue − totalExpenses  |
+| fixedCosts     | Decimal  | Soma dos custos fixos         |
+| variableCosts  | Decimal  | Soma dos custos variáveis     |
+
+### Novas Custom Routes
+
+```
+GET  /api/finance/summary?month=4&year=2026   → DRE simplificado do mês
+GET  /api/finance/expenses?month=4&year=2026  → Lista de despesas do mês
+POST /api/finance/expenses                    → Cadastrar nova despesa
+GET  /api/finance/cashflow?months=6           → Fluxo de caixa últimos N meses
+```
+
+### DRE Response Example
+
+```json
+{
+  "month": 4, "year": 2026,
+  "revenue": {
+    "total": 18420.00,
+    "byPlan": [
+      { "plan": "Mensal", "count": 120, "total": 11880.00 },
+      { "plan": "Trimestral", "count": 60, "total": 4860.00 },
+      { "plan": "Anual", "count": 10, "total": 1680.00 }
+    ]
+  },
+  "expenses": {
+    "total": 9800.00,
+    "fixed": 7500.00,
+    "variable": 2300.00,
+    "byCategory": [
+      { "category": "rent", "total": 4500.00 },
+      { "category": "payroll", "total": 3000.00 },
+      { "category": "utilities", "total": 800.00 },
+      { "category": "marketing", "total": 900.00 },
+      { "category": "other", "total": 600.00 }
+    ]
+  },
+  "netProfit": 8620.00,
+  "profitMargin": 46.8
+}
+```
+
+### Permissões v2
+
+| Role            | Expense access                                |
+|-----------------|-----------------------------------------------|
+| `academy_admin` | Full CRUD on own academy expenses             |
+| `instructor`    | Read-only (opcional, configurável pelo admin) |
+| `student`       | Sem acesso                                    |
