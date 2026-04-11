@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym — Treinos</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #f1f5f9; display: flex; height: 100vh; overflow: hidden; }
+  .sidebar { width: 240px; background: #1e1b4b; display: flex; flex-direction: column; padding: 0; flex-shrink: 0; height: 100vh; }
+  .sidebar-header { padding: 1.5rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .sidebar-logo { font-size: 1.25rem; font-weight: 800; color: #fff; }
+  .sidebar-tagline { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 0.2rem; }
+  .sidebar-section-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.3); padding: 1.25rem 1.25rem 0.5rem; }
+  .sidebar-nav { display: flex; flex-direction: column; padding: 0 0.75rem; gap: 0.2rem; }
+  .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.75rem; border-radius: 8px; color: rgba(255,255,255,0.6); font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.15s; text-decoration: none; }
+  .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  .nav-item.active { background: rgba(99,102,241,0.25); color: #fff; }
+  .nav-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+  .sidebar-footer { margin-top: auto; padding: 1rem 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); }
+  .user-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.75rem; border-radius: 8px; cursor: pointer; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.75rem; font-weight: 700; }
+  .user-name { color: #fff; font-size: 0.8rem; font-weight: 600; }
+  .user-role { color: rgba(255,255,255,0.4); font-size: 0.7rem; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: #fff; padding: 0 1.75rem; height: 60px; display: flex; align-items: center; border-bottom: 1px solid #e2e8f0; gap: 1rem; flex-shrink: 0; }
+  .topbar-title { font-size: 1rem; font-weight: 700; color: #1e1b4b; flex: 1; }
+  .btn-add { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+  .content { flex: 1; overflow-y: auto; padding: 1.75rem; }
+  .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+  .page-title { font-size: 1.4rem; font-weight: 800; color: #1e1b4b; }
+  .page-subtitle { color: #64748b; font-size: 0.875rem; margin-top: 0.25rem; }
+  .tabs { display: flex; gap: 0.25rem; background: #f1f5f9; border-radius: 10px; padding: 0.25rem; margin-bottom: 1.5rem; width: fit-content; }
+  .tab { padding: 0.5rem 1.25rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #64748b; }
+  .tab.active { background: #fff; color: #1e1b4b; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .workout-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+  .workout-card { background: #fff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); overflow: hidden; }
+  .workout-card-header { padding: 1.25rem; display: flex; align-items: center; gap: 0.875rem; border-bottom: 1px solid #f1f5f9; }
+  .workout-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+  .workout-name { font-weight: 700; color: #1e1b4b; font-size: 0.95rem; }
+  .workout-meta { font-size: 0.75rem; color: #94a3b8; margin-top: 0.15rem; }
+  .student-tag { margin-left: auto; display: flex; align-items: center; gap: 0.4rem; }
+  .s-mini-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 800; color: #fff; }
+  .exercise-list { padding: 0.75rem 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .ex-row { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.75rem; background: #f8fafc; border-radius: 8px; }
+  .ex-name { font-size: 0.82rem; font-weight: 600; color: #1e1b4b; }
+  .ex-detail { font-size: 0.72rem; color: #94a3b8; }
+  .ex-load { font-size: 0.8rem; font-weight: 700; color: #6366f1; }
+  .workout-footer { padding: 0.875rem 1.25rem; border-top: 1px solid #f1f5f9; display: flex; gap: 0.5rem; }
+  .btn-sm { font-size: 0.78rem; padding: 0.4rem 0.875rem; border-radius: 7px; font-weight: 600; cursor: pointer; text-decoration: none; border: none; }
+  .btn-sm-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+  .btn-sm-outline { background: transparent; color: #6366f1; border: 1.5px solid #6366f1; }
+  .btn-sm-ghost { background: #f1f5f9; color: #64748b; }
+  .badge { padding: 0.22rem 0.6rem; border-radius: 999px; font-size: 0.68rem; font-weight: 700; }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-gray { background: #f1f5f9; color: #475569; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">🏋️ Gym</div>
+    <div class="sidebar-tagline">CrossFit SP — Painel Admin</div>
+  </div>
+  <div class="sidebar-section-label">Principal</div>
+  <nav class="sidebar-nav">
+    <a href="admin-dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+    <a href="admin-students.html" class="nav-item"><span class="icon">👥</span> Alunos</a>
+    <a href="admin-dependents.html" class="nav-item"><span class="icon">👨‍👧</span> Dependentes</a>
+    <a href="admin-finance.html" class="nav-item"><span class="icon">💰</span> Financeiro</a>
+    <a href="admin-dre.html" class="nav-item"><span class="icon">📈</span> DRE / Custos</a>
+    <a href="admin-schedule.html" class="nav-item"><span class="icon">📅</span> Agenda</a>
+    <a href="admin-workouts.html" class="nav-item active"><span class="icon">💪</span> Treinos</a>
+    <a href="admin-settings.html" class="nav-item"><span class="icon">⚙️</span> Configurações</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="avatar">CS</div>
+      <div><div class="user-name">CrossFit SP</div><div class="user-role">Administrador</div></div>
+    </div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Fichas de Treino</div>
+    <button class="btn-add">+ Nova Ficha</button>
+  </div>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Fichas de Treino</div>
+        <div class="page-subtitle">8 fichas ativas — criadas pelo instrutor</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab active">Fichas Ativas</div>
+      <div class="tab">Avaliações Físicas</div>
+      <div class="tab">Arquivadas</div>
+    </div>
+    <div class="workout-grid">
+
+      <div class="workout-card">
+        <div class="workout-card-header">
+          <div class="workout-icon" style="background:#ede9fe">🏋️</div>
+          <div>
+            <div class="workout-name">Treino A — Peito e Tríceps</div>
+            <div class="workout-meta">5 exercícios · Criado 14/03 · Instrutor Rafael</div>
+          </div>
+          <div class="student-tag">
+            <div class="s-mini-avatar" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">JS</div>
+          </div>
+        </div>
+        <div class="exercise-list">
+          <div class="ex-row"><div><div class="ex-name">Supino Reto</div><div class="ex-detail">4×12</div></div><div class="ex-load">60kg</div></div>
+          <div class="ex-row"><div><div class="ex-name">Crucifixo Inclinado</div><div class="ex-detail">3×15</div></div><div class="ex-load">16kg</div></div>
+          <div class="ex-row"><div><div class="ex-name">Tríceps Corda</div><div class="ex-detail">4×12</div></div><div class="ex-load">25kg</div></div>
+        </div>
+        <div class="workout-footer">
+          <a href="#" class="btn-sm btn-sm-primary">Editar</a>
+          <a href="#" class="btn-sm btn-sm-outline">Duplicar</a>
+          <span class="badge badge-green" style="margin-left:auto;align-self:center">Ativo</span>
+        </div>
+      </div>
+
+      <div class="workout-card">
+        <div class="workout-card-header">
+          <div class="workout-icon" style="background:#fef3c7">🦵</div>
+          <div>
+            <div class="workout-name">Treino B — Pernas</div>
+            <div class="workout-meta">6 exercícios · Criado 14/03 · Instrutor Rafael</div>
+          </div>
+          <div class="student-tag">
+            <div class="s-mini-avatar" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">JS</div>
+          </div>
+        </div>
+        <div class="exercise-list">
+          <div class="ex-row"><div><div class="ex-name">Agachamento Livre</div><div class="ex-detail">4×10</div></div><div class="ex-load">80kg</div></div>
+          <div class="ex-row"><div><div class="ex-name">Leg Press 45°</div><div class="ex-detail">4×12</div></div><div class="ex-load">120kg</div></div>
+          <div class="ex-row"><div><div class="ex-name">Cadeira Extensora</div><div class="ex-detail">3×15</div></div><div class="ex-load">40kg</div></div>
+        </div>
+        <div class="workout-footer">
+          <a href="#" class="btn-sm btn-sm-primary">Editar</a>
+          <a href="#" class="btn-sm btn-sm-outline">Duplicar</a>
+          <span class="badge badge-green" style="margin-left:auto;align-self:center">Ativo</span>
+        </div>
+      </div>
+
+      <div class="workout-card">
+        <div class="workout-card-header">
+          <div class="workout-icon" style="background:#d1fae5">🏊</div>
+          <div>
+            <div class="workout-name">Natação Iniciante</div>
+            <div class="workout-meta">4 séries · Criado 01/04 · Instrutor Carla</div>
+          </div>
+          <div class="student-tag">
+            <div class="s-mini-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">SC</div>
+          </div>
+        </div>
+        <div class="exercise-list">
+          <div class="ex-row"><div><div class="ex-name">Crawl — 25m</div><div class="ex-detail">4×1 volta</div></div><div class="ex-load">—</div></div>
+          <div class="ex-row"><div><div class="ex-name">Costas — 25m</div><div class="ex-detail">3×1 volta</div></div><div class="ex-load">—</div></div>
+          <div class="ex-row"><div><div class="ex-name">Peito — 25m</div><div class="ex-detail">3×1 volta</div></div><div class="ex-load">—</div></div>
+        </div>
+        <div class="workout-footer">
+          <a href="#" class="btn-sm btn-sm-primary">Editar</a>
+          <a href="#" class="btn-sm btn-sm-outline">Duplicar</a>
+          <span class="badge badge-green" style="margin-left:auto;align-self:center">Ativo</span>
+        </div>
+      </div>
+
+      <div class="workout-card">
+        <div class="workout-card-header">
+          <div class="workout-icon" style="background:#fee2e2">🥊</div>
+          <div>
+            <div class="workout-name">Funcional Avançado</div>
+            <div class="workout-meta">7 exercícios · Criado 02/04 · Instrutor Carlos</div>
+          </div>
+          <div class="student-tag">
+            <div class="s-mini-avatar" style="background:linear-gradient(135deg,#10b981,#06b6d4)">ML</div>
+          </div>
+        </div>
+        <div class="exercise-list">
+          <div class="ex-row"><div><div class="ex-name">Burpees</div><div class="ex-detail">4×15</div></div><div class="ex-load">—</div></div>
+          <div class="ex-row"><div><div class="ex-name">Kettlebell Swing</div><div class="ex-detail">4×20</div></div><div class="ex-load">16kg</div></div>
+          <div class="ex-row"><div><div class="ex-name">Box Jump</div><div class="ex-detail">3×10</div></div><div class="ex-load">—</div></div>
+        </div>
+        <div class="workout-footer">
+          <a href="#" class="btn-sm btn-sm-primary">Editar</a>
+          <a href="#" class="btn-sm btn-sm-outline">Duplicar</a>
+          <span class="badge badge-green" style="margin-left:auto;align-self:center">Ativo</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

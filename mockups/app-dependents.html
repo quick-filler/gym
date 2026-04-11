@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CrossFit SP — Dependentes</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --primary: #ef4444; --primary-dark: #dc2626; --primary-light: #fef2f2; --primary-subtle: rgba(239,68,68,0.1); }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #f1f5f9; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; }
+  .phone { width: 390px; background: #fff; border-radius: 44px; box-shadow: 0 50px 100px rgba(0,0,0,0.2), inset 0 0 0 2px #e5e7eb; overflow: hidden; position: relative; }
+  .status-bar { background: var(--primary); padding: 0.5rem 1.5rem 0.25rem; display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 600; color: rgba(255,255,255,0.9); }
+  .app-header { background: var(--primary); padding: 1rem 1.5rem 1.5rem; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+  .back-btn { color: rgba(255,255,255,0.8); font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+  .header-title { color: #fff; font-size: 1.15rem; font-weight: 800; }
+  .header-sub { color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 0.15rem; }
+  .content { background: #f8fafc; border-radius: 24px 24px 0 0; margin-top: -16px; padding: 1.25rem; padding-bottom: 80px; position: relative; min-height: 500px; max-height: 580px; overflow-y: auto; }
+  .section-title { font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.75rem; }
+  .dep-card { background: #fff; border-radius: 16px; padding: 1.1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); margin-bottom: 0.875rem; }
+  .dep-header { display: flex; align-items: center; gap: 0.875rem; margin-bottom: 0.875rem; }
+  .dep-avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; background: #f1f5f9; flex-shrink: 0; }
+  .dep-name { font-weight: 800; color: #1e1b4b; font-size: 1rem; }
+  .dep-age { font-size: 0.78rem; color: #94a3b8; margin-top: 0.1rem; }
+  .badge { padding: 0.22rem 0.65rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .alert-box { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 10px; padding: 0.6rem 0.875rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; color: #92400e; font-weight: 600; }
+  .info-row { display: flex; justify-content: space-between; padding: 0.45rem 0; border-bottom: 1px solid #f8fafc; }
+  .info-row:last-child { border-bottom: none; }
+  .info-key { font-size: 0.78rem; color: #94a3b8; }
+  .info-val { font-size: 0.82rem; font-weight: 600; color: #1e1b4b; }
+  .dep-actions { display: flex; gap: 0.5rem; margin-top: 0.875rem; }
+  .btn-dep { flex: 1; padding: 0.6rem; border-radius: 10px; font-size: 0.78rem; font-weight: 700; text-align: center; cursor: pointer; border: none; }
+  .btn-dep-primary { background: var(--primary); color: #fff; }
+  .btn-dep-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+  .add-dep-card { border: 2px dashed #cbd5e1; border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; cursor: pointer; background: transparent; margin-bottom: 0.875rem; }
+  .add-dep-card:hover { border-color: var(--primary); background: var(--primary-light); }
+  .add-icon { font-size: 2rem; }
+  .add-label { font-size: 0.875rem; font-weight: 700; color: #64748b; }
+  .add-sublabel { font-size: 0.75rem; color: #94a3b8; }
+  .bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #f1f5f9; padding: 0.75rem 1.5rem 1.25rem; display: flex; justify-content: space-around; }
+  .nav-tab { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; cursor: pointer; text-decoration: none; }
+  .nav-tab-icon { font-size: 1.2rem; }
+  .nav-tab-label { font-size: 0.62rem; font-weight: 600; color: #94a3b8; }
+  .nav-tab.active .nav-tab-label { color: var(--primary); }
+  .nav-active-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--primary); margin: 0 auto; }
+  .emergency-card { background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 1px solid #fca5a5; border-radius: 12px; padding: 0.875rem; margin-bottom: 0.875rem; }
+  .emergency-title { font-size: 0.78rem; font-weight: 800; color: #991b1b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem; }
+  .emergency-name { font-size: 0.9rem; font-weight: 700; color: #1e1b4b; }
+  .emergency-phone { font-size: 0.85rem; color: var(--primary); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>●●●●● WiFi 🔋</span>
+  </div>
+  <div class="app-header">
+    <div class="header-top">
+      <a href="student-dashboard.html" class="back-btn">← Voltar</a>
+      <div style="width:36px"></div>
+    </div>
+    <div class="header-title">Meus Dependentes</div>
+    <div class="header-sub">Ana Costa · CrossFit SP</div>
+  </div>
+  <div class="content">
+
+    <div class="section-title">Dependentes cadastrados</div>
+
+    <!-- Sofia -->
+    <div class="dep-card">
+      <div class="dep-header">
+        <div class="dep-avatar">👧</div>
+        <div style="flex:1">
+          <div class="dep-name">Sofia Costa</div>
+          <div class="dep-age">8 anos · Nascida em 12/03/2018</div>
+        </div>
+        <span class="badge badge-green">Ativa</span>
+      </div>
+      <div class="alert-box">⚠️ Alergia a cloro — informar instrutor</div>
+      <div class="info-row"><span class="info-key">Plano</span><span class="info-val">Natação Infantil — R$ 120/mês</span></div>
+      <div class="info-row"><span class="info-key">Turma</span><span class="info-val">Segunda e Quarta · 16h00</span></div>
+      <div class="info-row"><span class="info-key">Tipo sanguíneo</span><span class="info-val">A+</span></div>
+      <div class="info-row"><span class="info-key">Próx. vencimento</span><span class="info-val">15/05/2026</span></div>
+      <div class="emergency-card" style="margin-top:0.875rem">
+        <div class="emergency-title">🚨 Contato de Emergência</div>
+        <div class="emergency-name">Carlos Costa (pai)</div>
+        <div class="emergency-phone">(11) 99999-1234</div>
+      </div>
+      <div class="dep-actions">
+        <button class="btn-dep btn-dep-primary">Ver agenda</button>
+        <button class="btn-dep btn-dep-outline">Editar</button>
+      </div>
+    </div>
+
+    <!-- Pedro -->
+    <div class="dep-card">
+      <div class="dep-header">
+        <div class="dep-avatar">👦</div>
+        <div style="flex:1">
+          <div class="dep-name">Pedro Costa</div>
+          <div class="dep-age">10 anos · Nascido em 05/07/2016</div>
+        </div>
+        <span class="badge badge-green">Ativo</span>
+      </div>
+      <div class="info-row"><span class="info-key">Plano</span><span class="info-val">Natação Infantil — R$ 120/mês</span></div>
+      <div class="info-row"><span class="info-key">Turma</span><span class="info-val">Quarta e Sexta · 17h00</span></div>
+      <div class="info-row"><span class="info-key">Tipo sanguíneo</span><span class="info-val">O+</span></div>
+      <div class="info-row"><span class="info-key">Próx. vencimento</span><span class="info-val">15/05/2026</span></div>
+      <div class="dep-actions">
+        <button class="btn-dep btn-dep-primary">Ver agenda</button>
+        <button class="btn-dep btn-dep-outline">Editar</button>
+      </div>
+    </div>
+
+    <!-- Add new -->
+    <div class="add-dep-card">
+      <div class="add-icon">➕</div>
+      <div class="add-label">Adicionar dependente</div>
+      <div class="add-sublabel">Filho, neto, sobrinho ou outro</div>
+    </div>
+
+  </div>
+
+  <div class="bottom-nav">
+    <a href="student-dashboard.html" class="nav-tab">
+      <div class="nav-tab-icon">🏠</div>
+      <div class="nav-tab-label">Início</div>
+    </a>
+    <a href="app-schedule.html" class="nav-tab">
+      <div class="nav-tab-icon">📅</div>
+      <div class="nav-tab-label">Agenda</div>
+    </a>
+    <a href="app-workouts.html" class="nav-tab">
+      <div class="nav-tab-icon">💪</div>
+      <div class="nav-tab-label">Treinos</div>
+    </a>
+    <a href="app-payments.html" class="nav-tab">
+      <div class="nav-tab-icon">💳</div>
+      <div class="nav-tab-label">Finanças</div>
+    </a>
+    <a href="app-dependents.html" class="nav-tab active">
+      <div class="nav-tab-icon">👨‍👧</div>
+      <div class="nav-tab-label">Dependentes</div>
+      <div class="nav-active-dot"></div>
+    </a>
+  </div>
+</div>
+</body>
+</html>

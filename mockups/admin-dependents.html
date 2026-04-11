@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym — Dependentes</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #f1f5f9; display: flex; height: 100vh; overflow: hidden; }
+  .sidebar { width: 240px; background: #1e1b4b; display: flex; flex-direction: column; padding: 0; flex-shrink: 0; height: 100vh; }
+  .sidebar-header { padding: 1.5rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .sidebar-logo { font-size: 1.25rem; font-weight: 800; color: #fff; }
+  .sidebar-tagline { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 0.2rem; }
+  .sidebar-section-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.3); padding: 1.25rem 1.25rem 0.5rem; }
+  .sidebar-nav { display: flex; flex-direction: column; padding: 0 0.75rem; gap: 0.2rem; }
+  .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.75rem; border-radius: 8px; color: rgba(255,255,255,0.6); font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.15s; text-decoration: none; }
+  .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  .nav-item.active { background: rgba(99,102,241,0.25); color: #fff; }
+  .nav-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+  .sidebar-footer { margin-top: auto; padding: 1rem 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); }
+  .user-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.75rem; border-radius: 8px; cursor: pointer; }
+  .user-row:hover { background: rgba(255,255,255,0.07); }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+  .user-name { color: #fff; font-size: 0.8rem; font-weight: 600; }
+  .user-role { color: rgba(255,255,255,0.4); font-size: 0.7rem; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: #fff; padding: 0 1.75rem; height: 60px; display: flex; align-items: center; border-bottom: 1px solid #e2e8f0; gap: 1rem; flex-shrink: 0; }
+  .topbar-title { font-size: 1rem; font-weight: 700; color: #1e1b4b; flex: 1; }
+  .btn-add { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; text-decoration: none; }
+  .content { flex: 1; overflow-y: auto; padding: 1.75rem; }
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; }
+  .page-title { font-size: 1.4rem; font-weight: 800; color: #1e1b4b; }
+  .page-subtitle { color: #64748b; font-size: 0.875rem; margin-top: 0.25rem; }
+  .info-banner { background: linear-gradient(135deg, #ede9fe, #e0e7ff); border: 1px solid #c4b5fd; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; }
+  .info-banner-icon { font-size: 1.5rem; }
+  .info-banner-text { font-size: 0.85rem; color: #4c1d95; }
+  .info-banner-text strong { font-weight: 700; }
+  .family-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.25rem; }
+  .family-card { background: #fff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); overflow: hidden; }
+  .family-card-header { padding: 1.25rem; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 0.875rem; }
+  .guardian-avatar { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 800; color: #fff; flex-shrink: 0; }
+  .guardian-name { font-weight: 700; color: #1e1b4b; font-size: 0.95rem; }
+  .guardian-meta { font-size: 0.75rem; color: #94a3b8; margin-top: 0.1rem; }
+  .family-badge { margin-left: auto; background: #ede9fe; color: #6d28d9; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 999px; }
+  .dependents-list { padding: 0.75rem 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; }
+  .dependent-row { display: flex; align-items: center; gap: 0.875rem; padding: 0.75rem; background: #f8fafc; border-radius: 10px; }
+  .dep-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; background: #f1f5f9; }
+  .dep-name { font-weight: 600; color: #1e1b4b; font-size: 0.875rem; }
+  .dep-meta { font-size: 0.72rem; color: #94a3b8; margin-top: 0.1rem; }
+  .dep-badges { margin-left: auto; display: flex; gap: 0.4rem; flex-direction: column; align-items: flex-end; }
+  .badge { padding: 0.2rem 0.5rem; border-radius: 999px; font-size: 0.68rem; font-weight: 700; }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .alert-tag { display: flex; align-items: center; gap: 0.3rem; font-size: 0.68rem; color: #b45309; background: #fef3c7; padding: 0.2rem 0.5rem; border-radius: 6px; font-weight: 600; }
+  .family-card-footer { padding: 0.875rem 1.25rem; border-top: 1px solid #f1f5f9; display: flex; gap: 0.5rem; }
+  .btn-sm { font-size: 0.78rem; padding: 0.4rem 0.875rem; border-radius: 7px; font-weight: 600; cursor: pointer; text-decoration: none; border: none; }
+  .btn-sm-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+  .btn-sm-outline { background: transparent; color: #6366f1; border: 1.5px solid #6366f1; }
+  .btn-sm-ghost { background: #f1f5f9; color: #64748b; }
+  .add-dep-btn { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.65rem; background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 10px; color: #94a3b8; font-size: 0.82rem; font-weight: 600; cursor: pointer; margin: 0 1.25rem 0.75rem; }
+  .add-dep-btn:hover { border-color: #6366f1; color: #6366f1; background: #f5f3ff; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">🏋️ Gym</div>
+    <div class="sidebar-tagline">CrossFit SP — Painel Admin</div>
+  </div>
+  <div class="sidebar-section-label">Principal</div>
+  <nav class="sidebar-nav">
+    <a href="admin-dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+    <a href="admin-students.html" class="nav-item"><span class="icon">👥</span> Alunos</a>
+    <a href="admin-dependents.html" class="nav-item active"><span class="icon">👨‍👧</span> Dependentes</a>
+    <a href="admin-finance.html" class="nav-item"><span class="icon">💰</span> Financeiro</a>
+    <a href="admin-dre.html" class="nav-item"><span class="icon">📈</span> DRE / Custos</a>
+    <a href="admin-schedule.html" class="nav-item"><span class="icon">📅</span> Agenda</a>
+    <a href="admin-workouts.html" class="nav-item"><span class="icon">💪</span> Treinos</a>
+    <a href="admin-settings.html" class="nav-item"><span class="icon">⚙️</span> Configurações</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="avatar">CS</div>
+      <div><div class="user-name">CrossFit SP</div><div class="user-role">Administrador</div></div>
+    </div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Dependentes</div>
+    <a href="#" class="btn-add">+ Novo Responsável</a>
+  </div>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Famílias Cadastradas</div>
+        <div class="page-subtitle">Responsáveis e seus dependentes — 3 famílias, 6 dependentes</div>
+      </div>
+    </div>
+    <div class="info-banner">
+      <div class="info-banner-icon">👨‍👧‍👦</div>
+      <div class="info-banner-text">
+        <strong>Módulo de Dependentes ativo.</strong> O responsável faz login e gerencia todos os dependentes num só lugar. Cobranças podem ser <strong>por dependente</strong> ou <strong>por família</strong> (configurar em ⚙️ Configurações).
+      </div>
+    </div>
+    <div class="family-grid">
+
+      <!-- FAMÍLIA 1 -->
+      <div class="family-card">
+        <div class="family-card-header">
+          <div class="guardian-avatar" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">AC</div>
+          <div>
+            <div class="guardian-name">Ana Costa</div>
+            <div class="guardian-meta">📧 ana@email.com · 📱 (11) 98765-4321</div>
+          </div>
+          <div class="family-badge">👨‍👧‍👦 2 dep.</div>
+        </div>
+        <div class="dependents-list">
+          <div class="dependent-row">
+            <div class="dep-avatar">👧</div>
+            <div>
+              <div class="dep-name">Sofia Costa</div>
+              <div class="dep-meta">8 anos · Natação Infantil · Turma Segunda 16h</div>
+            </div>
+            <div class="dep-badges">
+              <span class="badge badge-green">Ativa</span>
+              <span class="alert-tag">⚠️ Alergia a cloro</span>
+            </div>
+          </div>
+          <div class="dependent-row">
+            <div class="dep-avatar">👦</div>
+            <div>
+              <div class="dep-name">Pedro Costa</div>
+              <div class="dep-meta">10 anos · Natação Infantil · Turma Quarta 17h</div>
+            </div>
+            <div class="dep-badges">
+              <span class="badge badge-green">Ativo</span>
+            </div>
+          </div>
+        </div>
+        <div class="add-dep-btn">+ Adicionar dependente</div>
+        <div class="family-card-footer">
+          <a href="#" class="btn-sm btn-sm-primary">Ver pagamentos</a>
+          <a href="#" class="btn-sm btn-sm-outline">Editar família</a>
+          <a href="#" class="btn-sm btn-sm-ghost">Histórico</a>
+        </div>
+      </div>
+
+      <!-- FAMÍLIA 2 -->
+      <div class="family-card">
+        <div class="family-card-header">
+          <div class="guardian-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">RS</div>
+          <div>
+            <div class="guardian-name">Roberto Santos</div>
+            <div class="guardian-meta">📧 roberto@email.com · 📱 (11) 91234-5678</div>
+          </div>
+          <div class="family-badge">👨‍👧 3 dep.</div>
+        </div>
+        <div class="dependents-list">
+          <div class="dependent-row">
+            <div class="dep-avatar">👧</div>
+            <div>
+              <div class="dep-name">Laura Santos</div>
+              <div class="dep-meta">6 anos · Baby Class · Turma Terça 15h</div>
+            </div>
+            <div class="dep-badges">
+              <span class="badge badge-green">Ativa</span>
+            </div>
+          </div>
+          <div class="dependent-row">
+            <div class="dep-avatar">👦</div>
+            <div>
+              <div class="dep-name">Mateus Santos</div>
+              <div class="dep-meta">9 anos · Natação Infantil · Turma Quinta 16h</div>
+            </div>
+            <div class="dep-badges">
+              <span class="badge badge-yellow">Pendente</span>
+            </div>
+          </div>
+          <div class="dependent-row">
+            <div class="dep-avatar">👧</div>
+            <div>
+              <div class="dep-name">Bia Santos</div>
+              <div class="dep-meta">12 anos · Natação Avançado · Turma Sexta 17h</div>
+            </div>
+            <div class="dep-badges">
+              <span class="badge badge-green">Ativa</span>
+              <span class="alert-tag">⚠️ Asma leve</span>
+            </div>
+          </div>
+        </div>
+        <div class="add-dep-btn">+ Adicionar dependente</div>
+        <div class="family-card-footer">
+          <a href="#" class="btn-sm btn-sm-primary">Ver pagamentos</a>
+          <a href="#" class="btn-sm btn-sm-outline">Editar família</a>
+          <a href="#" class="btn-sm btn-sm-ghost">Histórico</a>
+        </div>
+      </div>
+
+      <!-- FAMÍLIA 3 -->
+      <div class="family-card">
+        <div class="family-card-header">
+          <div class="guardian-avatar" style="background:linear-gradient(135deg,#10b981,#06b6d4)">ML</div>
+          <div>
+            <div class="guardian-name">Marcos Lima</div>
+            <div class="guardian-meta">📧 marcos@email.com · 📱 (11) 99876-5432</div>
+          </div>
+          <div class="family-badge">👨‍👦 1 dep.</div>
+        </div>
+        <div class="dependents-list">
+          <div class="dependent-row">
+            <div class="dep-avatar">👦</div>
+            <div>
+              <div class="dep-name">Gabriel Lima</div>
+              <div class="dep-meta">7 anos · Baby Class · Turma Segunda 16h</div>
+            </div>
+            <div class="dep-badges">
+              <span class="badge badge-red">Inativo</span>
+            </div>
+          </div>
+        </div>
+        <div class="add-dep-btn">+ Adicionar dependente</div>
+        <div class="family-card-footer">
+          <a href="#" class="btn-sm btn-sm-primary">Ver pagamentos</a>
+          <a href="#" class="btn-sm btn-sm-outline">Editar família</a>
+          <a href="#" class="btn-sm btn-sm-ghost">Histórico</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

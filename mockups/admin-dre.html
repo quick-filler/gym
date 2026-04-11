@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym — DRE / Controle de Custos</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #f1f5f9; display: flex; height: 100vh; overflow: hidden; }
+  .sidebar { width: 240px; background: #1e1b4b; display: flex; flex-direction: column; padding: 0; flex-shrink: 0; height: 100vh; }
+  .sidebar-header { padding: 1.5rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .sidebar-logo { font-size: 1.25rem; font-weight: 800; color: #fff; }
+  .sidebar-tagline { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 0.2rem; }
+  .sidebar-section-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.3); padding: 1.25rem 1.25rem 0.5rem; }
+  .sidebar-nav { display: flex; flex-direction: column; padding: 0 0.75rem; gap: 0.2rem; }
+  .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.75rem; border-radius: 8px; color: rgba(255,255,255,0.6); font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.15s; text-decoration: none; }
+  .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  .nav-item.active { background: rgba(99,102,241,0.25); color: #fff; }
+  .nav-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+  .sidebar-footer { margin-top: auto; padding: 1rem 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); }
+  .user-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.75rem; border-radius: 8px; cursor: pointer; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.75rem; font-weight: 700; }
+  .user-name { color: #fff; font-size: 0.8rem; font-weight: 600; }
+  .user-role { color: rgba(255,255,255,0.4); font-size: 0.7rem; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: #fff; padding: 0 1.75rem; height: 60px; display: flex; align-items: center; border-bottom: 1px solid #e2e8f0; gap: 1rem; flex-shrink: 0; }
+  .topbar-title { font-size: 1rem; font-weight: 700; color: #1e1b4b; flex: 1; }
+  .month-selector { display: flex; align-items: center; gap: 0.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.85rem; color: #374151; font-weight: 600; cursor: pointer; }
+  .btn-add { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+  .content { flex: 1; overflow-y: auto; padding: 1.75rem; }
+  .page-title { font-size: 1.4rem; font-weight: 800; color: #1e1b4b; margin-bottom: 0.25rem; }
+  .page-subtitle { color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem; }
+
+  /* DRE HERO */
+  .dre-hero { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  .dre-card { border-radius: 16px; padding: 1.5rem; position: relative; overflow: hidden; }
+  .dre-card.revenue { background: linear-gradient(135deg, #10b981, #059669); }
+  .dre-card.expenses { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  .dre-card.profit { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+  .dre-card-label { color: rgba(255,255,255,0.75); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .dre-card-value { color: #fff; font-size: 2rem; font-weight: 900; margin: 0.4rem 0 0.2rem; }
+  .dre-card-change { color: rgba(255,255,255,0.75); font-size: 0.8rem; }
+  .dre-card-icon { position: absolute; right: 1.25rem; top: 50%; transform: translateY(-50%); font-size: 3rem; opacity: 0.2; }
+  .margin-bar-wrap { margin-top: 0.5rem; }
+  .margin-label { color: rgba(255,255,255,0.8); font-size: 0.75rem; margin-bottom: 0.3rem; }
+  .margin-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 999px; }
+  .margin-fill { height: 100%; background: rgba(255,255,255,0.8); border-radius: 999px; }
+
+  .grid-2col { display: grid; grid-template-columns: 1.3fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  .card { background: #fff; border-radius: 14px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); }
+  .card-title { font-size: 0.95rem; font-weight: 700; color: #1e1b4b; margin-bottom: 0.25rem; }
+  .card-subtitle { font-size: 0.78rem; color: #94a3b8; margin-bottom: 1.25rem; }
+
+  /* CASHFLOW CHART */
+  .chart-area { height: 160px; }
+  .chart-svg { width: 100%; height: 100%; }
+  .chart-labels { display: flex; justify-content: space-between; margin-top: 0.5rem; }
+  .chart-label { font-size: 0.7rem; color: #94a3b8; }
+  .legend { display: flex; gap: 1.25rem; margin-bottom: 0.75rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: #64748b; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* CATEGORY BREAKDOWN */
+  .category-list { display: flex; flex-direction: column; gap: 0.75rem; }
+  .cat-row { display: flex; align-items: center; gap: 0.75rem; }
+  .cat-icon { font-size: 1.1rem; width: 28px; text-align: center; }
+  .cat-name { font-size: 0.85rem; color: #374151; font-weight: 500; flex: 1; }
+  .cat-bar-wrap { flex: 2; }
+  .cat-bar { height: 8px; background: #f1f5f9; border-radius: 999px; }
+  .cat-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+  .cat-value { font-size: 0.82rem; font-weight: 700; color: #1e1b4b; min-width: 70px; text-align: right; }
+
+  /* EXPENSES TABLE */
+  .table-card { background: #fff; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; }
+  .table-header-row { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { padding: 0.75rem 1.5rem; text-align: left; font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; background: #f8fafc; }
+  tbody td { padding: 0.875rem 1.5rem; font-size: 0.85rem; color: #374151; border-bottom: 1px solid #f8fafc; }
+  tbody tr:last-child td { border-bottom: none; }
+  .badge { padding: 0.22rem 0.6rem; border-radius: 999px; font-size: 0.68rem; font-weight: 700; }
+  .badge-purple { background: #ede9fe; color: #5b21b6; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-orange { background: #ffedd5; color: #c2410c; }
+  .badge-gray { background: #f1f5f9; color: #475569; }
+  .btn-sm { font-size: 0.78rem; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; background: #f1f5f9; color: #64748b; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">🏋️ Gym</div>
+    <div class="sidebar-tagline">CrossFit SP — Painel Admin</div>
+  </div>
+  <div class="sidebar-section-label">Principal</div>
+  <nav class="sidebar-nav">
+    <a href="admin-dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+    <a href="admin-students.html" class="nav-item"><span class="icon">👥</span> Alunos</a>
+    <a href="admin-dependents.html" class="nav-item"><span class="icon">👨‍👧</span> Dependentes</a>
+    <a href="admin-finance.html" class="nav-item"><span class="icon">💰</span> Financeiro</a>
+    <a href="admin-dre.html" class="nav-item active"><span class="icon">📈</span> DRE / Custos</a>
+    <a href="admin-schedule.html" class="nav-item"><span class="icon">📅</span> Agenda</a>
+    <a href="admin-workouts.html" class="nav-item"><span class="icon">💪</span> Treinos</a>
+    <a href="admin-settings.html" class="nav-item"><span class="icon">⚙️</span> Configurações</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="avatar">CS</div>
+      <div><div class="user-name">CrossFit SP</div><div class="user-role">Administrador</div></div>
+    </div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">DRE / Controle de Custos</div>
+    <div class="month-selector">◀ Abril 2026 ▶</div>
+    <button class="btn-add">+ Nova Despesa</button>
+  </div>
+  <div class="content">
+    <div class="page-title">Demonstrativo de Resultado</div>
+    <div class="page-subtitle">Abril 2026 — Receitas, despesas e lucro líquido do mês</div>
+
+    <!-- DRE HERO -->
+    <div class="dre-hero">
+      <div class="dre-card revenue">
+        <div class="dre-card-icon">💚</div>
+        <div class="dre-card-label">Receita Bruta</div>
+        <div class="dre-card-value">R$ 18.420</div>
+        <div class="dre-card-change">↑ 8.2% vs março</div>
+      </div>
+      <div class="dre-card expenses">
+        <div class="dre-card-icon">🔴</div>
+        <div class="dre-card-label">Total de Despesas</div>
+        <div class="dre-card-value">R$ 9.800</div>
+        <div class="dre-card-change">R$ 7.500 fixos · R$ 2.300 variáveis</div>
+      </div>
+      <div class="dre-card profit">
+        <div class="dre-card-icon">💜</div>
+        <div class="dre-card-label">Lucro Líquido</div>
+        <div class="dre-card-value">R$ 8.620</div>
+        <div class="margin-bar-wrap">
+          <div class="margin-label">Margem: 46,8%</div>
+          <div class="margin-bar"><div class="margin-fill" style="width:46.8%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2col">
+      <!-- CASHFLOW CHART -->
+      <div class="card">
+        <div class="card-title">Fluxo de Caixa</div>
+        <div class="card-subtitle">Receitas vs Despesas — últimos 6 meses</div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div> Receita</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Despesas</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#6366f1"></div> Lucro</div>
+        </div>
+        <div class="chart-area">
+          <svg class="chart-svg" viewBox="0 0 480 150" preserveAspectRatio="none">
+            <!-- grid -->
+            <line x1="0" y1="37" x2="480" y2="37" stroke="#f1f5f9" stroke-width="1"/>
+            <line x1="0" y1="75" x2="480" y2="75" stroke="#f1f5f9" stroke-width="1"/>
+            <line x1="0" y1="112" x2="480" y2="112" stroke="#f1f5f9" stroke-width="1"/>
+            <!-- Receita (green) -->
+            <polyline points="0,110 96,100 192,88 288,95 384,70 480,55" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Despesas (red) -->
+            <polyline points="0,130 96,125 192,120 288,118 384,112 480,108" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Lucro (indigo) -->
+            <polyline points="0,138 96,130 192,115 288,120 384,95 480,78" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="5,3" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- dots receita -->
+            <circle cx="480" cy="55" r="4" fill="#10b981" stroke="#fff" stroke-width="2"/>
+            <!-- dots despesas -->
+            <circle cx="480" cy="108" r="4" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+            <!-- dots lucro -->
+            <circle cx="480" cy="78" r="4" fill="#6366f1" stroke="#fff" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="chart-labels">
+          <span class="chart-label">Nov</span><span class="chart-label">Dez</span>
+          <span class="chart-label">Jan</span><span class="chart-label">Fev</span>
+          <span class="chart-label">Mar</span><span class="chart-label">Abr</span>
+        </div>
+      </div>
+
+      <!-- CATEGORY BREAKDOWN -->
+      <div class="card">
+        <div class="card-title">Despesas por Categoria</div>
+        <div class="card-subtitle">Abril 2026 — Total: R$ 9.800</div>
+        <div class="category-list">
+          <div class="cat-row">
+            <span class="cat-icon">🏢</span>
+            <span class="cat-name">Aluguel</span>
+            <div class="cat-bar-wrap"><div class="cat-bar"><div class="cat-fill" style="width:45.9%"></div></div></div>
+            <span class="cat-value">R$ 4.500</span>
+          </div>
+          <div class="cat-row">
+            <span class="cat-icon">👔</span>
+            <span class="cat-name">Salários</span>
+            <div class="cat-bar-wrap"><div class="cat-bar"><div class="cat-fill" style="width:30.6%"></div></div></div>
+            <span class="cat-value">R$ 3.000</span>
+          </div>
+          <div class="cat-row">
+            <span class="cat-icon">📣</span>
+            <span class="cat-name">Marketing</span>
+            <div class="cat-bar-wrap"><div class="cat-bar"><div class="cat-fill" style="width:9.2%"></div></div></div>
+            <span class="cat-value">R$ 900</span>
+          </div>
+          <div class="cat-row">
+            <span class="cat-icon">💡</span>
+            <span class="cat-name">Utilidades</span>
+            <div class="cat-bar-wrap"><div class="cat-bar"><div class="cat-fill" style="width:8.2%"></div></div></div>
+            <span class="cat-value">R$ 800</span>
+          </div>
+          <div class="cat-row">
+            <span class="cat-icon">🔧</span>
+            <span class="cat-name">Equipamentos</span>
+            <div class="cat-bar-wrap"><div class="cat-bar"><div class="cat-fill" style="width:3.6%"></div></div></div>
+            <span class="cat-value">R$ 350</span>
+          </div>
+          <div class="cat-row">
+            <span class="cat-icon">📦</span>
+            <span class="cat-name">Outros</span>
+            <div class="cat-bar-wrap"><div class="cat-bar"><div class="cat-fill" style="width:2.5%"></div></div></div>
+            <span class="cat-value">R$ 250</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPENSES TABLE -->
+    <div class="table-card">
+      <div class="table-header-row">
+        <div>
+          <div style="font-size:0.95rem;font-weight:700;color:#1e1b4b">Despesas do Mês</div>
+          <div style="font-size:0.78rem;color:#94a3b8;margin-top:0.15rem">Abril 2026 — 6 lançamentos</div>
+        </div>
+        <button class="btn-add" style="font-size:0.82rem;padding:0.4rem 0.9rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer">+ Nova Despesa</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Descrição</th>
+            <th>Categoria</th>
+            <th>Tipo</th>
+            <th>Vencimento</th>
+            <th>Valor</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong style="color:#1e1b4b">Aluguel — Abril</strong><br><span style="font-size:0.72rem;color:#94a3b8">Recorrente · Todo dia 5</span></td>
+            <td><span class="badge badge-purple">🏢 Aluguel</span></td>
+            <td><span class="badge badge-blue">Fixo</span></td>
+            <td>05/04/2026</td>
+            <td style="font-weight:700">R$ 4.500,00</td>
+            <td><span class="badge" style="background:#d1fae5;color:#065f46">✓ Pago</span></td>
+            <td><button class="btn-sm">Ver</button></td>
+          </tr>
+          <tr>
+            <td><strong style="color:#1e1b4b">Folha de Pagamento</strong><br><span style="font-size:0.72rem;color:#94a3b8">2 instrutores + 1 recepcionista</span></td>
+            <td><span class="badge badge-orange">👔 Salários</span></td>
+            <td><span class="badge badge-blue">Fixo</span></td>
+            <td>05/04/2026</td>
+            <td style="font-weight:700">R$ 3.000,00</td>
+            <td><span class="badge" style="background:#d1fae5;color:#065f46">✓ Pago</span></td>
+            <td><button class="btn-sm">Ver</button></td>
+          </tr>
+          <tr>
+            <td><strong style="color:#1e1b4b">Google Ads — Abril</strong><br><span style="font-size:0.72rem;color:#94a3b8">Campanha matrícula nova turma</span></td>
+            <td><span class="badge" style="background:#fce7f3;color:#9d174d">📣 Marketing</span></td>
+            <td><span class="badge badge-gray">Variável</span></td>
+            <td>30/04/2026</td>
+            <td style="font-weight:700">R$ 900,00</td>
+            <td><span class="badge" style="background:#fef9c3;color:#854d0e">⏳ Pendente</span></td>
+            <td><button class="btn-sm">Ver</button></td>
+          </tr>
+          <tr>
+            <td><strong style="color:#1e1b4b">Conta de Luz</strong><br><span style="font-size:0.72rem;color:#94a3b8">CPFL — Referência Março/26</span></td>
+            <td><span class="badge" style="background:#fef3c7;color:#b45309">💡 Utilidades</span></td>
+            <td><span class="badge badge-blue">Fixo</span></td>
+            <td>10/04/2026</td>
+            <td style="font-weight:700">R$ 480,00</td>
+            <td><span class="badge" style="background:#d1fae5;color:#065f46">✓ Pago</span></td>
+            <td><button class="btn-sm">Ver</button></td>
+          </tr>
+          <tr>
+            <td><strong style="color:#1e1b4b">Internet + Telefone</strong></td>
+            <td><span class="badge" style="background:#fef3c7;color:#b45309">💡 Utilidades</span></td>
+            <td><span class="badge badge-blue">Fixo</span></td>
+            <td>15/04/2026</td>
+            <td style="font-weight:700">R$ 320,00</td>
+            <td><span class="badge" style="background:#d1fae5;color:#065f46">✓ Pago</span></td>
+            <td><button class="btn-sm">Ver</button></td>
+          </tr>
+          <tr>
+            <td><strong style="color:#1e1b4b">Manutenção Esteira #3</strong><br><span style="font-size:0.72rem;color:#94a3b8">Técnico agendado</span></td>
+            <td><span class="badge" style="background:#e0f2fe;color:#075985">🔧 Equipamentos</span></td>
+            <td><span class="badge badge-gray">Variável</span></td>
+            <td>20/04/2026</td>
+            <td style="font-weight:700">R$ 350,00</td>
+            <td><span class="badge" style="background:#fee2e2;color:#991b1b">✗ Em aberto</span></td>
+            <td><button class="btn-sm">Ver</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>
