@@ -100,6 +100,89 @@
   .nav-tab .lbl { font-size: 0.6rem; font-weight: 600; color: var(--ink-300); text-transform: uppercase; letter-spacing: 0.04em; }
   .nav-tab.active svg { stroke: var(--primary); }
   .nav-tab.active .lbl { color: var(--primary); }
+
+/* ========== MOBILE RESPONSIVE ========== */
+
+/* Hamburger button (hidden on desktop) */
+.hamburger {
+  display: none; flex-direction: column; gap: 5px; cursor: pointer;
+  padding: 0.4rem; border: none; background: transparent;
+}
+.hamburger span { display: block; width: 22px; height: 2px; background: #1e1b4b; border-radius: 2px; transition: all 0.3s; }
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  z-index: 99; backdrop-filter: blur(2px);
+}
+
+@media (max-width: 768px) {
+
+  /* ── Admin layout ── */
+  body { flex-direction: column; height: auto; overflow: auto; }
+
+  .hamburger { display: flex; }
+
+  .sidebar {
+    position: fixed; left: -260px; top: 0; bottom: 0; z-index: 100;
+    width: 240px; transition: left 0.3s ease; height: 100vh;
+  }
+  .sidebar.open { left: 0; }
+  .sidebar-overlay.visible { display: block; }
+
+  .main { width: 100%; min-height: 100vh; overflow: auto; }
+
+  .topbar {
+    padding: 0 1rem; gap: 0.5rem; position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-search { display: none; }
+  .topbar-title { font-size: 0.9rem; }
+
+  .content { padding: 1rem; overflow: visible; }
+
+  /* Metric grids → 2 columns */
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid-2col { grid-template-columns: 1fr; }
+  .features-grid { grid-template-columns: 1fr 1fr; }
+  .dre-hero { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .steps { flex-direction: column; gap: 1.5rem; }
+  .step:not(:last-child)::after { content: '↓'; top: auto; bottom: -1.2rem; right: 50%; transform: translateX(50%); font-size: 1.2rem; }
+  .family-grid { grid-template-columns: 1fr; }
+  .workout-grid { grid-template-columns: 1fr; }
+
+  /* Tables → hide less important cols */
+  table thead tr th:nth-child(4),
+  table thead tr th:nth-child(5),
+  table tbody tr td:nth-child(4),
+  table tbody tr td:nth-child(5) { display: none; }
+
+  .mockup-frame { display: none; }
+
+  /* Landing nav */
+  .nav-links { display: none; }
+
+  /* Hero text */
+  .hero { padding: 6rem 1.25rem 3rem; }
+  .hero-ctas { flex-direction: column; align-items: center; }
+  .hero-ctas .btn-primary,
+  .hero-ctas .btn-outline { width: 100%; max-width: 300px; text-align: center; }
+}
+
+@media (max-width: 480px) {
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+  .features-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 2rem; }
+  .section-title { font-size: 1.5rem; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .dre-hero { grid-template-columns: 1fr; }
+  .dre-card-value { font-size: 1.5rem; }
+}
+
+
+@media (max-width: 430px) {
+  body { padding: 0; background: #fff; align-items: flex-start; }
+  .phone { width: 100%; border-radius: 0; box-shadow: none; min-height: 100vh; }
+}
+
 </style>
 </head>
 <body>
