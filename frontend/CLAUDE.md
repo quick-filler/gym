@@ -495,3 +495,85 @@ export function useExpenses(month: number, year: number) {
 - Accessible: ARIA labels, keyboard navigation on all interactive elements
 - Loading states: skeleton loaders (shadcn Skeleton)
 - Error states: toast notifications (shadcn Sonner)
+
+---
+
+## 📋 v2 — Módulo de Dependentes (Frontend)
+
+> Para academias com alunos menores (natação, ballet, artes marciais, etc.)
+
+### Fluxo do Responsável (app do aluno)
+
+#### Tela: `/[subdomain]/dashboard` — com dependentes
+
+Quando `student.isGuardian === true`, o dashboard muda:
+
+- Header mostra: "Olá, Ana! Você tem **2 dependentes**"
+- Seletor de perfil no topo: **[ Ana (Você) | 👧 Sofia | 👦 Pedro ]**
+- Ao selecionar um dependente, toda a tela recarrega com os dados dele (agenda, treino, etc.)
+
+#### Tela: `/[subdomain]/dependents` — Gerenciar Dependentes
+
+- Lista de dependentes cadastrados com foto, nome, idade
+- Botão "+ Adicionar dependente"
+- Modal `DependentForm`:
+  - Nome, data de nascimento, foto
+  - Tipo sanguíneo, alergias, observações médicas
+  - Contato de emergência (nome + telefone)
+  - Relacionamento com o responsável
+
+#### Tela: `/[subdomain]/dashboard` — visão do dependente selecionado
+
+Igual ao dashboard normal, mas:
+- Header mostra o nome da criança + idade
+- Breadcrumb: "← Voltar para meus dependentes"
+- Próxima aula, ficha de treino, histórico de pagamentos (do responsável)
+
+### Fluxo do Admin
+
+#### `/admin/students` — tabela com indicador de família
+
+- Nova coluna "Dependentes" — mostra badge com número: `👨‍👩‍👧 2`
+- Ao clicar no aluno responsável → perfil mostra aba "Dependentes" com lista
+- Ao clicar num dependente → vai para perfil do dependente (com link "Responsável: Ana Costa")
+
+#### `/admin/students/[id]` — perfil do responsável
+
+Nova aba: **Dependentes**
+- Lista com: foto, nome, idade, plano, status, próxima aula
+- Botão "Adicionar dependente"
+- Botão "Matricular dependente" → abre flow de matrícula vinculada ao responsável
+
+#### `/admin/students/dependent/[id]` — perfil do dependente
+
+- Header: foto, nome, idade, tipo sanguíneo
+- Alerta visual se há alergias ou observações médicas ⚠️
+- Contato de emergência destacado (para o instrutor ver rápido)
+- Abas: Matrículas, Agenda, Ficha de Treino, Avaliações
+
+### Novos Componentes
+
+| Componente | Localização |
+|---|---|
+| `DependentForm` | `src/components/academy/DependentForm.tsx` |
+| `DependentSelector` | `src/components/academy/DependentSelector.tsx` |
+| `DependentCard` | `src/components/academy/DependentCard.tsx` |
+| `FamilyBadge` | `src/components/admin/FamilyBadge.tsx` |
+| `EmergencyContactCard` | `src/components/admin/EmergencyContactCard.tsx` |
+
+### Novo Hook
+
+```ts
+// hooks/useDependents.ts
+export function useDependents() {
+  return useQuery({
+    queryKey: ["dependents"],
+    queryFn: () => apiFetch("/students/me/dependents"),
+  });
+}
+
+export function useSelectedProfile() {
+  // Zustand store: { type: 'guardian' | 'dependent', id: number }
+  return useProfileStore((s) => s.selectedProfile);
+}
+```

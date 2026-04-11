@@ -547,3 +547,81 @@ GET  /api/finance/cashflow?months=6           → Fluxo de caixa últimos N mese
 | `academy_admin` | Full CRUD on own academy expenses             |
 | `instructor`    | Read-only (opcional, configurável pelo admin) |
 | `student`       | Sem acesso                                    |
+
+---
+
+## 📋 v2 — Módulo de Dependentes (Responsável + Aluno Menor)
+
+> Caso de uso: escolas de natação, ballet, artes marciais, ginástica — onde o **responsável** (pai/mãe) faz o cadastro e o pagamento, mas o **praticante** é a criança.
+
+### Modelo de Dados
+
+O `Student` existente representa o **responsável** (quem paga, quem faz login).
+Os dependentes são uma nova entidade `Dependent` ligada ao responsável.
+
+### Novo Content Type: `Dependent` (Dependente)
+
+| Field        | Type     | Notes                                                        |
+|--------------|----------|--------------------------------------------------------------|
+| name         | String   | Nome completo da criança                                     |
+| birthdate    | Date     | Data de nascimento (obrigatório)                             |
+| photo        | Media    | Foto do dependente                                           |
+| relationship | Enum     | `father` / `mother` / `grandparent` / `guardian` / `other`  |
+| bloodType    | String   | Tipo sanguíneo (opcional, importante para emergências)       |
+| allergies    | Text     | Alergias conhecidas                                          |
+| medicalNotes | Text     | Observações médicas relevantes                               |
+| guardian     | Relation | manyToOne Student (o responsável)                            |
+| academy      | Relation | manyToOne Academy                                            |
+| enrollments  | Relation | hasMany Enrollment (matrículas do dependente)                |
+| bookings     | Relation | hasMany ClassBooking (aulas do dependente)                   |
+| workoutPlans | Relation | hasMany WorkoutPlan (fichas do dependente)                   |
+| assessments  | Relation | hasMany BodyAssessment                                       |
+
+**Campos do responsável de emergência (dentro do Dependent):**
+| Field                  | Type   | Notes                         |
+|------------------------|--------|-------------------------------|
+| emergencyContactName   | String | Nome do contato de emergência |
+| emergencyContactPhone  | String | Telefone de emergência        |
+
+### Ajustes no `Student` (responsável)
+
+Adicionar campo:
+- `isGuardian` — Boolean (default: false) — indica que o aluno é responsável por dependentes
+- `dependents` — Relation hasMany Dependent
+
+### Ajuste no `Enrollment`
+
+O enrollment pode pertencer tanto a um `Student` quanto a um `Dependent`:
+- `student` — manyToOne Student (nullable)
+- `dependent` — manyToOne Dependent (nullable)
+- **Regra:** exatamente um dos dois deve estar preenchido
+- O **pagamento** sempre fica no responsável (`student`), mesmo que a matrícula seja do dependente
+
+### Ajuste no `Payment`
+
+Adicionar campo:
+- `guardian` — manyToOne Student — quem efetivamente paga (útil quando há múltiplos dependentes)
+
+### Lógica de Negócio
+
+1. **Cadastro:** responsável cria conta → adiciona dependentes → matricula cada um num plano
+2. **Cobrança:** sempre feita para o responsável (1 cobrança por família, ou por dependente — configurável)
+3. **Check-in:** instrutor faz check-in pelo nome da criança
+4. **App:** responsável loga e vê todos os dependentes em uma tela unificada
+5. **Limite de dependentes:** configurável por plano da academia
+
+### Custom Routes adicionais
+
+```
+GET  /api/students/me/dependents           → Lista dependentes do responsável logado
+POST /api/students/me/dependents           → Adiciona dependente
+GET  /api/dependents/:id/schedule          → Agenda de aulas do dependente
+POST /api/dependents/:id/check-in          → Check-in de um dependente
+```
+
+### Billing Mode (configurável por Academy)
+
+Campo novo em `Academy`:
+- `billingMode` — Enum: `per_student` (padrão) / `per_family`
+  - `per_student`: cada dependente tem sua matrícula e cobrança individual
+  - `per_family`: cobrança única para o responsável cobre todos os dependentes (plano família)
