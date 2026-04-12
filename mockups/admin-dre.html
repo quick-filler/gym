@@ -273,6 +273,117 @@
 }
 
 /* ===== END MOBILE FIX ===== */
+
+/* ========== MOBILE OVERRIDE ========== */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  padding: 0.4rem;
+  border: none;
+  background: transparent;
+  flex-shrink: 0;
+}
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2.5px;
+  background: #1e1b4b;
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+#sidebarOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 199;
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 768px) {
+  html, body {
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+  body {
+    display: block !important;
+    flex-direction: unset !important;
+  }
+  .sidebar, aside.sidebar, aside {
+    position: fixed !important;
+    left: -260px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    width: 240px !important;
+    z-index: 200 !important;
+    transition: left 0.28s ease !important;
+    overflow-y: auto !important;
+  }
+  .main, main.main, main {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .topbar, header.topbar, header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    width: 100% !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    gap: 0.5rem !important;
+    box-sizing: border-box !important;
+  }
+  .topbar-search, .search-input, input[type="search"], input[placeholder*="uscar"] {
+    display: none !important;
+  }
+  .content, .panel-body, main > .content {
+    flex: none !important;
+    overflow: visible !important;
+    padding: 0.875rem !important;
+    min-height: calc(100vh - 60px) !important;
+  }
+  .hamburger { display: flex !important; }
+
+  /* Grid collapses */
+  .metrics-grid, .kpi-grid, .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+  .grid-2col, .two-col, .chart-row {
+    grid-template-columns: 1fr !important;
+  }
+  .dre-hero { grid-template-columns: 1fr !important; }
+  .family-grid, .workout-grid, .pricing-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Table responsive */
+  .table-card, .table-wrap, .panel { overflow-x: auto !important; }
+  table { min-width: 380px !important; }
+  table th:nth-child(n+5), table td:nth-child(n+5) { display: none !important; }
+
+  /* Misc */
+  .mockup-frame { display: none !important; }
+  .btn-add span { display: none; }
+}
+
+@media (max-width: 480px) {
+  .metrics-grid, .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  table th:nth-child(n+4), table td:nth-child(n+4) { display: none !important; }
+  .topbar-title, .page-title-bar { font-size: 0.9rem !important; }
+  .btn-add { padding: 0.4rem 0.65rem !important; font-size: 0.78rem !important; }
+}
+/* ========== END MOBILE OVERRIDE ========== */
 </style>
 </head>
 <body>
@@ -514,6 +625,39 @@
   var links = sidebar.querySelectorAll('.nav-item');
   links.forEach(function(l) { l.addEventListener('click', closeSidebar); });
 })();
+</script>
+
+
+<script>
+function toggleSidebar() {
+  var s = document.querySelector('.sidebar, aside.sidebar, aside');
+  var o = document.getElementById('sidebarOverlay');
+  if (!s) return;
+  var isOpen = s.style.left === '0px' || s.classList.contains('open');
+  if (isOpen) {
+    s.style.left = '-260px';
+    s.classList.remove('open');
+    if (o) o.style.display = 'none';
+  } else {
+    s.style.left = '0px';
+    s.classList.add('open');
+    if (o) o.style.display = 'block';
+  }
+}
+// Close sidebar on nav link click (mobile)
+document.addEventListener('DOMContentLoaded', function() {
+  var links = document.querySelectorAll('.sidebar a, aside a, .nav-item');
+  links.forEach(function(l) {
+    l.addEventListener('click', function() {
+      if (window.innerWidth <= 768) {
+        var s = document.querySelector('.sidebar, aside');
+        var o = document.getElementById('sidebarOverlay');
+        if (s) { s.style.left = '-260px'; s.classList.remove('open'); }
+        if (o) o.style.display = 'none';
+      }
+    });
+  });
+});
 </script>
 
 </body>

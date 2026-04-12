@@ -319,6 +319,117 @@
 }
 
 /* ===== END MOBILE FIX ===== */
+
+/* ========== MOBILE OVERRIDE ========== */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  padding: 0.4rem;
+  border: none;
+  background: transparent;
+  flex-shrink: 0;
+}
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2.5px;
+  background: #1e1b4b;
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+#sidebarOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 199;
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 768px) {
+  html, body {
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+  body {
+    display: block !important;
+    flex-direction: unset !important;
+  }
+  .sidebar, aside.sidebar, aside {
+    position: fixed !important;
+    left: -260px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    width: 240px !important;
+    z-index: 200 !important;
+    transition: left 0.28s ease !important;
+    overflow-y: auto !important;
+  }
+  .main, main.main, main {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .topbar, header.topbar, header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    width: 100% !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    gap: 0.5rem !important;
+    box-sizing: border-box !important;
+  }
+  .topbar-search, .search-input, input[type="search"], input[placeholder*="uscar"] {
+    display: none !important;
+  }
+  .content, .panel-body, main > .content {
+    flex: none !important;
+    overflow: visible !important;
+    padding: 0.875rem !important;
+    min-height: calc(100vh - 60px) !important;
+  }
+  .hamburger { display: flex !important; }
+
+  /* Grid collapses */
+  .metrics-grid, .kpi-grid, .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+  .grid-2col, .two-col, .chart-row {
+    grid-template-columns: 1fr !important;
+  }
+  .dre-hero { grid-template-columns: 1fr !important; }
+  .family-grid, .workout-grid, .pricing-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Table responsive */
+  .table-card, .table-wrap, .panel { overflow-x: auto !important; }
+  table { min-width: 380px !important; }
+  table th:nth-child(n+5), table td:nth-child(n+5) { display: none !important; }
+
+  /* Misc */
+  .mockup-frame { display: none !important; }
+  .btn-add span { display: none; }
+}
+
+@media (max-width: 480px) {
+  .metrics-grid, .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  table th:nth-child(n+4), table td:nth-child(n+4) { display: none !important; }
+  .topbar-title, .page-title-bar { font-size: 0.9rem !important; }
+  .btn-add { padding: 0.4rem 0.65rem !important; font-size: 0.78rem !important; }
+}
+/* ========== END MOBILE OVERRIDE ========== */
 </style>
 </head>
 <body>
@@ -377,6 +488,7 @@
 
 <main class="main">
   <header class="topbar">
+  <button class="hamburger" aria-label="Menu" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
     <div class="topbar-title">Agenda</div>
     <div class="topbar-icon-btn"><svg class="icon"><use href="#i-bell"/></svg><span class="dot"></span></div>
     <button class="btn btn-flame" style="padding: 0.55rem 1.1rem; font-size: 0.85rem;"><svg class="icon"><use href="#i-plus"/></svg> Nova aula</button>
