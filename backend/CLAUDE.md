@@ -625,3 +625,67 @@ Campo novo em `Academy`:
 - `billingMode` — Enum: `per_student` (padrão) / `per_family`
   - `per_student`: cada dependente tem sua matrícula e cobrança individual
   - `per_family`: cobrança única para o responsável cobre todos os dependentes (plano família)
+
+
+---
+
+## 🏊 v2 — Módulo Escola de Natação / Controle Diário da Piscina
+
+> Feature opcional para academias/escolas com piscina. Pode ser ativada por tipo de negócio.
+
+### Objetivo
+Registrar a qualidade da água e a ocupação da piscina **2x por dia**:
+- **08:00**
+- **18:00**
+
+### Novo Content Type: `PoolInspection`
+
+| Field             | Type     | Notes |
+|------------------|----------|-------|
+| date             | Date     | Data da medição |
+| shift            | Enum     | `morning` / `evening` |
+| scheduledTime    | String   | `08:00` / `18:00` |
+| chlorine         | Decimal  | Medição de cloro |
+| ph               | Decimal  | Medição de pH |
+| temperature      | Decimal  | Temperatura da água |
+| peopleCount      | Integer  | Nº de pessoas na piscina |
+| peopleCountSource| Enum     | `schedule` / `manual` |
+| notes            | Text     | Observações livres |
+| status           | Enum     | `ok` / `warning` / `critical` |
+| academy          | Relation | manyToOne Academy |
+| createdBy        | Relation | users-permissions user |
+
+### Regras de negócio
+- Deve existir **1 registro por turno** (`morning` 08:00 e `evening` 18:00) por dia
+- `peopleCount` é sugerido automaticamente pela agenda do dia
+- Usuário pode editar `peopleCount` manualmente caso o número real seja diferente
+- `status` pode ser calculado automaticamente com base em faixas seguras
+
+### Faixas sugeridas de alerta (configuráveis por academia)
+- **Cloro**: ideal entre `1.0` e `3.0`
+- **pH**: ideal entre `7.2` e `7.8`
+- **Temperatura**: faixa ideal configurável (ex.: `28°C` a `31°C`)
+
+### Integração com Agenda
+Para preencher `peopleCount` automaticamente:
+1. Buscar aulas do dia em `ClassSchedule`
+2. Filtrar aulas da modalidade `natacao` / `swimming`
+3. Considerar reservas confirmadas por faixa horária
+4. Somar alunos previstos para o turno correspondente
+
+### Novas Custom Routes
+```
+GET  /api/pool-inspections/today               → retorna medições do dia (08h / 18h)
+POST /api/pool-inspections                     → cria medição manual
+PUT  /api/pool-inspections/:id                 → atualiza medição
+GET  /api/pool-inspections/history?from=&to=   → histórico por período
+GET  /api/pool-inspections/suggest-people-count?date=YYYY-MM-DD&shift=morning
+```
+
+### Ajuste em `Academy`
+Adicionar campos opcionais:
+- `businessType` — Enum: `gym` / `swimming_school` / `pilates` / `studio` / `martial_arts` / `other`
+- `poolModuleEnabled` — Boolean
+- `poolPhMin`, `poolPhMax` — Decimal
+- `poolChlorineMin`, `poolChlorineMax` — Decimal
+- `poolTempMin`, `poolTempMax` — Decimal

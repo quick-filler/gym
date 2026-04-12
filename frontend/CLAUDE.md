@@ -577,3 +577,66 @@ export function useSelectedProfile() {
   return useProfileStore((s) => s.selectedProfile);
 }
 ```
+
+
+---
+
+## 🏊 v2 — Módulo Escola de Natação / Qualidade da Piscina (Frontend)
+
+### Novo item no menu admin
+Quando `academy.poolModuleEnabled === true`:
+- **Piscina / Qualidade da Água**
+
+### Nova página
+```
+/admin/pool
+```
+
+### Estrutura da tela
+#### 1. Cards do dia
+Dois cards principais:
+- **Manhã — 08:00**
+- **Tarde — 18:00**
+
+Cada card contém:
+- Campo Cloro
+- Campo pH
+- Campo Temperatura
+- Campo Pessoas na piscina
+- Badge da origem: `Agenda` ou `Manual`
+- Status visual: OK / Alerta / Crítico
+- Botão Salvar
+
+#### 2. Sugestão automática de ocupação
+Ao abrir o card:
+- sistema consulta agenda do dia
+- soma alunos confirmados nas turmas de piscina
+- preenche automaticamente o campo `Pessoas na piscina`
+
+#### 3. Histórico
+Tabela com:
+- Data
+- Turno
+- Cloro
+- pH
+- Temperatura
+- Pessoas
+- Status
+- Responsável pelo registro
+
+### Novos Componentes
+| Componente | Localização |
+|---|---|
+| `PoolInspectionCard` | `src/components/admin/PoolInspectionCard.tsx` |
+| `PoolInspectionHistoryTable` | `src/components/admin/PoolInspectionHistoryTable.tsx` |
+| `WaterStatusBadge` | `src/components/admin/WaterStatusBadge.tsx` |
+
+### Novo Hook
+```ts
+export function usePoolInspections(date: string) {
+  return useQuery({
+    queryKey: ['pool-inspections', date],
+    queryFn: () => apiFetch(`/pool-inspections/today?date=${date}`),
+  });
+}
+```
