@@ -665,3 +665,16 @@ Cada medição deve mostrar:
 - `Cloro 0.9` → **Alerta** — abaixo do ideal (1.0–3.0)
 - `pH 6.8` → **Crítico** — muito abaixo do ideal (7.2–7.8)
 - `Temperatura 29.0` → **OK**
+
+
+### Configurações > Piscina
+Na página `/admin/settings`, quando `poolModuleEnabled === true`, exibir uma nova seção/aba:
+
+**Piscina**
+- Cloro mínimo / máximo
+- pH mínimo / máximo
+- Temperatura mínima / máxima
+- Tolerância de alerta
+- Botão `Salvar parâmetros`
+
+Essa tela deve ser a origem oficial dos valores usados pelos alertas da página `/admin/pool`.
