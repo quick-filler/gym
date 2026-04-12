@@ -689,3 +689,29 @@ Adicionar campos opcionais:
 - `poolPhMin`, `poolPhMax` — Decimal
 - `poolChlorineMin`, `poolChlorineMax` — Decimal
 - `poolTempMin`, `poolTempMax` — Decimal
+- `poolAlertTolerance` — Decimal
+
+
+### Regras de alerta baseadas em parâmetros ideais
+Os alertas usam os parâmetros configurados na `Academy`:
+- `poolChlorineMin`, `poolChlorineMax`
+- `poolPhMin`, `poolPhMax`
+- `poolTempMin`, `poolTempMax`
+- `poolAlertTolerance` (opcional)
+
+#### Lógica sugerida
+- **OK**: valor dentro da faixa ideal
+- **warning**: valor fora da faixa, mas dentro da tolerância
+- **critical**: valor muito fora da faixa ideal
+
+#### Exemplo
+Se `poolPhMin=7.2`, `poolPhMax=7.8` e `poolAlertTolerance=0.2`:
+- `7.4` → `ok`
+- `7.1` → `warning`
+- `6.8` → `critical`
+
+### Nova rota de configuração
+```
+GET /api/academies/:id/pool-settings
+PUT /api/academies/:id/pool-settings
+```
