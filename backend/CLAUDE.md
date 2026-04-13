@@ -715,3 +715,22 @@ Se `poolPhMin=7.2`, `poolPhMax=7.8` e `poolAlertTolerance=0.2`:
 GET /api/academies/:id/pool-settings
 PUT /api/academies/:id/pool-settings
 ```
+
+
+### Integração Agenda → Presença Confirmada → Piscina
+A contagem de `peopleCount` no módulo da piscina **não** deve usar apenas reservas/agendamentos.
+
+Ela deve usar **somente alunos com presença confirmada** no turno.
+
+#### Status recomendados em `ClassBooking`
+- `scheduled` — agendado
+- `confirmed_present` — presença confirmada
+- `missed` — faltou
+- `cancelled` — cancelado
+
+#### Regra de ocupação da piscina
+Para `GET /api/pool-inspections/suggest-people-count?...`:
+1. buscar bookings do dia
+2. filtrar modalidade natação / piscina
+3. filtrar pelo turno (`morning` / `evening`)
+4. somar apenas `confirmed_present`

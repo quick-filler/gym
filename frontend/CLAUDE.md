@@ -678,3 +678,15 @@ Na página `/admin/settings`, quando `poolModuleEnabled === true`, exibir uma no
 - Botão `Salvar parâmetros`
 
 Essa tela deve ser a origem oficial dos valores usados pelos alertas da página `/admin/pool`.
+
+
+### Fluxo Agenda → Presença → Piscina
+Na página `/admin/schedule`, cada aluno da turma deve poder receber um status:
+- Agendado
+- Confirmado presente
+- Faltou
+- Cancelado
+
+O módulo `/admin/pool` deve mostrar:
+- Pessoas na piscina = **presenças confirmadas**
+- Resumo do turno: agendados / presentes / faltas / cancelados
