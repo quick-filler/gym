@@ -750,3 +750,16 @@ Funções:
 No perfil do aluno/dependente:
 - botão/aba **Documentos**
 - lista com nome, tipo, envio, validade, botão visualizar
+
+
+### Navegação do app
+Adicionar item **Documentos** no menu/bottom-nav do app para acesso direto.
+
+### Admin — perfil do aluno
+Adicionar botão/aba **Documentos** diretamente no perfil do aluno/dependente.
+
+### Dashboard admin — alertas
+Adicionar card/lista de alertas para:
+- documentos vencidos
+- documentos vencendo em breve
+- ausência de documento obrigatório
