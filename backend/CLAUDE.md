@@ -734,3 +734,65 @@ Para `GET /api/pool-inspections/suggest-people-count?...`:
 2. filtrar modalidade natação / piscina
 3. filtrar pelo turno (`morning` / `evening`)
 4. somar apenas `confirmed_present`
+
+
+---
+
+## 📥 v2 — Importação em Massa por Planilha
+
+### Objetivo
+Permitir que o admin importe rapidamente:
+- alunos comuns
+- responsáveis + dependentes
+- contatos / contas básicas para onboarding
+
+### Formatos aceitos
+- `.csv`
+- `.xlsx`
+
+### Novo fluxo backend
+1. upload do arquivo
+2. leitura das colunas
+3. mapeamento de campos
+4. preview / validação
+5. confirmação da importação
+
+### Novas rotas
+```
+POST /api/imports/students/upload
+POST /api/imports/students/preview
+POST /api/imports/students/confirm
+GET  /api/imports/students/template?mode=students
+GET  /api/imports/students/template?mode=family
+```
+
+### Modos de importação
+#### `students`
+Cria registros `Student`
+
+#### `family`
+Cria:
+- `Student` como responsável
+- `Dependent` vinculado ao responsável
+
+### Campos mapeáveis
+- `name`
+- `phone`
+- `email`
+- `plan`
+- `status`
+- `birthdate`
+- `importAs` (`student` / `dependent`)
+- `guardianName`
+- `guardianPhone`
+- `guardianEmail`
+- `dependentName`
+- `dependentBirthdate`
+- `relationship`
+- `notes`
+
+### Regras de duplicidade
+Opções no confirm:
+- `skip_duplicates`
+- `update_existing`
+- `import_anyway`

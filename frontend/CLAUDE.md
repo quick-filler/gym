@@ -690,3 +690,42 @@ Na página `/admin/schedule`, cada aluno da turma deve poder receber um status:
 O módulo `/admin/pool` deve mostrar:
 - Pessoas na piscina = **presenças confirmadas**
 - Resumo do turno: agendados / presentes / faltas / cancelados
+
+
+---
+
+## 📥 v2 — Importação em Massa (Frontend)
+
+### Novo item do menu admin
+- **Importação**
+
+### Nova página
+```
+/admin/import
+```
+
+### Etapas da tela
+1. Escolher modo de importação
+   - Importar alunos
+   - Importar famílias / dependentes
+2. Baixar modelo de planilha
+3. Enviar arquivo `.csv` ou `.xlsx`
+4. Mapear colunas
+5. Pré-visualizar dados
+6. Confirmar importação
+
+### Ações importantes
+- botão **Baixar modelo — Alunos**
+- botão **Baixar modelo — Dependentes**
+- opção de duplicidade:
+  - ignorar duplicados
+  - atualizar existentes
+  - importar mesmo assim
+
+### Novos componentes
+| Componente | Localização |
+|---|---|
+| `ImportUploadCard` | `src/components/admin/ImportUploadCard.tsx` |
+| `ColumnMappingTable` | `src/components/admin/ColumnMappingTable.tsx` |
+| `ImportPreviewTable` | `src/components/admin/ImportPreviewTable.tsx` |
+| `TemplateDownloadCard` | `src/components/admin/TemplateDownloadCard.tsx` |

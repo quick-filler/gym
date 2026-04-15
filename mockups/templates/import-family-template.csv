@@ -1,0 +1,4 @@
+importAs,guardianName,guardianPhone,guardianEmail,dependentName,dependentBirthdate,relationship,plan,status,notes
+student,João Silva,11999999999,joao@email.com,,, ,Mensal,active,Aluno sem dependente
+dependent,Ana Costa,11988888888,ana@email.com,Sofia Costa,2018-03-12,mother,Natação Infantil,active,Dependente infantil
+dependent,Ana Costa,11988888888,ana@email.com,Pedro Costa,2016-07-05,mother,Natação Infantil,active,Segundo dependente da mesma responsável
