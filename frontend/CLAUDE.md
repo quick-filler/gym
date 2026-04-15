@@ -763,3 +763,9 @@ Adicionar card/lista de alertas para:
 - documentos vencidos
 - documentos vencendo em breve
 - ausência de documento obrigatório
+
+
+### Melhorias de UX para Documentos
+- destacar aluno com pendência documental em vermelho na lista
+- filtro rápido: "somente com pendência documental"
+- no app, permitir upload por câmera além de arquivo/galeria
