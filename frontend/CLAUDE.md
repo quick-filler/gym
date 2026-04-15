@@ -729,3 +729,24 @@ O módulo `/admin/pool` deve mostrar:
 | `ColumnMappingTable` | `src/components/admin/ColumnMappingTable.tsx` |
 | `ImportPreviewTable` | `src/components/admin/ImportPreviewTable.tsx` |
 | `TemplateDownloadCard` | `src/components/admin/TemplateDownloadCard.tsx` |
+
+
+---
+
+## 📎 v2 — Documentos (Frontend)
+
+### App do aluno
+Nova página:
+```
+/[subdomain]/documents
+```
+Funções:
+- enviar PDF/JPG/PNG
+- escolher tipo de documento
+- adicionar observação
+- ver lista de documentos já enviados
+
+### Admin
+No perfil do aluno/dependente:
+- botão/aba **Documentos**
+- lista com nome, tipo, envio, validade, botão visualizar

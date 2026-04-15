@@ -796,3 +796,29 @@ Opções no confirm:
 - `skip_duplicates`
 - `update_existing`
 - `import_anyway`
+
+
+---
+
+## 📎 v2 — Módulo de Documentos do Aluno / Dependente
+
+### Objetivo
+Permitir upload e gestão de documentos importantes de saúde e aptidão.
+
+### Novo Content Type: `StudentDocument`
+| Field | Type | Notes |
+|---|---|---|
+| title | String | Nome do documento |
+| type | Enum | `medical_certificate` / `allergy_report` / `health_note` / `other` |
+| file | Media | PDF / imagem |
+| notes | Text | Observações |
+| uploadedBy | Relation | user que enviou |
+| student | Relation | Student |
+| dependent | Relation | Dependent (opcional) |
+| expiresAt | Date | Validade opcional |
+| isActive | Boolean | default true |
+
+### Regras
+- documento pode pertencer ao aluno ou ao dependente
+- documentos vencidos devem aparecer com alerta
+- upload permitido para app do responsável/aluno; visualização para admin
