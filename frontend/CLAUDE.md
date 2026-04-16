@@ -784,3 +784,10 @@ Modal/formulário com campos:
 - forma de pagamento
 - referente a
 - observação
+
+
+### Financeiro — recursos extras
+Adicionar no `/admin/finance`:
+- botão/ação **Estornar**
+- card **Desconto / Bolsa**
+- bloco **Parcelamento manual**

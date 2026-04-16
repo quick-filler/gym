@@ -836,3 +836,24 @@ Campos adicionais sugeridos em `Payment`:
 ```
 POST /api/payments/manual
 ```
+
+
+### Estorno / cancelamento manual
+Adicionar suporte a reversão manual de pagamento:
+- `refundReason`
+- `refundAmount`
+- `refundedAt`
+- `cancelledAt`
+
+### Desconto / bolsa
+Novo conceito para matrícula/plano:
+- `discountType` — `amount` / `percentage` / `scholarship`
+- `discountValue`
+- `discountReason`
+- `discountValidUntil`
+
+### Parcelamento manual
+Permitir gerar parcelas manuais vinculadas ao aluno/responsável:
+- `installmentGroupId`
+- `installmentNumber`
+- `installmentTotal`
