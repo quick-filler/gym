@@ -822,3 +822,17 @@ Permitir upload e gestão de documentos importantes de saúde e aptidão.
 - documento pode pertencer ao aluno ou ao dependente
 - documentos vencidos devem aparecer com alerta
 - upload permitido para app do responsável/aluno; visualização para admin
+
+
+### Recebimento manual
+O módulo financeiro deve permitir criar `Payment` manualmente.
+
+Campos adicionais sugeridos em `Payment`:
+- `source` — `automatic` / `manual`
+- `referenceType` — `monthly_fee` / `enrollment_fee` / `single_class` / `fee` / `other`
+- `dependent` — Relation opcional
+
+### Nova rota
+```
+POST /api/payments/manual
+```

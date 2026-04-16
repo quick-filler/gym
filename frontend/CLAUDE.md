@@ -769,3 +769,18 @@ Adicionar card/lista de alertas para:
 - destacar aluno com pendência documental em vermelho na lista
 - filtro rápido: "somente com pendência documental"
 - no app, permitir upload por câmera além de arquivo/galeria
+
+
+### Recebimento manual (Frontend)
+Na página `/admin/finance`, adicionar botão:
+- **+ Recebimento manual**
+
+Modal/formulário com campos:
+- aluno / responsável
+- dependente (opcional)
+- plano
+- valor
+- data do pagamento
+- forma de pagamento
+- referente a
+- observação
