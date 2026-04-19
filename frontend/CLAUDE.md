@@ -791,3 +791,77 @@ Adicionar no `/admin/finance`:
 - botão/ação **Estornar**
 - card **Desconto / Bolsa**
 - bloco **Parcelamento manual**
+
+
+---
+
+## 🧩 Bloco 1 — Personalização do Produto (Frontend)
+
+### Nova página
+```
+/admin/configuration
+```
+
+### Objetivo
+Permitir que a academia escolha:
+1. o segmento do negócio
+2. os módulos que quer ativar
+3. o plano por faixa de alunos
+
+### Estrutura da tela
+#### 1. Segmento
+Cards de seleção:
+- Academia
+- Escola de Natação
+- Pilates
+- Ballet
+- Studio
+- Outro
+
+#### 2. Módulos ativáveis
+Toggles agrupados por categoria:
+
+**Operação**
+- Agenda
+- Presença
+- Reposição
+- Recursos físicos
+
+**Alunos**
+- Dependentes
+- Documentos
+- Evolução pedagógica
+- Assinatura digital
+
+**Financeiro**
+- Financeiro
+- Recebimento manual
+- Parcelamento
+- Desconto / bolsa
+
+**Especializados**
+- Piscina
+- Treinos
+
+**Gestão**
+- Comunicação
+- Indicadores
+- Importação
+
+#### 3. Plano por quantidade de alunos
+- Básico — até 80 alunos
+- Intermediário — até 250 alunos
+- Premium — até 700 alunos
+
+### Comportamento esperado
+- ao escolher o segmento, o sistema sugere automaticamente os módulos mais comuns
+- o admin pode ativar/desativar manualmente depois
+- menus do admin e app mudam conforme módulos ativos
+
+### Novos componentes
+| Componente | Localização |
+|---|---|
+| `BusinessTypeSelector` | `src/components/admin/BusinessTypeSelector.tsx` |
+| `ModuleToggleGrid` | `src/components/admin/ModuleToggleGrid.tsx` |
+| `StudentTierSelector` | `src/components/admin/StudentTierSelector.tsx` |
+| `SegmentPresetCard` | `src/components/admin/SegmentPresetCard.tsx` |

@@ -857,3 +857,125 @@ Permitir gerar parcelas manuais vinculadas ao aluno/responsável:
 - `installmentGroupId`
 - `installmentNumber`
 - `installmentTotal`
+
+
+---
+
+## 🧩 Bloco 1 — Personalização do Produto por Segmento e Módulos
+
+### Objetivo
+Permitir que cada cliente configure o sistema de acordo com seu segmento e com os módulos que deseja ativar.
+
+### Ajustes em `Academy`
+Adicionar campos:
+- `businessType` — Enum: `gym` / `swimming_school` / `pilates` / `ballet` / `studio` / `martial_arts` / `other`
+- `enabledModules` — JSON array com módulos ativos
+- `studentLimitPlan` — Enum: `basic` / `intermediate` / `premium`
+
+### Módulos ativáveis
+- `agenda`
+- `attendance`
+- `finance`
+- `documents`
+- `dependents`
+- `pool`
+- `workouts`
+- `pedagogy`
+- `makeups`
+- `resources`
+- `communication`
+- `digital_signature`
+- `indicators`
+- `imports`
+
+### Presets por segmento
+#### `gym`
+Ativar por padrão:
+- agenda
+- attendance
+- finance
+- workouts
+- documents
+- indicators
+
+#### `swimming_school`
+Ativar por padrão:
+- agenda
+- attendance
+- dependents
+- documents
+- pool
+- pedagogy
+- makeups
+- communication
+
+#### `pilates`
+Ativar por padrão:
+- agenda
+- attendance
+- finance
+- documents
+- resources
+- pedagogy
+- communication
+
+#### `ballet`
+Ativar por padrão:
+- agenda
+- dependents
+- pedagogy
+- documents
+- makeups
+- digital_signature
+- communication
+
+### Novas rotas
+```
+GET /api/academies/:id/configuration
+PUT /api/academies/:id/configuration
+POST /api/academies/:id/apply-segment-preset
+```
+
+---
+
+## 🧱 Blocos Planejados de Execução
+
+### Bloco 2 — Comunicação / Relacionamento
+- avisos para turma inteira
+- lembretes de aula
+- cobrança de pendências
+- lembretes de documento vencendo
+- notificações para responsável
+
+### Bloco 3 — Salas / Recursos Físicos
+- cadastro de salas / piscina / estúdio / aparelhos
+- capacidade por recurso
+- indisponibilidade / manutenção
+- evitar conflito de agenda por recurso
+
+### Bloco 4 — Evolução Pedagógica
+- nível do aluno
+- histórico de evolução
+- observações técnicas
+- mudança de turma por evolução
+
+### Bloco 5 — Reposição de Aula
+- pedido de reposição
+- saldo de reposição
+- encaixe em outra turma
+- aprovação automática/manual
+
+### Bloco 6 — Assinatura Digital / Termos
+- contrato
+- termo de responsabilidade
+- autorização de imagem
+- autorização para menor
+
+### Bloco 7 — Metas e Indicadores
+- alunos ativos
+- inadimplência
+- ocupação de turmas
+- ticket médio
+- retenção / evasão
+- receita por modalidade
+- lucro
