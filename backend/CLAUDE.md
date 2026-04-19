@@ -1012,3 +1012,103 @@ POST /api/resources
 PUT /api/resources/:id
 POST /api/resources/:id/block
 ```
+
+
+---
+
+## 🧩 Bloco 5 — Reposição de Aula
+
+### Objetivo
+Controlar faltas e permitir reposições em outras turmas/horários.
+
+### Novo Content Type: `MakeupCredit`
+| Field | Type | Notes |
+|---|---|---|
+| student | Relation | Student |
+| dependent | Relation | Dependent (opcional) |
+| originBooking | Relation | booking que gerou o crédito |
+| reason | Enum | `absence` / `academy_cancelled` / `other` |
+| expiresAt | Date | validade do crédito |
+| status | Enum | `open` / `used` / `expired` / `cancelled` |
+| academy | Relation | Academy |
+
+### Rotas
+```
+GET /api/makeups
+POST /api/makeups
+POST /api/makeups/:id/use
+```
+
+---
+
+## 🧩 Bloco 4 — Evolução Pedagógica
+
+### Objetivo
+Acompanhar progresso do aluno por nível/habilidade.
+
+### Novo Content Type: `StudentProgress`
+| Field | Type | Notes |
+|---|---|---|
+| student | Relation | Student |
+| dependent | Relation | Dependent (opcional) |
+| level | String | Ex: Golfinho, Tubarão, Intermediário |
+| skills | JSON | habilidades / checklist |
+| notes | Text | observações técnicas |
+| evaluatedAt | Date | data da avaliação |
+| instructor | String | avaliador |
+| academy | Relation | Academy |
+
+---
+
+## 🧩 Bloco 2 — Comunicação / Relacionamento
+
+### Objetivo
+Enviar avisos e lembretes para alunos/responsáveis.
+
+### Novo Content Type: `CommunicationLog`
+| Field | Type | Notes |
+|---|---|---|
+| targetType | Enum | `student` / `guardian` / `class` / `all` |
+| messageType | Enum | `reminder` / `warning` / `marketing` / `document_request` |
+| channel | Enum | `push` / `email` / `whatsapp` / `internal` |
+| title | String | assunto |
+| body | Text | conteúdo |
+| sentAt | DateTime | quando foi enviado |
+| status | Enum | `draft` / `sent` / `failed` |
+| academy | Relation | Academy |
+
+---
+
+## 🧩 Bloco 7 — Metas e Indicadores
+
+### Objetivo
+Exibir indicadores gerenciais para o dono.
+
+### Indicadores sugeridos
+- alunos ativos
+- inadimplência
+- ocupação de turmas
+- ticket médio
+- retenção / evasão
+- receita por modalidade
+- lucro
+- conversão de experimental
+
+---
+
+## 🧩 Bloco 6 — Assinatura Digital / Termos
+
+### Objetivo
+Coletar aceite digital de contratos e autorizações.
+
+### Novo Content Type: `SignedTerm`
+| Field | Type | Notes |
+|---|---|---|
+| student | Relation | Student |
+| dependent | Relation | Dependent (opcional) |
+| termType | Enum | `contract` / `image_release` / `liability` / `minor_authorization` |
+| signedBy | String | nome do responsável |
+| signedAt | DateTime | data/hora |
+| file | Media | PDF do termo |
+| isValid | Boolean | controle |
+| academy | Relation | Academy |

@@ -892,3 +892,41 @@ Cadastrar e gerenciar salas, piscina, estúdios e outros espaços físicos.
 | `ResourceCard` | `src/components/admin/ResourceCard.tsx` |
 | `ResourceForm` | `src/components/admin/ResourceForm.tsx` |
 | `ResourceCalendar` | `src/components/admin/ResourceCalendar.tsx` |
+
+
+---
+
+## 🧩 Bloco 5 — Reposição de Aula (Frontend)
+### Página
+`/admin/makeups`
+- créditos disponíveis
+- usar crédito em outra turma
+- aprovar / negar reposição
+
+## 🧩 Bloco 4 — Evolução Pedagógica (Frontend)
+### Página
+`/admin/progress`
+- nível do aluno
+- observações técnicas
+- checklist de habilidades
+- histórico de evolução
+
+## 🧩 Bloco 2 — Comunicação (Frontend)
+### Página
+`/admin/communications`
+- enviar aviso para turma / aluno / responsável
+- lembrete de pagamento
+- solicitação de documento
+
+## 🧩 Bloco 7 — Indicadores (Frontend)
+### Página
+`/admin/indicators`
+- cards e gráficos gerenciais
+- ocupação, inadimplência, ticket médio, retenção
+
+## 🧩 Bloco 6 — Assinatura Digital (Frontend)
+### Página
+`/admin/terms`
+- contratos e autorizações assinadas
+- status de assinatura
+- solicitar assinatura pendente
