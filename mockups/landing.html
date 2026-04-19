@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0c0a09">
+<meta name="theme-color" content="#05070b">
 <title>Gym — Sistema de gestão para academias modernas</title>
 <meta name="description" content="Gestão completa para academias brasileiras: matrículas, cobranças via PIX e boleto, agenda de aulas, fichas de treino e app white-label com a identidade visual da sua academia.">
 <meta name="keywords" content="sistema academia, software gestão academia, app academia, gestão de alunos, cobrança recorrente PIX, agenda de aulas, ficha de treino">
@@ -96,34 +96,34 @@
      DESIGN TOKENS — paper / ink / flame
      ============================================================ */
   :root {
-    --paper-50:  #fdfcfa;
-    --paper:     #faf8f5;
-    --paper-2:   #f3efe8;
-    --paper-3:   #e7e2d9;
+    --paper-50:  #05070b;
+    --paper:     #05070b;
+    --paper-2:   #0b1220;
+    --paper-3:   #1f2937;
 
-    --ink-50:    #f8f7f5;
-    --ink-200:   #d6d3ce;
-    --ink-300:   #a8a29e;
-    --ink-400:   #78716c;
-    --ink-500:   #57534e;
-    --ink-600:   #44403c;
-    --ink-700:   #292524;
-    --ink-900:   #0c0a09;
+    --ink-50:    #05070b;
+    --ink-200:   #374151;
+    --ink-300:   #94a3b8;
+    --ink-400:   #94a3b8;
+    --ink-500:   #cbd5e1;
+    --ink-600:   #cbd5e1;
+    --ink-700:   #cbd5e1;
+    --ink-900:   #05070b;
 
-    --flame:        #e8551c;
-    --flame-dark:   #c2410c;
-    --flame-50:     #fff7f1;
-    --flame-100:    #ffe7d6;
+    --flame:        #0A84FF;
+    --flame-dark:   #0A84FF;
+    --flame-50:     #0b1220;
+    --flame-100:    #0b1220;
 
-    --pine:         #0f766e;
-    --pine-50:      #ecfdf5;
+    --pine:         #0A84FF;
+    --pine-50:      #0b1220;
 
-    --emerald:      #059669;
+    --emerald:      #0A84FF;
     --rose:         #be123c;
-    --amber:        #d97706;
+    --amber:        #38BDF8;
 
-    --line:         #e7e2d9;
-    --line-strong:  #d6d3ce;
+    --line:         #1f2937;
+    --line-strong:  #374151;
 
     --font-display: "Outfit", system-ui, -apple-system, sans-serif;
     --font-body:    "Geist", -apple-system, system-ui, sans-serif;
@@ -508,9 +508,9 @@
   }
   .feature-hero-mock-row .name { color: var(--paper); font-weight: 500; }
   .feature-hero-mock-row .pill { font-family: var(--font-mono); font-size: 0.7rem; padding: 0.18rem 0.55rem; border-radius: 999px; }
-  .pill-green { background: rgba(5, 150, 105, 0.16); color: #34d399; }
-  .pill-amber { background: rgba(217, 119, 6, 0.16); color: #fbbf24; }
-  .pill-rose  { background: rgba(190, 18, 60, 0.16); color: #fb7185; }
+  .pill-green { background: rgba(5, 150, 105, 0.16); color: #38BDF8; }
+  .pill-amber { background: rgba(217, 119, 6, 0.16); color: #38BDF8; }
+  .pill-rose  { background: rgba(190, 18, 60, 0.16); color: #38BDF8; }
 
   /* The flame cell — highlights the white-label */
   .cell.feature-flame {
@@ -962,13 +962,13 @@
         <svg class="spark" viewBox="0 0 300 70" preserveAspectRatio="none">
           <defs>
             <linearGradient id="sg" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#e8551c" stop-opacity="0.22"/>
-              <stop offset="100%" stop-color="#e8551c" stop-opacity="0"/>
+              <stop offset="0%" stop-color="#0A84FF" stop-opacity="0.22"/>
+              <stop offset="100%" stop-color="#0A84FF" stop-opacity="0"/>
             </linearGradient>
           </defs>
           <path d="M0,55 L40,48 L80,40 L120,45 L160,30 L200,25 L240,18 L300,12 L300,70 L0,70 Z" fill="url(#sg)"/>
-          <path d="M0,55 L40,48 L80,40 L120,45 L160,30 L200,25 L240,18 L300,12" fill="none" stroke="#e8551c" stroke-width="2.2" stroke-linecap="round"/>
-          <circle cx="300" cy="12" r="4" fill="#e8551c"/>
+          <path d="M0,55 L40,48 L80,40 L120,45 L160,30 L200,25 L240,18 L300,12" fill="none" stroke="#0A84FF" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="300" cy="12" r="4" fill="#0A84FF"/>
         </svg>
       </div>
       <!-- Phone with student app preview -->
