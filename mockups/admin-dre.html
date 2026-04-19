@@ -36,7 +36,7 @@
   .dre-hero { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
   .dre-card { border-radius: 16px; padding: 1.5rem; position: relative; overflow: hidden; }
   .dre-card.revenue { background: linear-gradient(135deg, #10b981, #059669); }
-  .dre-card.expenses { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  .dre-card.expenses { background: linear-gradient(135deg, #0A84FF, #005396); }
   .dre-card.profit { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
   .dre-card-label { color: rgba(255,255,255,0.75); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
   .dre-card-value { color: #fff; font-size: 2rem; font-weight: 900; margin: 0.4rem 0 0.2rem; }
@@ -81,7 +81,7 @@
   .badge { padding: 0.22rem 0.6rem; border-radius: 999px; font-size: 0.68rem; font-weight: 700; }
   .badge-purple { background: #ede9fe; color: #5b21b6; }
   .badge-blue { background: #dbeafe; color: #1e40af; }
-  .badge-orange { background: #ffedd5; color: #c2410c; }
+  .badge-orange { background: #dbeafe; color: #0A84FF; }
   .badge-gray { background: #f1f5f9; color: #475569; }
   .btn-sm { font-size: 0.78rem; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; background: #f1f5f9; color: #64748b; }
 
@@ -456,7 +456,7 @@
         <div class="card-subtitle">Receitas vs Despesas — últimos 6 meses</div>
         <div class="legend">
           <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div> Receita</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Despesas</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#0A84FF"></div> Despesas</div>
           <div class="legend-item"><div class="legend-dot" style="background:#6366f1"></div> Lucro</div>
         </div>
         <div class="chart-area">
@@ -468,13 +468,13 @@
             <!-- Receita (green) -->
             <polyline points="0,110 96,100 192,88 288,95 384,70 480,55" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             <!-- Despesas (red) -->
-            <polyline points="0,130 96,125 192,120 288,118 384,112 480,108" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="0,130 96,125 192,120 288,118 384,112 480,108" fill="none" stroke="#0A84FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             <!-- Lucro (indigo) -->
             <polyline points="0,138 96,130 192,115 288,120 384,95 480,78" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="5,3" stroke-linecap="round" stroke-linejoin="round"/>
             <!-- dots receita -->
             <circle cx="480" cy="55" r="4" fill="#10b981" stroke="#fff" stroke-width="2"/>
             <!-- dots despesas -->
-            <circle cx="480" cy="108" r="4" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+            <circle cx="480" cy="108" r="4" fill="#0A84FF" stroke="#fff" stroke-width="2"/>
             <!-- dots lucro -->
             <circle cx="480" cy="78" r="4" fill="#6366f1" stroke="#fff" stroke-width="2"/>
           </svg>
@@ -573,7 +573,7 @@
           </tr>
           <tr>
             <td><strong style="color:#1e1b4b">Google Ads — Abril</strong><br><span style="font-size:0.72rem;color:#94a3b8">Campanha matrícula nova turma</span></td>
-            <td><span class="badge" style="background:#fce7f3;color:#9d174d">📣 Marketing</span></td>
+            <td><span class="badge" style="background:#dbeafe;color:#1d4ed8">📣 Marketing</span></td>
             <td><span class="badge badge-gray">Variável</span></td>
             <td>30/04/2026</td>
             <td style="font-weight:700">R$ 900,00</td>
@@ -582,7 +582,7 @@
           </tr>
           <tr>
             <td><strong style="color:#1e1b4b">Conta de Luz</strong><br><span style="font-size:0.72rem;color:#94a3b8">CPFL — Referência Março/26</span></td>
-            <td><span class="badge" style="background:#fef3c7;color:#b45309">💡 Utilidades</span></td>
+            <td><span class="badge" style="background:#e0f2fe;color:#0369a1">💡 Utilidades</span></td>
             <td><span class="badge badge-blue">Fixo</span></td>
             <td>10/04/2026</td>
             <td style="font-weight:700">R$ 480,00</td>
@@ -591,7 +591,7 @@
           </tr>
           <tr>
             <td><strong style="color:#1e1b4b">Internet + Telefone</strong></td>
-            <td><span class="badge" style="background:#fef3c7;color:#b45309">💡 Utilidades</span></td>
+            <td><span class="badge" style="background:#e0f2fe;color:#0369a1">💡 Utilidades</span></td>
             <td><span class="badge badge-blue">Fixo</span></td>
             <td>15/04/2026</td>
             <td style="font-weight:700">R$ 320,00</td>
@@ -604,7 +604,7 @@
             <td><span class="badge badge-gray">Variável</span></td>
             <td>20/04/2026</td>
             <td style="font-weight:700">R$ 350,00</td>
-            <td><span class="badge" style="background:#fee2e2;color:#991b1b">✗ Em aberto</span></td>
+            <td><span class="badge" style="background:#dbeafe;color:#1d4ed8">✗ Em aberto</span></td>
             <td><button class="btn-sm">Ver</button></td>
           </tr>
         </tbody>
