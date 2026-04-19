@@ -865,3 +865,30 @@ Toggles agrupados por categoria:
 | `ModuleToggleGrid` | `src/components/admin/ModuleToggleGrid.tsx` |
 | `StudentTierSelector` | `src/components/admin/StudentTierSelector.tsx` |
 | `SegmentPresetCard` | `src/components/admin/SegmentPresetCard.tsx` |
+
+
+---
+
+## 🧩 Bloco 3 — Salas / Recursos Físicos (Frontend)
+
+### Nova página
+```
+/admin/resources
+```
+
+### Objetivo
+Cadastrar e gerenciar salas, piscina, estúdios e outros espaços físicos.
+
+### Funções da tela
+- listar recursos
+- criar novo recurso
+- editar capacidade e disponibilidade
+- bloquear recurso para manutenção
+- visualizar agenda por recurso
+
+### Componentes
+| Componente | Localização |
+|---|---|
+| `ResourceCard` | `src/components/admin/ResourceCard.tsx` |
+| `ResourceForm` | `src/components/admin/ResourceForm.tsx` |
+| `ResourceCalendar` | `src/components/admin/ResourceCalendar.tsx` |

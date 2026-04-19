@@ -902,6 +902,7 @@ Ativar por padrão:
 Ativar por padrão:
 - agenda
 - attendance
+- finance
 - dependents
 - documents
 - pool
@@ -922,6 +923,7 @@ Ativar por padrão:
 #### `ballet`
 Ativar por padrão:
 - agenda
+- finance
 - dependents
 - pedagogy
 - documents
@@ -979,3 +981,34 @@ POST /api/academies/:id/apply-segment-preset
 - retenção / evasão
 - receita por modalidade
 - lucro
+
+
+---
+
+## 🧩 Bloco 3 — Salas / Recursos Físicos
+
+### Objetivo
+Controlar salas, piscinas, estúdios e aparelhos para evitar conflitos e melhorar a operação.
+
+### Novo Content Type: `ResourceSpace`
+| Field | Type | Notes |
+|---|---|---|
+| name | String | Nome do recurso, ex.: Sala 1, Piscina Principal |
+| type | Enum | `room` / `pool` / `studio` / `equipment_area` / `other` |
+| capacity | Integer | Capacidade máxima |
+| isActive | Boolean | Se está disponível |
+| notes | Text | Observações |
+| academy | Relation | manyToOne Academy |
+
+### Regras
+- turmas podem ser vinculadas a um recurso físico
+- sistema deve evitar conflito de horário no mesmo recurso
+- recurso pode ser marcado como indisponível para manutenção
+
+### Rotas
+```
+GET /api/resources
+POST /api/resources
+PUT /api/resources/:id
+POST /api/resources/:id/block
+```
