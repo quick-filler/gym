@@ -930,3 +930,13 @@ Cadastrar e gerenciar salas, piscina, estúdios e outros espaços físicos.
 - contratos e autorizações assinadas
 - status de assinatura
 - solicitar assinatura pendente
+
+
+### Branding / Identidade visual na personalização
+Na página `/admin/configuration`, adicionar uma seção de identidade visual com:
+- nome do empreendimento
+- upload de logo
+- cor principal preferida
+- cor secundária preferida
+
+Essa configuração deve refletir o white-label do admin e do app.
