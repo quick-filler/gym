@@ -31,8 +31,11 @@ export type Scalars = {
 export type Academy = {
   __typename?: 'Academy';
   address?: Maybe<Scalars['String']['output']>;
+  billingMode?: Maybe<Scalars['String']['output']>;
+  businessType?: Maybe<Scalars['String']['output']>;
   documentId: Scalars['ID']['output'];
   email?: Maybe<Scalars['String']['output']>;
+  enabledModules?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
   isActive?: Maybe<Scalars['Boolean']['output']>;
   logo?: Maybe<Media>;
   name: Scalars['String']['output'];
@@ -45,7 +48,10 @@ export type Academy = {
 
 export type AcademyInput = {
   address?: InputMaybe<Scalars['String']['input']>;
+  billingMode?: InputMaybe<Scalars['String']['input']>;
+  businessType?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
+  enabledModules?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   logo?: InputMaybe<Scalars['ID']['input']>;
   name: Scalars['String']['input'];
@@ -58,7 +64,10 @@ export type AcademyInput = {
 
 export type AcademyUpdateInput = {
   address?: InputMaybe<Scalars['String']['input']>;
+  billingMode?: InputMaybe<Scalars['String']['input']>;
+  businessType?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
+  enabledModules?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   logo?: InputMaybe<Scalars['ID']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
@@ -67,6 +76,14 @@ export type AcademyUpdateInput = {
   primaryColor?: InputMaybe<Scalars['String']['input']>;
   secondaryColor?: InputMaybe<Scalars['String']['input']>;
   slug?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AdminDashboard = {
+  __typename?: 'AdminDashboard';
+  metrics: Array<MetricCard>;
+  recentStudents: Array<DashboardStudentRow>;
+  todayClasses: Array<DashboardClassRow>;
+  upcomingPayments: Array<DashboardPaymentRow>;
 };
 
 export type BodyAssessment = {
@@ -195,6 +212,97 @@ export type ClassScheduleUpdateInput = {
   weekdays?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
 };
 
+export type DreCashFlowPoint = {
+  __typename?: 'DRECashFlowPoint';
+  expenses: Scalars['Float']['output'];
+  label: Scalars['String']['output'];
+  profit: Scalars['Float']['output'];
+  revenue: Scalars['Float']['output'];
+};
+
+export type DreCategoryBreakdown = {
+  __typename?: 'DRECategoryBreakdown';
+  amount: Scalars['String']['output'];
+  category: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  percent: Scalars['Float']['output'];
+};
+
+export type DreExpenseRow = {
+  __typename?: 'DREExpenseRow';
+  amount: Scalars['String']['output'];
+  category: Scalars['String']['output'];
+  categoryLabel: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  dueDate: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  subtitle?: Maybe<Scalars['String']['output']>;
+  type: Scalars['String']['output'];
+};
+
+export type DreHeroExpenses = {
+  __typename?: 'DREHeroExpenses';
+  fixed: Scalars['String']['output'];
+  total: Scalars['String']['output'];
+  variable: Scalars['String']['output'];
+};
+
+export type DreHeroProfit = {
+  __typename?: 'DREHeroProfit';
+  marginPercent: Scalars['Float']['output'];
+  total: Scalars['String']['output'];
+};
+
+export type DreHeroRevenue = {
+  __typename?: 'DREHeroRevenue';
+  deltaLabel: Scalars['String']['output'];
+  total: Scalars['String']['output'];
+  trend: Scalars['String']['output'];
+};
+
+export type DreOverview = {
+  __typename?: 'DREOverview';
+  cashFlow: Array<DreCashFlowPoint>;
+  categoryBreakdown: Array<DreCategoryBreakdown>;
+  expenseRows: Array<DreExpenseRow>;
+  expenses: DreHeroExpenses;
+  expensesTotalLabel: Scalars['String']['output'];
+  monthLabel: Scalars['String']['output'];
+  profit: DreHeroProfit;
+  revenue: DreHeroRevenue;
+};
+
+export type DashboardClassRow = {
+  __typename?: 'DashboardClassRow';
+  booked: Scalars['Int']['output'];
+  capacity: Scalars['Int']['output'];
+  id: Scalars['String']['output'];
+  instructor?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  time: Scalars['String']['output'];
+};
+
+export type DashboardPaymentRow = {
+  __typename?: 'DashboardPaymentRow';
+  amount: Scalars['String']['output'];
+  dueDate: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  method: Scalars['String']['output'];
+  student: Scalars['String']['output'];
+};
+
+export type DashboardStudentRow = {
+  __typename?: 'DashboardStudentRow';
+  email: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  initials: Scalars['String']['output'];
+  joinedAt?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  plan: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
+
 export type DateFilterInput = {
   and?: InputMaybe<Array<InputMaybe<Scalars['Date']['input']>>>;
   between?: InputMaybe<Array<InputMaybe<Scalars['Date']['input']>>>;
@@ -250,6 +358,58 @@ export type DeleteMutationResponse = {
   documentId: Scalars['ID']['output'];
 };
 
+export type Dependent = {
+  __typename?: 'Dependent';
+  academy?: Maybe<Academy>;
+  allergies?: Maybe<Scalars['String']['output']>;
+  birthdate: Scalars['String']['output'];
+  bloodType?: Maybe<Scalars['String']['output']>;
+  bookings?: Maybe<Array<Maybe<ClassBooking>>>;
+  documentId: Scalars['ID']['output'];
+  emergencyContactName?: Maybe<Scalars['String']['output']>;
+  emergencyContactPhone?: Maybe<Scalars['String']['output']>;
+  enrollments?: Maybe<Array<Maybe<Enrollment>>>;
+  gender?: Maybe<Scalars['String']['output']>;
+  guardian?: Maybe<Student>;
+  medicalAlert?: Maybe<Scalars['String']['output']>;
+  medicalNotes?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  photo?: Maybe<Media>;
+  relationship?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  workoutPlans?: Maybe<Array<Maybe<WorkoutPlan>>>;
+};
+
+export type DependentInput = {
+  academy?: InputMaybe<Scalars['ID']['input']>;
+  allergies?: InputMaybe<Scalars['String']['input']>;
+  birthdate: Scalars['String']['input'];
+  bloodType?: InputMaybe<Scalars['String']['input']>;
+  emergencyContactName?: InputMaybe<Scalars['String']['input']>;
+  emergencyContactPhone?: InputMaybe<Scalars['String']['input']>;
+  gender?: InputMaybe<Scalars['String']['input']>;
+  guardian?: InputMaybe<Scalars['ID']['input']>;
+  medicalAlert?: InputMaybe<Scalars['String']['input']>;
+  medicalNotes?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  relationship?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type DependentUpdateInput = {
+  allergies?: InputMaybe<Scalars['String']['input']>;
+  birthdate?: InputMaybe<Scalars['String']['input']>;
+  bloodType?: InputMaybe<Scalars['String']['input']>;
+  emergencyContactName?: InputMaybe<Scalars['String']['input']>;
+  emergencyContactPhone?: InputMaybe<Scalars['String']['input']>;
+  gender?: InputMaybe<Scalars['String']['input']>;
+  medicalAlert?: InputMaybe<Scalars['String']['input']>;
+  medicalNotes?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  relationship?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type Enrollment = {
   __typename?: 'Enrollment';
   documentId: Scalars['ID']['output'];
@@ -303,6 +463,84 @@ export type ExerciseInput = {
   sets?: InputMaybe<Scalars['Int']['input']>;
 };
 
+export type Expense = {
+  __typename?: 'Expense';
+  academy?: Maybe<Academy>;
+  amount: Scalars['Float']['output'];
+  category: Scalars['String']['output'];
+  date: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  documentId: Scalars['ID']['output'];
+  dueDate?: Maybe<Scalars['String']['output']>;
+  notes?: Maybe<Scalars['String']['output']>;
+  paidAt?: Maybe<Scalars['String']['output']>;
+  receipt?: Maybe<Media>;
+  recurrenceDay?: Maybe<Scalars['Int']['output']>;
+  recurrent?: Maybe<Scalars['Boolean']['output']>;
+  status: Scalars['String']['output'];
+  subtitle?: Maybe<Scalars['String']['output']>;
+  type: Scalars['String']['output'];
+};
+
+export type ExpenseInput = {
+  academy?: InputMaybe<Scalars['ID']['input']>;
+  amount: Scalars['Float']['input'];
+  category: Scalars['String']['input'];
+  date: Scalars['String']['input'];
+  description: Scalars['String']['input'];
+  dueDate?: InputMaybe<Scalars['String']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  paidAt?: InputMaybe<Scalars['String']['input']>;
+  recurrenceDay?: InputMaybe<Scalars['Int']['input']>;
+  recurrent?: InputMaybe<Scalars['Boolean']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  subtitle?: InputMaybe<Scalars['String']['input']>;
+  type: Scalars['String']['input'];
+};
+
+export type ExpenseUpdateInput = {
+  amount?: InputMaybe<Scalars['Float']['input']>;
+  category?: InputMaybe<Scalars['String']['input']>;
+  date?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  dueDate?: InputMaybe<Scalars['String']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  paidAt?: InputMaybe<Scalars['String']['input']>;
+  recurrenceDay?: InputMaybe<Scalars['Int']['input']>;
+  recurrent?: InputMaybe<Scalars['Boolean']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  subtitle?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type FinanceCharge = {
+  __typename?: 'FinanceCharge';
+  amount: Scalars['Float']['output'];
+  amountFormatted: Scalars['String']['output'];
+  dueDate: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  method: Scalars['String']['output'];
+  paidAt?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  student: Scalars['String']['output'];
+  studentInitials: Scalars['String']['output'];
+};
+
+export type FinanceMethodRow = {
+  __typename?: 'FinanceMethodRow';
+  amount: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  method: Scalars['String']['output'];
+  percent: Scalars['Int']['output'];
+};
+
+export type FinanceOverview = {
+  __typename?: 'FinanceOverview';
+  charges: Array<FinanceCharge>;
+  kpis: Array<MetricCard>;
+  methodBreakdown: Array<FinanceMethodRow>;
+};
+
 export type FloatFilterInput = {
   and?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
   between?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
@@ -326,6 +564,33 @@ export type FloatFilterInput = {
   null?: InputMaybe<Scalars['Boolean']['input']>;
   or?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
   startsWith?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type GuardianFamily = {
+  __typename?: 'GuardianFamily';
+  dependents: Array<GuardianFamilyDependent>;
+  guardian: GuardianFamilyGuardian;
+};
+
+export type GuardianFamilyDependent = {
+  __typename?: 'GuardianFamilyDependent';
+  age: Scalars['Int']['output'];
+  className?: Maybe<Scalars['String']['output']>;
+  classTime?: Maybe<Scalars['String']['output']>;
+  gender?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  medicalAlert?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
+
+export type GuardianFamilyGuardian = {
+  __typename?: 'GuardianFamilyGuardian';
+  email: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  initials: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phone?: Maybe<Scalars['String']['output']>;
 };
 
 export type IdFilterInput = {
@@ -460,6 +725,21 @@ export type Media = {
   width?: Maybe<Scalars['Int']['output']>;
 };
 
+export type MetricCard = {
+  __typename?: 'MetricCard';
+  delta?: Maybe<MetricDelta>;
+  highlighted?: Maybe<Scalars['Boolean']['output']>;
+  id: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
+export type MetricDelta = {
+  __typename?: 'MetricDelta';
+  trend: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   /** Mark a booking as attended and stamp checkedInAt. */
@@ -468,7 +748,9 @@ export type Mutation = {
   createBodyAssessment?: Maybe<BodyAssessment>;
   createClassBooking?: Maybe<ClassBooking>;
   createClassSchedule?: Maybe<ClassSchedule>;
+  createDependent?: Maybe<Dependent>;
   createEnrollment?: Maybe<Enrollment>;
+  createExpense?: Maybe<Expense>;
   createPlan?: Maybe<Plan>;
   createStudent?: Maybe<Student>;
   createWorkoutPlan?: Maybe<WorkoutPlan>;
@@ -476,7 +758,9 @@ export type Mutation = {
   deleteBodyAssessment?: Maybe<BodyAssessment>;
   deleteClassBooking?: Maybe<ClassBooking>;
   deleteClassSchedule?: Maybe<ClassSchedule>;
+  deleteDependent?: Maybe<Dependent>;
   deleteEnrollment?: Maybe<Enrollment>;
+  deleteExpense?: Maybe<Expense>;
   deletePlan?: Maybe<Plan>;
   deleteStudent?: Maybe<Student>;
   deleteWorkoutPlan?: Maybe<WorkoutPlan>;
@@ -484,7 +768,9 @@ export type Mutation = {
   updateBodyAssessment?: Maybe<BodyAssessment>;
   updateClassBooking?: Maybe<ClassBooking>;
   updateClassSchedule?: Maybe<ClassSchedule>;
+  updateDependent?: Maybe<Dependent>;
   updateEnrollment?: Maybe<Enrollment>;
+  updateExpense?: Maybe<Expense>;
   updatePayment?: Maybe<Payment>;
   updatePlan?: Maybe<Plan>;
   updateStudent?: Maybe<Student>;
@@ -517,8 +803,18 @@ export type MutationCreateClassScheduleArgs = {
 };
 
 
+export type MutationCreateDependentArgs = {
+  data: DependentInput;
+};
+
+
 export type MutationCreateEnrollmentArgs = {
   data: EnrollmentInput;
+};
+
+
+export type MutationCreateExpenseArgs = {
+  data: ExpenseInput;
 };
 
 
@@ -557,7 +853,17 @@ export type MutationDeleteClassScheduleArgs = {
 };
 
 
+export type MutationDeleteDependentArgs = {
+  documentId: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteEnrollmentArgs = {
+  documentId: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteExpenseArgs = {
   documentId: Scalars['ID']['input'];
 };
 
@@ -601,8 +907,20 @@ export type MutationUpdateClassScheduleArgs = {
 };
 
 
+export type MutationUpdateDependentArgs = {
+  data: DependentUpdateInput;
+  documentId: Scalars['ID']['input'];
+};
+
+
 export type MutationUpdateEnrollmentArgs = {
   data: EnrollmentUpdateInput;
+  documentId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateExpenseArgs = {
+  data: ExpenseUpdateInput;
   documentId: Scalars['ID']['input'];
 };
 
@@ -708,22 +1026,32 @@ export type Query = {
   academy?: Maybe<Academy>;
   /** Public — returns branding config for the given slug. */
   academyBySlug?: Maybe<Academy>;
+  adminDashboard?: Maybe<AdminDashboard>;
   bodyAssessment?: Maybe<BodyAssessment>;
   bodyAssessments?: Maybe<Array<Maybe<BodyAssessment>>>;
   classBooking?: Maybe<ClassBooking>;
   classBookings?: Maybe<Array<Maybe<ClassBooking>>>;
   classSchedule?: Maybe<ClassSchedule>;
   classSchedules?: Maybe<Array<Maybe<ClassSchedule>>>;
+  dependent?: Maybe<Dependent>;
+  dependents?: Maybe<Array<Maybe<Dependent>>>;
+  dreOverview?: Maybe<DreOverview>;
   enrollment?: Maybe<Enrollment>;
   enrollments?: Maybe<Array<Maybe<Enrollment>>>;
+  expense?: Maybe<Expense>;
+  expenses?: Maybe<Array<Maybe<Expense>>>;
+  financeOverview?: Maybe<FinanceOverview>;
+  guardians?: Maybe<Array<GuardianFamily>>;
   /** Returns the authenticated user's linked Student profile. */
   me?: Maybe<Student>;
+  myDependents?: Maybe<Array<Maybe<Dependent>>>;
   payment?: Maybe<Payment>;
   payments?: Maybe<Array<Maybe<Payment>>>;
   plan?: Maybe<Plan>;
   plans?: Maybe<Array<Maybe<Plan>>>;
   /** Bookings for a given class schedule, optionally filtered by date. */
   scheduleBookings?: Maybe<Array<Maybe<ClassBooking>>>;
+  scheduleWeek?: Maybe<ScheduleWeek>;
   student?: Maybe<Student>;
   students?: Maybe<Array<Maybe<Student>>>;
   workoutPlan?: Maybe<WorkoutPlan>;
@@ -776,6 +1104,22 @@ export type QueryClassSchedulesArgs = {
 };
 
 
+export type QueryDependentArgs = {
+  documentId: Scalars['ID']['input'];
+};
+
+
+export type QueryDependentsArgs = {
+  pagination?: InputMaybe<PaginationInput>;
+};
+
+
+export type QueryDreOverviewArgs = {
+  month?: InputMaybe<Scalars['Int']['input']>;
+  year?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryEnrollmentArgs = {
   documentId: Scalars['ID']['input'];
 };
@@ -783,6 +1127,24 @@ export type QueryEnrollmentArgs = {
 
 export type QueryEnrollmentsArgs = {
   pagination?: InputMaybe<PaginationInput>;
+};
+
+
+export type QueryExpenseArgs = {
+  documentId: Scalars['ID']['input'];
+};
+
+
+export type QueryExpensesArgs = {
+  month?: InputMaybe<Scalars['Int']['input']>;
+  pagination?: InputMaybe<PaginationInput>;
+  year?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryFinanceOverviewArgs = {
+  month?: InputMaybe<Scalars['Int']['input']>;
+  year?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -812,6 +1174,11 @@ export type QueryScheduleBookingsArgs = {
 };
 
 
+export type QueryScheduleWeekArgs = {
+  weekStart?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryStudentArgs = {
   documentId: Scalars['ID']['input'];
 };
@@ -834,6 +1201,43 @@ export type QueryWorkoutPlansArgs = {
 export type ResponseCollectionMeta = {
   __typename?: 'ResponseCollectionMeta';
   pagination: Pagination;
+};
+
+export type ScheduleClass = {
+  __typename?: 'ScheduleClass';
+  booked: Scalars['Int']['output'];
+  capacity: Scalars['Int']['output'];
+  color: Scalars['String']['output'];
+  endTime: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  instructor?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  startTime: Scalars['String']['output'];
+  weekday: Scalars['Int']['output'];
+};
+
+export type ScheduleStats = {
+  __typename?: 'ScheduleStats';
+  capacityFill: Scalars['Int']['output'];
+  totalBookings: Scalars['Int']['output'];
+  totalClasses: Scalars['Int']['output'];
+};
+
+export type ScheduleUpcoming = {
+  __typename?: 'ScheduleUpcoming';
+  id: Scalars['String']['output'];
+  instructor?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  time: Scalars['String']['output'];
+};
+
+export type ScheduleWeek = {
+  __typename?: 'ScheduleWeek';
+  classes: Array<ScheduleClass>;
+  stats: ScheduleStats;
+  upcoming: Array<ScheduleUpcoming>;
+  weekLabel: Scalars['String']['output'];
+  weekNumber: Scalars['Int']['output'];
 };
 
 export type StringFilterInput = {
@@ -865,9 +1269,11 @@ export type Student = {
   __typename?: 'Student';
   academy?: Maybe<Academy>;
   birthdate?: Maybe<Scalars['String']['output']>;
+  dependents?: Maybe<Array<Maybe<Dependent>>>;
   documentId: Scalars['ID']['output'];
   email: Scalars['String']['output'];
   enrollments?: Maybe<Array<Maybe<Enrollment>>>;
+  isGuardian?: Maybe<Scalars['Boolean']['output']>;
   name: Scalars['String']['output'];
   notes?: Maybe<Scalars['String']['output']>;
   phone?: Maybe<Scalars['String']['output']>;
@@ -880,6 +1286,7 @@ export type StudentInput = {
   academy?: InputMaybe<Scalars['ID']['input']>;
   birthdate?: InputMaybe<Scalars['String']['input']>;
   email: Scalars['String']['input'];
+  isGuardian?: InputMaybe<Scalars['Boolean']['input']>;
   name: Scalars['String']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
@@ -892,6 +1299,7 @@ export type StudentUpdateInput = {
   academy?: InputMaybe<Scalars['ID']['input']>;
   birthdate?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
+  isGuardian?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
@@ -970,13 +1378,6 @@ export type AcademiesQueryVariables = Exact<{
 
 export type AcademiesQuery = { __typename?: 'Query', academies?: Array<{ __typename?: 'Academy', documentId: string, name: string, slug: string, plan?: string | null, isActive?: boolean | null } | null> | null };
 
-export type StudentsQueryVariables = Exact<{
-  pagination?: InputMaybe<PaginationInput>;
-}>;
-
-
-export type StudentsQuery = { __typename?: 'Query', students?: Array<{ __typename?: 'Student', documentId: string, name: string, email: string, phone?: string | null, status?: string | null, photo?: { __typename?: 'Media', url?: string | null } | null } | null> | null };
-
 export type StudentByIdQueryVariables = Exact<{
   documentId: Scalars['ID']['input'];
 }>;
@@ -991,9 +1392,72 @@ export type CreateStudentMutationVariables = Exact<{
 
 export type CreateStudentMutation = { __typename?: 'Mutation', createStudent?: { __typename?: 'Student', documentId: string, name: string, email: string, status?: string | null } | null };
 
+export type AdminDashboardQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AdminDashboardQuery = { __typename?: 'Query', adminDashboard?: { __typename?: 'AdminDashboard', metrics: Array<{ __typename?: 'MetricCard', id: string, label: string, value: string, highlighted?: boolean | null, delta?: { __typename?: 'MetricDelta', value: string, trend: string } | null }>, recentStudents: Array<{ __typename?: 'DashboardStudentRow', id: string, name: string, email: string, plan: string, status: string, initials: string, joinedAt?: string | null }>, todayClasses: Array<{ __typename?: 'DashboardClassRow', id: string, name: string, instructor?: string | null, time: string, booked: number, capacity: number }>, upcomingPayments: Array<{ __typename?: 'DashboardPaymentRow', id: string, student: string, amount: string, dueDate: string, method: string }> } | null };
+
+export type FinanceOverviewQueryVariables = Exact<{
+  month?: InputMaybe<Scalars['Int']['input']>;
+  year?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type FinanceOverviewQuery = { __typename?: 'Query', financeOverview?: { __typename?: 'FinanceOverview', kpis: Array<{ __typename?: 'MetricCard', id: string, label: string, value: string, highlighted?: boolean | null, delta?: { __typename?: 'MetricDelta', value: string, trend: string } | null }>, charges: Array<{ __typename?: 'FinanceCharge', id: string, student: string, studentInitials: string, amount: number, amountFormatted: string, method: string, status: string, dueDate: string, paidAt?: string | null }>, methodBreakdown: Array<{ __typename?: 'FinanceMethodRow', method: string, label: string, amount: string, percent: number }> } | null };
+
+export type DreOverviewQueryVariables = Exact<{
+  month?: InputMaybe<Scalars['Int']['input']>;
+  year?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type DreOverviewQuery = { __typename?: 'Query', dreOverview?: { __typename?: 'DREOverview', monthLabel: string, expensesTotalLabel: string, revenue: { __typename?: 'DREHeroRevenue', total: string, deltaLabel: string, trend: string }, expenses: { __typename?: 'DREHeroExpenses', total: string, fixed: string, variable: string }, profit: { __typename?: 'DREHeroProfit', total: string, marginPercent: number }, cashFlow: Array<{ __typename?: 'DRECashFlowPoint', label: string, revenue: number, expenses: number, profit: number }>, categoryBreakdown: Array<{ __typename?: 'DRECategoryBreakdown', category: string, label: string, amount: string, percent: number }>, expenseRows: Array<{ __typename?: 'DREExpenseRow', id: string, description: string, subtitle?: string | null, category: string, categoryLabel: string, type: string, dueDate: string, amount: string, status: string }> } | null };
+
+export type ScheduleWeekQueryVariables = Exact<{
+  weekStart?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type ScheduleWeekQuery = { __typename?: 'Query', scheduleWeek?: { __typename?: 'ScheduleWeek', weekLabel: string, weekNumber: number, stats: { __typename?: 'ScheduleStats', totalClasses: number, totalBookings: number, capacityFill: number }, classes: Array<{ __typename?: 'ScheduleClass', id: string, name: string, instructor?: string | null, weekday: number, startTime: string, endTime: string, booked: number, capacity: number, color: string }>, upcoming: Array<{ __typename?: 'ScheduleUpcoming', id: string, name: string, time: string, instructor?: string | null }> } | null };
+
+export type GuardiansQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GuardiansQuery = { __typename?: 'Query', guardians?: Array<{ __typename?: 'GuardianFamily', guardian: { __typename?: 'GuardianFamilyGuardian', id: string, name: string, initials: string, email: string, phone?: string | null }, dependents: Array<{ __typename?: 'GuardianFamilyDependent', id: string, name: string, age: number, className?: string | null, classTime?: string | null, status: string, gender?: string | null, medicalAlert?: string | null }> }> | null };
+
+export type AdminWorkoutsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AdminWorkoutsQuery = { __typename?: 'Query', workoutPlans?: Array<{ __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null, isActive?: boolean | null, validFrom?: string | null, exercises?: Array<{ __typename?: 'Exercise', name: string, sets?: number | null, reps?: number | null, load?: string | null } | null> | null, student?: { __typename?: 'Student', documentId: string, name: string } | null } | null> | null };
+
+export type StudentsQueryVariables = Exact<{
+  pagination?: InputMaybe<PaginationInput>;
+}>;
+
+
+export type StudentsQuery = { __typename?: 'Query', students?: Array<{ __typename?: 'Student', documentId: string, name: string, email: string, phone?: string | null, status?: string | null, isGuardian?: boolean | null, enrollments?: Array<{ __typename?: 'Enrollment', documentId: string, startDate: string, endDate?: string | null, paymentMethod?: string | null, status: string, plan?: { __typename?: 'Plan', documentId: string, name: string, price: number, billingCycle: string } | null } | null> | null } | null> | null };
+
+export type MyAcademyQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MyAcademyQuery = { __typename?: 'Query', me?: { __typename?: 'Student', documentId: string, academy?: { __typename?: 'Academy', documentId: string, name: string, slug: string, primaryColor?: string | null, secondaryColor?: string | null, plan?: string | null, email?: string | null, phone?: string | null, address?: string | null, logo?: { __typename?: 'Media', url?: string | null, alternativeText?: string | null } | null } | null } | null };
+
+export type PricingPlansPublicQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type PricingPlansPublicQuery = { __typename?: 'Query', plans?: Array<{ __typename?: 'Plan', documentId: string, name: string, description?: string | null, price: number, billingCycle: string, maxStudents?: number | null, features?: Array<string | null> | null, isActive?: boolean | null } | null> | null };
+
 
 export const AcademyBySlugDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AcademyBySlug"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"academyBySlug"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"secondaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"plan"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}}]}}]}}]} as unknown as DocumentNode<AcademyBySlugQuery, AcademyBySlugQueryVariables>;
 export const AcademiesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Academies"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"PaginationInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"academies"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"plan"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<AcademiesQuery, AcademiesQueryVariables>;
-export const StudentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Students"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"PaginationInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"students"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"photo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]} as unknown as DocumentNode<StudentsQuery, StudentsQueryVariables>;
 export const StudentByIdDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"StudentById"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"student"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"birthdate"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"photo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}},{"kind":"Field","name":{"kind":"Name","value":"enrollments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"endDate"}},{"kind":"Field","name":{"kind":"Name","value":"paymentMethod"}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"workoutPlans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]}}]} as unknown as DocumentNode<StudentByIdQuery, StudentByIdQueryVariables>;
 export const CreateStudentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateStudent"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"StudentInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createStudent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<CreateStudentMutation, CreateStudentMutationVariables>;
+export const AdminDashboardDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminDashboard"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"adminDashboard"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"metrics"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"label"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"highlighted"}},{"kind":"Field","name":{"kind":"Name","value":"delta"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"trend"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"recentStudents"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"plan"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"initials"}},{"kind":"Field","name":{"kind":"Name","value":"joinedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"todayClasses"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"time"}},{"kind":"Field","name":{"kind":"Name","value":"booked"}},{"kind":"Field","name":{"kind":"Name","value":"capacity"}}]}},{"kind":"Field","name":{"kind":"Name","value":"upcomingPayments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"student"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"dueDate"}},{"kind":"Field","name":{"kind":"Name","value":"method"}}]}}]}}]}}]} as unknown as DocumentNode<AdminDashboardQuery, AdminDashboardQueryVariables>;
+export const FinanceOverviewDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"FinanceOverview"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"month"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"year"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"financeOverview"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"month"},"value":{"kind":"Variable","name":{"kind":"Name","value":"month"}}},{"kind":"Argument","name":{"kind":"Name","value":"year"},"value":{"kind":"Variable","name":{"kind":"Name","value":"year"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"kpis"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"label"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"highlighted"}},{"kind":"Field","name":{"kind":"Name","value":"delta"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"trend"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"charges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"student"}},{"kind":"Field","name":{"kind":"Name","value":"studentInitials"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"amountFormatted"}},{"kind":"Field","name":{"kind":"Name","value":"method"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"dueDate"}},{"kind":"Field","name":{"kind":"Name","value":"paidAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"methodBreakdown"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"method"}},{"kind":"Field","name":{"kind":"Name","value":"label"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"percent"}}]}}]}}]}}]} as unknown as DocumentNode<FinanceOverviewQuery, FinanceOverviewQueryVariables>;
+export const DreOverviewDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"DREOverview"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"month"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"year"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"dreOverview"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"month"},"value":{"kind":"Variable","name":{"kind":"Name","value":"month"}}},{"kind":"Argument","name":{"kind":"Name","value":"year"},"value":{"kind":"Variable","name":{"kind":"Name","value":"year"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"monthLabel"}},{"kind":"Field","name":{"kind":"Name","value":"revenue"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"deltaLabel"}},{"kind":"Field","name":{"kind":"Name","value":"trend"}}]}},{"kind":"Field","name":{"kind":"Name","value":"expenses"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"fixed"}},{"kind":"Field","name":{"kind":"Name","value":"variable"}}]}},{"kind":"Field","name":{"kind":"Name","value":"profit"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"marginPercent"}}]}},{"kind":"Field","name":{"kind":"Name","value":"cashFlow"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"label"}},{"kind":"Field","name":{"kind":"Name","value":"revenue"}},{"kind":"Field","name":{"kind":"Name","value":"expenses"}},{"kind":"Field","name":{"kind":"Name","value":"profit"}}]}},{"kind":"Field","name":{"kind":"Name","value":"categoryBreakdown"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"label"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"percent"}}]}},{"kind":"Field","name":{"kind":"Name","value":"expensesTotalLabel"}},{"kind":"Field","name":{"kind":"Name","value":"expenseRows"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"subtitle"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"categoryLabel"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"dueDate"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]}}]} as unknown as DocumentNode<DreOverviewQuery, DreOverviewQueryVariables>;
+export const ScheduleWeekDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ScheduleWeek"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"weekStart"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"scheduleWeek"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"weekStart"},"value":{"kind":"Variable","name":{"kind":"Name","value":"weekStart"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"weekLabel"}},{"kind":"Field","name":{"kind":"Name","value":"weekNumber"}},{"kind":"Field","name":{"kind":"Name","value":"stats"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalClasses"}},{"kind":"Field","name":{"kind":"Name","value":"totalBookings"}},{"kind":"Field","name":{"kind":"Name","value":"capacityFill"}}]}},{"kind":"Field","name":{"kind":"Name","value":"classes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"weekday"}},{"kind":"Field","name":{"kind":"Name","value":"startTime"}},{"kind":"Field","name":{"kind":"Name","value":"endTime"}},{"kind":"Field","name":{"kind":"Name","value":"booked"}},{"kind":"Field","name":{"kind":"Name","value":"capacity"}},{"kind":"Field","name":{"kind":"Name","value":"color"}}]}},{"kind":"Field","name":{"kind":"Name","value":"upcoming"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"time"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}}]}}]}}]}}]} as unknown as DocumentNode<ScheduleWeekQuery, ScheduleWeekQueryVariables>;
+export const GuardiansDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Guardians"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"guardians"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"guardian"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"initials"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}}]}},{"kind":"Field","name":{"kind":"Name","value":"dependents"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"age"}},{"kind":"Field","name":{"kind":"Name","value":"className"}},{"kind":"Field","name":{"kind":"Name","value":"classTime"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"gender"}},{"kind":"Field","name":{"kind":"Name","value":"medicalAlert"}}]}}]}}]}}]} as unknown as DocumentNode<GuardiansQuery, GuardiansQueryVariables>;
+export const AdminWorkoutsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminWorkouts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workoutPlans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"validFrom"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"sets"}},{"kind":"Field","name":{"kind":"Name","value":"reps"}},{"kind":"Field","name":{"kind":"Name","value":"load"}}]}},{"kind":"Field","name":{"kind":"Name","value":"student"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<AdminWorkoutsQuery, AdminWorkoutsQueryVariables>;
+export const StudentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Students"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"PaginationInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"students"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"isGuardian"}},{"kind":"Field","name":{"kind":"Name","value":"enrollments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"endDate"}},{"kind":"Field","name":{"kind":"Name","value":"paymentMethod"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}}]}}]}}]}}]}}]} as unknown as DocumentNode<StudentsQuery, StudentsQueryVariables>;
+export const MyAcademyDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyAcademy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"academy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"secondaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"plan"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"address"}},{"kind":"Field","name":{"kind":"Name","value":"logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}}]}}]}}]}}]} as unknown as DocumentNode<MyAcademyQuery, MyAcademyQueryVariables>;
+export const PricingPlansPublicDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PricingPlansPublic"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"plans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}},{"kind":"Field","name":{"kind":"Name","value":"maxStudents"}},{"kind":"Field","name":{"kind":"Name","value":"features"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<PricingPlansPublicQuery, PricingPlansPublicQueryVariables>;

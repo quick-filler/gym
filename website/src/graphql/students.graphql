@@ -1,17 +1,5 @@
-# Paginated student list for the admin students page. Academy-scoped
-# automatically on the backend by `resolveUserAcademyId`.
-query Students($pagination: PaginationInput) {
-  students(pagination: $pagination) {
-    documentId
-    name
-    email
-    phone
-    status
-    photo {
-      url
-    }
-  }
-}
+# The list query (Students) lives inline in src/lib/hooks.ts.
+# This file keeps the detail + create operations used elsewhere.
 
 # Single student detail — used by /admin/students/[id]
 query StudentById($documentId: ID!) {

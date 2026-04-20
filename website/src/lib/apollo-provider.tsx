@@ -13,16 +13,16 @@
 import { ApolloProvider } from '@apollo/client/react';
 import type { ReactNode } from 'react';
 import { apolloClient } from './apollo';
-import { USE_MOCKS } from './config';
 
 /**
- * In mock mode the Apollo provider degrades to a pass-through so demo
- * mode can render without a running backend. Apollo is still imported
- * (we're in the same module graph) but its client is never used.
+ * Always mounts ApolloProvider so `useQuery(..., { skip: USE_MOCKS })`
+ * is valid in mock mode — no network calls happen, but the Apollo
+ * context exists so hooks don't throw during SSR prerender.
+ *
+ * In mock mode, the client is never actually contacted (every hook
+ * passes `skip: true`), but carrying the context costs nothing and
+ * keeps the demo-mode fallback from diverging from API mode.
  */
 export function ApolloClientProvider({ children }: { children: ReactNode }) {
-  if (USE_MOCKS) {
-    return <>{children}</>;
-  }
   return <ApolloProvider client={apolloClient}>{children}</ApolloProvider>;
 }
