@@ -160,13 +160,17 @@ function CountryCombobox({
   }
 
   return (
-    <div ref={rootRef} className="relative">
+    // `flex` on the wrapper lets the button inside it stretch to the
+    // wrapper's height — which the outer `items-stretch` row already
+    // matched to the input sibling. Without this, the combobox button
+    // collapses to its content height and looks tiny next to the input.
+    <div ref={rootRef} className="relative flex">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="self-stretch rounded-l-xl bg-paper-50 border-r border-line pl-3 pr-2 text-[0.9rem] font-mono text-ink-700 cursor-pointer focus:outline-none hover:bg-paper-2 transition-colors inline-flex items-center gap-1"
+        className="rounded-l-xl bg-paper-50 border-r border-line pl-3 pr-2 text-[0.9rem] font-mono text-ink-700 cursor-pointer focus:outline-none hover:bg-paper-2 transition-colors inline-flex items-center gap-1"
       >
         <span>{country.flag ?? "🌐"}</span>
         <span className="ml-1 text-ink-500 text-[0.78rem]">
