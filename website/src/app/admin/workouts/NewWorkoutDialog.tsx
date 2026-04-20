@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { graphql } from "@/gql";
 import { Button } from "@/components/ui/Button";
+import { Combobox } from "@/components/ui/Combobox";
 import { Dialog } from "@/components/ui/Dialog";
-import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { Field, Input, Textarea } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { USE_MOCKS } from "@/lib/config";
 
@@ -158,18 +159,18 @@ export function NewWorkoutDialog({
         </Field>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Aluno">
-            <Select
+            <Combobox
               required
               value={studentId}
-              onChange={(e) => setStudentId(e.target.value)}
-            >
-              <option value="">Selecione…</option>
-              {studentOptions.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </Select>
+              onChange={setStudentId}
+              placeholder="Selecione um aluno…"
+              searchPlaceholder="Buscar aluno"
+              emptyMessage="Nenhum aluno"
+              options={studentOptions.map((s) => ({
+                id: s.id,
+                label: s.name,
+              }))}
+            />
           </Field>
           <Field label="Instrutor">
             <Input

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { graphql } from "@/gql";
 import { Button } from "@/components/ui/Button";
+import { Combobox } from "@/components/ui/Combobox";
 import { Dialog } from "@/components/ui/Dialog";
 import { Field, Input, Select } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
@@ -230,23 +231,23 @@ export function NewChargeDialog({
           help={
             students.length === 0
               ? "Nenhum aluno cadastrado nesta academia ainda."
-              : undefined
+              : "Digite o nome ou e-mail para filtrar."
           }
         >
-          <Select
+          <Combobox
             required
             value={studentId}
-            onChange={(e) => setStudentId(e.target.value)}
+            onChange={setStudentId}
             disabled={students.length === 0}
-          >
-            <option value="">Selecione um aluno…</option>
-            {students.map((s) => (
-              <option key={s.documentId} value={s.documentId}>
-                {s.name}
-                {s.email ? ` · ${s.email}` : ""}
-              </option>
-            ))}
-          </Select>
+            placeholder="Selecione um aluno…"
+            searchPlaceholder="Buscar nome ou e-mail"
+            emptyMessage="Nenhum aluno"
+            options={students.map((s) => ({
+              id: s.documentId,
+              label: s.name,
+              sublabel: s.email ?? undefined,
+            }))}
+          />
         </Field>
 
         <Field
@@ -261,19 +262,21 @@ export function NewChargeDialog({
                 : undefined
           }
         >
-          <Select
+          <Combobox
             required
             value={planId}
-            onChange={(e) => handlePlanChange(e.target.value)}
+            onChange={handlePlanChange}
             disabled={plans.length === 0}
-          >
-            <option value="">Selecione um plano…</option>
-            {plans.map((p) => (
-              <option key={p.documentId} value={p.documentId}>
-                {p.name} · R$ {p.price.toLocaleString("pt-BR")} ({p.billingCycle})
-              </option>
-            ))}
-          </Select>
+            placeholder="Selecione um plano…"
+            searchPlaceholder="Buscar plano"
+            emptyMessage="Nenhum plano"
+            options={plans.map((p) => ({
+              id: p.documentId,
+              label: p.name,
+              sublabel: p.billingCycle,
+              hint: `R$ ${p.price.toLocaleString("pt-BR")}`,
+            }))}
+          />
         </Field>
 
         <div className="grid grid-cols-2 gap-4">
