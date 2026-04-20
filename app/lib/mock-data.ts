@@ -10,6 +10,7 @@
 
 import type {
   DashboardData,
+  DependentsData,
   PaymentsData,
   ProfileData,
   ScheduleDay,
@@ -421,6 +422,44 @@ export const MOCK_PROFILE: ProfileData = {
       bodyFat: '19,4%',
       delta: '+0,2 kg',
       tone: 'up',
+    },
+  ],
+};
+
+export const MOCK_DEPENDENTS: DependentsData = {
+  guardianName: 'Ana Costa',
+  guardianAcademy: 'Gym',
+  dependents: [
+    {
+      id: 'dep-1',
+      name: 'Sofia Costa',
+      gender: 'girl',
+      ageLabel: '8 anos · Nascida em 12/03/2018',
+      status: 'active',
+      medicalAlert: 'Alergia a cloro — informar instrutor',
+      info: [
+        { key: 'Plano', value: 'Academia — R$ 120/mês' },
+        { key: 'Turma', value: 'Segunda e Quarta · 16h00' },
+        { key: 'Tipo sanguíneo', value: 'A+' },
+        { key: 'Próx. vencimento', value: '15/05/2026' },
+      ],
+      emergency: {
+        name: 'Carlos Costa (pai)',
+        phone: '(11) 99999-1234',
+      },
+    },
+    {
+      id: 'dep-2',
+      name: 'Pedro Costa',
+      gender: 'boy',
+      ageLabel: '10 anos · Nascido em 05/07/2016',
+      status: 'active',
+      info: [
+        { key: 'Plano', value: 'Academia — R$ 120/mês' },
+        { key: 'Turma', value: 'Quarta e Sexta · 17h00' },
+        { key: 'Tipo sanguíneo', value: 'O+' },
+        { key: 'Próx. vencimento', value: '15/05/2026' },
+      ],
     },
   ],
 };

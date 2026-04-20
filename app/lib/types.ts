@@ -182,3 +182,35 @@ export interface DataSourceResult {
   error: Error | null;
   refetch: () => void;
 }
+
+/* ------------------------------------------------------------------
+ * Dependentes screen — guardian's children roster
+ * ------------------------------------------------------------------ */
+export type DependentStatus = 'active' | 'pending' | 'inactive';
+
+export interface DependentInfoRow {
+  key: string;
+  value: string;
+}
+
+export interface DependentEmergencyContact {
+  name: string;
+  phone: string;
+}
+
+export interface DependentRecord {
+  id: string;
+  name: string;
+  gender: 'girl' | 'boy';
+  ageLabel: string; // "8 anos · Nascida em 12/03/2018"
+  status: DependentStatus;
+  medicalAlert?: string;
+  info: DependentInfoRow[];
+  emergency?: DependentEmergencyContact;
+}
+
+export interface DependentsData {
+  guardianName: string;
+  guardianAcademy: string;
+  dependents: DependentRecord[];
+}
