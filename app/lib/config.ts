@@ -17,12 +17,13 @@
  *               placeholders while loading, and shows an error card on
  *               failure. **Never falls back to mocks.**
  *
- * Default: `'true'` during scaffold/demo phase. Flip to `'false'` once
- * the backend is publicly reachable (via a tunnel, a staging host, or
- * production) so Expo Go / TestFlight builds always hit real data.
+ * Default: `'false'` — the app expects a running backend. Flip to
+ * `'true'` in `.env` for UI work on a fresh clone or for offline
+ * demos. Expo Go / TestFlight builds against a public tunnel always
+ * hit real data.
  */
 export const USE_MOCKS: boolean = (
-  process.env.EXPO_PUBLIC_USE_MOCKS ?? 'true'
+  process.env.EXPO_PUBLIC_USE_MOCKS ?? 'false'
 ).toLowerCase() === 'true';
 
 /**

@@ -79,12 +79,15 @@ After boot:
 
 ### Demo mode
 
-Both `website/` and `app/` default to `NEXT_PUBLIC_USE_MOCKS=true` /
-`EXPO_PUBLIC_USE_MOCKS=true` in their `.env.local` / `.env`. Flip to
-`false` and restart the dev server to hit the real Strapi GraphQL API.
-See [`website/CLAUDE.md#demo-mode`](./website/CLAUDE.md#demo-mode) and
-[`docs/design-decisions.md §4.7`](./docs/design-decisions.md) for the
-rationale.
+Both `website/` and `app/` default to **live mode** —
+`NEXT_PUBLIC_USE_MOCKS=false` / `EXPO_PUBLIC_USE_MOCKS=false`. The
+frontends expect a running Strapi backend at the endpoint in
+`.env.local` / `.env` (defaults to `http://localhost:7777/graphql`).
+Flip either flag to `true` to render the `src/lib/mock-data.ts`
+fixtures instead — useful for UI work on a fresh clone or offline
+demos. See [`website/CLAUDE.md#demo-mode`](./website/CLAUDE.md#demo-mode)
+and [`docs/design-decisions.md §4.7`](./docs/design-decisions.md) for
+the rationale.
 
 On the first backend boot, `SEED_DEMO=true` creates the **Gym Demo**
 academy with 2 plans, 3 students, 2 class schedules and a sample workout

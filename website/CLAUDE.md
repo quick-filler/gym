@@ -30,15 +30,16 @@ authenticated session for admins coming straight from `/login`.
 ```bash
 cd website
 npm install
-cp .env.local.example .env.local    # defaults ship in demo mode
+cp .env.local.example .env.local    # defaults: live mode, :7777 endpoint
 npm run codegen                     # generates src/gql/
 npm run dev                         # http://localhost:9999
 ```
 
-Demo mode (`NEXT_PUBLIC_USE_MOCKS=true`) is the default so a fresh clone
-renders the entire UI — marketing and admin — without booting the
-backend. See [Demo mode](#demo-mode) below for how to switch to the real
-Strapi GraphQL API.
+The default is **live mode** (`NEXT_PUBLIC_USE_MOCKS=false`) — the
+website expects a Strapi backend at `NEXT_PUBLIC_GRAPHQL_ENDPOINT`.
+Flip the flag to `true` in `.env.local` to render `src/lib/mock-data.ts`
+fixtures instead; useful when iterating on UI without a backend or for
+offline demos. See [Demo mode](#demo-mode) below.
 
 ## Structure
 
@@ -89,26 +90,24 @@ website/
 
 ## Demo mode
 
-The website ships with a **mock-vs-API toggle** that mirrors the `app/`
-project pattern so a fresh clone renders the full UI — marketing pages,
-admin dashboard, students, finance, schedule, settings — without a
-running Strapi backend.
+The website ships with a **mock-vs-API toggle** mirroring the `app/`
+project pattern so UI work doesn't require a running backend. Default
+is live (API) mode.
 
-- **Flag**: `NEXT_PUBLIC_USE_MOCKS` (default `true`).
+- **Flag**: `NEXT_PUBLIC_USE_MOCKS` (default `false` — live mode).
 - **Config**: `src/lib/config.ts` reads the env var at build time.
   Because Next.js inlines `NEXT_PUBLIC_*` vars, you must restart the dev
   server after flipping the flag.
-- **Provider**: `src/lib/apollo-provider.tsx` degrades to a React
-  pass-through in mock mode so Apollo's client never runs against a
-  missing endpoint. The real `ApolloProvider` is only mounted when
-  `USE_MOCKS=false`.
+- **Provider**: `src/lib/apollo-provider.tsx` always mounts
+  `ApolloProvider` — `useQuery(..., { skip: USE_MOCKS })` is a no-op
+  in mock mode but the Apollo context exists so SSR prerender doesn't
+  throw.
 - **Hooks**: `src/lib/hooks.ts` exposes `useDashboard`, `useStudents`,
-  `useFinance`, `useSchedule`, `useAcademy`, `usePricingPlans`. Each
-  returns a stable `DataSourceResult<T>` shape (`{ data, loading, error,
-  refetch? }`) regardless of branch. The API-mode branches are stubs
-  today — they return a clear error. Wiring them to Apollo `useQuery`
-  calls is the last-mile work once the backend list resolvers are
-  locked.
+  `useFinance`, `useSchedule`, `useAcademy`, `useDRE`, `useDependents`,
+  `useWorkouts`, `usePricingPlans`. Each returns a stable
+  `DataSourceResult<T>` shape (`{ data, loading, error }`) regardless
+  of branch. Mock mode returns `MOCK_*` fixtures synchronously; API
+  mode runs the Apollo query and maps the response via `src/lib/mappers.ts`.
 - **Fixtures**: `src/lib/mock-data.ts` holds typed objects
   (`MOCK_DASHBOARD`, `MOCK_STUDENTS`, `MOCK_FINANCE`, …) whose identity
   (`Gym Demo`) matches the `SEED_DEMO=true` academy, so switching modes

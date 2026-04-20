@@ -9,6 +9,11 @@ export default defineConfig({
     globals: true,
     include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['./src/test-setup.ts'],
+    // Tests assume mock mode so they don't need a running backend.
+    // Override at the call site if you want to test an API-mode flow.
+    env: {
+      NEXT_PUBLIC_USE_MOCKS: 'true',
+    },
   },
   resolve: {
     alias: {
