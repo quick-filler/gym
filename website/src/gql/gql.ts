@@ -21,6 +21,8 @@ type Documents = {
     "\n  mutation AdminCreatePayment($data: PaymentInput!) {\n    createPayment(data: $data) {\n      documentId\n      amount\n      status\n      method\n      dueDate\n    }\n  }\n": typeof types.AdminCreatePaymentDocument,
     "\n  mutation AdminCreateClassSchedule($data: ClassScheduleInput!) {\n    createClassSchedule(data: $data) {\n      documentId\n      name\n      instructor\n    }\n  }\n": typeof types.AdminCreateClassScheduleDocument,
     "\n  mutation AdminCreateStudent($data: StudentInput!) {\n    createStudent(data: $data) {\n      documentId\n      name\n      email\n      status\n    }\n  }\n": typeof types.AdminCreateStudentDocument,
+    "\n  mutation AdminUpdateStudentStatus(\n    $documentId: ID!\n    $data: StudentUpdateInput!\n  ) {\n    updateStudent(documentId: $documentId, data: $data) {\n      documentId\n      status\n    }\n  }\n": typeof types.AdminUpdateStudentStatusDocument,
+    "\n  mutation AdminDeleteStudent($documentId: ID!) {\n    deleteStudent(documentId: $documentId) {\n      documentId\n    }\n  }\n": typeof types.AdminDeleteStudentDocument,
     "\n  query StudentsForWorkout {\n    students(pagination: { limit: 200 }) {\n      documentId\n      name\n    }\n  }\n": typeof types.StudentsForWorkoutDocument,
     "\n  mutation AdminCreateWorkoutPlan($data: WorkoutPlanInput!) {\n    createWorkoutPlan(data: $data) {\n      documentId\n      name\n    }\n  }\n": typeof types.AdminCreateWorkoutPlanDocument,
     "query AcademyBySlug($slug: String!) {\n  academyBySlug(slug: $slug) {\n    documentId\n    name\n    slug\n    primaryColor\n    secondaryColor\n    plan\n    isActive\n    logo {\n      url\n      alternativeText\n    }\n  }\n}\n\nquery Academies($pagination: PaginationInput) {\n  academies(pagination: $pagination) {\n    documentId\n    name\n    slug\n    plan\n    isActive\n  }\n}": typeof types.AcademyBySlugDocument,
@@ -43,6 +45,8 @@ const documents: Documents = {
     "\n  mutation AdminCreatePayment($data: PaymentInput!) {\n    createPayment(data: $data) {\n      documentId\n      amount\n      status\n      method\n      dueDate\n    }\n  }\n": types.AdminCreatePaymentDocument,
     "\n  mutation AdminCreateClassSchedule($data: ClassScheduleInput!) {\n    createClassSchedule(data: $data) {\n      documentId\n      name\n      instructor\n    }\n  }\n": types.AdminCreateClassScheduleDocument,
     "\n  mutation AdminCreateStudent($data: StudentInput!) {\n    createStudent(data: $data) {\n      documentId\n      name\n      email\n      status\n    }\n  }\n": types.AdminCreateStudentDocument,
+    "\n  mutation AdminUpdateStudentStatus(\n    $documentId: ID!\n    $data: StudentUpdateInput!\n  ) {\n    updateStudent(documentId: $documentId, data: $data) {\n      documentId\n      status\n    }\n  }\n": types.AdminUpdateStudentStatusDocument,
+    "\n  mutation AdminDeleteStudent($documentId: ID!) {\n    deleteStudent(documentId: $documentId) {\n      documentId\n    }\n  }\n": types.AdminDeleteStudentDocument,
     "\n  query StudentsForWorkout {\n    students(pagination: { limit: 200 }) {\n      documentId\n      name\n    }\n  }\n": types.StudentsForWorkoutDocument,
     "\n  mutation AdminCreateWorkoutPlan($data: WorkoutPlanInput!) {\n    createWorkoutPlan(data: $data) {\n      documentId\n      name\n    }\n  }\n": types.AdminCreateWorkoutPlanDocument,
     "query AcademyBySlug($slug: String!) {\n  academyBySlug(slug: $slug) {\n    documentId\n    name\n    slug\n    primaryColor\n    secondaryColor\n    plan\n    isActive\n    logo {\n      url\n      alternativeText\n    }\n  }\n}\n\nquery Academies($pagination: PaginationInput) {\n  academies(pagination: $pagination) {\n    documentId\n    name\n    slug\n    plan\n    isActive\n  }\n}": types.AcademyBySlugDocument,
@@ -100,6 +104,14 @@ export function graphql(source: "\n  mutation AdminCreateClassSchedule($data: Cl
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation AdminCreateStudent($data: StudentInput!) {\n    createStudent(data: $data) {\n      documentId\n      name\n      email\n      status\n    }\n  }\n"): (typeof documents)["\n  mutation AdminCreateStudent($data: StudentInput!) {\n    createStudent(data: $data) {\n      documentId\n      name\n      email\n      status\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AdminUpdateStudentStatus(\n    $documentId: ID!\n    $data: StudentUpdateInput!\n  ) {\n    updateStudent(documentId: $documentId, data: $data) {\n      documentId\n      status\n    }\n  }\n"): (typeof documents)["\n  mutation AdminUpdateStudentStatus(\n    $documentId: ID!\n    $data: StudentUpdateInput!\n  ) {\n    updateStudent(documentId: $documentId, data: $data) {\n      documentId\n      status\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AdminDeleteStudent($documentId: ID!) {\n    deleteStudent(documentId: $documentId) {\n      documentId\n    }\n  }\n"): (typeof documents)["\n  mutation AdminDeleteStudent($documentId: ID!) {\n    deleteStudent(documentId: $documentId) {\n      documentId\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

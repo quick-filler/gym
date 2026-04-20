@@ -13,9 +13,12 @@ import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { useStudents } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
-import type { StudentStatus } from "@/lib/types";
-import { useApolloClient } from "@apollo/client/react";
+import type { StudentRow, StudentStatus } from "@/lib/types";
+import { useApolloClient, useMutation } from "@apollo/client/react";
+import { graphql } from "@/gql";
 import { NewStudentDialog } from "./NewStudentDialog";
+import { DropdownMenu } from "@/components/ui/DropdownMenu";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type Filter = "all" | StudentStatus;
 
@@ -26,12 +29,59 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: "inactive", label: "Inativos" },
 ];
 
+const UPDATE_STUDENT_STATUS = graphql(`
+  mutation AdminUpdateStudentStatus(
+    $documentId: ID!
+    $data: StudentUpdateInput!
+  ) {
+    updateStudent(documentId: $documentId, data: $data) {
+      documentId
+      status
+    }
+  }
+`);
+
+const DELETE_STUDENT = graphql(`
+  mutation AdminDeleteStudent($documentId: ID!) {
+    deleteStudent(documentId: $documentId) {
+      documentId
+    }
+  }
+`);
+
 export default function StudentsPage() {
   const { data, loading, error } = useStudents();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<StudentRow | null>(null);
   const apollo = useApolloClient();
+  const [updateStatus] = useMutation(UPDATE_STUDENT_STATUS);
+  const [deleteStudent, { loading: deleting }] = useMutation(DELETE_STUDENT);
+  const refreshList = () =>
+    apollo.refetchQueries({ include: ["Students"] });
+
+  async function toggleStatus(row: StudentRow) {
+    const next: StudentStatus =
+      row.status === "suspended" ? "active" : "suspended";
+    await updateStatus({
+      variables: { documentId: row.id, data: { status: next } },
+    });
+    refreshList();
+  }
+
+  async function handleDelete() {
+    if (!confirmDelete) return;
+    await deleteStudent({ variables: { documentId: confirmDelete.id } });
+    setConfirmDelete(null);
+    refreshList();
+  }
+
+  function copyEmail(row: StudentRow) {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      void navigator.clipboard.writeText(row.email);
+    }
+  }
 
   const filtered = (data ?? []).filter((s) => {
     if (filter !== "all" && s.status !== filter) return false;
@@ -163,9 +213,39 @@ export default function StudentsPage() {
                         {s.nextPayment}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="text-ink-400 hover:text-ink-900 transition-colors">
-                          <Icon name="more" size="lg" />
-                        </button>
+                        <DropdownMenu
+                          trigger={
+                            <button
+                              type="button"
+                              aria-label={`Ações para ${s.name}`}
+                              className="text-ink-400 hover:text-ink-900 transition-colors p-1 -m-1 rounded"
+                            >
+                              <Icon name="more" size="lg" />
+                            </button>
+                          }
+                          items={[
+                            {
+                              label: "Copiar e-mail",
+                              icon: "mail",
+                              onSelect: () => copyEmail(s),
+                            },
+                            {
+                              label:
+                                s.status === "suspended"
+                                  ? "Reativar"
+                                  : "Suspender",
+                              icon:
+                                s.status === "suspended" ? "check" : "lock",
+                              onSelect: () => void toggleStatus(s),
+                            },
+                            {
+                              label: "Excluir",
+                              icon: "trash",
+                              tone: "danger",
+                              onSelect: () => setConfirmDelete(s),
+                            },
+                          ]}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -183,6 +263,21 @@ export default function StudentsPage() {
             </div>
           </Card>
         )}
+
+        <ConfirmDialog
+          open={!!confirmDelete}
+          onClose={() => setConfirmDelete(null)}
+          onConfirm={handleDelete}
+          loading={deleting}
+          tone="danger"
+          title="Excluir aluno?"
+          message={
+            confirmDelete
+              ? `${confirmDelete.name} será removido permanentemente. Matrículas, cobranças e histórico continuam no banco — apenas o aluno deixa de aparecer na listagem.`
+              : ""
+          }
+          confirmLabel="Excluir"
+        />
       </main>
     </>
   );
