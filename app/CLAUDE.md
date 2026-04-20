@@ -65,13 +65,15 @@ Still to add when we need them:
 app/
 ├── app/                          # expo-router (file-based)
 │   ├── _layout.tsx               # Root: Apollo provider + safe-area provider + Stack
+│   ├── login.tsx                 # White-labeled student sign-in screen
+│   ├── dependents.tsx            # Guardian's children roster
 │   └── (tabs)/
 │       ├── _layout.tsx           # Custom tab bar with lucide icons (BrandedTabBar)
 │       ├── index.tsx             # Dashboard (home)
-│       ├── schedule.tsx          # Agenda (placeholder)
-│       ├── workouts.tsx          # Treinos (placeholder)
-│       ├── payments.tsx          # Finanças (placeholder)
-│       └── profile.tsx           # Perfil (placeholder)
+│       ├── schedule.tsx          # Agenda (weekly + per-day class list)
+│       ├── workouts.tsx          # Treinos (ficha atual + próximas + histórico)
+│       ├── payments.tsx          # Finanças (próxima cobrança + histórico)
+│       └── profile.tsx           # Perfil (dados + avaliações)
 ├── components/
 │   ├── Skeleton.tsx              # Animated skeleton placeholder
 │   └── PlaceholderScreen.tsx     # Shared "em breve" layout for unwired tabs
@@ -94,7 +96,7 @@ app/
 
 ### Still to scaffold
 
-- `/login` route + `(academy)` group (white-label picker)
+- `(academy)` group (white-label subdomain picker)
 - `workout/[id]`, `booking/[id]`, `payment/[id]` detail routes
 - `lib/auth.ts` (SecureStore wrappers), `lib/notifications.ts`,
   `lib/format.ts` (currency + date helpers)
@@ -183,17 +185,18 @@ export function DashboardScreen() {
 
 ## Screens
 
-| Route | Description |
-|---|---|
-| `/login` | Student login (white-labeled) |
-| `/(tabs)` | Dashboard — next class, payment status, current workout |
-| `/(tabs)/schedule` | Weekly schedule, book / cancel classes |
-| `/(tabs)/workouts` | Active workout + history |
-| `/(tabs)/payments` | Payment history, pending charges, receipts |
-| `/(tabs)/profile` | Personal info, body assessments, settings |
-| `/workout/[id]` | Single workout detail (exercises, sets, reps, video?) |
-| `/booking/[id]` | Class booking detail (room, instructor, capacity) |
-| `/payment/[id]` | Payment receipt detail |
+| Route | Description | Status |
+|---|---|---|
+| `/login` | Student login (white-labeled) | ✅ |
+| `/(tabs)` | Dashboard — next class, payment status, current workout | ✅ |
+| `/(tabs)/schedule` | Weekly schedule, book / cancel classes | ✅ |
+| `/(tabs)/workouts` | Active workout + history | ✅ |
+| `/(tabs)/payments` | Payment history, pending charges, receipts | ✅ |
+| `/(tabs)/profile` | Personal info, body assessments, settings | ✅ |
+| `/dependents` | Guardian's dependents roster (responsável) | ✅ |
+| `/workout/[id]` | Single workout detail (exercises, sets, reps, video?) | — future |
+| `/booking/[id]` | Class booking detail (room, instructor, capacity) | — future |
+| `/payment/[id]` | Payment receipt detail | — future |
 
 ## Push notifications
 
