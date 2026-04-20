@@ -19,6 +19,16 @@
 
 import type { Core } from '@strapi/strapi';
 import { resolveUserAcademyId, withAcademyScope } from '../helpers';
+import {
+  BRL,
+  BRL_SHORT,
+  CATEGORY_LABEL,
+  MONTH_LABELS_PT,
+  MONTH_SHORT_PT,
+  fmtDateBR,
+  initialsFor,
+  monthWindow,
+} from '../aggregate-helpers';
 
 const ACADEMY = 'api::academy.academy';
 const STUDENT = 'api::student.student';
@@ -29,80 +39,6 @@ const BOOKING = 'api::class-booking.class-booking';
 const PAYMENT = 'api::payment.payment';
 const EXPENSE = 'api::expense.expense';
 const DEPENDENT = 'api::dependent.dependent';
-
-// ---------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------
-
-const BRL = (n: number): string =>
-  `R$ ${Number(n).toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-
-const BRL_SHORT = (n: number): string =>
-  `R$ ${Number(n).toLocaleString('pt-BR', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  })}`;
-
-const MONTH_LABELS_PT = [
-  'Janeiro',
-  'Fevereiro',
-  'Março',
-  'Abril',
-  'Maio',
-  'Junho',
-  'Julho',
-  'Agosto',
-  'Setembro',
-  'Outubro',
-  'Novembro',
-  'Dezembro',
-];
-
-const MONTH_SHORT_PT = [
-  'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-  'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
-];
-
-const CATEGORY_LABEL: Record<string, string> = {
-  rent: 'Aluguel',
-  utilities: 'Utilidades',
-  payroll: 'Salários',
-  equipment: 'Equipamentos',
-  marketing: 'Marketing',
-  supplies: 'Material',
-  taxes: 'Impostos',
-  software: 'Software',
-  other: 'Outros',
-};
-
-function monthWindow(year: number, month: number) {
-  const mm = String(month).padStart(2, '0');
-  const nextMonth = month === 12 ? 1 : month + 1;
-  const nextYear = month === 12 ? year + 1 : year;
-  const nmm = String(nextMonth).padStart(2, '0');
-  return { start: `${year}-${mm}-01`, end: `${nextYear}-${nmm}-01` };
-}
-
-function initialsFor(name: string): string {
-  const parts = (name ?? '').split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
-  return (parts[0]![0]! + parts[parts.length - 1]![0]!).toUpperCase();
-}
-
-function fmtDateBR(iso: string): string {
-  if (!iso) return '';
-  const [y, m, d] = iso.slice(0, 10).split('-');
-  return `${d}/${m}/${y}`;
-}
-
-function weekdayISO(iso: string): number {
-  // Sun = 0
-  return new Date(iso + 'T12:00:00').getDay();
-}
 
 // ---------------------------------------------------------------------
 // Module

@@ -11,6 +11,7 @@ import { useQuery } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 
 import { USE_MOCKS } from '../lib/config';
+import { ageFrom, fmtDateBR, monthlyBRL } from '../lib/format';
 import { MOCK_DEPENDENTS } from '../lib/mock-data';
 import type {
   DependentRecord,
@@ -57,30 +58,6 @@ export interface DependentsResult {
   loading: boolean;
   error: Error | null;
   refetch: () => void;
-}
-
-function monthlyBRL(price: number): string {
-  return `R$ ${price.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-}
-
-function ageFrom(birthdate: string): number {
-  if (!birthdate) return 0;
-  const [y, m, d] = birthdate.split('-').map(Number);
-  if (!y) return 0;
-  const birth = new Date(y, (m ?? 1) - 1, d ?? 1);
-  const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
-  const hadBirthday =
-    now.getMonth() > birth.getMonth() ||
-    (now.getMonth() === birth.getMonth() && now.getDate() >= birth.getDate());
-  if (!hadBirthday) age -= 1;
-  return age;
-}
-
-function fmtDateBR(iso: string): string {
-  if (!iso) return '';
-  const [y, m, d] = iso.slice(0, 10).split('-');
-  return `${d}/${m}/${y}`;
 }
 
 export function useDependents(): DependentsResult {

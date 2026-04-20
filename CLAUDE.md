@@ -274,6 +274,30 @@ GraphQL playground: http://localhost:7777/graphql (dev only)
 
 See `./dev.sh --help` for session commands (`--detach`, `--kill`).
 
+## Testing
+
+Each sub-project ships a **Vitest** test suite covering the pure-logic
+layer (formatters, aggregation helpers, mock-mode hook shapes). Run
+them individually:
+
+```bash
+cd backend && npm test    # 26 tests — aggregate helpers (BRL, monthWindow, …)
+cd website && npm test    # 20 tests — utils + every useX hook in mock mode
+cd app     && npm test    # 16 tests — format + theme helpers
+```
+
+`npm run test:watch` is available in each project for TDD. Tests live
+co-located with the module they cover (`*.test.ts` next to `*.ts`).
+
+Scope intentionally excluded for now:
+- Backend integration tests that boot Strapi against a test DB
+- Playwright / RTL page-rendering tests
+- Expo screen rendering (needs the jest-expo preset — heavier)
+
+The pure-logic layer catches the bulk of regressions introduced by
+schema drift, formatter changes, or a mis-refactored mock fixture
+without requiring a database or a headless browser in CI.
+
 ## Deployment
 
 - **Backend:** Hetzner VPS or Railway (Docker)
