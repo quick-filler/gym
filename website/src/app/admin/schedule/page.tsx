@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useApolloClient } from "@apollo/client/react";
 import { Topbar } from "@/components/admin/Topbar";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/Button";
@@ -8,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { useSchedule } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
+import { NewClassDialog } from "./NewClassDialog";
 
 const WEEKDAYS = [
   { value: 1, label: "Seg", date: "07" },
@@ -30,6 +32,8 @@ const COLOR_CLS = {
 export default function SchedulePage() {
   const { data, loading, error } = useSchedule();
   const [view, setView] = useState<"grid" | "list">("grid");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const apollo = useApolloClient();
 
   return (
     <>
@@ -64,7 +68,7 @@ export default function SchedulePage() {
                   <Icon name="list" /> Lista
                 </button>
               </div>
-              <Button variant="ink">
+              <Button variant="ink" onClick={() => setDialogOpen(true)}>
                 <Icon name="plus" /> Nova aula
               </Button>
             </>
@@ -254,6 +258,14 @@ export default function SchedulePage() {
             </div>
           </>
         )}
+
+        <NewClassDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          onCreated={() =>
+            apollo.refetchQueries({ include: ["ScheduleWeek"] })
+          }
+        />
       </main>
     </>
   );

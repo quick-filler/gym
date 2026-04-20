@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useApolloClient } from "@apollo/client/react";
 import { Topbar } from "@/components/admin/Topbar";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { MetricCard } from "@/components/admin/MetricCard";
@@ -12,6 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { useFinance } from "@/lib/hooks";
+import { NewChargeDialog } from "./NewChargeDialog";
 
 const METHOD_COLOR: Record<string, string> = {
   pix: "var(--color-flame)",
@@ -21,6 +24,8 @@ const METHOD_COLOR: Record<string, string> = {
 
 export default function FinancePage() {
   const { data, loading, error } = useFinance();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const apollo = useApolloClient();
 
   return (
     <>
@@ -34,7 +39,7 @@ export default function FinancePage() {
               <Button variant="line">
                 <Icon name="download" /> Exportar CSV
               </Button>
-              <Button variant="ink">
+              <Button variant="ink" onClick={() => setDialogOpen(true)}>
                 <Icon name="plus" /> Nova cobrança
               </Button>
             </>
@@ -189,6 +194,14 @@ export default function FinancePage() {
             </div>
           </>
         )}
+
+        <NewChargeDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          onCreated={() =>
+            apollo.refetchQueries({ include: ["FinanceOverview"] })
+          }
+        />
       </main>
     </>
   );

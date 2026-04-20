@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useApolloClient } from "@apollo/client/react";
 import { Topbar } from "@/components/admin/Topbar";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/Button";
@@ -10,6 +11,7 @@ import { Pill } from "@/components/ui/Pill";
 import { cn } from "@/lib/utils";
 import type { WorkoutPlanCard, WorkoutTab } from "@/lib/types";
 import { useWorkouts } from "@/lib/hooks";
+import { NewWorkoutDialog } from "./NewWorkoutDialog";
 
 function WorkoutCard({ plan }: { plan: WorkoutPlanCard }) {
   return (
@@ -83,6 +85,8 @@ function WorkoutCard({ plan }: { plan: WorkoutPlanCard }) {
 export default function WorkoutsPage() {
   const { data, loading, error } = useWorkouts();
   const [activeTab, setActiveTab] = useState<WorkoutTab>("active");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const apollo = useApolloClient();
 
   const visibleCards =
     data?.cards.filter((c) =>
@@ -97,7 +101,7 @@ export default function WorkoutsPage() {
           title="Fichas de treino"
           subtitle={data?.subtitle}
           actions={
-            <Button variant="ink">
+            <Button variant="ink" onClick={() => setDialogOpen(true)}>
               <Icon name="plus" /> Nova ficha
             </Button>
           }
@@ -161,6 +165,14 @@ export default function WorkoutsPage() {
             )}
           </>
         )}
+
+        <NewWorkoutDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          onCreated={() =>
+            apollo.refetchQueries({ include: ["AdminWorkouts"] })
+          }
+        />
       </main>
     </>
   );

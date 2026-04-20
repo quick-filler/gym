@@ -716,6 +716,7 @@ type Mutation {
   createDependent(data: DependentInput!): Dependent
   createEnrollment(data: EnrollmentInput!): Enrollment
   createExpense(data: ExpenseInput!): Expense
+  createPayment(data: PaymentInput!): Payment
   createPlan(data: PlanInput!): Plan
   createStudent(data: StudentInput!): Student
   createWorkoutPlan(data: WorkoutPlanInput!): WorkoutPlan
@@ -764,6 +765,16 @@ type Payment {
   paidAt: String
   receiptUrl: String
   status: String!
+}
+
+input PaymentInput {
+  amount: Float!
+  dueDate: String!
+  enrollment: ID!
+  method: String
+  paidAt: String
+  receiptUrl: String
+  status: String
 }
 
 input PaymentUpdateInput {

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useApolloClient } from "@apollo/client/react";
 import { Topbar } from "@/components/admin/Topbar";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/Button";
@@ -8,6 +10,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Pill } from "@/components/ui/Pill";
 import type { DRECashFlowPoint, DREExpenseRow, ExpenseStatus } from "@/lib/types";
 import { useDRE } from "@/lib/hooks";
+import { NewExpenseDialog } from "./NewExpenseDialog";
 
 const TYPE_LABEL = { fixed: "Fixo", variable: "Variável" } as const;
 
@@ -38,6 +41,10 @@ function buildPolyline(
 
 export default function DREPage() {
   const { data, loading, error } = useDRE();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const apollo = useApolloClient();
+  const refresh = () =>
+    apollo.refetchQueries({ include: ["DREOverview", "FinanceOverview"] });
 
   return (
     <>
@@ -67,7 +74,7 @@ export default function DREPage() {
                   <Icon name="arrow-right" />
                 </button>
               </div>
-              <Button variant="ink">
+              <Button variant="ink" onClick={() => setDialogOpen(true)}>
                 <Icon name="plus" /> Nova despesa
               </Button>
             </>
@@ -264,7 +271,7 @@ export default function DREPage() {
                     {data.monthLabel} · {data.expenseRows.length} lançamentos
                   </p>
                 </div>
-                <Button variant="ink">
+                <Button variant="ink" onClick={() => setDialogOpen(true)}>
                   <Icon name="plus" /> Nova despesa
                 </Button>
               </div>
@@ -330,6 +337,12 @@ export default function DREPage() {
             </Card>
           </>
         )}
+
+        <NewExpenseDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          onCreated={refresh}
+        />
       </main>
     </>
   );

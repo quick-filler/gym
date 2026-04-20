@@ -14,6 +14,8 @@ import { Icon } from "@/components/ui/Icon";
 import { useStudents } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import type { StudentStatus } from "@/lib/types";
+import { useApolloClient } from "@apollo/client/react";
+import { NewStudentDialog } from "./NewStudentDialog";
 
 type Filter = "all" | StudentStatus;
 
@@ -28,6 +30,8 @@ export default function StudentsPage() {
   const { data, loading, error } = useStudents();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const apollo = useApolloClient();
 
   const filtered = (data ?? []).filter((s) => {
     if (filter !== "all" && s.status !== filter) return false;
@@ -44,10 +48,16 @@ export default function StudentsPage() {
           title="Alunos"
           subtitle={`${data?.length ?? 0} cadastrados · atualizado agora`}
           actions={
-            <Button variant="ink">
+            <Button variant="ink" onClick={() => setDialogOpen(true)}>
               <Icon name="plus" /> Adicionar aluno
             </Button>
           }
+        />
+
+        <NewStudentDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          onCreated={() => apollo.refetchQueries({ include: ["Students"] })}
         />
 
         {/* Filters */}

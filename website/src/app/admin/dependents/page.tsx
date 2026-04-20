@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useApolloClient } from "@apollo/client/react";
 import { Topbar } from "@/components/admin/Topbar";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/Button";
@@ -8,6 +10,8 @@ import { Icon } from "@/components/ui/Icon";
 import { Pill } from "@/components/ui/Pill";
 import type { Dependent, DependentStatus, GuardianFamily } from "@/lib/types";
 import { useDependents } from "@/lib/hooks";
+import { NewGuardianDialog } from "./NewGuardianDialog";
+import { NewDependentDialog } from "./NewDependentDialog";
 
 function DependentStatusPill({ status }: { status: DependentStatus }) {
   if (status === "active") return <Pill tone="emerald">ATIVO</Pill>;
@@ -44,7 +48,13 @@ function DependentRow({ dep }: { dep: Dependent }) {
   );
 }
 
-function FamilyCard({ family }: { family: GuardianFamily }) {
+function FamilyCard({
+  family,
+  onAddDependent,
+}: {
+  family: GuardianFamily;
+  onAddDependent: () => void;
+}) {
   const count = family.dependents.length;
   return (
     <Card className="p-0 overflow-hidden flex flex-col">
@@ -74,6 +84,7 @@ function FamilyCard({ family }: { family: GuardianFamily }) {
         ))}
         <button
           type="button"
+          onClick={onAddDependent}
           className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-paper-50 border-[1.5px] border-dashed border-line-strong text-ink-400 font-mono text-[0.72rem] uppercase tracking-[0.08em] font-semibold hover:border-flame hover:text-flame hover:bg-flame-50 transition-colors"
         >
           <Icon name="plus" /> Adicionar dependente
@@ -97,6 +108,13 @@ function FamilyCard({ family }: { family: GuardianFamily }) {
 
 export default function DependentsPage() {
   const { data, loading, error } = useDependents();
+  const [guardianDialog, setGuardianDialog] = useState(false);
+  const [depDialog, setDepDialog] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const apollo = useApolloClient();
+  const refresh = () => apollo.refetchQueries({ include: ["Guardians"] });
 
   const totalDeps = data?.reduce((acc, f) => acc + f.dependents.length, 0) ?? 0;
 
@@ -112,7 +130,7 @@ export default function DependentsPage() {
               : undefined
           }
           actions={
-            <Button variant="ink">
+            <Button variant="ink" onClick={() => setGuardianDialog(true)}>
               <Icon name="plus" /> Novo responsável
             </Button>
           }
@@ -141,10 +159,31 @@ export default function DependentsPage() {
 
             <div className="grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5 max-[720px]:grid-cols-1">
               {data.map((family) => (
-                <FamilyCard key={family.id} family={family} />
+                <FamilyCard
+                  key={family.id}
+                  family={family}
+                  onAddDependent={() =>
+                    setDepDialog({ id: family.id, name: family.guardian.name })
+                  }
+                />
               ))}
             </div>
           </>
+        )}
+
+        <NewGuardianDialog
+          open={guardianDialog}
+          onClose={() => setGuardianDialog(false)}
+          onCreated={refresh}
+        />
+        {depDialog && (
+          <NewDependentDialog
+            open
+            onClose={() => setDepDialog(null)}
+            guardianId={depDialog.id}
+            guardianName={depDialog.name}
+            onCreated={refresh}
+          />
         )}
       </main>
     </>

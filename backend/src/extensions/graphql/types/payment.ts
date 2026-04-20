@@ -36,6 +36,19 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
     },
   });
 
+  const PaymentInput = nexus.inputObjectType({
+    name: 'PaymentInput',
+    definition(t: any) {
+      t.nonNull.id('enrollment');
+      t.nonNull.float('amount');
+      t.nonNull.string('dueDate');
+      t.string('method');
+      t.string('status');
+      t.string('paidAt');
+      t.string('receiptUrl');
+    },
+  });
+
   const PaymentUpdateInput = nexus.inputObjectType({
     name: 'PaymentUpdateInput',
     definition(t: any) {
@@ -73,6 +86,20 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
   const mutations = nexus.extendType({
     type: 'Mutation',
     definition(t: any) {
+      t.field('createPayment', {
+        type: 'Payment',
+        args: { data: nexus.nonNull(nexus.arg({ type: 'PaymentInput' })) },
+        resolve: async (_root: any, args: any) => {
+          return await strapi.documents(UID).create({
+            data: {
+              ...args.data,
+              status: args.data.status ?? 'pending',
+              method: args.data.method ?? 'pix',
+            },
+          });
+        },
+      });
+
       t.field('updatePayment', {
         type: 'Payment',
         args: {
@@ -90,10 +117,11 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
   });
 
   return {
-    types: [Payment, PaymentUpdateInput, queries, mutations],
+    types: [Payment, PaymentInput, PaymentUpdateInput, queries, mutations],
     resolversConfig: {
       'Query.payments': { auth: true },
       'Query.payment': { auth: true },
+      'Mutation.createPayment': { auth: true },
       'Mutation.updatePayment': { auth: true },
     },
   };
