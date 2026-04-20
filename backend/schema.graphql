@@ -51,6 +51,13 @@ input AcademyUpdateInput {
   slug: String
 }
 
+type AdminDashboard {
+  metrics: [MetricCard!]!
+  recentStudents: [DashboardStudentRow!]!
+  todayClasses: [DashboardClassRow!]!
+  upcomingPayments: [DashboardPaymentRow!]!
+}
+
 type BodyAssessment {
   bodyFat: Float
   date: String!
@@ -172,6 +179,87 @@ input ClassScheduleUpdateInput {
   room: String
   startTime: String
   weekdays: [Int]
+}
+
+type DRECashFlowPoint {
+  expenses: Float!
+  label: String!
+  profit: Float!
+  revenue: Float!
+}
+
+type DRECategoryBreakdown {
+  amount: String!
+  category: String!
+  label: String!
+  percent: Float!
+}
+
+type DREExpenseRow {
+  amount: String!
+  category: String!
+  categoryLabel: String!
+  description: String!
+  dueDate: String!
+  id: String!
+  status: String!
+  subtitle: String
+  type: String!
+}
+
+type DREHeroExpenses {
+  fixed: String!
+  total: String!
+  variable: String!
+}
+
+type DREHeroProfit {
+  marginPercent: Float!
+  total: String!
+}
+
+type DREHeroRevenue {
+  deltaLabel: String!
+  total: String!
+  trend: String!
+}
+
+type DREOverview {
+  cashFlow: [DRECashFlowPoint!]!
+  categoryBreakdown: [DRECategoryBreakdown!]!
+  expenseRows: [DREExpenseRow!]!
+  expenses: DREHeroExpenses!
+  expensesTotalLabel: String!
+  monthLabel: String!
+  profit: DREHeroProfit!
+  revenue: DREHeroRevenue!
+}
+
+type DashboardClassRow {
+  booked: Int!
+  capacity: Int!
+  id: String!
+  instructor: String
+  name: String!
+  time: String!
+}
+
+type DashboardPaymentRow {
+  amount: String!
+  dueDate: String!
+  id: String!
+  method: String!
+  student: String!
+}
+
+type DashboardStudentRow {
+  email: String!
+  id: String!
+  initials: String!
+  joinedAt: String
+  name: String!
+  plan: String!
+  status: String!
 }
 
 """
@@ -388,6 +476,31 @@ input ExpenseUpdateInput {
   type: String
 }
 
+type FinanceCharge {
+  amount: Float!
+  amountFormatted: String!
+  dueDate: String!
+  id: String!
+  method: String!
+  paidAt: String
+  status: String!
+  student: String!
+  studentInitials: String!
+}
+
+type FinanceMethodRow {
+  amount: String!
+  label: String!
+  method: String!
+  percent: Int!
+}
+
+type FinanceOverview {
+  charges: [FinanceCharge!]!
+  kpis: [MetricCard!]!
+  methodBreakdown: [FinanceMethodRow!]!
+}
+
 input FloatFilterInput {
   and: [Float]
   between: [Float]
@@ -411,6 +524,30 @@ input FloatFilterInput {
   null: Boolean
   or: [Float]
   startsWith: Float
+}
+
+type GuardianFamily {
+  dependents: [GuardianFamilyDependent!]!
+  guardian: GuardianFamilyGuardian!
+}
+
+type GuardianFamilyDependent {
+  age: Int!
+  className: String
+  classTime: String
+  gender: String
+  id: String!
+  medicalAlert: String
+  name: String!
+  status: String!
+}
+
+type GuardianFamilyGuardian {
+  email: String!
+  id: String!
+  initials: String!
+  name: String!
+  phone: String
 }
 
 """A string used to identify an i18n locale"""
@@ -556,6 +693,19 @@ type Media {
   width: Int
 }
 
+type MetricCard {
+  delta: MetricDelta
+  highlighted: Boolean
+  id: String!
+  label: String!
+  value: String!
+}
+
+type MetricDelta {
+  trend: String!
+  value: String!
+}
+
 type Mutation {
   """Mark a booking as attended and stamp checkedInAt."""
   checkInBooking(documentId: ID!): ClassBooking
@@ -667,6 +817,7 @@ type Query {
 
   """Public — returns branding config for the given slug."""
   academyBySlug(slug: String!): Academy
+  adminDashboard: AdminDashboard
   bodyAssessment(documentId: ID!): BodyAssessment
   bodyAssessments(pagination: PaginationInput): [BodyAssessment]
   classBooking(documentId: ID!): ClassBooking
@@ -675,10 +826,13 @@ type Query {
   classSchedules(pagination: PaginationInput): [ClassSchedule]
   dependent(documentId: ID!): Dependent
   dependents(pagination: PaginationInput): [Dependent]
+  dreOverview(month: Int, year: Int): DREOverview
   enrollment(documentId: ID!): Enrollment
   enrollments(pagination: PaginationInput): [Enrollment]
   expense(documentId: ID!): Expense
   expenses(month: Int, pagination: PaginationInput, year: Int): [Expense]
+  financeOverview(month: Int, year: Int): FinanceOverview
+  guardians: [GuardianFamily!]
 
   """Returns the authenticated user's linked Student profile."""
   me: Student
@@ -690,6 +844,7 @@ type Query {
 
   """Bookings for a given class schedule, optionally filtered by date."""
   scheduleBookings(date: String, documentId: ID!): [ClassBooking]
+  scheduleWeek(weekStart: String): ScheduleWeek
   student(documentId: ID!): Student
   students(pagination: PaginationInput): [Student]
   workoutPlan(documentId: ID!): WorkoutPlan
@@ -698,6 +853,39 @@ type Query {
 
 type ResponseCollectionMeta {
   pagination: Pagination!
+}
+
+type ScheduleClass {
+  booked: Int!
+  capacity: Int!
+  color: String!
+  endTime: String!
+  id: String!
+  instructor: String
+  name: String!
+  startTime: String!
+  weekday: Int!
+}
+
+type ScheduleStats {
+  capacityFill: Int!
+  totalBookings: Int!
+  totalClasses: Int!
+}
+
+type ScheduleUpcoming {
+  id: String!
+  instructor: String
+  name: String!
+  time: String!
+}
+
+type ScheduleWeek {
+  classes: [ScheduleClass!]!
+  stats: ScheduleStats!
+  upcoming: [ScheduleUpcoming!]!
+  weekLabel: String!
+  weekNumber: Int!
 }
 
 input StringFilterInput {

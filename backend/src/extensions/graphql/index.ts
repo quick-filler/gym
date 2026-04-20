@@ -35,6 +35,7 @@ import { buildWorkoutPlan } from './types/workout-plan';
 import { buildBodyAssessment } from './types/body-assessment';
 import { buildExpense } from './types/expense';
 import { buildDependent } from './types/dependent';
+import { buildAggregates } from './types/aggregates';
 
 export function registerGraphQL(strapi: Core.Strapi) {
   const extensionService = strapi.plugin('graphql').service('extension');
@@ -54,6 +55,7 @@ export function registerGraphQL(strapi: Core.Strapi) {
       buildBodyAssessment(ctx),
       buildExpense(ctx),
       buildDependent(ctx),
+      buildAggregates(ctx),
     ];
 
     const types: any[] = [...buildCommonTypes(ctx)];
