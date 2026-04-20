@@ -33,6 +33,8 @@ import { buildClassBooking } from './types/class-booking';
 import { buildPayment } from './types/payment';
 import { buildWorkoutPlan } from './types/workout-plan';
 import { buildBodyAssessment } from './types/body-assessment';
+import { buildExpense } from './types/expense';
+import { buildDependent } from './types/dependent';
 
 export function registerGraphQL(strapi: Core.Strapi) {
   const extensionService = strapi.plugin('graphql').service('extension');
@@ -50,6 +52,8 @@ export function registerGraphQL(strapi: Core.Strapi) {
       buildPayment(ctx),
       buildWorkoutPlan(ctx),
       buildBodyAssessment(ctx),
+      buildExpense(ctx),
+      buildDependent(ctx),
     ];
 
     const types: any[] = [...buildCommonTypes(ctx)];

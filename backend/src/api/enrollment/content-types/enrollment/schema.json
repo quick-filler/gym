@@ -18,6 +18,12 @@
       "target": "api::student.student",
       "inversedBy": "enrollments"
     },
+    "dependent": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::dependent.dependent",
+      "inversedBy": "enrollments"
+    },
     "plan": {
       "type": "relation",
       "relation": "manyToOne",

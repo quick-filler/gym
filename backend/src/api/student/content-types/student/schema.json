@@ -37,6 +37,10 @@
       "default": "active",
       "required": true
     },
+    "isGuardian": {
+      "type": "boolean",
+      "default": false
+    },
     "notes": {
       "type": "text"
     },
@@ -74,6 +78,12 @@
       "relation": "oneToMany",
       "target": "api::body-assessment.body-assessment",
       "mappedBy": "student"
+    },
+    "dependents": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::dependent.dependent",
+      "mappedBy": "guardian"
     }
   }
 }

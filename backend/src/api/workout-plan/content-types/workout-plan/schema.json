@@ -22,6 +22,12 @@
       "target": "api::student.student",
       "inversedBy": "workoutPlans"
     },
+    "dependent": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::dependent.dependent",
+      "inversedBy": "workoutPlans"
+    },
     "instructor": {
       "type": "string"
     },

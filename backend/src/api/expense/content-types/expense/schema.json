@@ -1,0 +1,86 @@
+{
+  "kind": "collectionType",
+  "collectionName": "expenses",
+  "info": {
+    "singularName": "expense",
+    "pluralName": "expenses",
+    "displayName": "Expense",
+    "description": "Operational expense (despesa) — rent, payroll, utilities, etc."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "description": {
+      "type": "string",
+      "required": true
+    },
+    "subtitle": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "decimal",
+      "required": true
+    },
+    "date": {
+      "type": "date",
+      "required": true
+    },
+    "dueDate": {
+      "type": "date"
+    },
+    "paidAt": {
+      "type": "datetime"
+    },
+    "category": {
+      "type": "enumeration",
+      "enum": [
+        "rent",
+        "utilities",
+        "payroll",
+        "equipment",
+        "marketing",
+        "supplies",
+        "taxes",
+        "software",
+        "other"
+      ],
+      "default": "other",
+      "required": true
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": ["fixed", "variable"],
+      "default": "variable",
+      "required": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["paid", "pending", "open", "cancelled"],
+      "default": "open",
+      "required": true
+    },
+    "recurrent": {
+      "type": "boolean",
+      "default": false
+    },
+    "recurrenceDay": {
+      "type": "integer"
+    },
+    "notes": {
+      "type": "text"
+    },
+    "receipt": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images", "files"]
+    },
+    "academy": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::academy.academy",
+      "inversedBy": "expenses"
+    }
+  }
+}

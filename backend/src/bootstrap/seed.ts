@@ -150,5 +150,112 @@ export async function seedDemoData(strapi: Core.Strapi) {
     },
   });
 
-  strapi.log.info('[seed] demo academy + 3 students + 2 plans + 2 schedules created');
+  // Mark Ana Costa as a guardian and attach two dependents.
+  const anaResults: any = await strapi.documents('api::student.student').findMany({
+    filters: { email: 'ana@gym-demo.com' },
+    limit: 1,
+  });
+  const ana = anaResults[0];
+  if (ana) {
+    await strapi.documents('api::student.student').update({
+      documentId: ana.documentId,
+      data: { isGuardian: true } as any,
+    });
+    await strapi.documents('api::dependent.dependent').create({
+      data: {
+        name: 'Sofia Costa',
+        birthdate: '2018-03-12',
+        gender: 'girl',
+        relationship: 'daughter',
+        status: 'active',
+        bloodType: 'A+',
+        medicalAlert: 'Alergia a cloro — informar instrutor',
+        emergencyContactName: 'Carlos Costa (pai)',
+        emergencyContactPhone: '(11) 99999-1234',
+        guardian: ana.documentId,
+        academy: academy.documentId,
+      } as any,
+    });
+    await strapi.documents('api::dependent.dependent').create({
+      data: {
+        name: 'Pedro Costa',
+        birthdate: '2016-07-05',
+        gender: 'boy',
+        relationship: 'son',
+        status: 'active',
+        bloodType: 'O+',
+        guardian: ana.documentId,
+        academy: academy.documentId,
+      } as any,
+    });
+  }
+
+  // Sample expenses for April 2026 — matches the DRE page fixture.
+  const today = new Date().toISOString().slice(0, 10);
+  const expensesSeed = [
+    {
+      description: 'Aluguel — Abril',
+      subtitle: 'Recorrente · Todo dia 5',
+      amount: 4500,
+      date: today,
+      category: 'rent',
+      type: 'fixed',
+      status: 'paid',
+      recurrent: true,
+      recurrenceDay: 5,
+    },
+    {
+      description: 'Folha de Pagamento',
+      subtitle: '2 instrutores + 1 recepcionista',
+      amount: 3000,
+      date: today,
+      category: 'payroll',
+      type: 'fixed',
+      status: 'paid',
+    },
+    {
+      description: 'Google Ads — Abril',
+      subtitle: 'Campanha matrícula nova turma',
+      amount: 900,
+      date: today,
+      category: 'marketing',
+      type: 'variable',
+      status: 'pending',
+    },
+    {
+      description: 'Conta de Luz',
+      subtitle: 'CPFL — Referência Março/26',
+      amount: 480,
+      date: today,
+      category: 'utilities',
+      type: 'fixed',
+      status: 'paid',
+    },
+    {
+      description: 'Internet + Telefone',
+      amount: 320,
+      date: today,
+      category: 'utilities',
+      type: 'fixed',
+      status: 'paid',
+    },
+    {
+      description: 'Manutenção Esteira #3',
+      subtitle: 'Técnico agendado',
+      amount: 350,
+      date: today,
+      category: 'equipment',
+      type: 'variable',
+      status: 'open',
+    },
+  ];
+  for (const e of expensesSeed) {
+    await strapi.documents('api::expense.expense').create({
+      data: { ...e, academy: academy.documentId } as any,
+    });
+  }
+
+  strapi.log.info(
+    '[seed] demo academy + 3 students (1 guardian w/ 2 dependents) + 2 plans + 2 schedules + 6 expenses created',
+  );
 }

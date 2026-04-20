@@ -4,8 +4,11 @@
 
 type Academy {
   address: String
+  billingMode: String
+  businessType: String
   documentId: ID!
   email: String
+  enabledModules: [String]
   isActive: Boolean
   logo: Media
   name: String!
@@ -18,7 +21,10 @@ type Academy {
 
 input AcademyInput {
   address: String
+  billingMode: String
+  businessType: String
   email: String
+  enabledModules: [String]
   isActive: Boolean
   logo: ID
   name: String!
@@ -31,7 +37,10 @@ input AcademyInput {
 
 input AcademyUpdateInput {
   address: String
+  billingMode: String
+  businessType: String
   email: String
+  enabledModules: [String]
   isActive: Boolean
   logo: ID
   name: String
@@ -229,6 +238,57 @@ type DeleteMutationResponse {
   documentId: ID!
 }
 
+type Dependent {
+  academy: Academy
+  allergies: String
+  birthdate: String!
+  bloodType: String
+  bookings: [ClassBooking]
+  documentId: ID!
+  emergencyContactName: String
+  emergencyContactPhone: String
+  enrollments: [Enrollment]
+  gender: String
+  guardian: Student
+  medicalAlert: String
+  medicalNotes: String
+  name: String!
+  photo: Media
+  relationship: String
+  status: String!
+  workoutPlans: [WorkoutPlan]
+}
+
+input DependentInput {
+  academy: ID
+  allergies: String
+  birthdate: String!
+  bloodType: String
+  emergencyContactName: String
+  emergencyContactPhone: String
+  gender: String
+  guardian: ID
+  medicalAlert: String
+  medicalNotes: String
+  name: String!
+  relationship: String
+  status: String
+}
+
+input DependentUpdateInput {
+  allergies: String
+  birthdate: String
+  bloodType: String
+  emergencyContactName: String
+  emergencyContactPhone: String
+  gender: String
+  medicalAlert: String
+  medicalNotes: String
+  name: String
+  relationship: String
+  status: String
+}
+
 type Enrollment {
   documentId: ID!
   endDate: String
@@ -277,6 +337,55 @@ input ExerciseInput {
   notes: String
   reps: Int
   sets: Int
+}
+
+type Expense {
+  academy: Academy
+  amount: Float!
+  category: String!
+  date: String!
+  description: String!
+  documentId: ID!
+  dueDate: String
+  notes: String
+  paidAt: String
+  receipt: Media
+  recurrenceDay: Int
+  recurrent: Boolean
+  status: String!
+  subtitle: String
+  type: String!
+}
+
+input ExpenseInput {
+  academy: ID
+  amount: Float!
+  category: String!
+  date: String!
+  description: String!
+  dueDate: String
+  notes: String
+  paidAt: String
+  recurrenceDay: Int
+  recurrent: Boolean
+  status: String
+  subtitle: String
+  type: String!
+}
+
+input ExpenseUpdateInput {
+  amount: Float
+  category: String
+  date: String
+  description: String
+  dueDate: String
+  notes: String
+  paidAt: String
+  recurrenceDay: Int
+  recurrent: Boolean
+  status: String
+  subtitle: String
+  type: String
 }
 
 input FloatFilterInput {
@@ -454,7 +563,9 @@ type Mutation {
   createBodyAssessment(data: BodyAssessmentInput!): BodyAssessment
   createClassBooking(data: ClassBookingInput!): ClassBooking
   createClassSchedule(data: ClassScheduleInput!): ClassSchedule
+  createDependent(data: DependentInput!): Dependent
   createEnrollment(data: EnrollmentInput!): Enrollment
+  createExpense(data: ExpenseInput!): Expense
   createPlan(data: PlanInput!): Plan
   createStudent(data: StudentInput!): Student
   createWorkoutPlan(data: WorkoutPlanInput!): WorkoutPlan
@@ -462,7 +573,9 @@ type Mutation {
   deleteBodyAssessment(documentId: ID!): BodyAssessment
   deleteClassBooking(documentId: ID!): ClassBooking
   deleteClassSchedule(documentId: ID!): ClassSchedule
+  deleteDependent(documentId: ID!): Dependent
   deleteEnrollment(documentId: ID!): Enrollment
+  deleteExpense(documentId: ID!): Expense
   deletePlan(documentId: ID!): Plan
   deleteStudent(documentId: ID!): Student
   deleteWorkoutPlan(documentId: ID!): WorkoutPlan
@@ -470,7 +583,9 @@ type Mutation {
   updateBodyAssessment(data: BodyAssessmentUpdateInput!, documentId: ID!): BodyAssessment
   updateClassBooking(data: ClassBookingUpdateInput!, documentId: ID!): ClassBooking
   updateClassSchedule(data: ClassScheduleUpdateInput!, documentId: ID!): ClassSchedule
+  updateDependent(data: DependentUpdateInput!, documentId: ID!): Dependent
   updateEnrollment(data: EnrollmentUpdateInput!, documentId: ID!): Enrollment
+  updateExpense(data: ExpenseUpdateInput!, documentId: ID!): Expense
   updatePayment(data: PaymentUpdateInput!, documentId: ID!): Payment
   updatePlan(data: PlanUpdateInput!, documentId: ID!): Plan
   updateStudent(data: StudentUpdateInput!, documentId: ID!): Student
@@ -558,11 +673,16 @@ type Query {
   classBookings(pagination: PaginationInput): [ClassBooking]
   classSchedule(documentId: ID!): ClassSchedule
   classSchedules(pagination: PaginationInput): [ClassSchedule]
+  dependent(documentId: ID!): Dependent
+  dependents(pagination: PaginationInput): [Dependent]
   enrollment(documentId: ID!): Enrollment
   enrollments(pagination: PaginationInput): [Enrollment]
+  expense(documentId: ID!): Expense
+  expenses(month: Int, pagination: PaginationInput, year: Int): [Expense]
 
   """Returns the authenticated user's linked Student profile."""
   me: Student
+  myDependents: [Dependent]
   payment(documentId: ID!): Payment
   payments(pagination: PaginationInput): [Payment]
   plan(documentId: ID!): Plan
@@ -608,9 +728,11 @@ input StringFilterInput {
 type Student {
   academy: Academy
   birthdate: String
+  dependents: [Dependent]
   documentId: ID!
   email: String!
   enrollments: [Enrollment]
+  isGuardian: Boolean
   name: String!
   notes: String
   phone: String
@@ -623,6 +745,7 @@ input StudentInput {
   academy: ID
   birthdate: String
   email: String!
+  isGuardian: Boolean
   name: String!
   notes: String
   phone: String
@@ -635,6 +758,7 @@ input StudentUpdateInput {
   academy: ID
   birthdate: String
   email: String
+  isGuardian: Boolean
   name: String
   notes: String
   phone: String

@@ -24,6 +24,7 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('phone');
       t.string('birthdate');
       t.string('status');
+      t.boolean('isGuardian');
       t.string('notes');
       t.field('photo', {
         type: 'Media',
@@ -69,6 +70,19 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
           return doc?.workoutPlans ?? [];
         },
       });
+      t.list.field('dependents', {
+        type: 'Dependent',
+        resolve: async (parent: any) => {
+          if (parent.dependents !== undefined) return parent.dependents;
+          const doc: any = await strapi.documents(UID).findOne({
+            documentId: parent.documentId,
+            populate: {
+              dependents: { populate: { enrollments: { populate: { plan: true } } } },
+            },
+          });
+          return doc?.dependents ?? [];
+        },
+      });
     },
   });
 
@@ -80,6 +94,7 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('phone');
       t.string('birthdate');
       t.string('status');
+      t.boolean('isGuardian');
       t.string('notes');
       t.id('photo');
       t.id('academy');
@@ -95,6 +110,7 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('phone');
       t.string('birthdate');
       t.string('status');
+      t.boolean('isGuardian');
       t.string('notes');
       t.id('photo');
       t.id('academy');

@@ -20,6 +20,9 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('primaryColor');
       t.string('secondaryColor');
       t.string('plan');
+      t.string('businessType');
+      t.list.string('enabledModules');
+      t.string('billingMode');
       t.boolean('isActive');
       t.string('email');
       t.string('phone');
@@ -46,6 +49,9 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('primaryColor');
       t.string('secondaryColor');
       t.string('plan');
+      t.string('businessType');
+      t.list.string('enabledModules');
+      t.string('billingMode');
       t.boolean('isActive');
       t.string('email');
       t.string('phone');
@@ -62,6 +68,9 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('primaryColor');
       t.string('secondaryColor');
       t.string('plan');
+      t.string('businessType');
+      t.list.string('enabledModules');
+      t.string('billingMode');
       t.boolean('isActive');
       t.string('email');
       t.string('phone');

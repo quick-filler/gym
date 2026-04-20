@@ -32,6 +32,8 @@ const ROLE_BLUEPRINT = [
       'api::payment.payment': ['find', 'findOne', 'create', 'update'],
       'api::workout-plan.workout-plan': ['find', 'findOne', 'create', 'update', 'delete'],
       'api::body-assessment.body-assessment': ['find', 'findOne', 'create', 'update', 'delete'],
+      'api::expense.expense': ['find', 'findOne', 'create', 'update', 'delete'],
+      'api::dependent.dependent': ['find', 'findOne', 'create', 'update', 'delete'],
     },
   },
   {
@@ -43,6 +45,7 @@ const ROLE_BLUEPRINT = [
       'api::class-booking.class-booking': ['find', 'findOne', 'update'],
       'api::workout-plan.workout-plan': ['find', 'findOne', 'create', 'update'],
       'api::body-assessment.body-assessment': ['find', 'findOne', 'create', 'update'],
+      'api::dependent.dependent': ['find', 'findOne'],
     },
   },
   {
@@ -58,6 +61,7 @@ const ROLE_BLUEPRINT = [
       'api::plan.plan': ['find', 'findOne'],
       'api::enrollment.enrollment': ['find', 'findOne'],
       'api::payment.payment': ['find', 'findOne'],
+      'api::dependent.dependent': ['find', 'findOne', 'create', 'update'],
     },
   },
 ];

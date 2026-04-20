@@ -18,6 +18,12 @@
       "target": "api::student.student",
       "inversedBy": "assessments"
     },
+    "dependent": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::dependent.dependent",
+      "inversedBy": "assessments"
+    },
     "instructor": {
       "type": "string"
     },

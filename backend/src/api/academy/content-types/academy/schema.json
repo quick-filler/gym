@@ -70,6 +70,33 @@
       "relation": "oneToMany",
       "target": "api::class-schedule.class-schedule",
       "mappedBy": "academy"
+    },
+    "expenses": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::expense.expense",
+      "mappedBy": "academy"
+    },
+    "businessType": {
+      "type": "enumeration",
+      "enum": [
+        "gym",
+        "swimming_school",
+        "pilates",
+        "ballet",
+        "studio",
+        "martial_arts",
+        "other"
+      ],
+      "default": "gym"
+    },
+    "enabledModules": {
+      "type": "json"
+    },
+    "billingMode": {
+      "type": "enumeration",
+      "enum": ["per_student", "per_family"],
+      "default": "per_student"
     }
   }
 }

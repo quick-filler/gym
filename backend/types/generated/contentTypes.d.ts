@@ -443,10 +443,26 @@ export interface ApiAcademyAcademy extends Struct.CollectionTypeSchema {
   };
   attributes: {
     address: Schema.Attribute.Text;
+    billingMode: Schema.Attribute.Enumeration<['per_student', 'per_family']> &
+      Schema.Attribute.DefaultTo<'per_student'>;
+    businessType: Schema.Attribute.Enumeration<
+      [
+        'gym',
+        'swimming_school',
+        'pilates',
+        'ballet',
+        'studio',
+        'martial_arts',
+        'other',
+      ]
+    > &
+      Schema.Attribute.DefaultTo<'gym'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     email: Schema.Attribute.Email;
+    enabledModules: Schema.Attribute.JSON;
+    expenses: Schema.Attribute.Relation<'oneToMany', 'api::expense.expense'>;
     isActive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -496,6 +512,10 @@ export interface ApiBodyAssessmentBodyAssessment
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     date: Schema.Attribute.Date & Schema.Attribute.Required;
+    dependent: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::dependent.dependent'
+    >;
     height: Schema.Attribute.Decimal;
     instructor: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
@@ -537,6 +557,10 @@ export interface ApiClassBookingClassBooking
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     date: Schema.Attribute.Date & Schema.Attribute.Required;
+    dependent: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::dependent.dependent'
+    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -601,6 +625,70 @@ export interface ApiClassScheduleClassSchedule
   };
 }
 
+export interface ApiDependentDependent extends Struct.CollectionTypeSchema {
+  collectionName: 'dependents';
+  info: {
+    description: 'Dependent (minor) enrolled by a guardian Student.';
+    displayName: 'Dependent';
+    pluralName: 'dependents';
+    singularName: 'dependent';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academy: Schema.Attribute.Relation<'manyToOne', 'api::academy.academy'>;
+    allergies: Schema.Attribute.Text;
+    assessments: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::body-assessment.body-assessment'
+    >;
+    birthdate: Schema.Attribute.Date & Schema.Attribute.Required;
+    bloodType: Schema.Attribute.String;
+    bookings: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::class-booking.class-booking'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    emergencyContactName: Schema.Attribute.String;
+    emergencyContactPhone: Schema.Attribute.String;
+    enrollments: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::enrollment.enrollment'
+    >;
+    gender: Schema.Attribute.Enumeration<['girl', 'boy', 'other']> &
+      Schema.Attribute.DefaultTo<'other'>;
+    guardian: Schema.Attribute.Relation<'manyToOne', 'api::student.student'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::dependent.dependent'
+    > &
+      Schema.Attribute.Private;
+    medicalAlert: Schema.Attribute.String;
+    medicalNotes: Schema.Attribute.Text;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    photo: Schema.Attribute.Media<'images'>;
+    publishedAt: Schema.Attribute.DateTime;
+    relationship: Schema.Attribute.Enumeration<
+      ['son', 'daughter', 'grandchild', 'nibling', 'ward', 'other']
+    > &
+      Schema.Attribute.DefaultTo<'other'>;
+    status: Schema.Attribute.Enumeration<['active', 'pending', 'inactive']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'active'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    workoutPlans: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::workout-plan.workout-plan'
+    >;
+  };
+}
+
 export interface ApiEnrollmentEnrollment extends Struct.CollectionTypeSchema {
   collectionName: 'enrollments';
   info: {
@@ -618,6 +706,10 @@ export interface ApiEnrollmentEnrollment extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    dependent: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::dependent.dependent'
+    >;
     endDate: Schema.Attribute.Date;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -637,6 +729,68 @@ export interface ApiEnrollmentEnrollment extends Struct.CollectionTypeSchema {
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'active'>;
     student: Schema.Attribute.Relation<'manyToOne', 'api::student.student'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiExpenseExpense extends Struct.CollectionTypeSchema {
+  collectionName: 'expenses';
+  info: {
+    description: 'Operational expense (despesa) \u2014 rent, payroll, utilities, etc.';
+    displayName: 'Expense';
+    pluralName: 'expenses';
+    singularName: 'expense';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academy: Schema.Attribute.Relation<'manyToOne', 'api::academy.academy'>;
+    amount: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    category: Schema.Attribute.Enumeration<
+      [
+        'rent',
+        'utilities',
+        'payroll',
+        'equipment',
+        'marketing',
+        'supplies',
+        'taxes',
+        'software',
+        'other',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'other'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    date: Schema.Attribute.Date & Schema.Attribute.Required;
+    description: Schema.Attribute.String & Schema.Attribute.Required;
+    dueDate: Schema.Attribute.Date;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::expense.expense'
+    > &
+      Schema.Attribute.Private;
+    notes: Schema.Attribute.Text;
+    paidAt: Schema.Attribute.DateTime;
+    publishedAt: Schema.Attribute.DateTime;
+    receipt: Schema.Attribute.Media<'images' | 'files'>;
+    recurrenceDay: Schema.Attribute.Integer;
+    recurrent: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    status: Schema.Attribute.Enumeration<
+      ['paid', 'pending', 'open', 'cancelled']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'open'>;
+    subtitle: Schema.Attribute.String;
+    type: Schema.Attribute.Enumeration<['fixed', 'variable']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'variable'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -753,11 +907,16 @@ export interface ApiStudentStudent extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    dependents: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::dependent.dependent'
+    >;
     email: Schema.Attribute.Email & Schema.Attribute.Required;
     enrollments: Schema.Attribute.Relation<
       'oneToMany',
       'api::enrollment.enrollment'
     >;
+    isGuardian: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -801,6 +960,10 @@ export interface ApiWorkoutPlanWorkoutPlan extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    dependent: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::dependent.dependent'
+    >;
     exercises: Schema.Attribute.JSON;
     instructor: Schema.Attribute.String;
     isActive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
@@ -1336,7 +1499,9 @@ declare module '@strapi/strapi' {
       'api::body-assessment.body-assessment': ApiBodyAssessmentBodyAssessment;
       'api::class-booking.class-booking': ApiClassBookingClassBooking;
       'api::class-schedule.class-schedule': ApiClassScheduleClassSchedule;
+      'api::dependent.dependent': ApiDependentDependent;
       'api::enrollment.enrollment': ApiEnrollmentEnrollment;
+      'api::expense.expense': ApiExpenseExpense;
       'api::payment.payment': ApiPaymentPayment;
       'api::plan.plan': ApiPlanPlan;
       'api::student.student': ApiStudentStudent;

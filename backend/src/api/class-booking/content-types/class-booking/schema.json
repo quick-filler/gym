@@ -18,6 +18,12 @@
       "target": "api::student.student",
       "inversedBy": "bookings"
     },
+    "dependent": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::dependent.dependent",
+      "inversedBy": "bookings"
+    },
     "classSchedule": {
       "type": "relation",
       "relation": "manyToOne",

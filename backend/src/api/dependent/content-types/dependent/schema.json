@@ -1,0 +1,98 @@
+{
+  "kind": "collectionType",
+  "collectionName": "dependents",
+  "info": {
+    "singularName": "dependent",
+    "pluralName": "dependents",
+    "displayName": "Dependent",
+    "description": "Dependent (minor) enrolled by a guardian Student."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "birthdate": {
+      "type": "date",
+      "required": true
+    },
+    "photo": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "gender": {
+      "type": "enumeration",
+      "enum": ["girl", "boy", "other"],
+      "default": "other"
+    },
+    "relationship": {
+      "type": "enumeration",
+      "enum": ["son", "daughter", "grandchild", "nibling", "ward", "other"],
+      "default": "other"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["active", "pending", "inactive"],
+      "default": "active",
+      "required": true
+    },
+    "bloodType": {
+      "type": "string"
+    },
+    "allergies": {
+      "type": "text"
+    },
+    "medicalNotes": {
+      "type": "text"
+    },
+    "medicalAlert": {
+      "type": "string"
+    },
+    "emergencyContactName": {
+      "type": "string"
+    },
+    "emergencyContactPhone": {
+      "type": "string"
+    },
+    "guardian": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::student.student",
+      "inversedBy": "dependents"
+    },
+    "academy": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::academy.academy"
+    },
+    "enrollments": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::enrollment.enrollment",
+      "mappedBy": "dependent"
+    },
+    "bookings": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::class-booking.class-booking",
+      "mappedBy": "dependent"
+    },
+    "workoutPlans": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::workout-plan.workout-plan",
+      "mappedBy": "dependent"
+    },
+    "assessments": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::body-assessment.body-assessment",
+      "mappedBy": "dependent"
+    }
+  }
+}
