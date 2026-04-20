@@ -17,19 +17,25 @@ import { USE_MOCKS } from "./config";
 import {
   MOCK_ACADEMY,
   MOCK_DASHBOARD,
+  MOCK_DRE,
+  MOCK_FAMILIES,
   MOCK_FINANCE,
   MOCK_PRICING_PLANS,
   MOCK_SCHEDULE,
   MOCK_STUDENTS,
+  MOCK_WORKOUTS,
 } from "./mock-data";
 import type {
   AcademySettings,
+  DREData,
   DashboardData,
   DataSourceResult,
   FinanceData,
+  GuardianFamily,
   PricingPlan,
   ScheduleData,
   StudentRow,
+  WorkoutsData,
 } from "./types";
 
 /* Mock-mode helpers — synchronous and memoised so re-renders are cheap. */
@@ -89,4 +95,19 @@ export function useSchedule(): DataSourceResult<ScheduleData> {
 export function useAcademy(): DataSourceResult<AcademySettings> {
   // eslint-disable-next-line react-hooks/rules-of-hooks
   return USE_MOCKS ? useMocked(MOCK_ACADEMY) : notImplemented("academy");
+}
+
+export function useDRE(): DataSourceResult<DREData> {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  return USE_MOCKS ? useMocked(MOCK_DRE) : notImplemented("dre");
+}
+
+export function useDependents(): DataSourceResult<GuardianFamily[]> {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  return USE_MOCKS ? useMocked(MOCK_FAMILIES) : notImplemented("dependents");
+}
+
+export function useWorkouts(): DataSourceResult<WorkoutsData> {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  return USE_MOCKS ? useMocked(MOCK_WORKOUTS) : notImplemented("workouts");
 }

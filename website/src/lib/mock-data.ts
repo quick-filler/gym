@@ -9,11 +9,14 @@
 
 import type {
   AcademySettings,
+  DREData,
   DashboardData,
   FinanceData,
+  GuardianFamily,
   PricingPlan,
   ScheduleData,
   StudentRow,
+  WorkoutsData,
 } from "./types";
 
 /* ============================================================
@@ -526,4 +529,300 @@ export const MOCK_ACADEMY: AcademySettings = {
   primaryColor: "#e8551c",
   secondaryColor: "#0f766e",
   plan: "business",
+};
+
+/* ============================================================
+   Admin — DRE / custos
+   ============================================================ */
+
+export const MOCK_DRE: DREData = {
+  monthLabel: "Abril 2026",
+  revenue: {
+    total: "R$ 18.420",
+    deltaLabel: "+8,2% vs março",
+    trend: "up",
+  },
+  expenses: {
+    total: "R$ 9.800",
+    fixed: "R$ 7.500",
+    variable: "R$ 2.300",
+  },
+  profit: {
+    total: "R$ 8.620",
+    marginPercent: 46.8,
+  },
+  cashFlow: [
+    { label: "Nov", revenue: 14200, expenses: 8400, profit: 5800 },
+    { label: "Dez", revenue: 15100, expenses: 8600, profit: 6500 },
+    { label: "Jan", revenue: 16280, expenses: 8900, profit: 7380 },
+    { label: "Fev", revenue: 15900, expenses: 9100, profit: 6800 },
+    { label: "Mar", revenue: 17020, expenses: 9350, profit: 7670 },
+    { label: "Abr", revenue: 18420, expenses: 9800, profit: 8620 },
+  ],
+  categoryBreakdown: [
+    { category: "rent", label: "Aluguel", amount: "R$ 4.500", percent: 45.9 },
+    { category: "payroll", label: "Salários", amount: "R$ 3.000", percent: 30.6 },
+    { category: "marketing", label: "Marketing", amount: "R$ 900", percent: 9.2 },
+    { category: "utilities", label: "Utilidades", amount: "R$ 800", percent: 8.2 },
+    { category: "equipment", label: "Equipamentos", amount: "R$ 350", percent: 3.6 },
+    { category: "other", label: "Outros", amount: "R$ 250", percent: 2.5 },
+  ],
+  expensesTotalLabel: "R$ 9.800",
+  expenseRows: [
+    {
+      id: "e1",
+      description: "Aluguel — Abril",
+      subtitle: "Recorrente · Todo dia 5",
+      category: "rent",
+      categoryLabel: "Aluguel",
+      type: "fixed",
+      dueDate: "05/04/2026",
+      amount: "R$ 4.500,00",
+      status: "paid",
+    },
+    {
+      id: "e2",
+      description: "Folha de Pagamento",
+      subtitle: "2 instrutores + 1 recepcionista",
+      category: "payroll",
+      categoryLabel: "Salários",
+      type: "fixed",
+      dueDate: "05/04/2026",
+      amount: "R$ 3.000,00",
+      status: "paid",
+    },
+    {
+      id: "e3",
+      description: "Google Ads — Abril",
+      subtitle: "Campanha matrícula nova turma",
+      category: "marketing",
+      categoryLabel: "Marketing",
+      type: "variable",
+      dueDate: "30/04/2026",
+      amount: "R$ 900,00",
+      status: "pending",
+    },
+    {
+      id: "e4",
+      description: "Conta de Luz",
+      subtitle: "CPFL — Referência Março/26",
+      category: "utilities",
+      categoryLabel: "Utilidades",
+      type: "fixed",
+      dueDate: "10/04/2026",
+      amount: "R$ 480,00",
+      status: "paid",
+    },
+    {
+      id: "e5",
+      description: "Internet + Telefone",
+      category: "utilities",
+      categoryLabel: "Utilidades",
+      type: "fixed",
+      dueDate: "15/04/2026",
+      amount: "R$ 320,00",
+      status: "paid",
+    },
+    {
+      id: "e6",
+      description: "Manutenção Esteira #3",
+      subtitle: "Técnico agendado",
+      category: "equipment",
+      categoryLabel: "Equipamentos",
+      type: "variable",
+      dueDate: "20/04/2026",
+      amount: "R$ 350,00",
+      status: "open",
+    },
+  ],
+};
+
+/* ============================================================
+   Admin — dependentes / famílias
+   ============================================================ */
+
+export const MOCK_FAMILIES: GuardianFamily[] = [
+  {
+    id: "f1",
+    guardian: {
+      name: "Ana Costa",
+      initials: "AC",
+      avatarGradient: "linear-gradient(135deg, #e8551c, #c4431d)",
+      email: "ana@email.com",
+      phone: "(11) 98765-4321",
+    },
+    dependents: [
+      {
+        id: "d1",
+        name: "Sofia Costa",
+        age: 8,
+        className: "Natação Infantil",
+        classTime: "Turma Segunda 16h",
+        status: "active",
+        gender: "girl",
+        medicalAlert: "Alergia a cloro",
+      },
+      {
+        id: "d2",
+        name: "Pedro Costa",
+        age: 10,
+        className: "Natação Infantil",
+        classTime: "Turma Quarta 17h",
+        status: "active",
+        gender: "boy",
+      },
+    ],
+  },
+  {
+    id: "f2",
+    guardian: {
+      name: "Roberto Santos",
+      initials: "RS",
+      avatarGradient: "linear-gradient(135deg, #0369a1, #0284c7)",
+      email: "roberto@email.com",
+      phone: "(11) 91234-5678",
+    },
+    dependents: [
+      {
+        id: "d3",
+        name: "Laura Santos",
+        age: 6,
+        className: "Baby Class",
+        classTime: "Turma Terça 15h",
+        status: "active",
+        gender: "girl",
+      },
+      {
+        id: "d4",
+        name: "Mateus Santos",
+        age: 9,
+        className: "Natação Infantil",
+        classTime: "Turma Quinta 16h",
+        status: "pending",
+        gender: "boy",
+      },
+      {
+        id: "d5",
+        name: "Bia Santos",
+        age: 12,
+        className: "Natação Avançado",
+        classTime: "Turma Sexta 17h",
+        status: "active",
+        gender: "girl",
+        medicalAlert: "Asma leve",
+      },
+    ],
+  },
+  {
+    id: "f3",
+    guardian: {
+      name: "Marcos Lima",
+      initials: "ML",
+      avatarGradient: "linear-gradient(135deg, #0f766e, #059669)",
+      email: "marcos@email.com",
+      phone: "(11) 99876-5432",
+    },
+    dependents: [
+      {
+        id: "d6",
+        name: "Gabriel Lima",
+        age: 7,
+        className: "Baby Class",
+        classTime: "Turma Segunda 16h",
+        status: "inactive",
+        gender: "boy",
+      },
+    ],
+  },
+];
+
+/* ============================================================
+   Admin — fichas de treino
+   ============================================================ */
+
+export const MOCK_WORKOUTS: WorkoutsData = {
+  subtitle: "8 fichas ativas — criadas pelo instrutor",
+  tabs: [
+    { id: "active", label: "Fichas Ativas" },
+    { id: "assessments", label: "Avaliações Físicas" },
+    { id: "archived", label: "Arquivadas" },
+  ],
+  cards: [
+    {
+      id: "w1",
+      name: "Treino A — Peito e Tríceps",
+      exerciseCount: 5,
+      createdAt: "14/03",
+      instructorName: "Rafael",
+      iconEmoji: "🏋️",
+      iconBg: "#fde2d0",
+      student: {
+        initials: "JS",
+        gradient: "linear-gradient(135deg, #e8551c, #c4431d)",
+      },
+      exercises: [
+        { name: "Supino Reto", sets: "4×12", load: "60kg" },
+        { name: "Crucifixo Inclinado", sets: "3×15", load: "16kg" },
+        { name: "Tríceps Corda", sets: "4×12", load: "25kg" },
+      ],
+      status: "active",
+    },
+    {
+      id: "w2",
+      name: "Treino B — Pernas",
+      exerciseCount: 6,
+      createdAt: "14/03",
+      instructorName: "Rafael",
+      iconEmoji: "🦵",
+      iconBg: "#e0f2fe",
+      student: {
+        initials: "JS",
+        gradient: "linear-gradient(135deg, #e8551c, #c4431d)",
+      },
+      exercises: [
+        { name: "Agachamento Livre", sets: "4×10", load: "80kg" },
+        { name: "Leg Press 45°", sets: "4×12", load: "120kg" },
+        { name: "Cadeira Extensora", sets: "3×15", load: "40kg" },
+      ],
+      status: "active",
+    },
+    {
+      id: "w3",
+      name: "Natação Iniciante",
+      exerciseCount: 4,
+      createdAt: "01/04",
+      instructorName: "Carla",
+      iconEmoji: "🏊",
+      iconBg: "#d1fae5",
+      student: {
+        initials: "SC",
+        gradient: "linear-gradient(135deg, #0369a1, #0284c7)",
+      },
+      exercises: [
+        { name: "Crawl — 25m", sets: "4×1 volta", load: "—" },
+        { name: "Costas — 25m", sets: "3×1 volta", load: "—" },
+        { name: "Peito — 25m", sets: "3×1 volta", load: "—" },
+      ],
+      status: "active",
+    },
+    {
+      id: "w4",
+      name: "Funcional Avançado",
+      exerciseCount: 7,
+      createdAt: "02/04",
+      instructorName: "Carlos",
+      iconEmoji: "🥊",
+      iconBg: "#fde2d0",
+      student: {
+        initials: "ML",
+        gradient: "linear-gradient(135deg, #0f766e, #059669)",
+      },
+      exercises: [
+        { name: "Burpees", sets: "4×15", load: "—" },
+        { name: "Kettlebell Swing", sets: "4×20", load: "16kg" },
+        { name: "Box Jump", sets: "3×10", load: "—" },
+      ],
+      status: "active",
+    },
+  ],
 };

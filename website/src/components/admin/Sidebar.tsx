@@ -15,8 +15,11 @@ type NavItem = {
 const PRIMARY: NavItem[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: "chart" },
   { href: "/admin/students", label: "Alunos", icon: "users", badge: 3 },
+  { href: "/admin/dependents", label: "Dependentes", icon: "user" },
   { href: "/admin/finance", label: "Financeiro", icon: "money" },
+  { href: "/admin/dre", label: "DRE / Custos", icon: "trending" },
   { href: "/admin/schedule", label: "Agenda", icon: "calendar" },
+  { href: "/admin/workouts", label: "Treinos", icon: "dumbbell" },
 ];
 
 const CONFIG: NavItem[] = [

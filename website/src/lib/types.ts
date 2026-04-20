@@ -161,3 +161,135 @@ export interface AcademySettings {
   secondaryColor: string;
   plan: PlanTier;
 }
+
+/* ============================================================
+   Admin — DRE / cost control
+   ============================================================ */
+
+export type ExpenseCategory =
+  | "rent"
+  | "payroll"
+  | "marketing"
+  | "utilities"
+  | "equipment"
+  | "supplies"
+  | "taxes"
+  | "software"
+  | "other";
+
+export type ExpenseType = "fixed" | "variable";
+
+export type ExpenseStatus = "paid" | "pending" | "open";
+
+export interface DRECategoryBreakdown {
+  category: ExpenseCategory;
+  label: string;
+  amount: string; // formatted
+  percent: number;
+}
+
+export interface DRECashFlowPoint {
+  label: string; // "Nov", "Dez", …
+  revenue: number; // BRL
+  expenses: number; // BRL
+  profit: number; // BRL
+}
+
+export interface DREExpenseRow {
+  id: string;
+  description: string;
+  subtitle?: string;
+  category: ExpenseCategory;
+  categoryLabel: string;
+  type: ExpenseType;
+  dueDate: string; // DD/MM/YYYY
+  amount: string; // formatted
+  status: ExpenseStatus;
+}
+
+export interface DREData {
+  monthLabel: string; // "Abril 2026"
+  revenue: {
+    total: string;
+    deltaLabel: string;
+    trend: "up" | "down" | "flat";
+  };
+  expenses: {
+    total: string;
+    fixed: string;
+    variable: string;
+  };
+  profit: {
+    total: string;
+    marginPercent: number;
+  };
+  cashFlow: DRECashFlowPoint[];
+  categoryBreakdown: DRECategoryBreakdown[];
+  expensesTotalLabel: string; // "R$ 9.800"
+  expenseRows: DREExpenseRow[];
+}
+
+/* ============================================================
+   Admin — dependents / families
+   ============================================================ */
+
+export type DependentStatus = "active" | "pending" | "inactive";
+
+export interface Dependent {
+  id: string;
+  name: string;
+  age: number;
+  className: string; // "Natação Infantil"
+  classTime: string; // "Turma Segunda 16h"
+  status: DependentStatus;
+  gender: "girl" | "boy";
+  medicalAlert?: string; // "Alergia a cloro"
+}
+
+export interface GuardianFamily {
+  id: string;
+  guardian: {
+    name: string;
+    initials: string;
+    avatarGradient: string; // tailwind-ready gradient
+    email: string;
+    phone: string;
+  };
+  dependents: Dependent[];
+}
+
+/* ============================================================
+   Admin — workout plans
+   ============================================================ */
+
+export interface WorkoutExercise {
+  name: string;
+  sets: string; // "4×12", "3×15", "4×1 volta"
+  load: string; // "60kg" or "—"
+}
+
+export interface WorkoutStudent {
+  initials: string;
+  gradient: string;
+}
+
+export type WorkoutTab = "active" | "assessments" | "archived";
+
+export interface WorkoutPlanCard {
+  id: string;
+  name: string;
+  exerciseCount: number;
+  createdAt: string; // "14/03"
+  instructorName: string;
+  iconEmoji: string;
+  iconBg: string; // tailwind bg-* class or hex
+  student: WorkoutStudent;
+  exercises: WorkoutExercise[];
+  status: "active" | "archived";
+}
+
+export interface WorkoutsData {
+  subtitle: string; // "8 fichas ativas — criadas pelo instrutor"
+  tabs: Array<{ id: WorkoutTab; label: string }>;
+  cards: WorkoutPlanCard[];
+}
