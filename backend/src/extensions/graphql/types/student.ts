@@ -24,6 +24,7 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('phone');
       t.string('birthdate');
       t.string('status');
+      t.nonNull.string('role');
       t.boolean('isGuardian');
       t.string('notes');
       t.field('photo', {
@@ -94,6 +95,7 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('phone');
       t.string('birthdate');
       t.string('status');
+      t.string('role');
       t.boolean('isGuardian');
       t.string('notes');
       t.id('photo');
@@ -110,6 +112,7 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('phone');
       t.string('birthdate');
       t.string('status');
+      t.string('role');
       t.boolean('isGuardian');
       t.string('notes');
       t.id('photo');

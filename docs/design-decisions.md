@@ -1023,6 +1023,39 @@ will be redesigned when they're ported to Next.js/Expo).
   type checks (`tsc --noEmit`) do **not** catch Nexus API misuse
   because the types are heavily overloaded.
 
+### 9.7bis Gym roles live on `Student.role`, not in users-permissions
+
+- **Decision** — The academy-facing roles (`academy_admin`,
+  `instructor`, `member`) are an enum on the `Student` content type.
+  users-permissions keeps only its defaults (`Public`, `Authenticated`).
+  An operator editing a user in the Strapi admin sees the stock
+  two-item picker, plus anything they deliberately create themselves
+  — no gym-specific noise.
+- **Context** — The first pass at this project added the three gym
+  roles to users-permissions so REST CRUD could be gated per role.
+  But the frontends are GraphQL-only, so the custom roles earned
+  their own row in the role picker without actually adding value.
+  The author flagged this after seeing the picker polluted with
+  `academy_admin` / `instructor` next to `Authenticated`.
+- **Rationale** —
+  - Keeps the Strapi admin UI clean (role picker has just two items).
+  - Decouples "can this user log in?" (users-permissions) from "what
+    can this Student do in their academy?" (Student.role). Different
+    questions, different fields.
+  - GraphQL resolvers already look up `Student` via
+    `resolveUserAcademyId`, so checking `student.role` there is one
+    line instead of a whole permissions migration.
+- **Consequences** — `bootstrap/permissions.ts` is smaller; ships a
+  one-time cleanup that deletes any legacy `academy_admin` /
+  `instructor` / `student` rows from the DB and re-homes their users
+  to `Authenticated` before deletion (safe — no users get lost). The
+  cleanup runs on every boot; once every environment has rolled
+  through, `LEGACY_GYM_ROLES` can be emptied and the function removed.
+- **Revisit when** — We need to gate REST endpoints per gym role
+  (e.g. a custom controller action only instructors can invoke).
+  At that point either add users-permissions roles back for the REST
+  surface specifically, or move the custom controller to a resolver.
+
 ### 9.8 Dockerfiles: BuildKit cache mounts + Next.js standalone output
 
 - **Decision** — `backend/Dockerfile` and `website/Dockerfile` are

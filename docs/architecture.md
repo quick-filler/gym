@@ -281,18 +281,40 @@ The pending ones are simple wrappers around `me.{bookings|workoutPlans|payments}
 
 ## Permissions
 
-`src/bootstrap/permissions.ts` seeds three custom roles on every boot
-(idempotent).
+Two decoupled layers:
 
-| Role | Content types (CRUD) |
+**users-permissions (Strapi plugin)** — default roles only. Every API
+caller is either `Public` (only the Asaas webhook is enabled) or
+`Authenticated` (anything else requires a JWT). `src/bootstrap/permissions.ts`
+also removes any legacy `academy_admin`/`instructor`/`student` rows
+that older boots created.
+
+**Gym role on `Student.role`** — the academy-facing role lives on the
+Student content type:
+
+| `Student.role` | Access |
 |---|---|
-| `academy_admin` | academy (R/U), student, plan, enrollment, class-schedule, class-booking, payment (R/C/U), workout-plan, body-assessment, **expense**, **dependent** |
-| `instructor` | student (R), class-schedule (R/C/U), class-booking (R/U), workout-plan (R/C/U), body-assessment (R/C/U), dependent (R) |
-| `student` | academy (R), student (R-self), class-schedule (R), class-booking (R/C/U), workout-plan (R), body-assessment (R), plan (R), enrollment (R), payment (R), dependent (R/C/U) |
+| `academy_admin` | Full CRUD on their academy's data — finance, students, expenses, dependents |
+| `instructor` | Read students, manage schedules, write assessments + workouts |
+| `member` (default) | Read own data, book classes, view own workouts |
 
-GraphQL authorization is enforced **separately** by the per-resolver
-`resolversConfig.auth` entries — these permission rows only gate the
-REST CRUD used by the Strapi admin UI.
+GraphQL resolvers look up the caller's `Student` via the
+`resolveUserAcademyId` helper (in `src/extensions/graphql/helpers.ts`)
+and branch on `Student.role` as needed. `resolversConfig.auth` stays
+`true` for everything except `Query.academyBySlug`.
+
+### Dev login (SEED_DEMO=true)
+
+`bootstrap/seed.ts → ensureDemoDevUser` runs on every
+`SEED_DEMO=true` boot and idempotently provisions:
+
+- a users-permissions user `admin@gym-demo.com` / `gym-demo-admin`
+  (overridable via `DEV_USER_EMAIL` / `DEV_USER_PASSWORD`), assigned
+  the default `Authenticated` role
+- Ana Costa's Student record linked to that user, `role = academy_admin`
+
+Credentials are printed prominently in the boot log so the operator
+doesn't have to grep source.
 
 ## Authentication flow
 

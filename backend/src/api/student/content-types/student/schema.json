@@ -37,6 +37,12 @@
       "default": "active",
       "required": true
     },
+    "role": {
+      "type": "enumeration",
+      "enum": ["academy_admin", "instructor", "member"],
+      "default": "member",
+      "required": true
+    },
     "isGuardian": {
       "type": "boolean",
       "default": false

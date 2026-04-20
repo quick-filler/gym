@@ -104,6 +104,20 @@
           "sortable": true
         }
       },
+      "role": {
+        "edit": {
+          "label": "role",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "role",
+          "searchable": true,
+          "sortable": true
+        }
+      },
       "isGuardian": {
         "edit": {
           "label": "isGuardian",
@@ -385,6 +399,10 @@
         [
           {
             "name": "dependents",
+            "size": 6
+          },
+          {
+            "name": "role",
             "size": 6
           }
         ]

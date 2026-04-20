@@ -928,6 +928,11 @@ export interface ApiStudentStudent extends Struct.CollectionTypeSchema {
     phone: Schema.Attribute.String;
     photo: Schema.Attribute.Media<'images'>;
     publishedAt: Schema.Attribute.DateTime;
+    role: Schema.Attribute.Enumeration<
+      ['academy_admin', 'instructor', 'member']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'member'>;
     status: Schema.Attribute.Enumeration<['active', 'inactive', 'suspended']> &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'active'>;

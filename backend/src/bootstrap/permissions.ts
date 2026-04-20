@@ -1,128 +1,91 @@
 /**
- * Bootstrap helper — sets up the gym-specific roles in users-permissions.
+ * Bootstrap helper — minimal users-permissions wiring.
  *
- * Roles created/maintained:
- *   - Authenticated (default — kept as-is, used as fallback)
- *   - Public (default — granted access to the Asaas webhook endpoint)
- *   - academy_admin — full CRUD on their academy's data (via REST/Strapi admin)
- *   - instructor    — read students, manage schedules, write assessments
- *   - student       — read own data, book classes, view own workouts
+ * We intentionally do NOT create gym-specific roles
+ * (academy_admin / instructor / member) in the users-permissions
+ * plugin. Gym roles live on the `Student` content type in a
+ * dedicated `role` enum field. This keeps the users-permissions role
+ * picker in the admin UI clean — only the default `Public` and
+ * `Authenticated` roles plus anything an operator adds on purpose.
  *
- * Note on GraphQL: authorization for the /graphql surface is enforced by
- * the per-resolver `resolversConfig.auth` entries in src/extensions/graphql,
- * NOT by these users-permissions actions. The actions below only gate the
- * REST CRUD that the Strapi admin UI uses internally.
+ * GraphQL authorization runs off `ctx.state.user.id` → look up the
+ * linked Student → check `Student.role` as needed. See the aggregate
+ * resolvers + `resolveUserAcademyId` in src/extensions/graphql.
  *
- * The setup is idempotent: it checks for existing roles before creating.
+ * This helper only ensures the Public role has the Asaas webhook
+ * unblocked; everything else defaults off.
  */
 
 import type { Core } from '@strapi/strapi';
 
-const ROLE_BLUEPRINT = [
-  {
-    name: 'academy_admin',
-    description: 'Full CRUD on their own academy\'s data',
-    permissions: {
-      'api::academy.academy': ['find', 'findOne', 'update'],
-      'api::student.student': ['find', 'findOne', 'create', 'update', 'delete'],
-      'api::plan.plan': ['find', 'findOne', 'create', 'update', 'delete'],
-      'api::enrollment.enrollment': ['find', 'findOne', 'create', 'update', 'delete'],
-      'api::class-schedule.class-schedule': ['find', 'findOne', 'create', 'update', 'delete'],
-      'api::class-booking.class-booking': ['find', 'findOne', 'create', 'update', 'delete'],
-      'api::payment.payment': ['find', 'findOne', 'create', 'update'],
-      'api::workout-plan.workout-plan': ['find', 'findOne', 'create', 'update', 'delete'],
-      'api::body-assessment.body-assessment': ['find', 'findOne', 'create', 'update', 'delete'],
-      'api::expense.expense': ['find', 'findOne', 'create', 'update', 'delete'],
-      'api::dependent.dependent': ['find', 'findOne', 'create', 'update', 'delete'],
-    },
-  },
-  {
-    name: 'instructor',
-    description: 'Manages schedules, writes assessments and workouts',
-    permissions: {
-      'api::student.student': ['find', 'findOne'],
-      'api::class-schedule.class-schedule': ['find', 'findOne', 'create', 'update'],
-      'api::class-booking.class-booking': ['find', 'findOne', 'update'],
-      'api::workout-plan.workout-plan': ['find', 'findOne', 'create', 'update'],
-      'api::body-assessment.body-assessment': ['find', 'findOne', 'create', 'update'],
-      'api::dependent.dependent': ['find', 'findOne'],
-    },
-  },
-  {
-    name: 'student',
-    description: 'Can view own data, book classes, view own workouts',
-    permissions: {
-      'api::academy.academy': ['findOne'],
-      'api::student.student': ['findOne'],
-      'api::class-schedule.class-schedule': ['find', 'findOne'],
-      'api::class-booking.class-booking': ['find', 'findOne', 'create', 'update'],
-      'api::workout-plan.workout-plan': ['find', 'findOne'],
-      'api::body-assessment.body-assessment': ['find', 'findOne'],
-      'api::plan.plan': ['find', 'findOne'],
-      'api::enrollment.enrollment': ['find', 'findOne'],
-      'api::payment.payment': ['find', 'findOne'],
-      'api::dependent.dependent': ['find', 'findOne', 'create', 'update'],
-    },
-  },
-];
-
 // Only the Asaas webhook is public — it's called by the external payment
 // gateway with a shared secret header. Everything else requires auth.
-const PUBLIC_PERMISSIONS = {
+const PUBLIC_PERMISSIONS: Record<string, string[]> = {
   'api::payment.payment': ['webhook'],
 };
 
+// Names of the legacy gym roles that used to live in users-permissions.
+// Kept here so existing deployments get cleaned up automatically; once
+// every environment has rolled through this boot once, this list can be
+// emptied and cleanupLegacyRoles removed.
+const LEGACY_GYM_ROLES = ['academy_admin', 'instructor', 'student'];
+
 export async function setupRolesAndPermissions(strapi: Core.Strapi) {
-  const roleService = strapi.plugin('users-permissions').service('role');
-
-  const existingRoles = await roleService.find();
-  const byName = new Map(existingRoles.map((r: any) => [r.name, r]));
-
-  // Ensure custom roles exist.
-  for (const blueprint of ROLE_BLUEPRINT) {
-    if (byName.has(blueprint.name)) {
-      strapi.log.info(`[bootstrap] role "${blueprint.name}" already exists`);
-      continue;
-    }
-    await roleService.createRole({
-      name: blueprint.name,
-      description: blueprint.description,
-      permissions: buildPermissionsObject(blueprint.permissions),
-      users: [],
-    });
-    strapi.log.info(`[bootstrap] created role "${blueprint.name}"`);
-  }
-
-  // Ensure public role has the always-public endpoints enabled.
   await ensurePermissions(strapi, 'public', PUBLIC_PERMISSIONS);
+  await cleanupLegacyRoles(strapi);
 }
 
-function buildPermissionsObject(perms: Record<string, string[]>): any {
-  const result: any = {};
-  for (const [controller, actions] of Object.entries(perms)) {
-    result[controller] = {
-      controllers: {
-        [controller.split('.').pop()!]: Object.fromEntries(
-          actions.map((a) => [a, { enabled: true, policy: '' }])
-        ),
-      },
-    };
+/**
+ * Removes the legacy academy_admin / instructor / student roles that
+ * were previously created by this file. Gym-specific access control
+ * now lives on `Student.role`, so these roles just clutter the admin
+ * UI's role picker.
+ *
+ * Any user still holding one of these roles is moved back to the
+ * default `Authenticated` role before the role is deleted, so the
+ * user itself is never destroyed.
+ */
+async function cleanupLegacyRoles(strapi: Core.Strapi) {
+  const roleService = strapi.plugin('users-permissions').service('role');
+  const allRoles: any[] = await roleService.find();
+  const authRole = allRoles.find(
+    (r) => r.type === 'authenticated' || r.name === 'Authenticated',
+  );
+  if (!authRole) return;
+
+  for (const legacyName of LEGACY_GYM_ROLES) {
+    const role = allRoles.find((r) => r.name === legacyName);
+    if (!role) continue;
+
+    const users: any[] = await strapi.db
+      .query('plugin::users-permissions.user')
+      .findMany({ where: { role: role.id } });
+    for (const u of users) {
+      await strapi.db
+        .query('plugin::users-permissions.user')
+        .update({ where: { id: u.id }, data: { role: authRole.id } });
+    }
+    await roleService.deleteRole(role.id);
+    strapi.log.info(
+      `[bootstrap] removed legacy role "${legacyName}" (${users.length} user(s) → Authenticated)`,
+    );
   }
-  return result;
 }
 
 /**
  * Idempotently enables a set of action permissions on the given role
- * (looking up by name). Used for the public role since it already exists
- * by default and we just want to flip a few flags on it.
+ * (looking up by type). Used for the public role so we can expose the
+ * Asaas webhook without manual clicks on every fresh install.
  */
 async function ensurePermissions(
   strapi: Core.Strapi,
   roleName: string,
-  perms: Record<string, string[]>
+  perms: Record<string, string[]>,
 ) {
   const roles = await strapi.plugin('users-permissions').service('role').find();
-  const role = roles.find((r: any) => r.type === roleName || r.name.toLowerCase() === roleName);
+  const role = roles.find(
+    (r: any) => r.type === roleName || r.name.toLowerCase() === roleName,
+  );
   if (!role) {
     strapi.log.warn(`[bootstrap] could not find role "${roleName}"`);
     return;

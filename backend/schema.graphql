@@ -925,6 +925,7 @@ type Student {
   notes: String
   phone: String
   photo: Media
+  role: String!
   status: String
   workoutPlans: [WorkoutPlan]
 }
@@ -938,6 +939,7 @@ input StudentInput {
   notes: String
   phone: String
   photo: ID
+  role: String
   status: String
   user: ID
 }
@@ -951,6 +953,7 @@ input StudentUpdateInput {
   notes: String
   phone: String
   photo: ID
+  role: String
   status: String
 }
 

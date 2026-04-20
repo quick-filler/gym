@@ -308,20 +308,39 @@ data — everything goes through `/graphql`.
 
 ## Roles & Permissions
 
-Defined in `src/bootstrap/permissions.ts` and applied at every boot
-(idempotent — checks for existing roles before creating).
+Two distinct layers — keep them straight:
+
+### 1. users-permissions (default roles only)
+
+The users-permissions plugin ships with `Public` and `Authenticated`
+roles. **Gym-specific roles are NOT added here** — that kept cluttering
+the admin UI's role picker when editing a user. `src/bootstrap/permissions.ts`
+only flips the `Public` role's Asaas webhook action on, plus a cleanup
+step that removes any legacy `academy_admin` / `instructor` / `student`
+rows (and re-homes their users back to `Authenticated`) that older
+boots left behind.
+
+### 2. Gym role on `Student.role`
+
+The academy-facing role is an enum field on the `Student` content type:
+
+```
+role: enumeration<'academy_admin' | 'instructor' | 'member'>  // default: 'member'
+```
 
 | Role | Access |
 |---|---|
-| `super_admin` | Full Strapi admin (platform owner) |
-| `academy_admin` | Full CRUD on their own academy's data |
+| `academy_admin` | Full CRUD on their academy's data — finance, students, expenses, dependents |
 | `instructor` | Read students, manage schedules, write assessments + workouts |
-| `student` | Read own data, book classes, view own workouts |
-| `public` | Asaas webhook only |
+| `member` | Read own data, book classes, view own workouts |
 
-GraphQL authorization is enforced separately, via `resolversConfig.auth`
-in each module — these users-permissions actions only gate the REST CRUD
-that the Strapi admin UI uses internally.
+GraphQL resolvers check `ctx.state.user.id` → look up the linked
+`Student` → branch on `Student.role` as needed. Academy scoping is
+handled by `resolveUserAcademyId` in `src/extensions/graphql/helpers.ts`
+— everyone sees only their own academy's data.
+
+`resolversConfig.auth` stays `true` for every resolver that isn't
+`Query.academyBySlug`; the role check is secondary to authentication.
 
 ## Lifecycle Hooks
 

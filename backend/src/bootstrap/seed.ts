@@ -67,10 +67,18 @@ export async function seedDemoData(strapi: Core.Strapi) {
     },
   });
 
-  const studentsSeed = [
-    { name: 'João Silva', email: 'joao@gym-demo.com', phone: '11 98888-1111', plan: planMensal },
-    { name: 'Ana Costa', email: 'ana@gym-demo.com', phone: '11 98888-2222', plan: planAnual },
-    { name: 'Carlos Souza', email: 'carlos@gym-demo.com', phone: '11 98888-3333', plan: planMensal },
+  const studentsSeed: Array<{
+    name: string;
+    email: string;
+    phone: string;
+    plan: any;
+    role: 'academy_admin' | 'instructor' | 'member';
+  }> = [
+    { name: 'João Silva', email: 'joao@gym-demo.com', phone: '11 98888-1111', plan: planMensal, role: 'member' },
+    // Ana is the demo academy_admin — the dev user (see ensureDemoDevUser)
+    // logs in as her so /admin/* pages show full-CRUD affordances.
+    { name: 'Ana Costa', email: 'ana@gym-demo.com', phone: '11 98888-2222', plan: planAnual, role: 'academy_admin' },
+    { name: 'Carlos Souza', email: 'carlos@gym-demo.com', phone: '11 98888-3333', plan: planMensal, role: 'member' },
   ];
 
   for (const s of studentsSeed) {
@@ -80,8 +88,9 @@ export async function seedDemoData(strapi: Core.Strapi) {
         email: s.email,
         phone: s.phone,
         status: 'active',
+        role: s.role,
         academy: academy.documentId,
-      },
+      } as any,
     });
 
     await strapi.documents('api::enrollment.enrollment').create({
@@ -258,4 +267,106 @@ export async function seedDemoData(strapi: Core.Strapi) {
   strapi.log.info(
     '[seed] demo academy + 3 students (1 guardian w/ 2 dependents) + 2 plans + 2 schedules + 6 expenses created',
   );
+}
+
+/**
+ * Ensures a ready-to-login dev user exists in the users-permissions
+ * plugin and is linked to the demo academy admin Student (Ana Costa).
+ *
+ * Runs every bootstrap when SEED_DEMO=true so that a partially-seeded
+ * DB (e.g. first-boot crashed before user creation) still converges
+ * to a working login. Idempotent — looks up the user by email first.
+ *
+ * Creds are taken from env (DEV_USER_EMAIL / DEV_USER_PASSWORD) with
+ * safe fallbacks so `SEED_DEMO=true npm run develop` on a fresh clone
+ * just works. The console prints the credentials prominently so the
+ * operator doesn't have to grep source.
+ */
+export async function ensureDemoDevUser(strapi: Core.Strapi) {
+  const email = process.env.DEV_USER_EMAIL ?? 'admin@gym-demo.com';
+  const password = process.env.DEV_USER_PASSWORD ?? 'gym-demo-admin';
+
+  // Target Student (Ana Costa — academy_admin role) must exist.
+  const studentResults: any = await strapi
+    .documents('api::student.student')
+    .findMany({
+      filters: { email: 'ana@gym-demo.com' },
+      populate: { user: true, academy: true },
+      limit: 1,
+    });
+  const ana = studentResults[0];
+  if (!ana) {
+    strapi.log.warn(
+      '[seed] ensureDemoDevUser: Ana Costa not seeded — skipping user',
+    );
+    return;
+  }
+
+  // Default Authenticated role — we do NOT create custom gym roles in
+  // users-permissions anymore. Access is controlled via Student.role.
+  const roles = await strapi
+    .plugin('users-permissions')
+    .service('role')
+    .find();
+  const authRole = roles.find(
+    (r: any) => r.type === 'authenticated' || r.name === 'Authenticated',
+  );
+  if (!authRole) {
+    strapi.log.warn(
+      '[seed] ensureDemoDevUser: Authenticated role missing — skipping user',
+    );
+    return;
+  }
+
+  // Find-or-create the user.
+  const existing = await strapi.db
+    .query('plugin::users-permissions.user')
+    .findOne({ where: { email } });
+
+  let user: any = existing;
+  if (existing) {
+    strapi.log.info(`[seed] dev user ${email} already exists`);
+  } else {
+    user = await strapi
+      .plugin('users-permissions')
+      .service('user')
+      .add({
+        username: email,
+        email,
+        password,
+        provider: 'local',
+        role: authRole.id,
+        confirmed: true,
+        blocked: false,
+      });
+    strapi.log.info(`[seed] created dev user ${email}`);
+  }
+
+  // Link the user onto Ana's Student record and make sure she carries
+  // the academy_admin role (the field was added after the demo data
+  // was first seeded, so early DBs may still have her at the default).
+  const needsUserLink = !ana.user || ana.user.id !== user.id;
+  const needsRoleBackfill = ana.role !== 'academy_admin';
+  if (needsUserLink || needsRoleBackfill) {
+    await strapi.documents('api::student.student').update({
+      documentId: ana.documentId,
+      data: {
+        ...(needsUserLink ? { user: user.id } : {}),
+        ...(needsRoleBackfill ? { role: 'academy_admin' } : {}),
+      } as any,
+    });
+    strapi.log.info(
+      `[seed] Student "${ana.name}" updated (user=${needsUserLink}, role=${needsRoleBackfill})`,
+    );
+  }
+
+  // Print the credentials prominently so the operator doesn't have to
+  // grep source.
+  const border = '═'.repeat(56);
+  strapi.log.info(border);
+  strapi.log.info('[seed] Dev login ready:');
+  strapi.log.info(`          email:    ${email}`);
+  strapi.log.info(`          password: ${password}`);
+  strapi.log.info(`          academy:  ${ana.academy?.slug ?? 'gym-demo'}`);
+  strapi.log.info(border);
 }

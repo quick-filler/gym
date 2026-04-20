@@ -798,7 +798,7 @@
       "locale": null
     },
     {
-      "documentId": "w13m5x8nrs9lutfmv37omsew",
+      "documentId": "atxhbv6voqfgbpf2u0m0qfxx",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -810,6 +810,7 @@
           "photo",
           "birthdate",
           "status",
+          "role",
           "isGuardian",
           "notes",
           "academy",
@@ -843,7 +844,7 @@
       "locale": null
     },
     {
-      "documentId": "vchgdk3gkre1xz27p3dal9ha",
+      "documentId": "t98sf6r6uwgunv1ownw3yvdw",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -855,6 +856,7 @@
           "photo",
           "birthdate",
           "status",
+          "role",
           "isGuardian",
           "notes",
           "academy",
@@ -870,7 +872,7 @@
       "locale": null
     },
     {
-      "documentId": "llv6fsxv6f65e9gie1ties4f",
+      "documentId": "sx7nz57xf0vcvyzo81o8xro9",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -882,6 +884,7 @@
           "photo",
           "birthdate",
           "status",
+          "role",
           "isGuardian",
           "notes",
           "academy",
