@@ -73,6 +73,30 @@ export const COUNTRIES: Country[] = [
   { code: "JP", name: "Japão", dial: "81", flag: "🇯🇵", example: "9012345678", format: formatGeneric },
 ];
 
+/**
+ * Sentinel for a country the picker doesn't list. The caller swaps the
+ * dial code at runtime; formatting falls back to the generic grouper.
+ *
+ * Kept out of COUNTRIES so the search list stays curated — the caller
+ * renders it as a manual "Outro país" entry.
+ */
+export const OTHER_COUNTRY: Country = {
+  code: "OTHER",
+  name: "Outro país",
+  dial: "",
+  flag: "🌐",
+  example: "123456789",
+  format: formatGeneric,
+};
+
+/** Create a custom country with the operator-typed dial code. */
+export function makeOtherCountry(dial: string): Country {
+  return {
+    ...OTHER_COUNTRY,
+    dial: digitsOnly(dial).slice(0, 4),
+  };
+}
+
 export const DEFAULT_COUNTRY = COUNTRIES[0]!; // Brazil
 
 export function findCountry(code: string | undefined | null): Country {

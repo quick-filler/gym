@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   COUNTRIES,
   DEFAULT_COUNTRY,
+  OTHER_COUNTRY,
   digitsOnly,
   findCountry,
   formatDisplay,
   formatPhoneForDisplay,
+  makeOtherCountry,
   parseStoredPhone,
   toStored,
 } from './phone';
@@ -134,6 +136,33 @@ describe('toStored', () => {
   it('returns "" for empty digits (so caller can send null)', () => {
     expect(toStored(findCountry('BR'), '')).toBe('');
     expect(toStored(findCountry('BR'), '---')).toBe('');
+  });
+});
+
+describe('OTHER country', () => {
+  it('ships empty dial so the caller must fill it', () => {
+    expect(OTHER_COUNTRY.code).toBe('OTHER');
+    expect(OTHER_COUNTRY.dial).toBe('');
+  });
+
+  it('makeOtherCountry captures the operator-typed dial', () => {
+    const c = makeOtherCountry('62');
+    expect(c.code).toBe('OTHER');
+    expect(c.dial).toBe('62');
+  });
+
+  it('strips non-digits from the typed dial', () => {
+    expect(makeOtherCountry('+62').dial).toBe('62');
+    expect(makeOtherCountry('abc42xyz').dial).toBe('42');
+  });
+
+  it('caps dial length at 4 digits (longest valid codes)', () => {
+    expect(makeOtherCountry('12345678').dial).toBe('1234');
+  });
+
+  it('stores through toStored with the typed dial', () => {
+    const c = makeOtherCountry('62');
+    expect(toStored(c, '8123456789')).toBe('+628123456789');
   });
 });
 
