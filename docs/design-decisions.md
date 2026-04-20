@@ -972,6 +972,39 @@ will be redesigned when they're ported to Next.js/Expo).
   add a husky pre-commit hook that runs the regen and stages the
   diff.
 
+### 9.6bis `config/sync/` exported with every structural change
+
+- **Decision** — Any commit that changes a content type, a role, the
+  permissions matrix, or a core-store setting also re-exports
+  `backend/config/sync/*.json` via `npm run config:export`. Both the
+  source change (schema.json / permissions.ts / admin UI change) and
+  the regenerated sync files go into the same commit.
+- **Context** — Strapi stores runtime configuration in the database
+  (core-store + users-permissions permissions + content-manager view
+  settings), not in code. Without a sync layer, a fresh environment
+  with a fresh Postgres would boot with default permissions and the
+  new content types invisible in the admin UI until someone re-clicked
+  everything.
+- **Rationale** — `strapi-plugin-config-sync` serializes that DB state
+  to disk. Committing it means:
+  - A `docker compose up` against a fresh volume lands with the
+    correct roles and content-type visibility after one
+    `npm run config:import`.
+  - Permission edits made through the admin UI (which are common when
+    onboarding a new academy role) are captured in git instead of
+    silently drifting.
+  - Reviewers see permission changes as JSON diffs — e.g. adding
+    `api::expense.expense.find` to `academy_admin` shows up line-for-line.
+- **Consequences** — Three extra steps in a content-type PR: boot
+  Strapi once, run `npm run config:export`, `git add config/sync`.
+  `importOnBootstrap: false` stays — imports are always manual on
+  deploy so a stray local permission toggle doesn't nuke production.
+  OAuth grant secrets are excluded via `excludedConfig`.
+- **Revisit when** — We get burned by a deploy that came up with a
+  stale permission set. At that point, either add a deploy-time
+  `npm run config:import` (after a `git diff --exit-code` check) or a
+  pre-commit hook that re-runs `config:export` and stages.
+
 ### 9.7 Nexus API: `nonNull` is a function, not a namespace
 
 - **Decision** — In `src/extensions/graphql/types/*.ts`, arg wrappers

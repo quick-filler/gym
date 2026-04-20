@@ -1,0 +1,453 @@
+{
+  "key": "plugin_content_manager_configuration_content_types::api::dependent.dependent",
+  "value": {
+    "settings": {
+      "bulkable": true,
+      "filterable": true,
+      "searchable": true,
+      "pageSize": 10,
+      "relationOpenMode": "modal",
+      "mainField": "name",
+      "defaultSortBy": "name",
+      "defaultSortOrder": "ASC"
+    },
+    "metadatas": {
+      "id": {
+        "edit": {},
+        "list": {
+          "label": "id",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "name": {
+        "edit": {
+          "label": "name",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "name",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "birthdate": {
+        "edit": {
+          "label": "birthdate",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "birthdate",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "photo": {
+        "edit": {
+          "label": "photo",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "photo",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "gender": {
+        "edit": {
+          "label": "gender",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "gender",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "relationship": {
+        "edit": {
+          "label": "relationship",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "relationship",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "status": {
+        "edit": {
+          "label": "status",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "status",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "bloodType": {
+        "edit": {
+          "label": "bloodType",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "bloodType",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "allergies": {
+        "edit": {
+          "label": "allergies",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "allergies",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "medicalNotes": {
+        "edit": {
+          "label": "medicalNotes",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "medicalNotes",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "medicalAlert": {
+        "edit": {
+          "label": "medicalAlert",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "medicalAlert",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "emergencyContactName": {
+        "edit": {
+          "label": "emergencyContactName",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "emergencyContactName",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "emergencyContactPhone": {
+        "edit": {
+          "label": "emergencyContactPhone",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "emergencyContactPhone",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "guardian": {
+        "edit": {
+          "label": "guardian",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "guardian",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "academy": {
+        "edit": {
+          "label": "academy",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "academy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "enrollments": {
+        "edit": {
+          "label": "enrollments",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "asaasCustomerId"
+        },
+        "list": {
+          "label": "enrollments",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "bookings": {
+        "edit": {
+          "label": "bookings",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "documentId"
+        },
+        "list": {
+          "label": "bookings",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "workoutPlans": {
+        "edit": {
+          "label": "workoutPlans",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "workoutPlans",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "assessments": {
+        "edit": {
+          "label": "assessments",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "instructor"
+        },
+        "list": {
+          "label": "assessments",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "createdAt": {
+        "edit": {
+          "label": "createdAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "createdAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedAt": {
+        "edit": {
+          "label": "updatedAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "updatedAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdBy": {
+        "edit": {
+          "label": "createdBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "createdBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedBy": {
+        "edit": {
+          "label": "updatedBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "updatedBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "documentId": {
+        "edit": {},
+        "list": {
+          "label": "documentId",
+          "searchable": true,
+          "sortable": true
+        }
+      }
+    },
+    "layouts": {
+      "list": [
+        "id",
+        "name",
+        "birthdate",
+        "photo"
+      ],
+      "edit": [
+        [
+          {
+            "name": "name",
+            "size": 6
+          },
+          {
+            "name": "birthdate",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "photo",
+            "size": 6
+          },
+          {
+            "name": "gender",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "relationship",
+            "size": 6
+          },
+          {
+            "name": "status",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "bloodType",
+            "size": 6
+          },
+          {
+            "name": "allergies",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "medicalNotes",
+            "size": 6
+          },
+          {
+            "name": "medicalAlert",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "emergencyContactName",
+            "size": 6
+          },
+          {
+            "name": "emergencyContactPhone",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "guardian",
+            "size": 6
+          },
+          {
+            "name": "academy",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "enrollments",
+            "size": 6
+          },
+          {
+            "name": "bookings",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "workoutPlans",
+            "size": 6
+          },
+          {
+            "name": "assessments",
+            "size": 6
+          }
+        ]
+      ]
+    },
+    "uid": "api::dependent.dependent"
+  },
+  "type": "object",
+  "environment": null,
+  "tag": null
+}

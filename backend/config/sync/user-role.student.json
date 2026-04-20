@@ -1,0 +1,8 @@
+{
+  "documentId": "atsnu48vrua6nlun08lu4uzw",
+  "name": "student",
+  "description": "Can view own data, book classes, view own workouts",
+  "type": "student",
+  "locale": null,
+  "permissions": []
+}

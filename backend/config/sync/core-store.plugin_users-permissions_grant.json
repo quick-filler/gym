@@ -1,0 +1,183 @@
+{
+  "key": "plugin_users-permissions_grant",
+  "value": {
+    "email": {
+      "icon": "envelope",
+      "enabled": true
+    },
+    "discord": {
+      "icon": "discord",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "callbackUrl": "api/auth/discord/callback",
+      "scope": [
+        "identify",
+        "email"
+      ]
+    },
+    "facebook": {
+      "icon": "facebook-square",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "callbackUrl": "api/auth/facebook/callback",
+      "scope": [
+        "email"
+      ]
+    },
+    "google": {
+      "icon": "google",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "callbackUrl": "api/auth/google/callback",
+      "scope": [
+        "email"
+      ]
+    },
+    "github": {
+      "icon": "github",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "callbackUrl": "api/auth/github/callback",
+      "scope": [
+        "user",
+        "user:email"
+      ]
+    },
+    "microsoft": {
+      "icon": "windows",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "callbackUrl": "api/auth/microsoft/callback",
+      "scope": [
+        "user.read"
+      ]
+    },
+    "twitter": {
+      "icon": "twitter",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "callbackUrl": "api/auth/twitter/callback"
+    },
+    "instagram": {
+      "icon": "instagram",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "callbackUrl": "api/auth/instagram/callback",
+      "scope": [
+        "user_profile"
+      ]
+    },
+    "vk": {
+      "icon": "vk",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "callbackUrl": "api/auth/vk/callback",
+      "scope": [
+        "email"
+      ]
+    },
+    "twitch": {
+      "icon": "twitch",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "callbackUrl": "api/auth/twitch/callback",
+      "scope": [
+        "user:read:email"
+      ]
+    },
+    "linkedin": {
+      "icon": "linkedin",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "callbackUrl": "api/auth/linkedin/callback",
+      "scope": [
+        "r_liteprofile",
+        "r_emailaddress"
+      ]
+    },
+    "cognito": {
+      "icon": "aws",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "subdomain": "my.subdomain.com",
+      "callback": "api/auth/cognito/callback",
+      "scope": [
+        "email",
+        "openid",
+        "profile"
+      ]
+    },
+    "reddit": {
+      "icon": "reddit",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "callback": "api/auth/reddit/callback",
+      "scope": [
+        "identity"
+      ]
+    },
+    "auth0": {
+      "icon": "",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "subdomain": "my-tenant.eu",
+      "callback": "api/auth/auth0/callback",
+      "scope": [
+        "openid",
+        "email",
+        "profile"
+      ]
+    },
+    "cas": {
+      "icon": "book",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "callback": "api/auth/cas/callback",
+      "scope": [
+        "openid email"
+      ],
+      "subdomain": "my.subdomain.com/cas"
+    },
+    "patreon": {
+      "icon": "",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "callback": "api/auth/patreon/callback",
+      "scope": [
+        "identity",
+        "identity[email]"
+      ]
+    },
+    "keycloak": {
+      "icon": "",
+      "enabled": false,
+      "key": "",
+      "secret": "",
+      "subdomain": "myKeycloakProvider.com/realms/myrealm",
+      "callback": "api/auth/keycloak/callback",
+      "scope": [
+        "openid",
+        "email",
+        "profile"
+      ]
+    }
+  },
+  "type": "object",
+  "environment": null,
+  "tag": null
+}

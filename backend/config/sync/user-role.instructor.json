@@ -1,0 +1,8 @@
+{
+  "documentId": "vbscsvgg89ph4q29b4klnohq",
+  "name": "instructor",
+  "description": "Manages schedules, writes assessments and workouts",
+  "type": "instructor",
+  "locale": null,
+  "permissions": []
+}

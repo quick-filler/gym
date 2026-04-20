@@ -284,7 +284,13 @@ Custom queries / mutations:
    `build<Name>({ nexus, strapi })` — copy `plan.ts` as a template.
 3. Register the module in `src/extensions/graphql/index.ts` (single import +
    single line in the `modules` array).
-4. Run `npx strapi ts:generate-types` to refresh the generated TS types.
+4. Extend `src/bootstrap/permissions.ts` with the CRUD actions the
+   `academy_admin` / `instructor` / `student` roles should get.
+5. Run `npm run develop` once to boot Strapi — this regenerates
+   `schema.graphql` and `types/generated/contentTypes.d.ts`.
+6. **Run `npm run config:export`** to dump the new content-manager
+   configuration + role permissions to `config/sync/*.json`. Both the
+   schema change and the sync diff go in the same commit.
 
 ## REST surface
 
@@ -410,19 +416,45 @@ to the built-in local provider (uploads land in `public/uploads/`).
 users-permissions roles to `backend/config/sync/` so configuration
 changes travel with the repo.
 
-Workflow:
+### When to export
+
+Run `npm run config:export` whenever a commit:
+
+- adds, renames, or removes a content type
+- changes the role permissions in `src/bootstrap/permissions.ts`
+- adds or edits a custom role
+- changes content-manager configuration via the admin UI
+- flips a core-store setting (upload provider, users-permissions
+  advanced, i18n default locale, etc.)
+
+A PR that modifies any of the above without a matching
+`config/sync/*.json` diff is incomplete.
+
+### Workflow
 
 ```bash
-# Inside the running Strapi admin
-Settings → Config Sync → Export → review the diff in git → commit
+# 1. Make the change (edit schema.json / permissions.ts / etc.)
+cd backend
+npm run develop                 # let it boot once, then Ctrl-C
 
-# On another env
-Settings → Config Sync → Import (after pulling the commit)
+# 2. Export via CLI (preferred — avoids admin-UI round-trips)
+npm run config:export           # writes config/sync/*.json
+git add config/sync
+
+# 3. Commit both the code change and the sync diff together
+
+# 4. Other environments pull the commit and run:
+npm run config:import           # diff-then-apply, non-interactive (-y)
+# or inspect first:
+npm run config:diff
 ```
+
+Admin-UI alternative (identical result):
+`Settings → Config Sync → Export / Import`.
 
 `importOnBootstrap` is intentionally **off** so a deploy never silently
 overwrites permissions — every import is reviewed by hand. OAuth grant
-secrets are excluded from sync.
+secrets (`plugin_users-permissions_grant`) are excluded from sync.
 
 ## i18n
 

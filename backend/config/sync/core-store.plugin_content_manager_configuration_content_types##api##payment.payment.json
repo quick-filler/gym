@@ -1,0 +1,258 @@
+{
+  "key": "plugin_content_manager_configuration_content_types::api::payment.payment",
+  "value": {
+    "settings": {
+      "bulkable": true,
+      "filterable": true,
+      "searchable": true,
+      "pageSize": 10,
+      "relationOpenMode": "modal",
+      "mainField": "externalId",
+      "defaultSortBy": "externalId",
+      "defaultSortOrder": "ASC"
+    },
+    "metadatas": {
+      "id": {
+        "edit": {},
+        "list": {
+          "label": "id",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "enrollment": {
+        "edit": {
+          "label": "enrollment",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "asaasCustomerId"
+        },
+        "list": {
+          "label": "enrollment",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "amount": {
+        "edit": {
+          "label": "amount",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "amount",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "dueDate": {
+        "edit": {
+          "label": "dueDate",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "dueDate",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "paidAt": {
+        "edit": {
+          "label": "paidAt",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "paidAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "status": {
+        "edit": {
+          "label": "status",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "status",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "method": {
+        "edit": {
+          "label": "method",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "method",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "externalId": {
+        "edit": {
+          "label": "externalId",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "externalId",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "receiptUrl": {
+        "edit": {
+          "label": "receiptUrl",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "receiptUrl",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdAt": {
+        "edit": {
+          "label": "createdAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "createdAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedAt": {
+        "edit": {
+          "label": "updatedAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "updatedAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdBy": {
+        "edit": {
+          "label": "createdBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "createdBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedBy": {
+        "edit": {
+          "label": "updatedBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "updatedBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "documentId": {
+        "edit": {},
+        "list": {
+          "label": "documentId",
+          "searchable": true,
+          "sortable": true
+        }
+      }
+    },
+    "layouts": {
+      "list": [
+        "id",
+        "enrollment",
+        "amount",
+        "dueDate"
+      ],
+      "edit": [
+        [
+          {
+            "name": "enrollment",
+            "size": 6
+          },
+          {
+            "name": "amount",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "dueDate",
+            "size": 4
+          },
+          {
+            "name": "paidAt",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "status",
+            "size": 6
+          },
+          {
+            "name": "method",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "externalId",
+            "size": 6
+          },
+          {
+            "name": "receiptUrl",
+            "size": 6
+          }
+        ]
+      ]
+    },
+    "uid": "api::payment.payment"
+  },
+  "type": "object",
+  "environment": null,
+  "tag": null
+}

@@ -1,0 +1,1554 @@
+{
+  "documentId": "tuwd69sef38iy973601zdv7k",
+  "name": "Super Admin",
+  "code": "strapi-super-admin",
+  "description": "Super Admins can access and manage all features and settings.",
+  "locale": null,
+  "permissions": [
+    {
+      "documentId": "wweall2uyzcxiu6s30y5bcph",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::academy.academy",
+      "properties": {
+        "fields": [
+          "name",
+          "slug",
+          "logo",
+          "primaryColor",
+          "secondaryColor",
+          "plan",
+          "isActive",
+          "email",
+          "phone",
+          "address",
+          "students",
+          "plans",
+          "schedules",
+          "expenses",
+          "businessType",
+          "enabledModules",
+          "billingMode"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "dlkurx0phzotoa627lig6r1y",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::academy.academy",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "vuq9an8hgveb46rsrxlwjtry",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::academy.academy",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "qutyfmaffjjg3bwcgoemgqjx",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::academy.academy",
+      "properties": {
+        "fields": [
+          "name",
+          "slug",
+          "logo",
+          "primaryColor",
+          "secondaryColor",
+          "plan",
+          "isActive",
+          "email",
+          "phone",
+          "address",
+          "students",
+          "plans",
+          "schedules",
+          "expenses",
+          "businessType",
+          "enabledModules",
+          "billingMode"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "b2vle1wc180n6njvza681wkd",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::academy.academy",
+      "properties": {
+        "fields": [
+          "name",
+          "slug",
+          "logo",
+          "primaryColor",
+          "secondaryColor",
+          "plan",
+          "isActive",
+          "email",
+          "phone",
+          "address",
+          "students",
+          "plans",
+          "schedules",
+          "expenses",
+          "businessType",
+          "enabledModules",
+          "billingMode"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "w9hb5dky1uoe6dtjugx5o7kv",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::body-assessment.body-assessment",
+      "properties": {
+        "fields": [
+          "student",
+          "dependent",
+          "instructor",
+          "date",
+          "weight",
+          "height",
+          "bodyFat",
+          "measurements",
+          "notes"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "xnznvt22e1uufl6x7nrtmac7",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::body-assessment.body-assessment",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "magrkrsm9magqga0yrl5zltr",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::body-assessment.body-assessment",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "sa6heuvijarcud5tbuxite8w",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::body-assessment.body-assessment",
+      "properties": {
+        "fields": [
+          "student",
+          "dependent",
+          "instructor",
+          "date",
+          "weight",
+          "height",
+          "bodyFat",
+          "measurements",
+          "notes"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "kbgj03v0lrwvuhwk7yaaohw8",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::body-assessment.body-assessment",
+      "properties": {
+        "fields": [
+          "student",
+          "dependent",
+          "instructor",
+          "date",
+          "weight",
+          "height",
+          "bodyFat",
+          "measurements",
+          "notes"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "vmhz6wwrmdorbxovj4yo565l",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::class-booking.class-booking",
+      "properties": {
+        "fields": [
+          "student",
+          "dependent",
+          "classSchedule",
+          "date",
+          "status",
+          "checkedInAt"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "mj4daivu3vr7hjlu9ifylc8d",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::class-booking.class-booking",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "xdzhcenqn5ugkwb44r17xddj",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::class-booking.class-booking",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "nfhsgaj5ikf6oznylk5gj3iw",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::class-booking.class-booking",
+      "properties": {
+        "fields": [
+          "student",
+          "dependent",
+          "classSchedule",
+          "date",
+          "status",
+          "checkedInAt"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "qvjebctdayuzj5vfnvwpcarr",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::class-booking.class-booking",
+      "properties": {
+        "fields": [
+          "student",
+          "dependent",
+          "classSchedule",
+          "date",
+          "status",
+          "checkedInAt"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "ao9lul7768kuwwlcodptx2y5",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::class-schedule.class-schedule",
+      "properties": {
+        "fields": [
+          "name",
+          "instructor",
+          "modality",
+          "weekdays",
+          "startTime",
+          "endTime",
+          "maxCapacity",
+          "room",
+          "isActive",
+          "academy",
+          "bookings"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "wrmqmha8f01i1xvmxaw7cffd",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::class-schedule.class-schedule",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "efgrrfi83uj34f47c25jz844",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::class-schedule.class-schedule",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "l5i2rtujjcv26ia3zsrghnwd",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::class-schedule.class-schedule",
+      "properties": {
+        "fields": [
+          "name",
+          "instructor",
+          "modality",
+          "weekdays",
+          "startTime",
+          "endTime",
+          "maxCapacity",
+          "room",
+          "isActive",
+          "academy",
+          "bookings"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "pdupitay8i0u5nke5b64fdlc",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::class-schedule.class-schedule",
+      "properties": {
+        "fields": [
+          "name",
+          "instructor",
+          "modality",
+          "weekdays",
+          "startTime",
+          "endTime",
+          "maxCapacity",
+          "room",
+          "isActive",
+          "academy",
+          "bookings"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "j04db7ukro7rf823ncg4b0x5",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::dependent.dependent",
+      "properties": {
+        "fields": [
+          "name",
+          "birthdate",
+          "photo",
+          "gender",
+          "relationship",
+          "status",
+          "bloodType",
+          "allergies",
+          "medicalNotes",
+          "medicalAlert",
+          "emergencyContactName",
+          "emergencyContactPhone",
+          "guardian",
+          "academy",
+          "enrollments",
+          "bookings",
+          "workoutPlans",
+          "assessments"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "tx7snj1h6te8g29gpminrb6m",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::dependent.dependent",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "vebcodftvb0zdtfe1b1vvbv0",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::dependent.dependent",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "oqcrr8f9l7fdf7kz5un2qzvq",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::dependent.dependent",
+      "properties": {
+        "fields": [
+          "name",
+          "birthdate",
+          "photo",
+          "gender",
+          "relationship",
+          "status",
+          "bloodType",
+          "allergies",
+          "medicalNotes",
+          "medicalAlert",
+          "emergencyContactName",
+          "emergencyContactPhone",
+          "guardian",
+          "academy",
+          "enrollments",
+          "bookings",
+          "workoutPlans",
+          "assessments"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "sqx8b77sux9zn0wp3osd54sl",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::dependent.dependent",
+      "properties": {
+        "fields": [
+          "name",
+          "birthdate",
+          "photo",
+          "gender",
+          "relationship",
+          "status",
+          "bloodType",
+          "allergies",
+          "medicalNotes",
+          "medicalAlert",
+          "emergencyContactName",
+          "emergencyContactPhone",
+          "guardian",
+          "academy",
+          "enrollments",
+          "bookings",
+          "workoutPlans",
+          "assessments"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "r2uvtt7lq1ktvmx5d1jf3nkx",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::enrollment.enrollment",
+      "properties": {
+        "fields": [
+          "student",
+          "dependent",
+          "plan",
+          "startDate",
+          "endDate",
+          "status",
+          "paymentMethod",
+          "asaasCustomerId",
+          "asaasSubId",
+          "payments"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "legf6ptjo8bsd6bl3geizcej",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::enrollment.enrollment",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "mbxxrugv0rf2ocdzzy6rcll7",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::enrollment.enrollment",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "s02fqcbcem7kw6gl4w6ekxmm",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::enrollment.enrollment",
+      "properties": {
+        "fields": [
+          "student",
+          "dependent",
+          "plan",
+          "startDate",
+          "endDate",
+          "status",
+          "paymentMethod",
+          "asaasCustomerId",
+          "asaasSubId",
+          "payments"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "w8396n3awfkxdk5b6wvkauac",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::enrollment.enrollment",
+      "properties": {
+        "fields": [
+          "student",
+          "dependent",
+          "plan",
+          "startDate",
+          "endDate",
+          "status",
+          "paymentMethod",
+          "asaasCustomerId",
+          "asaasSubId",
+          "payments"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "u2dvwpxxuz4ov5iqd7gy6wn5",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::expense.expense",
+      "properties": {
+        "fields": [
+          "description",
+          "subtitle",
+          "amount",
+          "date",
+          "dueDate",
+          "paidAt",
+          "category",
+          "type",
+          "status",
+          "recurrent",
+          "recurrenceDay",
+          "notes",
+          "receipt",
+          "academy"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "e8hhpok2ew1zk9li1u1m0diq",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::expense.expense",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "eyoeosdqv7p3td0mrj6tkp5f",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::expense.expense",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "f1noo1x7hkb6aou1zv1hmmn7",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::expense.expense",
+      "properties": {
+        "fields": [
+          "description",
+          "subtitle",
+          "amount",
+          "date",
+          "dueDate",
+          "paidAt",
+          "category",
+          "type",
+          "status",
+          "recurrent",
+          "recurrenceDay",
+          "notes",
+          "receipt",
+          "academy"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "uh7gw4jwnae0phhn94plll4p",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::expense.expense",
+      "properties": {
+        "fields": [
+          "description",
+          "subtitle",
+          "amount",
+          "date",
+          "dueDate",
+          "paidAt",
+          "category",
+          "type",
+          "status",
+          "recurrent",
+          "recurrenceDay",
+          "notes",
+          "receipt",
+          "academy"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "rci560w2eitorrh459o4acdy",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::payment.payment",
+      "properties": {
+        "fields": [
+          "enrollment",
+          "amount",
+          "dueDate",
+          "paidAt",
+          "status",
+          "method",
+          "externalId",
+          "receiptUrl"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "lhfjrjy4m6zz8rcdw6cnc2nf",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::payment.payment",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "q2ftzl4uqc52vg36kp6ub3gc",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::payment.payment",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "zuv51cy5k2t6c1bl55ow8upm",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::payment.payment",
+      "properties": {
+        "fields": [
+          "enrollment",
+          "amount",
+          "dueDate",
+          "paidAt",
+          "status",
+          "method",
+          "externalId",
+          "receiptUrl"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "s70e6zn0hko20khr79y1onqf",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::payment.payment",
+      "properties": {
+        "fields": [
+          "enrollment",
+          "amount",
+          "dueDate",
+          "paidAt",
+          "status",
+          "method",
+          "externalId",
+          "receiptUrl"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "gjnuunsdmu35433qqne2g0db",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::plan.plan",
+      "properties": {
+        "fields": [
+          "name",
+          "description",
+          "price",
+          "billingCycle",
+          "maxStudents",
+          "features",
+          "isActive",
+          "academy",
+          "enrollments"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "b17ngytwlzm3d0upurt305hc",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::plan.plan",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "wjw96tx2kdnz5geztk31cj2c",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::plan.plan",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "dzy7dyamwafmx7adx2mxggwo",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::plan.plan",
+      "properties": {
+        "fields": [
+          "name",
+          "description",
+          "price",
+          "billingCycle",
+          "maxStudents",
+          "features",
+          "isActive",
+          "academy",
+          "enrollments"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "qmqptsaqh4smggrlxiyruciz",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::plan.plan",
+      "properties": {
+        "fields": [
+          "name",
+          "description",
+          "price",
+          "billingCycle",
+          "maxStudents",
+          "features",
+          "isActive",
+          "academy",
+          "enrollments"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "w13m5x8nrs9lutfmv37omsew",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::student.student",
+      "properties": {
+        "fields": [
+          "name",
+          "email",
+          "phone",
+          "photo",
+          "birthdate",
+          "status",
+          "isGuardian",
+          "notes",
+          "academy",
+          "user",
+          "enrollments",
+          "bookings",
+          "workoutPlans",
+          "assessments",
+          "dependents"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "bnyi2bq7pgsclok241ra4dnm",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::student.student",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "hvr9bk1ps0wd7ma0zfjbbfdf",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::student.student",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "vchgdk3gkre1xz27p3dal9ha",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::student.student",
+      "properties": {
+        "fields": [
+          "name",
+          "email",
+          "phone",
+          "photo",
+          "birthdate",
+          "status",
+          "isGuardian",
+          "notes",
+          "academy",
+          "user",
+          "enrollments",
+          "bookings",
+          "workoutPlans",
+          "assessments",
+          "dependents"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "llv6fsxv6f65e9gie1ties4f",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::student.student",
+      "properties": {
+        "fields": [
+          "name",
+          "email",
+          "phone",
+          "photo",
+          "birthdate",
+          "status",
+          "isGuardian",
+          "notes",
+          "academy",
+          "user",
+          "enrollments",
+          "bookings",
+          "workoutPlans",
+          "assessments",
+          "dependents"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "ulx5fsjsgmyz6ej7ej874mc7",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::workout-plan.workout-plan",
+      "properties": {
+        "fields": [
+          "name",
+          "student",
+          "dependent",
+          "instructor",
+          "exercises",
+          "validFrom",
+          "validTo",
+          "isActive"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "um7bj7cnftgctojoi55yzfw9",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::workout-plan.workout-plan",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "e1ln2kauditu3prj2cplq68u",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::workout-plan.workout-plan",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "bw7c63117a4tr627exgpg966",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::workout-plan.workout-plan",
+      "properties": {
+        "fields": [
+          "name",
+          "student",
+          "dependent",
+          "instructor",
+          "exercises",
+          "validFrom",
+          "validTo",
+          "isActive"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "aqjezjjiwjzlwfs7uhacg6rd",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::workout-plan.workout-plan",
+      "properties": {
+        "fields": [
+          "name",
+          "student",
+          "dependent",
+          "instructor",
+          "exercises",
+          "validFrom",
+          "validTo",
+          "isActive"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "jmu7ud9fz6dd4kdy54j2qrr5",
+      "action": "admin::api-tokens.access",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "ch5h8jab2owkd7vr31tzd0ci",
+      "action": "admin::api-tokens.create",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "kmr5y7tsbrz7rxejng05xr24",
+      "action": "admin::api-tokens.delete",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "g4tmnq08g5b8owdmuo9rmzwh",
+      "action": "admin::api-tokens.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "o77mxgqdugfd9x4b6hq8bgat",
+      "action": "admin::api-tokens.regenerate",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "n6q5eavhuominhpqodxm5nxe",
+      "action": "admin::api-tokens.update",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "i3ewevhjly4mkry5tnhnz4ex",
+      "action": "admin::marketplace.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "ex9u25acrpamtyj9j0ryvwcb",
+      "action": "admin::project-settings.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "q1284isyzqoascwa07sp7om1",
+      "action": "admin::project-settings.update",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "sjctc7n9n9oqn03gn95ep2ry",
+      "action": "admin::roles.create",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "h1izk7z6wi76v8x2y88eubtp",
+      "action": "admin::roles.delete",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "xndl2luehecx21xqwxc0zf1l",
+      "action": "admin::roles.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "w1axf6npm552q3hg86nb14t1",
+      "action": "admin::roles.update",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "m65m4yiv1uy9f1jdrerbej5y",
+      "action": "admin::transfer.tokens.access",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "yg0wqed59rcgrx3gwekxnnet",
+      "action": "admin::transfer.tokens.create",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "el55lmlmuhh31kdd4tljtgrz",
+      "action": "admin::transfer.tokens.delete",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "k3j5btwjfgscqt0e47v6dlu4",
+      "action": "admin::transfer.tokens.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "e4ew25h4xq1g94qmmqdd0x0w",
+      "action": "admin::transfer.tokens.regenerate",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "lnyiix9u7v4ti1kkeabeve7u",
+      "action": "admin::transfer.tokens.update",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "hciik4u8pt40ugs7jx4ebv0y",
+      "action": "admin::users.create",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "rm07v2ieyj45fvv493qndg65",
+      "action": "admin::users.delete",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "uonycoc377068fgcuu8z9xm5",
+      "action": "admin::users.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "ydkrdlm8apdupgiu66lsxinz",
+      "action": "admin::users.update",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "oktygek3fdm0epanhxynltq6",
+      "action": "admin::webhooks.create",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "jy97bjn74nf7wrfw952v3auh",
+      "action": "admin::webhooks.delete",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "qo2iv9en14b7lig6bz016lsa",
+      "action": "admin::webhooks.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "pre0v1xp0i3fiy66udn6r7ii",
+      "action": "admin::webhooks.update",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "wwcbzkrgwtxfz7ddaw8wvodw",
+      "action": "plugin::config-sync.menu-link",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "tslbifi044iqfsjlmlij54iq",
+      "action": "plugin::config-sync.settings.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "c1a7021fvuzg0k9bt801nqnr",
+      "action": "plugin::content-manager.collection-types.configure-view",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "wn7wk9j2h8pmwu6he33azr3o",
+      "action": "plugin::content-manager.components.configure-layout",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "ddor1i55dzdo0mch5483jw6b",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "plugin::users-permissions.user",
+      "properties": {
+        "fields": [
+          "username",
+          "email",
+          "provider",
+          "password",
+          "resetPasswordToken",
+          "confirmationToken",
+          "confirmed",
+          "blocked",
+          "role"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "as1nf0nx5c29x5zmjpv8elyq",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "plugin::users-permissions.user",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "u8klmasfmu32u23uwgyv0te1",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "plugin::users-permissions.user",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "axbbze7s8grnbgyql0v6odrh",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "plugin::users-permissions.user",
+      "properties": {
+        "fields": [
+          "username",
+          "email",
+          "provider",
+          "password",
+          "resetPasswordToken",
+          "confirmationToken",
+          "confirmed",
+          "blocked",
+          "role"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "wp9ja8fep3kliuf1pccgkq0r",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "plugin::users-permissions.user",
+      "properties": {
+        "fields": [
+          "username",
+          "email",
+          "provider",
+          "password",
+          "resetPasswordToken",
+          "confirmationToken",
+          "confirmed",
+          "blocked",
+          "role"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "cdglpd05x5lx9rkszsou4j1v",
+      "action": "plugin::content-manager.single-types.configure-view",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "oo6a2azxmqqcz4jnf1run42w",
+      "action": "plugin::content-type-builder.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "hmn3ehv9ullesji1jcdrw1pi",
+      "action": "plugin::email.settings.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "eg87st6lm9zj4t35acj80evb",
+      "action": "plugin::i18n.locale.create",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "u199xtc748iselpy1l2xxs72",
+      "action": "plugin::i18n.locale.delete",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "cfulhh9amsliyyjkr6clj8ba",
+      "action": "plugin::i18n.locale.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "kjkv5zvegj823xm1jv6hwnah",
+      "action": "plugin::i18n.locale.update",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "rk0nu1esi2exvr5dd6uwqfkl",
+      "action": "plugin::upload.assets.copy-link",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "gesrstvkzlr1cz739ojaga0g",
+      "action": "plugin::upload.assets.create",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "fdgn8mj5lfmepd3jjrjamsjf",
+      "action": "plugin::upload.assets.download",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "a2ns0fn4gsj26dhl9f3yfl0e",
+      "action": "plugin::upload.assets.update",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "qx1nv62vvqvrcjizsh1u03to",
+      "action": "plugin::upload.configure-view",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "nzse74dng0rgvyu3ssg1r9eb",
+      "action": "plugin::upload.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "q7zzyzf8846f5djb89v74vxi",
+      "action": "plugin::upload.settings.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "pdkejkski8lcldkbp75kl1l8",
+      "action": "plugin::users-permissions.advanced-settings.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "ac8u7zx4vsxg40wts48e2lef",
+      "action": "plugin::users-permissions.advanced-settings.update",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "uw1ry9f9bxu9zk3snnu3uus6",
+      "action": "plugin::users-permissions.email-templates.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "dhw0wyncte4lf9mawifk9vyb",
+      "action": "plugin::users-permissions.email-templates.update",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "qh9ufqwsrh4g9x4z1jftr91c",
+      "action": "plugin::users-permissions.providers.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "sl5thqp3wsxiakburknwse6l",
+      "action": "plugin::users-permissions.providers.update",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "fbsty26i1j85119tptil5gpg",
+      "action": "plugin::users-permissions.roles.create",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "w8hhjrhvt3tfkj9wgwcn6vki",
+      "action": "plugin::users-permissions.roles.delete",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "ulywi141nxbzt0yo3w3jzrqj",
+      "action": "plugin::users-permissions.roles.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "zd5l24wbitv8yaejtnxliexs",
+      "action": "plugin::users-permissions.roles.update",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    }
+  ]
+}

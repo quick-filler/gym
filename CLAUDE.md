@@ -136,6 +136,36 @@ when the schema and queries are unchanged. The generated `gql/` folder
 is committed so fresh clones and CI can type-check without running
 codegen first.
 
+### 6. Structural changes export `config-sync` in the same commit
+
+Content types, roles, and permissions live both in code *and* in
+Strapi's database (core-store). The `strapi-plugin-config-sync` plugin
+exports the DB-side state to `backend/config/sync/` so environments
+stay in lockstep.
+
+**Run `npm run config:export` any time a commit:**
+
+- adds, renames, or removes a content type (including new API UIDs)
+- changes the permissions matrix in `src/bootstrap/permissions.ts`
+- adds/removes a custom role (`academy_admin`, `instructor`, `student`)
+- changes content-manager configuration (column order, list view
+  settings) through the admin UI
+- flips a core-store setting (i18n default locale, upload settings,
+  users-permissions advanced config)
+
+```bash
+cd backend
+npm run develop              # boot once so the plugin can read state
+npm run config:export        # writes backend/config/sync/*.json
+git add config/sync
+git commit -m "…"
+```
+
+`importOnBootstrap` is intentionally **off** — another env picks up
+the changes by running `npm run config:import` after pulling, so every
+apply is reviewed by hand. A commit that touches a content type's
+schema.json or `permissions.ts` but not `config/sync/` is incomplete.
+
 ## Multi-tenancy Model
 
 Each **Academy** has:
