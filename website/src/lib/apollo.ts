@@ -15,6 +15,7 @@
 'use client';
 
 import { ApolloClient, InMemoryCache, HttpLink, from, ApolloLink } from '@apollo/client';
+import { JWT_STORAGE_KEY } from './config';
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? 'http://localhost:7777/graphql';
@@ -30,7 +31,7 @@ const httpLink = new HttpLink({
  */
 const authLink = new ApolloLink((operation, forward) => {
   if (typeof window !== 'undefined') {
-    const token = window.localStorage.getItem('jwt');
+    const token = window.localStorage.getItem(JWT_STORAGE_KEY);
     if (token) {
       operation.setContext(({ headers = {} }: { headers?: Record<string, string> }) => ({
         headers: {

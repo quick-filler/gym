@@ -7,7 +7,7 @@ import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
-import { USE_MOCKS, GRAPHQL_ENDPOINT } from "@/lib/config";
+import { GRAPHQL_ENDPOINT, JWT_STORAGE_KEY, USE_MOCKS } from "@/lib/config";
 
 /**
  * Default credentials come from the backend seed's `ensureDemoDevUser`
@@ -37,7 +37,7 @@ export function LoginClient() {
       // Demo mode: accept anything and drop a fake JWT so admin pages
       // see the "session" exists. No real auth check.
       if (typeof window !== "undefined") {
-        localStorage.setItem("gym_jwt", "mock-demo-token");
+        localStorage.setItem(JWT_STORAGE_KEY, "mock-demo-token");
       }
       setTimeout(() => router.push("/admin/dashboard"), 300);
       return;
@@ -57,7 +57,7 @@ export function LoginClient() {
         throw new Error("E-mail ou senha inválidos.");
       }
       const data = (await res.json()) as { jwt: string };
-      localStorage.setItem("gym_jwt", data.jwt);
+      localStorage.setItem(JWT_STORAGE_KEY, data.jwt);
       router.push("/admin/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar.");

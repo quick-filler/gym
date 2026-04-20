@@ -20,3 +20,11 @@ export const SITE_ORIGIN: string =
 
 export const APP_DOMAIN: string =
   process.env.NEXT_PUBLIC_APP_DOMAIN ?? "gym.app";
+
+/**
+ * localStorage key for the authenticated JWT. Used by Apollo's auth
+ * middleware (`src/lib/apollo.ts`) and the login flow
+ * (`src/app/login/LoginClient.tsx`). Always import from here — drifting
+ * keys silently break every authenticated request.
+ */
+export const JWT_STORAGE_KEY = "gym_jwt";
