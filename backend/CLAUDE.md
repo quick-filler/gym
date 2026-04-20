@@ -342,6 +342,57 @@ handled by `resolveUserAcademyId` in `src/extensions/graphql/helpers.ts`
 `resolversConfig.auth` stays `true` for every resolver that isn't
 `Query.academyBySlug`; the role check is secondary to authentication.
 
+### Dev seed + auto-login
+
+`bootstrap/seed.ts → ensureDemoDevUser` runs on every `SEED_DEMO=true`
+boot (idempotent on email) and provisions three things so a fresh
+clone is one command away from a working login:
+
+1. A users-permissions user `admin@gym-demo.com` / `gym-demo-admin`
+   (override via `DEV_USER_EMAIL` / `DEV_USER_PASSWORD`), role =
+   default `Authenticated`.
+2. The Student "Ana Costa" is linked to that user and has her
+   `role` back-filled to `academy_admin`.
+3. A Strapi admin-panel user (`:7777/admin`) with the **same**
+   credentials, so operators memorise one pair for both surfaces.
+   Password is reset on every boot, so rotating it via the UI is
+   non-sticky (feature, not bug — in dev you want predictable creds).
+
+Credentials print in a bordered banner at the top of the boot log.
+
+### CLI: `admin:create`
+
+Creates (or resets the password of) a gym admin for any academy
+without clicking through the admin UI. Talks to a **running** Strapi
+(boot it first with `npm run develop`) and upserts a
+users-permissions user + a Student linked to it with `role =
+academy_admin`. Optional flag mirrors the same credentials into the
+Strapi `/admin` panel.
+
+```bash
+npm run admin:create -- \
+  --email alice@crossfit-sp.com \
+  --password seCreT123 \
+  --name "Alice Rocha" \
+  --academy crossfit-sp
+
+# optional flags:
+#   --phone "+55 11 99999-0000"
+#   --strapi-admin                 also create/reset a Strapi /admin user
+#   --endpoint http://host:7777    default http://localhost:7777
+#   --admin-email / --admin-password  override the seeded dev admin creds
+#                                     used to authenticate against Strapi
+```
+
+Idempotent: re-runs reset the password on both sides, so this
+doubles as a password-reset tool. Exit codes: 0 success, 1 bad args,
+2 backend unreachable / academy not found.
+
+Why HTTP and not a programmatic Strapi boot? Strapi v5 boot through
+`createStrapi().load()` trips a Node 22 + koa `is-generator-function`
+incompatibility when the admin plugin registers; going over the wire
+sidesteps that entirely.
+
 ## Lifecycle Hooks
 
 `src/api/enrollment/content-types/enrollment/lifecycles.ts`:

@@ -14,6 +14,7 @@
     "config:export": "config-sync export -y",
     "config:import": "config-sync import -y",
     "config:diff": "config-sync diff",
+    "admin:create": "tsx scripts/create-gym-admin.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run tests/integration",
@@ -39,6 +40,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@vitest/expect": "^4.1.4",
+    "tsx": "^4.21.0",
     "vitest": "^4.1.4"
   },
   "engines": {

@@ -360,6 +360,10 @@ export async function ensureDemoDevUser(strapi: Core.Strapi) {
     );
   }
 
+  // Mirror the same credentials into Strapi's admin panel so operators
+  // only memorise one pair for both :7777/admin and the website login.
+  await ensureStrapiAdminUser(strapi, email, password);
+
   // Print the credentials prominently so the operator doesn't have to
   // grep source.
   const border = '═'.repeat(56);
@@ -369,4 +373,62 @@ export async function ensureDemoDevUser(strapi: Core.Strapi) {
   strapi.log.info(`          password: ${password}`);
   strapi.log.info(`          academy:  ${ana.academy?.slug ?? 'gym-demo'}`);
   strapi.log.info(border);
+}
+
+/**
+ * Ensures a Strapi admin-panel user (the /admin login, not the
+ * users-permissions one above) exists with the given credentials. If
+ * an admin with that email already exists, its password is reset so
+ * the credentials printed in the log actually work. Always assigned
+ * the super_admin role so the operator can walk the content manager.
+ *
+ * Idempotent: find-or-create, then reset password if needed.
+ */
+async function ensureStrapiAdminUser(
+  strapi: Core.Strapi,
+  email: string,
+  password: string,
+) {
+  const roleService: any = strapi.service('admin::role');
+  const userService: any = strapi.service('admin::user');
+  const authService: any = strapi.service('admin::auth');
+
+  const superAdminRole = await roleService.getSuperAdmin();
+  if (!superAdminRole) {
+    strapi.log.warn(
+      '[seed] super-admin role not found — skipping admin user provisioning',
+    );
+    return;
+  }
+
+  const existing = await strapi.db
+    .query('admin::user')
+    .findOne({ where: { email } });
+
+  if (existing) {
+    // Reset password so the banner credentials always work, even if
+    // someone rotated the password via the UI.
+    const hashedPassword = await authService.hashPassword(password);
+    await strapi.db.query('admin::user').update({
+      where: { id: existing.id },
+      data: {
+        password: hashedPassword,
+        isActive: true,
+        blocked: false,
+      },
+    });
+    strapi.log.info(`[seed] reset Strapi admin password for ${email}`);
+    return;
+  }
+
+  await userService.create({
+    firstname: 'Gym',
+    lastname: 'Admin',
+    email,
+    password,
+    isActive: true,
+    blocked: false,
+    roles: [superAdminRole.id],
+  });
+  strapi.log.info(`[seed] created Strapi admin ${email}`);
 }
