@@ -19,10 +19,10 @@ function DependentRow({ dep }: { dep: Dependent }) {
   return (
     <div className="flex items-center gap-3 p-3 rounded-xl bg-paper-50">
       <div
-        className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 bg-paper-2"
+        className="w-10 h-10 rounded-full flex items-center justify-center text-ink-500 shrink-0 bg-paper-2"
         aria-hidden
       >
-        {dep.gender === "girl" ? "👧" : "👦"}
+        <Icon name="user" size="lg" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="font-semibold text-ink-900 text-[0.9rem] truncate">

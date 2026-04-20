@@ -43,7 +43,14 @@ export type IconName =
   | "eye-off"
   | "link"
   | "globe"
-  | "palette";
+  | "palette"
+  | "droplet"
+  | "leaf"
+  | "sparkles"
+  | "building"
+  | "book"
+  | "flame"
+  | "heart-pulse";
 
 type Size = "sm" | "md" | "lg" | "xl";
 

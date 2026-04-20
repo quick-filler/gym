@@ -275,14 +275,16 @@ export interface WorkoutStudent {
 
 export type WorkoutTab = "active" | "assessments" | "archived";
 
+export type WorkoutIcon = "dumbbell" | "zap" | "droplet" | "flame";
+
 export interface WorkoutPlanCard {
   id: string;
   name: string;
   exerciseCount: number;
   createdAt: string; // "14/03"
   instructorName: string;
-  iconEmoji: string;
-  iconBg: string; // tailwind bg-* class or hex
+  icon: WorkoutIcon;
+  iconBg: string; // css color for icon background tile
   student: WorkoutStudent;
   exercises: WorkoutExercise[];
   status: "active" | "archived";

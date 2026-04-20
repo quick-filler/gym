@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
 
 export function Brand({
@@ -16,8 +17,8 @@ export function Brand({
         className,
       )}
     >
-      <span className="w-8 h-8 rounded-[9px] bg-ink-900 text-paper flex items-center justify-center text-[1.1rem]">
-        ◆
+      <span className="w-8 h-8 rounded-[9px] bg-ink-900 text-paper flex items-center justify-center">
+        <Icon name="dumbbell" />
       </span>
       Gym
     </Link>

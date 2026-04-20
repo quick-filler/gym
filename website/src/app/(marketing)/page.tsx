@@ -239,17 +239,17 @@ function HeroVisual() {
 function SegmentHighlights() {
   const items = [
     {
-      emoji: "🏊",
+      icon: "droplet" as const,
       title: "Para escolas de natação",
       desc: "Controle da piscina com registro de cloro, pH, temperatura, ocupação e histórico das medições.",
     },
     {
-      emoji: "🏢",
+      icon: "building" as const,
       title: "Para pilates e studios",
       desc: "Controle de salas, estúdios, recursos físicos e bloqueio de conflitos na agenda por espaço.",
     },
     {
-      emoji: "📚",
+      icon: "book" as const,
       title: "Para operações com acompanhamento",
       desc: "Evolução do aluno, reposições, documentos e comunicação organizados em um único sistema.",
     },
@@ -270,8 +270,8 @@ function SegmentHighlights() {
         <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
           {items.map((item) => (
             <Card key={item.title} className="p-7">
-              <div className="text-[2.25rem] mb-4 leading-none">
-                {item.emoji}
+              <div className="w-12 h-12 rounded-xl bg-flame-50 text-flame flex items-center justify-center mb-5">
+                <Icon name={item.icon} size="lg" />
               </div>
               <h3 className="font-display text-[1.2rem] font-semibold text-ink-900 mb-2">
                 {item.title}
@@ -571,27 +571,27 @@ function HowItWorks() {
 function Segments() {
   const items = [
     {
-      emoji: "🏋️",
+      icon: "dumbbell" as const,
       title: "Academia",
       desc: "Agenda, presença, financeiro, treinos e gestão de alunos em um só lugar.",
     },
     {
-      emoji: "🏊",
+      icon: "droplet" as const,
       title: "Escola de Natação",
       desc: "Dependentes, documentos, presença confirmada, piscina e reposição de aula.",
     },
     {
-      emoji: "🧘",
+      icon: "leaf" as const,
       title: "Pilates",
       desc: "Agenda por turma, controle de recursos, documentos e acompanhamento do aluno.",
     },
     {
-      emoji: "🩰",
+      icon: "sparkles" as const,
       title: "Ballet",
       desc: "Dependentes, evolução pedagógica, calendário e gestão de aulas e responsáveis.",
     },
     {
-      emoji: "🏢",
+      icon: "building" as const,
       title: "Studios",
       desc: "Uma operação mais enxuta, organizada e rápida para negócios de diferentes formatos.",
     },
@@ -612,8 +612,8 @@ function Segments() {
         <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
           {items.map((item) => (
             <Card key={item.title} className="p-7">
-              <div className="text-[2.25rem] mb-4 leading-none">
-                {item.emoji}
+              <div className="w-12 h-12 rounded-xl bg-flame-50 text-flame flex items-center justify-center mb-5">
+                <Icon name={item.icon} size="lg" />
               </div>
               <h3 className="font-display text-[1.2rem] font-semibold text-ink-900 mb-2">
                 {item.title}
@@ -676,7 +676,7 @@ function PricingPreview() {
               key={plan.name}
               className={
                 plan.featured
-                  ? "relative rounded-[var(--radius-lg)] bg-ink-900 text-paper border border-ink-700 p-10 shadow-[var(--shadow-gym-3)] md:scale-[1.02] flex flex-col"
+                  ? "relative rounded-[var(--radius-lg)] bg-ink-900 text-paper border border-ink-900 p-10 shadow-[var(--shadow-gym-3)] -translate-y-3 flex flex-col"
                   : "rounded-[var(--radius-lg)] bg-white border border-line p-10 shadow-[var(--shadow-gym-1)] flex flex-col"
               }
             >
@@ -717,7 +717,7 @@ function PricingPreview() {
                 variant={plan.featured ? "flame" : "ink"}
                 block
                 href="/contact"
-                className="mt-auto pt-0"
+                className="mt-auto"
               >
                 Quero uma demonstração
               </Button>

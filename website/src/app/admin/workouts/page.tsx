@@ -16,11 +16,11 @@ function WorkoutCard({ plan }: { plan: WorkoutPlanCard }) {
     <Card className="p-0 overflow-hidden flex flex-col">
       <div className="flex items-center gap-3.5 p-5 border-b border-line">
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-[1.5rem] shrink-0"
+          className="w-12 h-12 rounded-xl flex items-center justify-center text-flame shrink-0"
           style={{ background: plan.iconBg }}
           aria-hidden
         >
-          {plan.iconEmoji}
+          <Icon name={plan.icon} size="lg" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-ink-900 text-[0.95rem] truncate">

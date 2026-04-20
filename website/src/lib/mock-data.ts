@@ -754,7 +754,7 @@ export const MOCK_WORKOUTS: WorkoutsData = {
       exerciseCount: 5,
       createdAt: "14/03",
       instructorName: "Rafael",
-      iconEmoji: "🏋️",
+      icon: "dumbbell",
       iconBg: "#fde2d0",
       student: {
         initials: "JS",
@@ -773,7 +773,7 @@ export const MOCK_WORKOUTS: WorkoutsData = {
       exerciseCount: 6,
       createdAt: "14/03",
       instructorName: "Rafael",
-      iconEmoji: "🦵",
+      icon: "zap",
       iconBg: "#e0f2fe",
       student: {
         initials: "JS",
@@ -792,7 +792,7 @@ export const MOCK_WORKOUTS: WorkoutsData = {
       exerciseCount: 4,
       createdAt: "01/04",
       instructorName: "Carla",
-      iconEmoji: "🏊",
+      icon: "droplet",
       iconBg: "#d1fae5",
       student: {
         initials: "SC",
@@ -811,7 +811,7 @@ export const MOCK_WORKOUTS: WorkoutsData = {
       exerciseCount: 7,
       createdAt: "02/04",
       instructorName: "Carlos",
-      iconEmoji: "🥊",
+      icon: "flame",
       iconBg: "#fde2d0",
       student: {
         initials: "ML",
