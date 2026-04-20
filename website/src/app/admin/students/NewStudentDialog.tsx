@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { Field, Input, Select } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
+import { PhoneInput } from "@/components/ui/PhoneInput";
 import { USE_MOCKS } from "@/lib/config";
+import { DEFAULT_COUNTRY, toStored, type Country } from "@/lib/phone";
 
 const CREATE_STUDENT = graphql(`
   mutation AdminCreateStudent($data: StudentInput!) {
@@ -31,7 +33,8 @@ export function NewStudentDialog({
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phoneDigits, setPhoneDigits] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [role, setRole] = useState<"member" | "instructor" | "academy_admin">(
     "member",
   );
@@ -41,7 +44,8 @@ export function NewStudentDialog({
   function reset() {
     setName("");
     setEmail("");
-    setPhone("");
+    setPhoneDigits("");
+    setPhoneCountry(DEFAULT_COUNTRY);
     setRole("member");
     setError(null);
   }
@@ -58,12 +62,13 @@ export function NewStudentDialog({
     }
 
     try {
+      const storedPhone = toStored(phoneCountry, phoneDigits);
       await createStudent({
         variables: {
           data: {
             name,
             email,
-            phone: phone || undefined,
+            phone: storedPhone || undefined,
             role,
             status: "active",
           },
@@ -103,12 +108,12 @@ export function NewStudentDialog({
             placeholder="ana@email.com"
           />
         </Field>
-        <Field label="Telefone" help="Opcional">
-          <Input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="(11) 98765-4321"
+        <Field label="Telefone" help="Opcional — usado para avisos urgentes">
+          <PhoneInput
+            country={phoneCountry}
+            onCountryChange={setPhoneCountry}
+            value={phoneDigits}
+            onChange={setPhoneDigits}
           />
         </Field>
         <Field label="Papel na academia">

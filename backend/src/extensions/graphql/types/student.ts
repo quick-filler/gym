@@ -173,8 +173,14 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.field('createStudent', {
         type: 'Student',
         args: { data: nexus.nonNull(nexus.arg({ type: 'StudentInput' })) },
-        resolve: async (_root: any, args: any) => {
-          return await strapi.documents(UID).create({ data: args.data });
+        resolve: async (_root: any, args: any, ctx: any) => {
+          // Default academy to the caller's so a new student always
+          // ends up in the same tenant the admin is viewing — otherwise
+          // the students() list would filter it out.
+          const academyId = await resolveUserAcademyId(strapi, ctx);
+          return await strapi.documents(UID).create({
+            data: { ...args.data, academy: args.data.academy ?? academyId },
+          });
         },
       });
 

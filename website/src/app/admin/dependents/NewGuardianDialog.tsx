@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { Field, Input } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
+import { PhoneInput } from "@/components/ui/PhoneInput";
 import { USE_MOCKS } from "@/lib/config";
+import { DEFAULT_COUNTRY, toStored, type Country } from "@/lib/phone";
 
 const CREATE_GUARDIAN = graphql(`
   mutation AdminCreateGuardianStudent($data: StudentInput!) {
@@ -31,14 +33,16 @@ export function NewGuardianDialog({
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phoneDigits, setPhoneDigits] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [error, setError] = useState<string | null>(null);
   const [createGuardian, { loading }] = useMutation(CREATE_GUARDIAN);
 
   function reset() {
     setName("");
     setEmail("");
-    setPhone("");
+    setPhoneDigits("");
+    setPhoneCountry(DEFAULT_COUNTRY);
     setError(null);
   }
 
@@ -54,12 +58,13 @@ export function NewGuardianDialog({
     }
 
     try {
+      const storedPhone = toStored(phoneCountry, phoneDigits);
       await createGuardian({
         variables: {
           data: {
             name,
             email,
-            phone: phone || undefined,
+            phone: storedPhone || undefined,
             role: "member",
             status: "active",
             isGuardian: true,
@@ -101,11 +106,11 @@ export function NewGuardianDialog({
           />
         </Field>
         <Field label="Telefone" help="Usado para avisos urgentes sobre os dependentes">
-          <Input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="(11) 98765-4321"
+          <PhoneInput
+            country={phoneCountry}
+            onCountryChange={setPhoneCountry}
+            value={phoneDigits}
+            onChange={setPhoneDigits}
           />
         </Field>
         {error && <div className="text-[0.82rem] text-rose mb-3">{error}</div>}

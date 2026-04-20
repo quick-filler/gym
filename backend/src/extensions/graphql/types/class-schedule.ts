@@ -122,8 +122,11 @@ export function buildClassSchedule({ nexus, strapi }: { nexus: any; strapi: Core
       t.field('createClassSchedule', {
         type: 'ClassSchedule',
         args: { data: nexus.nonNull(nexus.arg({ type: 'ClassScheduleInput' })) },
-        resolve: async (_root: any, args: any) => {
-          return await strapi.documents(UID).create({ data: args.data });
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const academyId = await resolveUserAcademyId(strapi, ctx);
+          return await strapi.documents(UID).create({
+            data: { ...args.data, academy: args.data.academy ?? academyId },
+          });
         },
       });
 

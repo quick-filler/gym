@@ -25,6 +25,7 @@ import type {
   WorkoutPlanCard,
   WorkoutsData,
 } from "./types";
+import { formatPhoneForDisplay } from "./phone";
 
 /* ------------------------------------------------------------------
  * Shared helpers
@@ -221,7 +222,7 @@ export function mapStudents(
         id: s.documentId ?? "",
         name: s.name ?? "",
         email: s.email ?? "",
-        phone: s.phone ?? "",
+        phone: formatPhoneForDisplay(s.phone),
         plan: enrolled?.plan?.name ?? "—",
         planPrice: `R$ ${price.toLocaleString("pt-BR", {
           minimumFractionDigits: 2,
@@ -371,7 +372,7 @@ export function mapAcademy(a: RawAcademy): AcademySettings {
   return {
     name: a.name,
     email: a.email ?? "",
-    phone: a.phone ?? "",
+    phone: formatPhoneForDisplay(a.phone),
     address: a.address ?? "",
     slug: a.slug,
     logoUrl: a.logo?.url ?? undefined,
@@ -502,7 +503,7 @@ export function mapGuardians(
           g.guardian.id + "x",
         )})`,
         email: g.guardian.email,
-        phone: g.guardian.phone ?? "",
+        phone: formatPhoneForDisplay(g.guardian.phone),
       },
       dependents: g.dependents.map((d) => ({
         id: d.id,

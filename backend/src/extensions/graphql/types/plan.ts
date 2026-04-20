@@ -94,8 +94,11 @@ export function buildPlan({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }
       t.field('createPlan', {
         type: 'Plan',
         args: { data: nexus.nonNull(nexus.arg({ type: 'PlanInput' })) },
-        resolve: async (_root: any, args: any) => {
-          return await strapi.documents(UID).create({ data: args.data });
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const academyId = await resolveUserAcademyId(strapi, ctx);
+          return await strapi.documents(UID).create({
+            data: { ...args.data, academy: args.data.academy ?? academyId },
+          });
         },
       });
 
