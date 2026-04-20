@@ -276,27 +276,50 @@ See `./dev.sh --help` for session commands (`--detach`, `--kill`).
 
 ## Testing
 
-Each sub-project ships a **Vitest** test suite covering the pure-logic
-layer (formatters, aggregation helpers, mock-mode hook shapes). Run
-them individually:
+Each sub-project ships a **Vitest** suite. Tests live co-located with
+the module they cover (`*.test.ts` / `*.test.tsx` next to `*.ts`).
 
 ```bash
-cd backend && npm test    # 26 tests — aggregate helpers (BRL, monthWindow, …)
-cd website && npm test    # 20 tests — utils + every useX hook in mock mode
+cd backend && npm test    # 36 tests — 26 unit (helpers) + 10 integration (gql)
+cd website && npm test    # 99 tests — utils + mappers + hooks + components
 cd app     && npm test    # 16 tests — format + theme helpers
 ```
 
-`npm run test:watch` is available in each project for TDD. Tests live
-co-located with the module they cover (`*.test.ts` next to `*.ts`).
+`npm run test:watch` is available in each project for TDD.
 
-Scope intentionally excluded for now:
-- Backend integration tests that boot Strapi against a test DB
-- Playwright / RTL page-rendering tests
-- Expo screen rendering (needs the jest-expo preset — heavier)
+### What each layer covers
 
-The pure-logic layer catches the bulk of regressions introduced by
-schema drift, formatter changes, or a mis-refactored mock fixture
-without requiring a database or a headless browser in CI.
+| Layer | Suite | What |
+|---|---|---|
+| L1 pure logic | `backend/src/extensions/graphql/aggregate-helpers.test.ts` | BRL formatters, `monthWindow`, DST-safe `weekdayISO`, `initialsFor`, `fmtDateBR`, month labels, category labels |
+| L1 pure logic | `website/src/lib/utils.test.ts` | `cn` class joiner, `formatBRL`, `formatDate` |
+| L1 pure logic | `app/lib/format.test.ts`, `app/lib/theme.test.ts` | `monthlyBRL`, `fmtDateBR`, `ageFrom` (with faked clock), `withAlpha`, palette integrity |
+| L2 wire mappers | `website/src/lib/mappers.test.ts` | GraphQL→domain mappers for every admin hook; enum coercion, null handling, gradient/initials/color derivation |
+| L2 mock-mode | `website/src/lib/hooks.test.tsx` | Every `useX` renders the MOCK fixture in-shape, guards against mock↔type drift |
+| L4 components | `website/src/components/**/*.test.tsx` | Button, Pill, MetricCard, Avatar, StatusPill — variants + labels + colors |
+| L4 page smoke | `website/src/app/admin/dre/page.test.tsx` | Renders a full admin page in mock mode, asserts key copy appears |
+| L3 backend integration | `backend/tests/integration/graphql.test.ts` | Hits a live Strapi at `GRAPHQL_TEST_ENDPOINT` (default `localhost:7777`). Tests public `academyBySlug`, auth-required resolvers refuse anonymous callers, schema introspection exposes every required Query/type. **Skips gracefully when Strapi is unreachable** so `npm test` stays green in CI. Run `npm run test:integration` to fail fast when you expect a backend. |
+
+### Running integration tests
+
+```bash
+# Terminal A — boot backend once (idempotent if SEED_DEMO already ran)
+cd backend && npm run develop
+
+# Terminal B — run against the live instance
+cd backend && npm run test:integration
+# or: GRAPHQL_TEST_ENDPOINT=https://staging.gym.app/graphql npm run test:integration
+```
+
+### Intentionally not in scope
+
+- Full page tests for every marketing + admin page — too much copy to
+  assert; high churn, low signal. DRE stands in as the structural
+  smoke test.
+- Expo screen rendering — needs jest-expo (RN bundler preset). Pure
+  helpers are covered; screen tests are follow-up work.
+- Asaas webhook end-to-end — requires a sandbox Asaas account and
+  signature mocking; defer until the payment flow gets more traffic.
 
 ## Deployment
 
