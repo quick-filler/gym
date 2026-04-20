@@ -34,13 +34,9 @@ import {
 } from 'lucide-react-native';
 
 import { useDashboard } from '../hooks/useDashboard';
-import { MOCK_DEPENDENTS } from '../lib/mock-data';
+import { useDependents } from '../hooks/useDependents';
 import { theme, withAlpha } from '../lib/theme';
-import type {
-  DependentRecord,
-  DependentStatus,
-  DependentsData,
-} from '../lib/types';
+import type { DependentRecord, DependentStatus } from '../lib/types';
 
 const STATUS_LABEL: Record<DependentStatus, string> = {
   active: 'Ativa',
@@ -58,11 +54,25 @@ const STATUS_TONE: Record<
 };
 
 export default function DependentsScreen() {
-  const { data } = useDashboard();
-  const accent = data?.academy.primaryColor ?? theme.ink900;
-  const academyName = data?.academy.name ?? 'Gym';
+  const { data: dashData } = useDashboard();
+  const { data: payload, loading } = useDependents();
+  const accent = dashData?.academy.primaryColor ?? theme.ink900;
+  const academyName = payload?.guardianAcademy || dashData?.academy.name || 'Gym';
 
-  const payload: DependentsData = MOCK_DEPENDENTS;
+  if (loading || !payload) {
+    return (
+      <SafeAreaView
+        edges={['top']}
+        style={[styles.safe, { backgroundColor: accent }]}
+      >
+        <StatusBar barStyle="light-content" backgroundColor={accent} />
+        <View style={[styles.header, { backgroundColor: accent }]}>
+          <Text style={styles.title}>Meus dependentes</Text>
+          <Text style={styles.sub}>Carregando…</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
