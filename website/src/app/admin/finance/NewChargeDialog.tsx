@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { graphql } from "@/gql";
 import { Button } from "@/components/ui/Button";
@@ -9,21 +9,60 @@ import { Field, Input, Select } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { USE_MOCKS } from "@/lib/config";
 
-const ACTIVE_ENROLLMENTS = graphql(`
-  query ActiveEnrollmentsForCharge {
-    enrollments(pagination: { limit: 100 }) {
+/**
+ * Data fetched when the dialog opens:
+ *
+ * - students         — every student in the admin's academy, each with
+ *                      their active enrollment + plan. We list *all*
+ *                      students (not just enrolled ones) so operators
+ *                      see the same roster as /admin/students.
+ * - plans            — the academy's plan catalog. Used when the
+ *                      selected student has no enrollment yet, or when
+ *                      the operator wants to bill a one-off plan.
+ *
+ * On submit, if the picked (student, plan) doesn't already have an
+ * active enrollment, the dialog creates one on the fly before creating
+ * the payment. This keeps the "Adicionar aluno" → "Nova cobrança" flow
+ * working without forcing a separate "enroll" step.
+ */
+const FETCH_FOR_CHARGE = graphql(`
+  query FetchForCharge {
+    students(pagination: { limit: 500 }) {
+      documentId
+      name
+      email
+      status
+      enrollments {
+        documentId
+        status
+        plan {
+          documentId
+          name
+          price
+          billingCycle
+        }
+      }
+    }
+    plans(pagination: { limit: 100 }) {
+      documentId
+      name
+      price
+      billingCycle
+      isActive
+    }
+  }
+`);
+
+const CREATE_ENROLLMENT = graphql(`
+  mutation AdminCreateEnrollment($data: EnrollmentInput!) {
+    createEnrollment(data: $data) {
       documentId
       status
-      student {
-        documentId
-        name
-        email
-      }
       plan {
         documentId
-        name
-        price
-        billingCycle
+      }
+      student {
+        documentId
       }
     }
   }
@@ -50,17 +89,15 @@ export function NewChargeDialog({
   onClose: () => void;
   onCreated?: () => void;
 }) {
-  // Default to today so the new charge lands in the current month's
-  // window — financeOverview / dreOverview both filter by dueDate ∈
-  // [monthStart, nextMonthStart), and picking a future date made the
-  // row silently invisible in the list right after creation.
   const todayIso = new Date().toISOString().slice(0, 10);
 
-  const { data: enrollmentData } = useQuery(ACTIVE_ENROLLMENTS, {
+  const { data } = useQuery(FETCH_FOR_CHARGE, {
     skip: USE_MOCKS || !open,
+    fetchPolicy: "cache-and-network",
   });
 
-  const [enrollmentId, setEnrollmentId] = useState("");
+  const [studentId, setStudentId] = useState("");
+  const [planId, setPlanId] = useState("");
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState(todayIso);
   const [method, setMethod] = useState<"pix" | "credit_card" | "boleto">("pix");
@@ -68,19 +105,44 @@ export function NewChargeDialog({
     "pending",
   );
   const [error, setError] = useState<string | null>(null);
-  const [createPayment, { loading }] = useMutation(CREATE_PAYMENT);
+  const [createEnrollment, { loading: enrollingLoading }] =
+    useMutation(CREATE_ENROLLMENT);
+  const [createPayment, { loading: payingLoading }] =
+    useMutation(CREATE_PAYMENT);
+  const loading = enrollingLoading || payingLoading;
 
-  const options =
-    enrollmentData?.enrollments
-      ?.filter((e): e is NonNullable<typeof e> => !!e && e.status === "active")
-      .map((e) => ({
-        id: e.documentId,
-        label: `${e.student?.name ?? "—"} · ${e.plan?.name ?? "—"}`,
-        price: e.plan?.price ?? 0,
-      })) ?? [];
+  const students = useMemo(
+    () =>
+      (data?.students ?? []).filter(
+        (s): s is NonNullable<typeof s> => !!s && s.status !== "inactive",
+      ),
+    [data],
+  );
+  const plans = useMemo(
+    () =>
+      (data?.plans ?? []).filter(
+        (p): p is NonNullable<typeof p> => !!p && p.isActive !== false,
+      ),
+    [data],
+  );
+
+  const selectedStudent = students.find((s) => s.documentId === studentId);
+  const selectedPlan = plans.find((p) => p.documentId === planId);
+
+  /** Returns an existing enrollment matching (student, plan) if any. */
+  function findExistingEnrollment(): string | null {
+    if (!selectedStudent || !selectedPlan) return null;
+    const match = selectedStudent.enrollments?.find(
+      (e) =>
+        e?.plan?.documentId === selectedPlan.documentId &&
+        e.status === "active",
+    );
+    return match?.documentId ?? null;
+  }
 
   function reset() {
-    setEnrollmentId("");
+    setStudentId("");
+    setPlanId("");
     setAmount("");
     setDueDate(todayIso);
     setMethod("pix");
@@ -88,10 +150,13 @@ export function NewChargeDialog({
     setError(null);
   }
 
-  function handleEnrollmentChange(id: string) {
-    setEnrollmentId(id);
-    const match = options.find((o) => o.id === id);
-    if (match && !amount) setAmount(String(match.price));
+  function handlePlanChange(nextPlanId: string) {
+    setPlanId(nextPlanId);
+    const next = plans.find((p) => p.documentId === nextPlanId);
+    // Overwrite the amount when the user hasn't customised it yet, or
+    // when switching plans (predictable default > preserving a stale
+    // value from a different plan).
+    if (next) setAmount(String(next.price));
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -106,16 +171,30 @@ export function NewChargeDialog({
     }
 
     const amt = Number(amount);
-    if (!enrollmentId) {
-      setError("Selecione uma matrícula.");
-      return;
-    }
-    if (!amt || amt < 0) {
-      setError("Valor inválido.");
-      return;
-    }
+    if (!studentId) return setError("Selecione um aluno.");
+    if (!planId) return setError("Selecione um plano.");
+    if (!amt || amt < 0) return setError("Valor inválido.");
 
     try {
+      let enrollmentId = findExistingEnrollment();
+      if (!enrollmentId) {
+        const res = await createEnrollment({
+          variables: {
+            data: {
+              student: studentId,
+              plan: planId,
+              startDate: todayIso,
+              status: "active",
+              paymentMethod: method,
+            },
+          },
+        });
+        enrollmentId = res.data?.createEnrollment?.documentId ?? null;
+        if (!enrollmentId) {
+          throw new Error("Falha ao criar matrícula.");
+        }
+      }
+
       await createPayment({
         variables: {
           data: {
@@ -127,6 +206,7 @@ export function NewChargeDialog({
           },
         },
       });
+
       onCreated?.();
       reset();
       onClose();
@@ -135,36 +215,67 @@ export function NewChargeDialog({
     }
   }
 
+  const enrollmentExists = !!findExistingEnrollment();
+
   return (
     <Dialog
       open={open}
       onClose={onClose}
       title="Nova cobrança"
-      subtitle="Gere uma cobrança manual para uma matrícula ativa. Cobranças recorrentes são criadas automaticamente pelo Asaas."
+      subtitle="Escolha o aluno e o plano. Se o aluno ainda não estiver matriculado, a matrícula é criada automaticamente."
     >
       <form id="new-charge-form" onSubmit={handleSubmit}>
         <Field
-          label="Aluno (matrícula ativa)"
+          label="Aluno"
           help={
-            options.length === 0
-              ? "Nenhuma matrícula ativa. Cadastre um aluno e matricule-o em um plano antes de gerar cobrança."
-              : "Escolha o aluno. O valor é preenchido automaticamente pelo preço do plano."
+            students.length === 0
+              ? "Nenhum aluno cadastrado nesta academia ainda."
+              : undefined
           }
         >
           <Select
             required
-            value={enrollmentId}
-            onChange={(e) => handleEnrollmentChange(e.target.value)}
-            disabled={options.length === 0}
+            value={studentId}
+            onChange={(e) => setStudentId(e.target.value)}
+            disabled={students.length === 0}
           >
             <option value="">Selecione um aluno…</option>
-            {options.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.label}
+            {students.map((s) => (
+              <option key={s.documentId} value={s.documentId}>
+                {s.name}
+                {s.email ? ` · ${s.email}` : ""}
               </option>
             ))}
           </Select>
         </Field>
+
+        <Field
+          label="Plano"
+          help={
+            studentId
+              ? enrollmentExists
+                ? "Aluno já tem matrícula ativa neste plano — a cobrança será lançada nela."
+                : "Uma nova matrícula será criada com este plano."
+              : plans.length === 0
+                ? "Nenhum plano ativo. Cadastre um plano antes de gerar cobrança."
+                : undefined
+          }
+        >
+          <Select
+            required
+            value={planId}
+            onChange={(e) => handlePlanChange(e.target.value)}
+            disabled={plans.length === 0}
+          >
+            <option value="">Selecione um plano…</option>
+            {plans.map((p) => (
+              <option key={p.documentId} value={p.documentId}>
+                {p.name} · R$ {p.price.toLocaleString("pt-BR")} ({p.billingCycle})
+              </option>
+            ))}
+          </Select>
+        </Field>
+
         <div className="grid grid-cols-2 gap-4">
           <Field label="Valor (R$)">
             <Input
