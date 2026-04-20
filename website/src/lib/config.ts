@@ -11,10 +11,10 @@ export const USE_MOCKS: boolean =
   (process.env.NEXT_PUBLIC_USE_MOCKS ?? "true").toLowerCase() === "true";
 
 export const GRAPHQL_ENDPOINT: string =
-  process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? "http://localhost:1337/graphql";
+  process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? "http://localhost:7777/graphql";
 
 export const SITE_ORIGIN: string =
-  process.env.NEXT_PUBLIC_SITE_ORIGIN ?? "http://localhost:3000";
+  process.env.NEXT_PUBLIC_SITE_ORIGIN ?? "http://localhost:9999";
 
 export const APP_DOMAIN: string =
   process.env.NEXT_PUBLIC_APP_DOMAIN ?? "gym.app";

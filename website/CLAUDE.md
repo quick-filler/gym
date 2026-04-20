@@ -32,7 +32,7 @@ cd website
 npm install
 cp .env.local.example .env.local    # defaults ship in demo mode
 npm run codegen                     # generates src/gql/
-npm run dev                         # http://localhost:3000
+npm run dev                         # http://localhost:9999
 ```
 
 Demo mode (`NEXT_PUBLIC_USE_MOCKS=true`) is the default so a fresh clone

@@ -22,7 +22,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_ORIGIN ?? "http://localhost:3000",
+    process.env.NEXT_PUBLIC_SITE_ORIGIN ?? "http://localhost:9999",
   ),
   title: {
     default: "Gym — Sistema de gestão para academias modernas",

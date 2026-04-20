@@ -57,7 +57,7 @@ RUN apk add --no-cache vips tini
 
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
-    PORT=1337
+    PORT=7777
 
 # In a TypeScript project, `strapi start` reads every file — config,
 # schema JSON, compiled JS — from `dist/`. It locates that directory by
@@ -85,6 +85,6 @@ COPY --from=builder   --chown=node:node /opt/app/dist ./dist
 COPY --from=builder   --chown=node:node /opt/app/favicon.png ./favicon.png
 
 USER node
-EXPOSE 1337
+EXPOSE 7777
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["npm", "run", "start"]

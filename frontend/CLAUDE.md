@@ -170,7 +170,7 @@ export const config = {
 
 ```ts
 // lib/api.ts
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:1337";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7777";
 
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const token = typeof window !== "undefined" ? localStorage.getItem("jwt") : null;

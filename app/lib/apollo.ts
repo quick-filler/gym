@@ -16,7 +16,7 @@ import { Observable } from '@apollo/client';
 import * as SecureStore from 'expo-secure-store';
 
 const GRAPHQL_ENDPOINT =
-  process.env.EXPO_PUBLIC_GRAPHQL_ENDPOINT ?? 'http://localhost:1337/graphql';
+  process.env.EXPO_PUBLIC_GRAPHQL_ENDPOINT ?? 'http://localhost:7777/graphql';
 
 const httpLink = new HttpLink({
   uri: GRAPHQL_ENDPOINT,

@@ -179,7 +179,7 @@ schema layout.
 ```env
 # Server
 HOST=0.0.0.0
-PORT=1337
+PORT=7777
 
 # Secrets — generate with: openssl rand -base64 32
 APP_KEYS=...
@@ -222,8 +222,8 @@ GRAPHQL_PLAYGROUND=true
 ### Frontend (`website/.env.local` and `app/.env.local`)
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:1337
-NEXT_PUBLIC_GRAPHQL_ENDPOINT=http://localhost:1337/graphql
+NEXT_PUBLIC_API_URL=http://localhost:7777
+NEXT_PUBLIC_GRAPHQL_ENDPOINT=http://localhost:7777/graphql
 NEXT_PUBLIC_APP_DOMAIN=gym.app
 ```
 
@@ -239,8 +239,8 @@ NEXT_PUBLIC_APP_DOMAIN=gym.app
 4. On first backend boot: `SEED_DEMO=true` seeds the "Gym Demo" academy,
    two plans, three students, two schedules and a sample workout.
 
-Admin: http://localhost:1337/admin
-GraphQL playground: http://localhost:1337/graphql (dev only)
+Admin: http://localhost:7777/admin
+GraphQL playground: http://localhost:7777/graphql (dev only)
 
 See `./dev.sh --help` for session commands (`--detach`, `--kill`).
 

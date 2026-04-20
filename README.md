@@ -67,10 +67,10 @@ Missing directories are skipped.
 
 After boot:
 
-- **Strapi admin**: http://localhost:1337/admin
-- **GraphQL playground** (dev only): http://localhost:1337/graphql
-- **Asaas webhook**: `POST http://localhost:1337/api/payments/webhook`
-- **Website**: http://localhost:3000 — landing, pricing, features,
+- **Strapi admin**: http://localhost:7777/admin
+- **GraphQL playground** (dev only): http://localhost:7777/graphql
+- **Asaas webhook**: `POST http://localhost:7777/api/payments/webhook`
+- **Website**: http://localhost:9999 — landing, pricing, features,
   about, contact, login, and the admin panel (dashboard, students,
   finance, schedule, settings). All pages ship with demo-mode fixtures
   so a fresh clone works without a running backend.

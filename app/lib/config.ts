@@ -27,8 +27,8 @@ export const USE_MOCKS: boolean = (
 
 /**
  * GraphQL endpoint — must be publicly reachable when `USE_MOCKS` is off.
- * Local `localhost:1337` will not work from a phone; use a tunnel
+ * Local `localhost:7777` will not work from a phone; use a tunnel
  * (ngrok, cloudflared) or a deployed staging URL.
  */
 export const GRAPHQL_ENDPOINT: string =
-  process.env.EXPO_PUBLIC_GRAPHQL_ENDPOINT ?? 'http://localhost:1337/graphql';
+  process.env.EXPO_PUBLIC_GRAPHQL_ENDPOINT ?? 'http://localhost:7777/graphql';
