@@ -61,9 +61,11 @@ export default function LandingPage() {
       <JsonLd data={faqSchema(FAQ)} />
 
       <Hero />
+      <SegmentHighlights />
       <Trust />
       <Features />
       <HowItWorks />
+      <Segments />
       <PricingPreview />
       <Testimonials />
       <Faq items={FAQ} />
@@ -84,7 +86,7 @@ function Hero() {
           <div>
             <Eyebrow>Beta aberto · Vagas limitadas</Eyebrow>
             <h1 className="font-display text-[clamp(2.5rem,6vw,4.5rem)] font-semibold tracking-[-0.03em] leading-[1.02] mt-6 text-ink-900">
-              A gestão da sua academia,{" "}
+              A gestão do seu negócio,{" "}
               <em className="font-display not-italic text-flame">
                 do seu jeito
               </em>
@@ -104,7 +106,7 @@ function Hero() {
                 <Icon name="arrow-right" />
               </Button>
               <Button variant="line" href="/features">
-                Ver demonstração
+                Ver como funciona
               </Button>
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-3 mt-8 text-[0.88rem] text-ink-500">
@@ -123,6 +125,11 @@ function Hero() {
             </div>
           </div>
           <HeroVisual />
+        </div>
+        <div className="mt-10 mx-auto max-w-[860px] text-center bg-sky-50 border border-sky-100 rounded-2xl px-5 py-4 text-ink-700 text-[0.98rem] leading-[1.7]">
+          Todos os planos incluem o mesmo sistema completo.
+          <br />
+          Você não paga por funcionalidade, e sim pelo tamanho da sua operação.
         </div>
       </Wrap>
     </section>
@@ -216,12 +223,67 @@ function HeroVisual() {
 }
 
 /* ============================================================
+   Segment highlights — segment-specific value props
+   ============================================================ */
+
+function SegmentHighlights() {
+  const items = [
+    {
+      emoji: "🏊",
+      title: "Para escolas de natação",
+      desc: "Controle da piscina com registro de cloro, pH, temperatura, ocupação e histórico das medições.",
+    },
+    {
+      emoji: "🏢",
+      title: "Para pilates e studios",
+      desc: "Controle de salas, estúdios, recursos físicos e bloqueio de conflitos na agenda por espaço.",
+    },
+    {
+      emoji: "📚",
+      title: "Para operações com acompanhamento",
+      desc: "Evolução do aluno, reposições, documentos e comunicação organizados em um único sistema.",
+    },
+  ];
+  return (
+    <section className="py-20 max-[720px]:py-14">
+      <Wrap>
+        <header className="mb-12 max-w-[720px]">
+          <SectionEyebrow>Recursos por segmento</SectionEyebrow>
+          <h2 className="font-display text-[clamp(1.8rem,3.6vw,2.6rem)] font-semibold tracking-[-0.03em] leading-[1.1]">
+            Recursos pensados para cada tipo de operação
+          </h2>
+          <p className="text-[1.05rem] text-ink-500 mt-5 max-w-[38rem]">
+            Além da base de gestão, o sistema se adapta ao seu segmento com
+            recursos específicos para o dia a dia.
+          </p>
+        </header>
+        <div className="grid grid-cols-3 gap-6 max-[880px]:grid-cols-1">
+          {items.map((item) => (
+            <Card key={item.title} className="p-8">
+              <div className="w-12 h-12 rounded-xl bg-paper-2 text-[1.5rem] flex items-center justify-center mb-5">
+                {item.emoji}
+              </div>
+              <h3 className="font-display text-[1.2rem] font-semibold text-ink-900">
+                {item.title}
+              </h3>
+              <p className="text-[0.95rem] text-ink-500 mt-3 leading-[1.6]">
+                {item.desc}
+              </p>
+            </Card>
+          ))}
+        </div>
+      </Wrap>
+    </section>
+  );
+}
+
+/* ============================================================
    Trust bar
    ============================================================ */
 
 function Trust() {
   const logos = [
-    "CrossFit SP",
+    "Gym",
     "FitHaus",
     "Studio Vida",
     "Academia Norte",
@@ -325,7 +387,7 @@ function Features() {
                 <Icon name="phone" size="lg" />
               </div>
               <h3 className="font-display text-[1.35rem] font-semibold text-paper leading-tight">
-                App white-label
+                App white-label com sua marca
               </h3>
               <p className="text-[0.92rem] text-ink-300 mt-3 leading-[1.55]">
                 A logo, as cores e o subdomínio da sua academia. O aluno baixa o
@@ -358,7 +420,7 @@ function Features() {
 
           <FeatureCell
             icon="chart"
-            title="Relatórios"
+            title="Financeiro, documentos e controle operacional"
             desc="Frequência, retenção, MRR."
             span={2}
             iconTone="flame"
@@ -493,69 +555,109 @@ function HowItWorks() {
 }
 
 /* ============================================================
+   Segments — multi-segment positioning
+   ============================================================ */
+
+function Segments() {
+  const items = [
+    {
+      emoji: "🏋️",
+      title: "Academia",
+      desc: "Agenda, presença, financeiro, treinos e gestão de alunos em um só lugar.",
+    },
+    {
+      emoji: "🏊",
+      title: "Escola de Natação",
+      desc: "Dependentes, documentos, presença confirmada, piscina e reposição de aula.",
+    },
+    {
+      emoji: "🧘",
+      title: "Pilates",
+      desc: "Agenda por turma, controle de recursos, documentos e acompanhamento do aluno.",
+    },
+    {
+      emoji: "🩰",
+      title: "Ballet",
+      desc: "Dependentes, evolução pedagógica, calendário e gestão de aulas e responsáveis.",
+    },
+    {
+      emoji: "🏢",
+      title: "Studios",
+      desc: "Uma operação mais enxuta, organizada e rápida para negócios de diferentes formatos.",
+    },
+  ];
+  return (
+    <section className="py-24 bg-paper-2 max-[720px]:py-16">
+      <Wrap>
+        <header className="mb-12 max-w-[720px]">
+          <SectionEyebrow>Segmentos</SectionEyebrow>
+          <h2 className="font-display text-[clamp(1.8rem,3.6vw,2.6rem)] font-semibold tracking-[-0.03em] leading-[1.1]">
+            Feito para diferentes tipos de operação
+          </h2>
+          <p className="text-[1.05rem] text-ink-500 mt-5 max-w-[38rem]">
+            A mesma base de gestão se adapta para academias, escolas de natação,
+            pilates, ballet e studios.
+          </p>
+        </header>
+        <div className="grid grid-cols-3 gap-6 max-[980px]:grid-cols-2 max-[640px]:grid-cols-1">
+          {items.map((item) => (
+            <Card key={item.title} className="p-8">
+              <div className="w-12 h-12 rounded-xl bg-paper-2 text-[1.5rem] flex items-center justify-center mb-5">
+                {item.emoji}
+              </div>
+              <h3 className="font-display text-[1.2rem] font-semibold text-ink-900">
+                {item.title}
+              </h3>
+              <p className="text-[0.95rem] text-ink-500 mt-3 leading-[1.6]">
+                {item.desc}
+              </p>
+            </Card>
+          ))}
+        </div>
+      </Wrap>
+    </section>
+  );
+}
+
+/* ============================================================
    Pricing preview
    ============================================================ */
 
 function PricingPreview() {
   const plans = [
     {
-      name: "Starter",
-      tagline: "Para quem está começando",
-      price: "99",
-      features: [
-        "Até 50 alunos ativos",
-        "Agenda + reservas",
-        "Cobrança via PIX e boleto",
-        "App white-label",
-        "Suporte por e-mail",
-      ],
-      cta: "Começar grátis",
+      name: "Básico",
+      capacity: "Até 80 alunos",
+      price: "167",
+      desc: "Ideal para operações menores que querem organizar a gestão com rapidez.",
       featured: false,
     },
     {
-      name: "Business",
-      tagline: "Para crescer com confiança",
-      price: "199",
-      features: [
-        "Até 200 alunos ativos",
-        "Tudo do Starter",
-        "Cartão de crédito recorrente",
-        "Relatórios financeiros",
-        "Cobrança automática de inadimplentes",
-        "Suporte WhatsApp prioritário",
-      ],
-      cta: "Começar grátis",
+      name: "Intermediário",
+      capacity: "Até 250 alunos",
+      price: "347",
+      desc: "Para negócios em crescimento que precisam de mais capacidade sem trocar de sistema.",
       featured: true,
     },
     {
-      name: "Pro",
-      tagline: "Para academias com várias unidades",
-      price: "399",
-      features: [
-        "Alunos ilimitados",
-        "Tudo do Business",
-        "Multi-unidade",
-        "CRM integrado",
-        "API + webhooks",
-        "Gerente de conta dedicado",
-      ],
-      cta: "Falar com vendas",
+      name: "Premium",
+      capacity: "Até 700 alunos",
+      price: "697",
+      desc: "Para operações maiores que precisam de escala, controle e continuidade.",
       featured: false,
     },
   ];
   return (
     <section id="pricing" className="py-24 max-[720px]:py-16">
       <Wrap>
-        <header className="mb-16 max-w-[720px]">
+        <header className="mb-12 max-w-[720px]">
           <SectionEyebrow>Preços</SectionEyebrow>
-          <h2 className="font-display text-[clamp(2rem,4vw,3rem)] font-semibold tracking-[-0.03em] leading-[1.05]">
-            Transparente. Sem fidelidade.
-            <br />
-            Sem taxa por aluno.
+          <h2 className="font-display text-[clamp(1.8rem,3.6vw,2.6rem)] font-semibold tracking-[-0.03em] leading-[1.1]">
+            Planos simples, definidos pelo número de alunos
           </h2>
-          <p className="text-[1.1rem] text-ink-500 mt-5 max-w-[38rem]">
-            Todos os planos incluem 14 dias grátis sem cartão de crédito. Mude
-            de plano ou cancele a qualquer momento.
+          <p className="text-[1.05rem] text-ink-500 mt-5 max-w-[42rem]">
+            Todos os planos usam o mesmo sistema completo. A diferença está
+            apenas na quantidade de alunos da operação.
           </p>
         </header>
         <div className="grid grid-cols-[1fr_1.1fr_1fr] gap-8 items-stretch max-[980px]:grid-cols-1">
@@ -564,8 +666,8 @@ function PricingPreview() {
               key={plan.name}
               className={
                 plan.featured
-                  ? "relative rounded-[var(--radius-lg)] bg-ink-900 text-paper border border-ink-700 p-10 shadow-[var(--shadow-gym-3)] md:scale-[1.02]"
-                  : "rounded-[var(--radius-lg)] bg-white border border-line p-10 shadow-[var(--shadow-gym-1)]"
+                  ? "relative rounded-[var(--radius-lg)] bg-ink-900 text-paper border border-ink-700 p-10 shadow-[var(--shadow-gym-3)] md:scale-[1.02] flex flex-col"
+                  : "rounded-[var(--radius-lg)] bg-white border border-line p-10 shadow-[var(--shadow-gym-1)] flex flex-col"
               }
             >
               {plan.featured && (
@@ -581,7 +683,7 @@ function PricingPreview() {
               <p
                 className={`text-[0.9rem] mt-1 ${plan.featured ? "text-ink-300" : "text-ink-500"}`}
               >
-                {plan.tagline}
+                {plan.capacity}
               </p>
               <div
                 className={`mt-6 font-display font-semibold leading-none ${plan.featured ? "text-paper" : "text-ink-900"}`}
@@ -596,30 +698,25 @@ function PricingPreview() {
                   /mês
                 </span>
               </div>
-              <ul className="mt-8 flex flex-col gap-3">
-                {plan.features.map((f) => (
-                  <li
-                    key={f}
-                    className={`flex items-center gap-2 text-[0.92rem] ${plan.featured ? "text-ink-200" : "text-ink-600"}`}
-                  >
-                    <Icon
-                      name="check"
-                      className={plan.featured ? "text-flame" : "text-emerald"}
-                    />
-                    {f}
-                  </li>
-                ))}
-              </ul>
+              <p
+                className={`text-[0.95rem] mt-6 leading-[1.7] ${plan.featured ? "text-ink-300" : "text-ink-500"}`}
+              >
+                {plan.desc}
+              </p>
               <Button
                 variant={plan.featured ? "flame" : "ink"}
                 block
-                href="/pricing"
-                className="mt-10"
+                href="/contact"
+                className="mt-auto pt-0"
               >
-                {plan.cta}
+                Quero uma demonstração
               </Button>
             </article>
           ))}
+        </div>
+        <div className="mt-10 mx-auto max-w-[860px] text-center bg-sky-50 border border-sky-100 rounded-2xl px-5 py-4 text-ink-700 text-[0.98rem] leading-[1.7]">
+          Todos os planos usam o mesmo sistema completo.
+          <br />A diferença está apenas na quantidade de alunos da operação.
         </div>
       </Wrap>
     </section>
@@ -662,7 +759,7 @@ function Testimonials() {
                   Rafael Vasconcellos
                 </div>
                 <div className="font-mono text-[0.72rem] text-ink-400 uppercase tracking-[0.06em]">
-                  CrossFit SP · Vila Mariana
+                  Gym · Vila Mariana
                 </div>
               </div>
             </div>
