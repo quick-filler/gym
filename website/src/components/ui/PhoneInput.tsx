@@ -166,7 +166,7 @@ function CountryCombobox({
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="h-full bg-paper-50 border-r border-line pl-3 pr-2 py-[0.85rem] text-[0.9rem] font-mono text-ink-700 cursor-pointer focus:outline-none hover:bg-paper-2 transition-colors inline-flex items-center gap-1"
+        className="self-stretch rounded-l-xl bg-paper-50 border-r border-line pl-3 pr-2 text-[0.9rem] font-mono text-ink-700 cursor-pointer focus:outline-none hover:bg-paper-2 transition-colors inline-flex items-center gap-1"
       >
         <span>{country.flag ?? "🌐"}</span>
         <span className="ml-1 text-ink-500 text-[0.78rem]">
