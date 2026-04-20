@@ -14,6 +14,7 @@
  */
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   COUNTRIES,
   DEFAULT_COUNTRY,
@@ -112,30 +113,59 @@ function CountryCombobox({
     country.code === "OTHER" ? country.dial : "",
   );
   const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number }>({
+    top: 0,
+    left: 0,
+  });
 
-  // Close on outside click + Escape.
+  function recompute() {
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setPopoverPos({
+      top: rect.bottom + 4, // 4px mt
+      left: rect.left,
+    });
+  }
+
+  // Close on outside click + Escape. Outside-click must check both the
+  // button *and* the popover (which now lives in a portal outside
+  // rootRef's subtree).
   useEffect(() => {
     if (!open) return;
     function onDoc(e: MouseEvent) {
-      if (!rootRef.current?.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const t = e.target as Node;
+      if (rootRef.current?.contains(t)) return;
+      if (popoverRef.current?.contains(t)) return;
+      setOpen(false);
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
+    function onScrollOrResize() {
+      recompute();
+    }
     document.addEventListener("mousedown", onDoc);
     document.addEventListener("keydown", onKey);
+    // Capture-phase scroll so any scrollable ancestor (modal body, page)
+    // triggers the recompute. Without { capture: true }, scroll events
+    // don't bubble and the popover drifts away from the button.
+    window.addEventListener("scroll", onScrollOrResize, true);
+    window.addEventListener("resize", onScrollOrResize);
     return () => {
       document.removeEventListener("mousedown", onDoc);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScrollOrResize, true);
+      window.removeEventListener("resize", onScrollOrResize);
     };
   }, [open]);
 
-  // Autofocus the search when the panel opens.
+  // Autofocus the search when the panel opens; clear query on close.
   useEffect(() => {
     if (open) {
+      recompute();
       setTimeout(() => searchRef.current?.focus(), 20);
     } else {
       setQuery("");
@@ -166,6 +196,7 @@ function CountryCombobox({
     // collapses to its content height and looks tiny next to the input.
     <div ref={rootRef} className="relative flex">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
@@ -179,117 +210,125 @@ function CountryCombobox({
         <Icon name="arrow-right" className="rotate-90 text-ink-400" />
       </button>
 
-      {open && (
-        <div
-          className="absolute left-0 top-full mt-1 z-50 bg-white border border-line rounded-xl shadow-[var(--shadow-gym-2)] w-[320px] overflow-hidden"
-          role="listbox"
-        >
-          <div className="p-2 border-b border-line bg-paper-50">
-            <div className="relative">
-              <Icon
-                name="search"
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400"
-                size="lg"
-              />
-              <input
-                ref={searchRef}
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar país ou código (+55, BR…)"
-                className="w-full pl-10 pr-3 py-2 rounded-lg bg-white border border-line-strong text-[0.88rem] text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-ink-900"
-              />
-            </div>
-          </div>
-
-          <ul className="max-h-[260px] overflow-y-auto py-1">
-            {filtered.map((c) => {
-              const active = c.code === country.code;
-              return (
-                <li key={c.code}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onPick(c);
-                      setOpen(false);
-                      setOtherMode(false);
-                    }}
-                    className={cn(
-                      "w-full flex items-center gap-2 px-3 py-2 text-left text-[0.88rem] hover:bg-paper-50 transition-colors",
-                      active && "bg-flame-50 text-flame font-medium",
-                    )}
-                    role="option"
-                    aria-selected={active}
-                  >
-                    <span className="text-[1.1rem] leading-none">
-                      {c.flag}
-                    </span>
-                    <span className="flex-1 text-ink-900 truncate">
-                      {c.name}
-                    </span>
-                    <span className="font-mono text-[0.78rem] text-ink-400">
-                      +{c.dial}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-
-            {filtered.length === 0 && (
-              <li className="px-3 py-3 text-[0.85rem] text-ink-400">
-                Nenhum país com &ldquo;{query}&rdquo;.
-              </li>
-            )}
-          </ul>
-
-          {/* "Other" row — always at the bottom so the operator has an
-              escape hatch even when the search turned up nothing. */}
-          <div className="border-t border-line p-2 bg-paper-50">
-            {!otherMode ? (
-              <button
-                type="button"
-                onClick={() => setOtherMode(true)}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-[0.88rem] text-ink-700 hover:bg-paper-2 transition-colors"
-              >
-                <span className="text-[1.1rem]">{OTHER_COUNTRY.flag}</span>
-                <span className="flex-1">Outro país…</span>
-                <Icon name="plus" className="text-ink-400" />
-              </button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="text-[1.1rem]">{OTHER_COUNTRY.flag}</span>
-                <span className="text-ink-500 text-[0.88rem]">+</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  autoFocus
-                  value={otherDial}
-                  onChange={(e) =>
-                    setOtherDial(digitsOnly(e.target.value).slice(0, 4))
-                  }
-                  placeholder="62"
-                  aria-label="Código do país"
-                  className="w-16 px-2 py-1.5 rounded-lg border border-line-strong text-[0.88rem] text-ink-900 placeholder:text-ink-300 focus:outline-none focus:border-ink-900"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      commitOther();
-                    }
-                  }}
+      {open &&
+        typeof document !== "undefined" &&
+        createPortal(
+          // Rendered in document.body so the dialog's overflow-y-auto
+          // body doesn't clip it. Positioned with fixed + the button's
+          // bounding rect — recomputed on scroll/resize (see effect).
+          <div
+            ref={popoverRef}
+            className="fixed z-[200] bg-white border border-line rounded-xl shadow-[var(--shadow-gym-3)] w-[320px] overflow-hidden"
+            style={{ top: popoverPos.top, left: popoverPos.left }}
+            role="listbox"
+          >
+            <div className="p-2 border-b border-line bg-paper-50">
+              <div className="relative">
+                <Icon
+                  name="search"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400"
+                  size="lg"
                 />
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Buscar país ou código (+55, BR…)"
+                  className="w-full pl-10 pr-3 py-2 rounded-lg bg-white border border-line-strong text-[0.88rem] text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-ink-900"
+                />
+              </div>
+            </div>
+
+            <ul className="max-h-[260px] overflow-y-auto py-1">
+              {filtered.map((c) => {
+                const active = c.code === country.code;
+                return (
+                  <li key={c.code}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onPick(c);
+                        setOpen(false);
+                        setOtherMode(false);
+                      }}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-2 text-left text-[0.88rem] hover:bg-paper-50 transition-colors",
+                        active && "bg-flame-50 text-flame font-medium",
+                      )}
+                      role="option"
+                      aria-selected={active}
+                    >
+                      <span className="text-[1.1rem] leading-none">
+                        {c.flag}
+                      </span>
+                      <span className="flex-1 text-ink-900 truncate">
+                        {c.name}
+                      </span>
+                      <span className="font-mono text-[0.78rem] text-ink-400">
+                        +{c.dial}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+
+              {filtered.length === 0 && (
+                <li className="px-3 py-3 text-[0.85rem] text-ink-400">
+                  Nenhum país com &ldquo;{query}&rdquo;.
+                </li>
+              )}
+            </ul>
+
+            {/* "Other" row — always at the bottom so the operator has an
+                escape hatch even when the search turned up nothing. */}
+            <div className="border-t border-line p-2 bg-paper-50">
+              {!otherMode ? (
                 <button
                   type="button"
-                  onClick={commitOther}
-                  disabled={!otherDial}
-                  className="px-3 py-1.5 rounded-lg bg-ink-900 text-paper text-[0.82rem] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setOtherMode(true)}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-[0.88rem] text-ink-700 hover:bg-paper-2 transition-colors"
                 >
-                  Usar
+                  <span className="text-[1.1rem]">{OTHER_COUNTRY.flag}</span>
+                  <span className="flex-1">Outro país…</span>
+                  <Icon name="plus" className="text-ink-400" />
                 </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-[1.1rem]">{OTHER_COUNTRY.flag}</span>
+                  <span className="text-ink-500 text-[0.88rem]">+</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoFocus
+                    value={otherDial}
+                    onChange={(e) =>
+                      setOtherDial(digitsOnly(e.target.value).slice(0, 4))
+                    }
+                    placeholder="62"
+                    aria-label="Código do país"
+                    className="w-16 px-2 py-1.5 rounded-lg border border-line-strong text-[0.88rem] text-ink-900 placeholder:text-ink-300 focus:outline-none focus:border-ink-900"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        commitOther();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={commitOther}
+                    disabled={!otherDial}
+                    className="px-3 py-1.5 rounded-lg bg-ink-900 text-paper text-[0.82rem] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Usar
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
