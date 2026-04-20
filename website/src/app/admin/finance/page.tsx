@@ -199,7 +199,17 @@ export default function FinancePage() {
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}
           onCreated={() =>
-            apollo.refetchQueries({ include: ["FinanceOverview"] })
+            // DREOverview + AdminDashboard also aggregate payments, so
+            // they need to refetch too — otherwise a new charge shows
+            // up on the finance page but the dashboard KPIs drift
+            // stale until the next hard reload.
+            apollo.refetchQueries({
+              include: [
+                "FinanceOverview",
+                "DREOverview",
+                "AdminDashboard",
+              ],
+            })
           }
         />
       </main>

@@ -50,10 +50,11 @@ export function NewChargeDialog({
   onClose: () => void;
   onCreated?: () => void;
 }) {
-  const today = new Date();
-  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
-    .toISOString()
-    .slice(0, 10);
+  // Default to today so the new charge lands in the current month's
+  // window — financeOverview / dreOverview both filter by dueDate ∈
+  // [monthStart, nextMonthStart), and picking a future date made the
+  // row silently invisible in the list right after creation.
+  const todayIso = new Date().toISOString().slice(0, 10);
 
   const { data: enrollmentData } = useQuery(ACTIVE_ENROLLMENTS, {
     skip: USE_MOCKS || !open,
@@ -61,7 +62,7 @@ export function NewChargeDialog({
 
   const [enrollmentId, setEnrollmentId] = useState("");
   const [amount, setAmount] = useState("");
-  const [dueDate, setDueDate] = useState(nextMonth);
+  const [dueDate, setDueDate] = useState(todayIso);
   const [method, setMethod] = useState<"pix" | "credit_card" | "boleto">("pix");
   const [status, setStatus] = useState<"pending" | "paid" | "overdue">(
     "pending",
@@ -81,7 +82,7 @@ export function NewChargeDialog({
   function reset() {
     setEnrollmentId("");
     setAmount("");
-    setDueDate(nextMonth);
+    setDueDate(todayIso);
     setMethod("pix");
     setStatus("pending");
     setError(null);
@@ -142,11 +143,19 @@ export function NewChargeDialog({
       subtitle="Gere uma cobrança manual para uma matrícula ativa. Cobranças recorrentes são criadas automaticamente pelo Asaas."
     >
       <form id="new-charge-form" onSubmit={handleSubmit}>
-        <Field label="Matrícula">
+        <Field
+          label="Aluno (matrícula ativa)"
+          help={
+            options.length === 0
+              ? "Nenhuma matrícula ativa. Cadastre um aluno e matricule-o em um plano antes de gerar cobrança."
+              : "Escolha o aluno. O valor é preenchido automaticamente pelo preço do plano."
+          }
+        >
           <Select
             required
             value={enrollmentId}
             onChange={(e) => handleEnrollmentChange(e.target.value)}
+            disabled={options.length === 0}
           >
             <option value="">Selecione um aluno…</option>
             {options.map((o) => (

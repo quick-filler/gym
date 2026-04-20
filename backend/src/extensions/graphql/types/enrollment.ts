@@ -7,6 +7,7 @@
  */
 
 import type { Core } from '@strapi/strapi';
+import { resolveUserAcademyId } from '../helpers';
 
 const UID = 'api::enrollment.enrollment';
 
@@ -85,8 +86,16 @@ export function buildEnrollment({ nexus, strapi }: { nexus: any; strapi: Core.St
       t.list.field('enrollments', {
         type: 'Enrollment',
         args: { pagination: 'PaginationInput' },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          // Scope by the caller's academy via student → academy. Enrollment
+          // doesn't have a direct academy field; it inherits tenancy from
+          // the student it belongs to.
+          const academyId = await resolveUserAcademyId(strapi, ctx);
+          const filters: any = academyId
+            ? { student: { academy: { documentId: academyId } } }
+            : {};
           return await strapi.documents(UID).findMany({
+            filters,
             start: args.pagination?.start ?? 0,
             limit: Math.min(100, args.pagination?.limit ?? 25),
             sort: { startDate: 'desc' },
