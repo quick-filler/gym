@@ -151,7 +151,7 @@ export default function PricingClient() {
                   className={cn(
                     "rounded-[var(--radius-lg)] p-10 relative flex flex-col",
                     plan.featured
-                      ? "bg-ink-900 text-paper border border-ink-700 shadow-[var(--shadow-gym-3)] md:scale-[1.02]"
+                      ? "bg-ink-900 text-paper border border-ink-900 shadow-[var(--shadow-gym-3)] -translate-y-3"
                       : "bg-white border border-line shadow-[var(--shadow-gym-1)]",
                   )}
                 >
