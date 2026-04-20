@@ -6,44 +6,46 @@
    ============================================================ */
 
 @theme {
-  /* Paper / ink palette */
+  /* Paper / ink palette — cool tints (black + iOS blue premium palette)
+     Tokens keep their names (flame/pine/emerald/amber) but values mirror
+     mockups/landing.html, which is the authoritative reference. */
   --color-paper-50: #fdfcfa;
   --color-paper: #faf8f5;
-  --color-paper-2: #f3efe8;
-  --color-paper-3: #e7e2d9;
+  --color-paper-2: #dbeafe;
+  --color-paper-3: #bfdbfe;
 
   --color-ink-50: #f8f7f5;
-  --color-ink-200: #d6d3ce;
-  --color-ink-300: #a8a29e;
-  --color-ink-400: #78716c;
-  --color-ink-500: #57534e;
-  --color-ink-600: #44403c;
-  --color-ink-700: #292524;
-  --color-ink-900: #0c0a09;
+  --color-ink-200: #93c5fd;
+  --color-ink-300: #64748b;
+  --color-ink-400: #64748b;
+  --color-ink-500: #334155;
+  --color-ink-600: #334155;
+  --color-ink-700: #1e293b;
+  --color-ink-900: #0f172a;
 
-  /* Accent — flame (desaturated tangerine) */
-  --color-flame: #e8551c;
-  --color-flame-dark: #c2410c;
-  --color-flame-50: #fff7f1;
-  --color-flame-100: #ffe7d6;
+  /* Accent — flame (iOS blue, not tangerine) */
+  --color-flame: #0a84ff;
+  --color-flame-dark: #0a84ff;
+  --color-flame-50: #eff6ff;
+  --color-flame-100: #dbeafe;
 
-  /* Secondary — pine (sparingly) */
-  --color-pine: #0f766e;
-  --color-pine-50: #ecfdf5;
+  /* Secondary — pine (matches flame in this palette) */
+  --color-pine: #0a84ff;
+  --color-pine-50: #eff6ff;
 
   /* Status */
-  --color-emerald: #059669;
-  --color-emerald-50: #ecfdf5;
+  --color-emerald: #0a84ff;
+  --color-emerald-50: #eff6ff;
   --color-rose: #be123c;
   --color-rose-50: #fff1f2;
-  --color-amber: #d97706;
-  --color-amber-50: #fffbeb;
+  --color-amber: #38bdf8;
+  --color-amber-50: #e0f2fe;
   --color-sky: #0369a1;
   --color-sky-50: #f0f9ff;
 
   /* Lines */
-  --color-line: #e7e2d9;
-  --color-line-strong: #d6d3ce;
+  --color-line: #bfdbfe;
+  --color-line-strong: #93c5fd;
 
   /* Radii */
   --radius-sm: 10px;

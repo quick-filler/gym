@@ -49,7 +49,7 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${geistSans.variable} ${outfit.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-paper text-ink-900">
+      <body className="grain min-h-full flex flex-col bg-paper text-ink-900">
         <ApolloClientProvider>{children}</ApolloClientProvider>
       </body>
     </html>

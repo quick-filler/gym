@@ -1,9 +1,9 @@
 import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 import Link from "next/link";
 
 const LINKS = [
-  { href: "/", label: "Início" },
   { href: "/features", label: "Recursos" },
   { href: "/pricing", label: "Preços" },
   { href: "/about", label: "A plataforma" },
@@ -33,6 +33,7 @@ export function Nav() {
             </Button>
             <Button variant="ink" href="/contact">
               Teste grátis
+              <Icon name="arrow-right" />
             </Button>
           </div>
         </div>

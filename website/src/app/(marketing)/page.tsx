@@ -101,7 +101,7 @@ function Hero() {
               — para o aluno ver só você.
             </p>
             <div className="flex flex-wrap gap-4 mt-8">
-              <Button variant="flame" href="/contact">
+              <Button variant="ink" href="/contact">
                 Começar grátis · 14 dias
                 <Icon name="arrow-right" />
               </Button>
@@ -139,26 +139,34 @@ function Hero() {
 function HeroVisual() {
   return (
     <div className="relative h-[480px] max-[980px]:h-[420px]" aria-hidden="true">
-      {/* Metric card */}
-      <Card className="absolute top-0 left-0 w-[78%] z-[2]">
+      {/* Metric card — top right */}
+      <Card className="absolute top-0 right-0 w-[76%] p-7 z-[2]">
         <div className="font-mono text-[0.72rem] uppercase tracking-[0.1em] text-ink-400 mb-2">
           Receita do mês
         </div>
         <div className="font-display text-[2.6rem] font-semibold text-ink-900 leading-none">
           R$ 18.420
         </div>
-        <div className="mt-2 text-[0.82rem] text-emerald inline-flex items-center gap-1">
+        <div className="mt-2 text-[0.82rem] text-flame font-semibold inline-flex items-center gap-1">
           <Icon name="trending" /> +8,2% vs mês anterior
         </div>
         <svg
-          className="mt-4 w-full h-[60px]"
+          className="mt-5 w-full h-[60px]"
           viewBox="0 0 300 70"
           preserveAspectRatio="none"
         >
           <defs>
             <linearGradient id="lg-spark" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#e8551c" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="#e8551c" stopOpacity="0" />
+              <stop
+                offset="0%"
+                stopColor="var(--color-flame)"
+                stopOpacity="0.22"
+              />
+              <stop
+                offset="100%"
+                stopColor="var(--color-flame)"
+                stopOpacity="0"
+              />
             </linearGradient>
           </defs>
           <path
@@ -168,49 +176,51 @@ function HeroVisual() {
           <path
             d="M0,55 L40,48 L80,40 L120,45 L160,30 L200,25 L240,18 L300,12"
             fill="none"
-            stroke="#e8551c"
+            stroke="var(--color-flame)"
             strokeWidth="2.2"
             strokeLinecap="round"
           />
-          <circle cx="300" cy="12" r="4" fill="#e8551c" />
+          <circle cx="300" cy="12" r="4" fill="var(--color-flame)" />
         </svg>
       </Card>
 
-      {/* Phone preview */}
-      <Card className="absolute bottom-0 right-0 w-[62%] bg-ink-900 text-paper border-ink-700 p-6 z-[1]">
-        <div className="border-b border-ink-700 pb-3">
-          <div className="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-ink-300">
+      {/* Phone preview — top-left, overlaps below metric card */}
+      <div className="absolute top-[60px] left-0 w-[60%] rounded-[32px] overflow-hidden bg-ink-900 border border-ink-700 shadow-[var(--shadow-gym-3)] z-[1]">
+        <div className="bg-flame text-white px-5 py-5">
+          <div className="font-mono text-[0.7rem] uppercase tracking-[0.1em] opacity-80 font-medium">
             Próxima aula
           </div>
-          <div className="font-display text-[1.4rem] font-semibold text-paper mt-1">
+          <div className="font-display text-[1.4rem] font-semibold mt-1 tracking-[-0.02em]">
             Hoje, 18:00
           </div>
         </div>
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="bg-white px-5 py-3">
           {[
             { num: "1", name: "Supino reto", meta: "4×12 · 60kg" },
             { num: "2", name: "Crucifixo", meta: "3×15 · 16kg" },
             { num: "3", name: "Tríceps corda", meta: "4×12 · 25kg" },
-          ].map((row) => (
+          ].map((row, i) => (
             <div
               key={row.num}
-              className="flex items-center gap-3 text-[0.88rem]"
+              className={`flex items-center gap-3 py-2.5 text-[0.85rem] ${i < 2 ? "border-b border-paper-3" : ""}`}
             >
-              <span className="w-7 h-7 rounded-lg bg-flame/10 text-flame font-mono text-[0.75rem] flex items-center justify-center">
+              <span className="w-[22px] h-[22px] rounded-md bg-flame-50 text-flame font-mono text-[0.68rem] font-semibold flex items-center justify-center shrink-0">
                 {row.num}
               </span>
-              <span className="flex-1 text-paper">{row.name}</span>
-              <span className="font-mono text-[0.72rem] text-ink-300">
+              <span className="flex-1 text-ink-700 font-semibold">
+                {row.name}
+              </span>
+              <span className="font-mono text-[0.7rem] text-ink-400">
                 {row.meta}
               </span>
             </div>
           ))}
         </div>
-      </Card>
+      </div>
 
-      {/* Floating note */}
-      <div className="absolute top-[54%] left-[-8%] bg-white border border-line rounded-2xl shadow-[var(--shadow-gym-2)] px-4 py-3 flex items-center gap-3 z-[3] max-[980px]:left-2">
-        <span className="w-2 h-2 rounded-full bg-emerald animate-gym-pulse" />
+      {/* Floating note — bottom right */}
+      <div className="absolute right-[8%] bottom-[20px] bg-white border border-line rounded-2xl shadow-[var(--shadow-gym-2)] px-4 py-3 flex items-center gap-3 z-[3] max-w-[220px] max-[980px]:right-2">
+        <span className="w-2 h-2 rounded-full bg-emerald ring-4 ring-emerald/20 animate-gym-pulse shrink-0" />
         <div>
           <div className="text-[0.82rem] font-semibold text-ink-900">
             Mariana check-in
@@ -257,16 +267,16 @@ function SegmentHighlights() {
             recursos específicos para o dia a dia.
           </p>
         </header>
-        <div className="grid grid-cols-3 gap-6 max-[880px]:grid-cols-1">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
           {items.map((item) => (
-            <Card key={item.title} className="p-8">
-              <div className="w-12 h-12 rounded-xl bg-paper-2 text-[1.5rem] flex items-center justify-center mb-5">
+            <Card key={item.title} className="p-7">
+              <div className="text-[2.25rem] mb-4 leading-none">
                 {item.emoji}
               </div>
-              <h3 className="font-display text-[1.2rem] font-semibold text-ink-900">
+              <h3 className="font-display text-[1.2rem] font-semibold text-ink-900 mb-2">
                 {item.title}
               </h3>
-              <p className="text-[0.95rem] text-ink-500 mt-3 leading-[1.6]">
+              <p className="text-[0.95rem] text-ink-500 leading-[1.6]">
                 {item.desc}
               </p>
             </Card>
@@ -293,15 +303,15 @@ function Trust() {
   return (
     <section className="py-10 border-y border-line bg-paper-50">
       <Wrap>
-        <div className="flex flex-wrap items-center justify-center gap-8 max-[720px]:flex-col max-[720px]:gap-4">
-          <div className="font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink-400">
+        <div className="grid grid-cols-[auto_1fr] gap-12 items-center max-[880px]:grid-cols-1 max-[880px]:gap-6 max-[880px]:text-center">
+          <div className="text-[0.75rem] font-medium uppercase tracking-[0.08em] text-ink-400 max-w-[14rem]">
             Mais de 240 academias brasileiras já migraram
           </div>
-          <div className="flex flex-wrap items-center gap-8 max-[720px]:gap-5">
+          <div className="flex flex-wrap items-center justify-between gap-8 max-[880px]:justify-center">
             {logos.map((logo) => (
               <span
                 key={logo}
-                className="font-display text-[0.95rem] font-semibold text-ink-400 tracking-[-0.01em]"
+                className="font-display text-[1.2rem] font-bold text-ink-300 tracking-[-0.02em]"
               >
                 {logo}
               </span>
@@ -599,16 +609,16 @@ function Segments() {
             pilates, ballet e studios.
           </p>
         </header>
-        <div className="grid grid-cols-3 gap-6 max-[980px]:grid-cols-2 max-[640px]:grid-cols-1">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
           {items.map((item) => (
-            <Card key={item.title} className="p-8">
-              <div className="w-12 h-12 rounded-xl bg-paper-2 text-[1.5rem] flex items-center justify-center mb-5">
+            <Card key={item.title} className="p-7">
+              <div className="text-[2.25rem] mb-4 leading-none">
                 {item.emoji}
               </div>
-              <h3 className="font-display text-[1.2rem] font-semibold text-ink-900">
+              <h3 className="font-display text-[1.2rem] font-semibold text-ink-900 mb-2">
                 {item.title}
               </h3>
-              <p className="text-[0.95rem] text-ink-500 mt-3 leading-[1.6]">
+              <p className="text-[0.95rem] text-ink-500 leading-[1.6]">
                 {item.desc}
               </p>
             </Card>

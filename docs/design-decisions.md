@@ -612,7 +612,7 @@ The visual foundation is defined in `mockups/design-system.css` and applied
 across every mockup (except the original two untouched dashboards, which
 will be redesigned when they're ported to Next.js/Expo).
 
-### 6.1 Palette: warm paper + ink + flame
+### 6.1 Palette: warm paper + ink + flame [SUPERSEDED by §6.1bis]
 
 - **Decision** — Warm paper (`#faf8f5`) background, near-black ink
   (`#0c0a09`) text, flame tangerine (`#e8551c`, desaturated) accent.
@@ -631,6 +631,39 @@ will be redesigned when they're ported to Next.js/Expo).
   `#fff` for card surfaces and accept the micro-contrast.
 - **Revisit when** — The brand matures and needs a signature color
   shift. Then we change the flame, not the paper.
+
+### 6.1bis Palette pivot: warm paper + ink + iOS blue (premium)
+
+- **Decision** — Paper stays `#faf8f5`, ink shifts to a cooler slate
+  (`#0f172a` primary, `#64748b` muted, `#334155` secondary). Flame
+  accent changes from tangerine to iOS blue `#0A84FF`; `--flame-50` and
+  `--flame-100` become light blues (`#eff6ff` / `#dbeafe`). `--line`
+  becomes `#bfdbfe`. The `pine` / `emerald` tokens also map to the
+  same blue to keep emphasis coherent. `rose` stays `#be123c` for
+  danger; `amber` shifts to cyan (`#38bdf8`) to match the cool family.
+- **Context** — Mockup commits `1b53bf3`, `55c7a9e`, `6ee02e8`,
+  `89cf6c1` repainted `landing.html` (and later admin-dashboard /
+  student-dashboard) to a "black + iOS blue premium" palette. The
+  decision was made in the mockup layer but never propagated to this
+  doc or to `website/src/app/globals.css` — so the live site drifted
+  out of sync with the mockup for ~7 commits until this was caught.
+- **Rationale** — The brand positioning moved from "energetic Brazilian
+  gym" to "multi-segment business management platform" (see the
+  `copy: make landing clearly multi-segment` / `reposition landing
+  page around microsaas message` commits). The warm tangerine read
+  as too consumer/fitness; the cool premium blue reads as software,
+  which is the actual category we're selling. Blue is normally the
+  fintech cliché forbidden by §6.1, but combined with ink-900 as the
+  primary CTA color and used only as accent emphasis, it reads as
+  Apple-adjacent premium rather than bank-app default.
+- **Consequences** — Token *names* stay the same (`flame`, `pine`,
+  `emerald`) so existing components don't have to rename props.
+  Semantic status colors lose some contrast (paid = blue, overdue =
+  red, pending = amber-cyan — only red stays obviously distinct).
+  Any page that read well against `#fff7f1` flame-50 must be re-eyed
+  against `#eff6ff`.
+- **Revisit when** — Repositioning reverses, or a distinct brand
+  color survives user research better than iOS blue.
 
 ### 6.2 Typography: Outfit (display) + Geist (body) + JetBrains Mono
 
