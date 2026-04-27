@@ -9,17 +9,8 @@ import { Field, Input } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { GRAPHQL_ENDPOINT, JWT_STORAGE_KEY, USE_MOCKS } from "@/lib/config";
 
-/**
- * Default credentials come from the backend seed's `ensureDemoDevUser`
- * step. They're pre-filled so a fresh clone can log in with one click
- * — override via NEXT_PUBLIC_DEFAULT_LOGIN_EMAIL / _PASSWORD if you
- * changed the seed values. Production builds should leave the env
- * vars empty so the form starts blank.
- */
-const DEFAULT_EMAIL =
-  process.env.NEXT_PUBLIC_DEFAULT_LOGIN_EMAIL ?? "admin@gym-demo.com";
-const DEFAULT_PASSWORD =
-  process.env.NEXT_PUBLIC_DEFAULT_LOGIN_PASSWORD ?? "gym-demo-admin";
+const DEFAULT_EMAIL = process.env.NEXT_PUBLIC_DEFAULT_LOGIN_EMAIL ?? "";
+const DEFAULT_PASSWORD = process.env.NEXT_PUBLIC_DEFAULT_LOGIN_PASSWORD ?? "";
 
 export function LoginClient() {
   const router = useRouter();

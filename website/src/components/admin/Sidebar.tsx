@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
+import { JWT_STORAGE_KEY } from "@/lib/config";
 
 type NavItem = {
   href: string;
@@ -28,6 +29,12 @@ const CONFIG: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  function handleLogout() {
+    localStorage.removeItem(JWT_STORAGE_KEY);
+    router.push("/login");
+  }
 
   return (
     <aside className="fixed top-0 left-0 w-[248px] h-screen bg-ink-900 text-paper flex flex-col border-r border-ink-700 max-[980px]:hidden">
@@ -54,18 +61,28 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-ink-700 p-4">
-        <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-ink-700/40 transition-colors cursor-pointer">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-flame to-flame-dark flex items-center justify-center font-mono text-[0.78rem] font-semibold text-white">
-            GD
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[0.9rem] font-semibold text-paper truncate">
-              Gym Demo
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 flex-1 min-w-0 p-2 rounded-xl hover:bg-ink-700/40 transition-colors cursor-pointer">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-flame to-flame-dark flex items-center justify-center font-mono text-[0.78rem] font-semibold text-white shrink-0">
+              GD
             </div>
-            <div className="font-mono text-[0.68rem] uppercase tracking-[0.08em] text-ink-300">
-              Administrador
+            <div className="flex-1 min-w-0">
+              <div className="text-[0.9rem] font-semibold text-paper truncate">
+                Gym Demo
+              </div>
+              <div className="font-mono text-[0.68rem] uppercase tracking-[0.08em] text-ink-300">
+                Administrador
+              </div>
             </div>
           </div>
+          <button
+            onClick={handleLogout}
+            aria-label="Sair"
+            title="Sair"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-ink-400 hover:text-rose hover:bg-ink-700/60 transition-colors shrink-0"
+          >
+            <Icon name="log-out" size="lg" />
+          </button>
         </div>
       </div>
     </aside>

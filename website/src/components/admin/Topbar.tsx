@@ -1,8 +1,17 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
+import { JWT_STORAGE_KEY } from "@/lib/config";
 
 export function Topbar({ title }: { title: string }) {
+  const router = useRouter();
+
+  function handleLogout() {
+    localStorage.removeItem(JWT_STORAGE_KEY);
+    router.push("/login");
+  }
+
   return (
     <header className="sticky top-0 z-40 h-16 bg-paper/85 backdrop-blur-xl border-b border-line flex items-center gap-4 px-8 max-[720px]:px-4">
       <h1 className="font-display text-[1.2rem] font-semibold text-ink-900 shrink-0">
@@ -33,6 +42,14 @@ export function Topbar({ title }: { title: string }) {
       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-flame to-flame-dark text-white flex items-center justify-center font-mono text-[0.78rem] font-semibold">
         GD
       </div>
+      <button
+        onClick={handleLogout}
+        aria-label="Sair"
+        title="Sair"
+        className="min-[981px]:hidden w-10 h-10 rounded-full bg-paper-2 hover:bg-paper-3 text-ink-500 hover:text-rose flex items-center justify-center transition-colors"
+      >
+        <Icon name="log-out" size="lg" />
+      </button>
     </header>
   );
 }

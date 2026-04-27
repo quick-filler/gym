@@ -181,6 +181,19 @@ input ClassScheduleUpdateInput {
   weekdays: [Int]
 }
 
+input ContactFormInput {
+  academyName: String
+  email: String!
+  message: String!
+  name: String!
+  phone: String
+  studentCount: String
+}
+
+type ContactFormResult {
+  ok: Boolean!
+}
+
 type DRECashFlowPoint {
   expenses: Float!
   label: String!
@@ -730,6 +743,7 @@ type Mutation {
   deletePlan(documentId: ID!): Plan
   deleteStudent(documentId: ID!): Student
   deleteWorkoutPlan(documentId: ID!): WorkoutPlan
+  submitContactForm(input: ContactFormInput!): ContactFormResult
   updateAcademy(data: AcademyUpdateInput!, documentId: ID!): Academy
   updateBodyAssessment(data: BodyAssessmentUpdateInput!, documentId: ID!): BodyAssessment
   updateClassBooking(data: ClassBookingUpdateInput!, documentId: ID!): ClassBooking
