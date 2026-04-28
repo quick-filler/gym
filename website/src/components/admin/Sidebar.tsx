@@ -17,6 +17,7 @@ const PRIMARY: NavItem[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: "chart" },
   { href: "/admin/students", label: "Alunos", icon: "users" },
   { href: "/admin/dependents", label: "Dependentes", icon: "user" },
+  { href: "/admin/plans", label: "Planos", icon: "credit" },
   { href: "/admin/finance", label: "Financeiro", icon: "money" },
   { href: "/admin/dre", label: "DRE / Custos", icon: "trending" },
   { href: "/admin/schedule", label: "Agenda", icon: "calendar" },

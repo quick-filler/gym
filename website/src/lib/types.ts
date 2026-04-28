@@ -5,6 +5,7 @@
  */
 
 export type PlanTier = "starter" | "business" | "pro";
+export type BillingCycle = "monthly" | "quarterly" | "annual";
 export type StudentStatus = "active" | "inactive" | "suspended";
 export type PaymentStatus = "pending" | "paid" | "overdue" | "cancelled";
 export type PaymentMethod = "pix" | "credit_card" | "boleto";
@@ -294,4 +295,27 @@ export interface WorkoutsData {
   subtitle: string; // "8 fichas ativas — criadas pelo instrutor"
   tabs: Array<{ id: WorkoutTab; label: string }>;
   cards: WorkoutPlanCard[];
+}
+
+/* ============================================================
+   Admin — membership plans (planos de matrícula)
+   ============================================================ */
+
+export interface MembershipPlan {
+  id: string; // documentId
+  name: string;
+  description: string;
+  price: number;
+  priceFormatted: string; // "R$ 149,00"
+  billingCycle: BillingCycle;
+  billingCycleLabel: string; // "Mensal" | "Trimestral" | "Anual"
+  maxStudents: number | null; // null = unlimited
+  features: string[];
+  isActive: boolean;
+  enrollmentCount: number;
+}
+
+export interface PlansData {
+  subtitle: string;
+  plans: MembershipPlan[];
 }

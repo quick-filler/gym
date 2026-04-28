@@ -26,6 +26,7 @@ import {
   MOCK_DRE,
   MOCK_FAMILIES,
   MOCK_FINANCE,
+  MOCK_PLANS,
   MOCK_PRICING_PLANS,
   MOCK_SCHEDULE,
   MOCK_STUDENTS,
@@ -37,6 +38,7 @@ import {
   mapDashboard,
   mapFinance,
   mapGuardians,
+  mapMembershipPlans,
   mapPricingPlans,
   mapSchedule,
   mapStudents,
@@ -49,6 +51,7 @@ import type {
   DataSourceResult,
   FinanceData,
   GuardianFamily,
+  PlansData,
   PricingPlan,
   ScheduleData,
   StudentRow,
@@ -321,6 +324,21 @@ const PRICING_PLANS_PUBLIC = graphql(`
   }
 `);
 
+const ADMIN_PLANS = graphql(`
+  query AdminPlans {
+    plans {
+      documentId
+      name
+      description
+      price
+      billingCycle
+      maxStudents
+      features
+      isActive
+    }
+  }
+`);
+
 /* ============================================================
    Shared wire helpers
    ============================================================ */
@@ -448,6 +466,19 @@ export function useWorkouts(): DataSourceResult<WorkoutsData> {
   if (q.error) return errorResult(q.error);
   return {
     data: mapWorkouts(q.data?.workoutPlans ?? null),
+    loading: false,
+    error: null,
+  };
+}
+
+export function useMembershipPlans(): DataSourceResult<PlansData> {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const q = useQuery(ADMIN_PLANS, { skip: USE_MOCKS });
+  if (USE_MOCKS) return useMockedValue(MOCK_PLANS);
+  if (q.loading) return loadingResult();
+  if (q.error) return errorResult(q.error);
+  return {
+    data: mapMembershipPlans(q.data?.plans ?? null),
     loading: false,
     error: null,
   };

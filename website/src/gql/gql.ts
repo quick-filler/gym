@@ -20,6 +20,9 @@ type Documents = {
     "\n  query FetchForCharge {\n    students(pagination: { limit: 500 }) {\n      documentId\n      name\n      email\n      status\n      enrollments {\n        documentId\n        status\n        plan {\n          documentId\n          name\n          price\n          billingCycle\n        }\n      }\n    }\n    plans(pagination: { limit: 100 }) {\n      documentId\n      name\n      price\n      billingCycle\n      isActive\n    }\n  }\n": typeof types.FetchForChargeDocument,
     "\n  mutation AdminCreateEnrollment($data: EnrollmentInput!) {\n    createEnrollment(data: $data) {\n      documentId\n      status\n      plan {\n        documentId\n      }\n      student {\n        documentId\n      }\n    }\n  }\n": typeof types.AdminCreateEnrollmentDocument,
     "\n  mutation AdminCreatePayment($data: PaymentInput!) {\n    createPayment(data: $data) {\n      documentId\n      amount\n      status\n      method\n      dueDate\n    }\n  }\n": typeof types.AdminCreatePaymentDocument,
+    "\n  mutation AdminUpdatePlan($documentId: ID!, $data: PlanUpdateInput!) {\n    updatePlan(documentId: $documentId, data: $data) {\n      documentId\n      name\n      price\n      billingCycle\n      isActive\n    }\n  }\n": typeof types.AdminUpdatePlanDocument,
+    "\n  mutation AdminDeletePlan($documentId: ID!) {\n    deletePlan(documentId: $documentId) {\n      documentId\n    }\n  }\n": typeof types.AdminDeletePlanDocument,
+    "\n  mutation AdminCreatePlan($data: PlanInput!) {\n    createPlan(data: $data) {\n      documentId\n      name\n      price\n      billingCycle\n      isActive\n    }\n  }\n": typeof types.AdminCreatePlanDocument,
     "\n  mutation AdminCreateClassSchedule($data: ClassScheduleInput!) {\n    createClassSchedule(data: $data) {\n      documentId\n      name\n      instructor\n    }\n  }\n": typeof types.AdminCreateClassScheduleDocument,
     "\n  mutation AdminCreateStudent($data: StudentInput!) {\n    createStudent(data: $data) {\n      documentId\n      name\n      email\n      status\n    }\n  }\n": typeof types.AdminCreateStudentDocument,
     "\n  mutation AdminUpdateStudentStatus(\n    $documentId: ID!\n    $data: StudentUpdateInput!\n  ) {\n    updateStudent(documentId: $documentId, data: $data) {\n      documentId\n      status\n    }\n  }\n": typeof types.AdminUpdateStudentStatusDocument,
@@ -38,6 +41,7 @@ type Documents = {
     "\n  query Students($pagination: PaginationInput) {\n    students(pagination: $pagination) {\n      documentId\n      name\n      email\n      phone\n      status\n      isGuardian\n      enrollments {\n        documentId\n        startDate\n        endDate\n        paymentMethod\n        status\n        plan {\n          documentId\n          name\n          price\n          billingCycle\n        }\n      }\n    }\n  }\n": typeof types.StudentsDocument,
     "\n  query MyAcademy {\n    me {\n      documentId\n      academy {\n        documentId\n        name\n        slug\n        primaryColor\n        secondaryColor\n        plan\n        email\n        phone\n        address\n        logo {\n          url\n          alternativeText\n        }\n      }\n    }\n  }\n": typeof types.MyAcademyDocument,
     "\n  query PricingPlansPublic {\n    plans {\n      documentId\n      name\n      description\n      price\n      billingCycle\n      maxStudents\n      features\n      isActive\n    }\n  }\n": typeof types.PricingPlansPublicDocument,
+    "\n  query AdminPlans {\n    plans {\n      documentId\n      name\n      description\n      price\n      billingCycle\n      maxStudents\n      features\n      isActive\n    }\n  }\n": typeof types.AdminPlansDocument,
 };
 const documents: Documents = {
     "\n  mutation AdminCreateDependent($data: DependentInput!) {\n    createDependent(data: $data) {\n      documentId\n      name\n      birthdate\n    }\n  }\n": types.AdminCreateDependentDocument,
@@ -46,6 +50,9 @@ const documents: Documents = {
     "\n  query FetchForCharge {\n    students(pagination: { limit: 500 }) {\n      documentId\n      name\n      email\n      status\n      enrollments {\n        documentId\n        status\n        plan {\n          documentId\n          name\n          price\n          billingCycle\n        }\n      }\n    }\n    plans(pagination: { limit: 100 }) {\n      documentId\n      name\n      price\n      billingCycle\n      isActive\n    }\n  }\n": types.FetchForChargeDocument,
     "\n  mutation AdminCreateEnrollment($data: EnrollmentInput!) {\n    createEnrollment(data: $data) {\n      documentId\n      status\n      plan {\n        documentId\n      }\n      student {\n        documentId\n      }\n    }\n  }\n": types.AdminCreateEnrollmentDocument,
     "\n  mutation AdminCreatePayment($data: PaymentInput!) {\n    createPayment(data: $data) {\n      documentId\n      amount\n      status\n      method\n      dueDate\n    }\n  }\n": types.AdminCreatePaymentDocument,
+    "\n  mutation AdminUpdatePlan($documentId: ID!, $data: PlanUpdateInput!) {\n    updatePlan(documentId: $documentId, data: $data) {\n      documentId\n      name\n      price\n      billingCycle\n      isActive\n    }\n  }\n": types.AdminUpdatePlanDocument,
+    "\n  mutation AdminDeletePlan($documentId: ID!) {\n    deletePlan(documentId: $documentId) {\n      documentId\n    }\n  }\n": types.AdminDeletePlanDocument,
+    "\n  mutation AdminCreatePlan($data: PlanInput!) {\n    createPlan(data: $data) {\n      documentId\n      name\n      price\n      billingCycle\n      isActive\n    }\n  }\n": types.AdminCreatePlanDocument,
     "\n  mutation AdminCreateClassSchedule($data: ClassScheduleInput!) {\n    createClassSchedule(data: $data) {\n      documentId\n      name\n      instructor\n    }\n  }\n": types.AdminCreateClassScheduleDocument,
     "\n  mutation AdminCreateStudent($data: StudentInput!) {\n    createStudent(data: $data) {\n      documentId\n      name\n      email\n      status\n    }\n  }\n": types.AdminCreateStudentDocument,
     "\n  mutation AdminUpdateStudentStatus(\n    $documentId: ID!\n    $data: StudentUpdateInput!\n  ) {\n    updateStudent(documentId: $documentId, data: $data) {\n      documentId\n      status\n    }\n  }\n": types.AdminUpdateStudentStatusDocument,
@@ -64,6 +71,7 @@ const documents: Documents = {
     "\n  query Students($pagination: PaginationInput) {\n    students(pagination: $pagination) {\n      documentId\n      name\n      email\n      phone\n      status\n      isGuardian\n      enrollments {\n        documentId\n        startDate\n        endDate\n        paymentMethod\n        status\n        plan {\n          documentId\n          name\n          price\n          billingCycle\n        }\n      }\n    }\n  }\n": types.StudentsDocument,
     "\n  query MyAcademy {\n    me {\n      documentId\n      academy {\n        documentId\n        name\n        slug\n        primaryColor\n        secondaryColor\n        plan\n        email\n        phone\n        address\n        logo {\n          url\n          alternativeText\n        }\n      }\n    }\n  }\n": types.MyAcademyDocument,
     "\n  query PricingPlansPublic {\n    plans {\n      documentId\n      name\n      description\n      price\n      billingCycle\n      maxStudents\n      features\n      isActive\n    }\n  }\n": types.PricingPlansPublicDocument,
+    "\n  query AdminPlans {\n    plans {\n      documentId\n      name\n      description\n      price\n      billingCycle\n      maxStudents\n      features\n      isActive\n    }\n  }\n": types.AdminPlansDocument,
 };
 
 /**
@@ -104,6 +112,18 @@ export function graphql(source: "\n  mutation AdminCreateEnrollment($data: Enrol
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation AdminCreatePayment($data: PaymentInput!) {\n    createPayment(data: $data) {\n      documentId\n      amount\n      status\n      method\n      dueDate\n    }\n  }\n"): (typeof documents)["\n  mutation AdminCreatePayment($data: PaymentInput!) {\n    createPayment(data: $data) {\n      documentId\n      amount\n      status\n      method\n      dueDate\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AdminUpdatePlan($documentId: ID!, $data: PlanUpdateInput!) {\n    updatePlan(documentId: $documentId, data: $data) {\n      documentId\n      name\n      price\n      billingCycle\n      isActive\n    }\n  }\n"): (typeof documents)["\n  mutation AdminUpdatePlan($documentId: ID!, $data: PlanUpdateInput!) {\n    updatePlan(documentId: $documentId, data: $data) {\n      documentId\n      name\n      price\n      billingCycle\n      isActive\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AdminDeletePlan($documentId: ID!) {\n    deletePlan(documentId: $documentId) {\n      documentId\n    }\n  }\n"): (typeof documents)["\n  mutation AdminDeletePlan($documentId: ID!) {\n    deletePlan(documentId: $documentId) {\n      documentId\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AdminCreatePlan($data: PlanInput!) {\n    createPlan(data: $data) {\n      documentId\n      name\n      price\n      billingCycle\n      isActive\n    }\n  }\n"): (typeof documents)["\n  mutation AdminCreatePlan($data: PlanInput!) {\n    createPlan(data: $data) {\n      documentId\n      name\n      price\n      billingCycle\n      isActive\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -176,6 +196,10 @@ export function graphql(source: "\n  query MyAcademy {\n    me {\n      document
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query PricingPlansPublic {\n    plans {\n      documentId\n      name\n      description\n      price\n      billingCycle\n      maxStudents\n      features\n      isActive\n    }\n  }\n"): (typeof documents)["\n  query PricingPlansPublic {\n    plans {\n      documentId\n      name\n      description\n      price\n      billingCycle\n      maxStudents\n      features\n      isActive\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query AdminPlans {\n    plans {\n      documentId\n      name\n      description\n      price\n      billingCycle\n      maxStudents\n      features\n      isActive\n    }\n  }\n"): (typeof documents)["\n  query AdminPlans {\n    plans {\n      documentId\n      name\n      description\n      price\n      billingCycle\n      maxStudents\n      features\n      isActive\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

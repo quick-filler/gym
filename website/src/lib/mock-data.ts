@@ -13,6 +13,8 @@ import type {
   DashboardData,
   FinanceData,
   GuardianFamily,
+  MembershipPlan,
+  PlansData,
   PricingPlan,
   ScheduleData,
   StudentRow,
@@ -825,4 +827,86 @@ export const MOCK_WORKOUTS: WorkoutsData = {
       status: "active",
     },
   ],
+};
+
+/* ============================================================
+   Admin — membership plans (planos de matrícula)
+   ============================================================ */
+
+const MOCK_MEMBERSHIP_PLAN_LIST: MembershipPlan[] = [
+  {
+    id: "plan-mensal",
+    name: "Mensal",
+    description: "Acesso completo à academia com renovação mensal.",
+    price: 149,
+    priceFormatted: "R$ 149,00",
+    billingCycle: "monthly",
+    billingCycleLabel: "Mensal",
+    maxStudents: null,
+    features: [
+      "Acesso ilimitado",
+      "Vestiário",
+      "Avaliação física mensal",
+    ],
+    isActive: true,
+    enrollmentCount: 87,
+  },
+  {
+    id: "plan-trimestral",
+    name: "Trimestral",
+    description: "3 meses com desconto. Ideal para quem quer compromisso de curto prazo.",
+    price: 399,
+    priceFormatted: "R$ 399,00",
+    billingCycle: "quarterly",
+    billingCycleLabel: "Trimestral",
+    maxStudents: null,
+    features: [
+      "Acesso ilimitado",
+      "Vestiário",
+      "Avaliação física trimestral",
+      "10% de desconto vs mensal",
+    ],
+    isActive: true,
+    enrollmentCount: 34,
+  },
+  {
+    id: "plan-anual",
+    name: "Anual",
+    description: "Melhor custo-benefício. 12 meses pelo preço de 10.",
+    price: 1490,
+    priceFormatted: "R$ 1.490,00",
+    billingCycle: "annual",
+    billingCycleLabel: "Anual",
+    maxStudents: 50,
+    features: [
+      "Acesso ilimitado",
+      "Vestiário",
+      "Avaliação física mensal",
+      "Ficha de treino personalizada",
+      "2 meses grátis",
+    ],
+    isActive: true,
+    enrollmentCount: 12,
+  },
+  {
+    id: "plan-estudante",
+    name: "Estudante",
+    description: "Plano exclusivo para estudantes com comprovante de matrícula.",
+    price: 99,
+    priceFormatted: "R$ 99,00",
+    billingCycle: "monthly",
+    billingCycleLabel: "Mensal",
+    maxStudents: 30,
+    features: [
+      "Acesso ilimitado",
+      "Vestiário",
+    ],
+    isActive: false,
+    enrollmentCount: 0,
+  },
+];
+
+export const MOCK_PLANS: PlansData = {
+  subtitle: `${MOCK_MEMBERSHIP_PLAN_LIST.filter((p) => p.isActive).length} planos ativos — ${MOCK_MEMBERSHIP_PLAN_LIST.reduce((s, p) => s + p.enrollmentCount, 0)} matrículas`,
+  plans: MOCK_MEMBERSHIP_PLAN_LIST,
 };
