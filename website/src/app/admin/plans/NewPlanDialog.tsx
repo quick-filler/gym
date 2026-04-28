@@ -5,7 +5,7 @@ import { useMutation } from "@apollo/client/react";
 import { graphql } from "@/gql";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
-import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { CurrencyInput, Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { USE_MOCKS } from "@/lib/config";
 
@@ -32,7 +32,7 @@ export function NewPlanDialog({
 }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
+  const [price, setPrice] = useState(0);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly" | "annual">("monthly");
   const [maxStudents, setMaxStudents] = useState("");
   const [featureInput, setFeatureInput] = useState("");
@@ -43,7 +43,7 @@ export function NewPlanDialog({
   function reset() {
     setName("");
     setDescription("");
-    setPrice("");
+    setPrice(0);
     setBillingCycle("monthly");
     setMaxStudents("");
     setFeatureInput("");
@@ -67,8 +67,7 @@ export function NewPlanDialog({
     e.preventDefault();
     setError(null);
 
-    const parsedPrice = parseFloat(price.replace(",", "."));
-    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+    if (price <= 0) {
       setError("Informe um preço válido.");
       return;
     }
@@ -86,7 +85,7 @@ export function NewPlanDialog({
           data: {
             name,
             description: description || undefined,
-            price: parsedPrice,
+            price,
             billingCycle,
             maxStudents: maxStudents ? parseInt(maxStudents, 10) : undefined,
             features: features.length ? features : undefined,
@@ -130,14 +129,12 @@ export function NewPlanDialog({
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Preço (R$)">
-            <Input
+          <Field label="Preço">
+            <CurrencyInput
               required
-              type="text"
-              inputMode="decimal"
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="149,00"
+              onChange={setPrice}
+              placeholder="0,00"
             />
           </Field>
           <Field label="Periodicidade">

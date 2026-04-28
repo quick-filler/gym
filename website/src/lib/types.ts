@@ -114,12 +114,6 @@ export interface PaymentRow {
 export interface FinanceData {
   kpis: MetricCard[];
   charges: PaymentRow[];
-  methodBreakdown: Array<{
-    method: PaymentMethod;
-    label: string;
-    amount: string;
-    percent: number;
-  }>;
 }
 
 export interface ScheduleClass {

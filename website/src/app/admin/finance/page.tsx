@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 import { Topbar } from "@/components/admin/Topbar";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -14,13 +14,14 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { useFinance } from "@/lib/hooks";
+import { formatBRL } from "@/lib/utils";
 import { NewChargeDialog } from "./NewChargeDialog";
 
-const METHOD_COLOR: Record<string, string> = {
-  pix: "var(--color-flame)",
-  credit_card: "var(--color-ink-900)",
-  boleto: "var(--color-pine)",
-};
+const METHOD_DEFS = [
+  { method: "pix", label: "PIX", color: "var(--color-flame)" },
+  { method: "credit_card", label: "Cartão de crédito", color: "var(--color-ink-900)" },
+  { method: "boleto", label: "Boleto", color: "var(--color-pine)" },
+] as const;
 
 export default function FinancePage() {
   const { data, loading, error } = useFinance();
@@ -31,6 +32,21 @@ export default function FinancePage() {
   const filteredCharges = (data?.charges ?? []).filter(
     (c) => !query || c.student.toLowerCase().includes(query.toLowerCase()),
   );
+
+  const methodBreakdown = useMemo(() => {
+    const totals: Record<string, number> = { pix: 0, credit_card: 0, boleto: 0 };
+    (data?.charges ?? []).forEach((c) => {
+      totals[c.method] = (totals[c.method] ?? 0) + c.amount;
+    });
+    const total = Object.values(totals).reduce((a, b) => a + b, 0);
+    return METHOD_DEFS.map((m) => ({
+      method: m.method,
+      label: m.label,
+      color: m.color,
+      amount: formatBRL(totals[m.method] ?? 0),
+      percent: total > 0 ? Math.round(((totals[m.method] ?? 0) / total) * 100) : 0,
+    }));
+  }, [data?.charges]);
 
   return (
     <>
@@ -161,7 +177,7 @@ export default function FinancePage() {
                   Distribuição do mês
                 </p>
                 <div className="flex flex-col gap-5">
-                  {data.methodBreakdown.map((m) => (
+                  {methodBreakdown.map((m) => (
                     <div key={m.method}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="text-[0.88rem] font-semibold text-ink-900">
@@ -176,7 +192,7 @@ export default function FinancePage() {
                           className="h-full rounded-full transition-all"
                           style={{
                             width: `${m.percent}%`,
-                            background: METHOD_COLOR[m.method],
+                            background: m.color,
                           }}
                         />
                       </div>

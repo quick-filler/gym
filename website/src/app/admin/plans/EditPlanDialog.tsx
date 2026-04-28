@@ -5,7 +5,7 @@ import { useMutation } from "@apollo/client/react";
 import { graphql } from "@/gql";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
-import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { CurrencyInput, Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { USE_MOCKS } from "@/lib/config";
 import type { MembershipPlan } from "@/lib/types";
@@ -43,7 +43,7 @@ export function EditPlanDialog({
 }) {
   const [name, setName] = useState(plan.name);
   const [description, setDescription] = useState(plan.description);
-  const [price, setPrice] = useState(plan.price.toFixed(2).replace(".", ","));
+  const [price, setPrice] = useState(plan.price);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly" | "annual">(plan.billingCycle);
   const [maxStudents, setMaxStudents] = useState(plan.maxStudents?.toString() ?? "");
   const [featureInput, setFeatureInput] = useState("");
@@ -58,7 +58,7 @@ export function EditPlanDialog({
     if (open) {
       setName(plan.name);
       setDescription(plan.description);
-      setPrice(plan.price.toFixed(2).replace(".", ","));
+      setPrice(plan.price);
       setBillingCycle(plan.billingCycle);
       setMaxStudents(plan.maxStudents?.toString() ?? "");
       setFeatures(plan.features);
@@ -84,8 +84,7 @@ export function EditPlanDialog({
     e.preventDefault();
     setError(null);
 
-    const parsedPrice = parseFloat(price.replace(",", "."));
-    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+    if (price <= 0) {
       setError("Informe um preço válido.");
       return;
     }
@@ -103,7 +102,7 @@ export function EditPlanDialog({
           data: {
             name,
             description: description || undefined,
-            price: parsedPrice,
+            price,
             billingCycle,
             maxStudents: maxStudents ? parseInt(maxStudents, 10) : undefined,
             features,
@@ -167,14 +166,11 @@ export function EditPlanDialog({
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Preço (R$)">
-            <Input
+          <Field label="Preço">
+            <CurrencyInput
               required
-              type="text"
-              inputMode="decimal"
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="149,00"
+              onChange={setPrice}
             />
           </Field>
           <Field label="Periodicidade">

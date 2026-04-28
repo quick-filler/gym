@@ -264,12 +264,6 @@ export interface RawFinanceOverview {
     dueDate: string;
     paidAt?: string | null;
   }>;
-  methodBreakdown: Array<{
-    method: string;
-    label: string;
-    amount: string;
-    percent: number;
-  }>;
 }
 
 export function mapFinance(f: RawFinanceOverview): FinanceData {
@@ -291,12 +285,6 @@ export function mapFinance(f: RawFinanceOverview): FinanceData {
       status: c.status as PaymentStatus,
       dueDate: c.dueDate,
       paidAt: c.paidAt ?? undefined,
-    })),
-    methodBreakdown: f.methodBreakdown.map((m) => ({
-      method: m.method as PaymentMethod,
-      label: m.label,
-      amount: m.amount,
-      percent: m.percent,
     })),
   };
 }

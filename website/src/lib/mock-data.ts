@@ -448,21 +448,6 @@ export const MOCK_FINANCE: FinanceData = {
       paidAt: "22/02/2026",
     },
   ],
-  methodBreakdown: [
-    { method: "pix", label: "PIX", amount: "R$ 34.520,00", percent: 55 },
-    {
-      method: "credit_card",
-      label: "Cartão de crédito",
-      amount: "R$ 21.610,00",
-      percent: 35,
-    },
-    {
-      method: "boleto",
-      label: "Boleto",
-      amount: "R$ 6.350,00",
-      percent: 10,
-    },
-  ],
 };
 
 /* ============================================================

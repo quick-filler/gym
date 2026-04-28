@@ -127,12 +127,6 @@ const FINANCE_OVERVIEW = graphql(`
         dueDate
         paidAt
       }
-      methodBreakdown {
-        method
-        label
-        amount
-        percent
-      }
     }
   }
 `);
