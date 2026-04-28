@@ -25,11 +25,21 @@ const METHOD_COLOR: Record<string, string> = {
 export default function FinancePage() {
   const { data, loading, error } = useFinance();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const apollo = useApolloClient();
+
+  const filteredCharges = (data?.charges ?? []).filter(
+    (c) => !query || c.student.toLowerCase().includes(query.toLowerCase()),
+  );
 
   return (
     <>
-      <Topbar title="Financeiro" />
+      <Topbar
+        title="Financeiro"
+        searchValue={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Buscar cobrança…"
+      />
       <main className="flex-1 p-8 max-[720px]:p-4">
         <PageHeader
           title="Financeiro"
@@ -82,7 +92,7 @@ export default function FinancePage() {
                       Cobranças recentes
                     </h3>
                     <p className="font-mono text-[0.7rem] uppercase tracking-[0.1em] text-ink-400 mt-1">
-                      {data.charges.length} registros
+                      {filteredCharges.length} registros
                     </p>
                   </div>
                   <button className="text-ink-400 hover:text-ink-900">
@@ -110,7 +120,7 @@ export default function FinancePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {data.charges.map((c) => (
+                      {filteredCharges.map((c) => (
                         <tr
                           key={c.id}
                           className="border-b border-line/60 last:border-b-0 hover:bg-paper-50 transition-colors"
