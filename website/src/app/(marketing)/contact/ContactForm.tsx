@@ -1,23 +1,58 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "@apollo/client/react";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
+import { SubmitContactFormDocument } from "@/gql/graphql";
+import { USE_MOCKS } from "@/lib/config";
+
+function maskPhone(raw: string): string {
+  const d = raw.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
 
 export function ContactForm() {
   const [sent, setSent] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [phone, setPhone] = useState("");
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setSubmitting(true);
-    // In mock mode we fake the network round-trip. API mode would POST to
-    // a Strapi custom endpoint or an email service webhook.
-    setTimeout(() => {
-      setSubmitting(false);
+  const [submitForm, { loading }] = useMutation(SubmitContactFormDocument, {
+    onCompleted() {
       setSent(true);
-    }, 600);
+    },
+    onError(err: Error) {
+      setError(err.message ?? "Erro ao enviar. Tente novamente.");
+    },
+  });
+
+  function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+
+    if (USE_MOCKS) {
+      setTimeout(() => setSent(true), 600);
+      return;
+    }
+
+    const fd = new FormData(e.currentTarget);
+    const rawPhone = phone.replace(/\D/g, "");
+    submitForm({
+      variables: {
+        input: {
+          name: fd.get("name") as string,
+          email: fd.get("email") as string,
+          phone: rawPhone || undefined,
+          academyName: (fd.get("academy") as string) || undefined,
+          studentCount: (fd.get("size") as string) || undefined,
+          message: fd.get("message") as string,
+        },
+      },
+    });
   }
 
   if (sent) {
@@ -64,16 +99,22 @@ export function ContactForm() {
           />
         </Field>
         <Field label="WhatsApp">
-          <Input name="phone" type="tel" placeholder="(11) 99999-0000" />
+          <Input
+            type="tel"
+            placeholder="(11) 99999-0000"
+            value={phone}
+            onChange={(e) => setPhone(maskPhone(e.target.value))}
+            inputMode="numeric"
+          />
         </Field>
       </div>
       <Field label="Quantos alunos ativos?">
-        <Select name="size" defaultValue="50 — 200">
-          <option>Menos de 50</option>
-          <option>50 — 200</option>
-          <option>200 — 500</option>
-          <option>Mais de 500</option>
-          <option>Ainda não abri</option>
+        <Select name="size" defaultValue="de_50_a_200">
+          <option value="menos_de_50">Menos de 50</option>
+          <option value="de_50_a_200">50 — 200</option>
+          <option value="de_200_a_500">200 — 500</option>
+          <option value="mais_de_500">Mais de 500</option>
+          <option value="ainda_nao_abri">Ainda não abri</option>
         </Select>
       </Field>
       <Field
@@ -87,14 +128,19 @@ export function ContactForm() {
           required
         />
       </Field>
+
+      {error && (
+        <p className="text-[0.82rem] text-rose mb-2">{error}</p>
+      )}
+
       <Button
         type="submit"
         variant="flame"
         block
-        disabled={submitting}
+        disabled={loading}
         className="mt-2"
       >
-        {submitting ? "Enviando…" : "Enviar mensagem"}
+        {loading ? "Enviando…" : "Enviar mensagem"}
         <Icon name="arrow-right" />
       </Button>
       <p className="text-[0.78rem] text-ink-400 mt-4 text-center">

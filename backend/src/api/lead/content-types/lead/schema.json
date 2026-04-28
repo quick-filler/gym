@@ -1,0 +1,49 @@
+{
+  "kind": "collectionType",
+  "collectionName": "leads",
+  "info": {
+    "singularName": "lead",
+    "pluralName": "leads",
+    "displayName": "Lead",
+    "description": "Contact form submission / trial request from the marketing site."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "phone": {
+      "type": "string"
+    },
+    "academyName": {
+      "type": "string"
+    },
+    "studentCount": {
+      "type": "enumeration",
+      "enum": [
+        "menos_de_50",
+        "de_50_a_200",
+        "de_200_a_500",
+        "mais_de_500",
+        "ainda_nao_abri"
+      ]
+    },
+    "message": {
+      "type": "text",
+      "required": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["new", "read", "replied"],
+      "default": "new"
+    }
+  }
+}

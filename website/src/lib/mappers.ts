@@ -11,13 +11,16 @@
 
 import type {
   AcademySettings,
+  BillingCycle,
   DREData,
   DashboardData,
   FinanceData,
   GuardianFamily,
+  MembershipPlan,
   MetricDelta,
   PaymentMethod,
   PaymentStatus,
+  PlansData,
   PricingPlan,
   ScheduleData,
   StudentRow,
@@ -261,12 +264,6 @@ export interface RawFinanceOverview {
     dueDate: string;
     paidAt?: string | null;
   }>;
-  methodBreakdown: Array<{
-    method: string;
-    label: string;
-    amount: string;
-    percent: number;
-  }>;
 }
 
 export function mapFinance(f: RawFinanceOverview): FinanceData {
@@ -288,12 +285,6 @@ export function mapFinance(f: RawFinanceOverview): FinanceData {
       status: c.status as PaymentStatus,
       dueDate: c.dueDate,
       paidAt: c.paidAt ?? undefined,
-    })),
-    methodBreakdown: f.methodBreakdown.map((m) => ({
-      method: m.method as PaymentMethod,
-      label: m.label,
-      amount: m.amount,
-      percent: m.percent,
     })),
   };
 }
@@ -579,5 +570,57 @@ export function mapWorkouts(
       { id: "archived", label: "Arquivadas" },
     ],
     cards,
+  };
+}
+
+/* ------------------------------------------------------------------
+ * Admin — membership plans
+ * ------------------------------------------------------------------ */
+
+const BILLING_LABELS: Record<string, string> = {
+  monthly: "Mensal",
+  quarterly: "Trimestral",
+  annual: "Anual",
+};
+
+export interface RawMembershipPlan {
+  documentId: string;
+  name: string;
+  description?: string | null;
+  price: number;
+  billingCycle: string;
+  maxStudents?: number | null;
+  features?: Array<string | null> | null;
+  isActive?: boolean | null;
+  enrollments?: Array<unknown> | null;
+}
+
+export function mapMembershipPlans(
+  plans: Array<RawMembershipPlan | null> | null | undefined,
+): PlansData {
+  const safe = (plans ?? []).filter((p): p is RawMembershipPlan => !!p);
+  const mapped: MembershipPlan[] = safe.map((p) => {
+    const cycle = (["monthly", "quarterly", "annual"].includes(p.billingCycle)
+      ? p.billingCycle
+      : "monthly") as BillingCycle;
+    return {
+      id: p.documentId,
+      name: p.name,
+      description: p.description ?? "",
+      price: p.price,
+      priceFormatted: `R$ ${p.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      billingCycle: cycle,
+      billingCycleLabel: BILLING_LABELS[cycle] ?? cycle,
+      maxStudents: p.maxStudents ?? null,
+      features: (p.features ?? []).filter((f): f is string => !!f),
+      isActive: p.isActive !== false,
+      enrollmentCount: Array.isArray(p.enrollments) ? p.enrollments.length : 0,
+    };
+  });
+  const active = mapped.filter((p) => p.isActive).length;
+  const total = mapped.reduce((s, p) => s + p.enrollmentCount, 0);
+  return {
+    subtitle: `${active} planos ativos — ${total} matrículas`,
+    plans: mapped,
   };
 }

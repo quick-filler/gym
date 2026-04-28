@@ -797,6 +797,47 @@ export interface ApiExpenseExpense extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiLeadLead extends Struct.CollectionTypeSchema {
+  collectionName: 'leads';
+  info: {
+    description: 'Contact form submission / trial request from the marketing site.';
+    displayName: 'Lead';
+    pluralName: 'leads';
+    singularName: 'lead';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academyName: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.Email & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::lead.lead'> &
+      Schema.Attribute.Private;
+    message: Schema.Attribute.Text & Schema.Attribute.Required;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    phone: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    status: Schema.Attribute.Enumeration<['new', 'read', 'replied']> &
+      Schema.Attribute.DefaultTo<'new'>;
+    studentCount: Schema.Attribute.Enumeration<
+      [
+        'menos_de_50',
+        'de_50_a_200',
+        'de_200_a_500',
+        'mais_de_500',
+        'ainda_nao_abri',
+      ]
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiPaymentPayment extends Struct.CollectionTypeSchema {
   collectionName: 'payments';
   info: {
@@ -1507,6 +1548,7 @@ declare module '@strapi/strapi' {
       'api::dependent.dependent': ApiDependentDependent;
       'api::enrollment.enrollment': ApiEnrollmentEnrollment;
       'api::expense.expense': ApiExpenseExpense;
+      'api::lead.lead': ApiLeadLead;
       'api::payment.payment': ApiPaymentPayment;
       'api::plan.plan': ApiPlanPlan;
       'api::student.student': ApiStudentStudent;
