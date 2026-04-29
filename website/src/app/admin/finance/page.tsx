@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
+import { Select } from "@/components/ui/Field";
 import { useFinance } from "@/lib/hooks";
 import { formatBRL } from "@/lib/utils";
 import { NewChargeDialog } from "./NewChargeDialog";
@@ -23,11 +24,69 @@ const METHOD_DEFS = [
   { method: "boleto", label: "Boleto", color: "var(--color-pine)" },
 ] as const;
 
+const METHOD_LABEL: Record<string, string> = {
+  pix: "PIX",
+  credit_card: "Cartão de crédito",
+  boleto: "Boleto",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  paid: "Pago",
+  pending: "Pendente",
+  overdue: "Vencido",
+  cancelled: "Cancelado",
+};
+
+const MONTHS_PT = [
+  "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+  "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
+];
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from({ length: 4 }, (_, i) => CURRENT_YEAR - i);
+
 export default function FinancePage() {
-  const { data, loading, error } = useFinance();
+  const now = new Date();
+  const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
+  const [filterYear, setFilterYear] = useState(now.getFullYear());
+  const [filterOpen, setFilterOpen] = useState(false);
+  const { data, loading, error } = useFinance({ month: filterMonth, year: filterYear });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [query, setQuery] = useState("");
   const apollo = useApolloClient();
+
+  const isCurrentPeriod = filterMonth === now.getMonth() + 1 && filterYear === now.getFullYear();
+  const subtitle = `${MONTHS_PT[filterMonth - 1]} ${filterYear}${isCurrentPeriod ? " · Atualizado agora" : " · Filtrado"}`;
+
+  function resetFilter() {
+    setFilterMonth(now.getMonth() + 1);
+    setFilterYear(now.getFullYear());
+  }
+
+  function exportCSV() {
+    const charges = data?.charges ?? [];
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const rows = [
+      ["Aluno", "Valor (R$)", "Método", "Status", "Vencimento", "Pago em"].map(escape).join(";"),
+      ...charges.map((c) =>
+        [
+          c.student,
+          c.amount.toFixed(2).replace(".", ","),
+          METHOD_LABEL[c.method] ?? c.method,
+          STATUS_LABEL[c.status] ?? c.status,
+          c.dueDate,
+          c.paidAt ?? "",
+        ].map(escape).join(";"),
+      ),
+    ];
+    const blob = new Blob(["﻿" + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cobrancas-${MONTHS_PT[filterMonth - 1]}-${filterYear}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   const filteredCharges = (data?.charges ?? []).filter(
     (c) => !query || c.student.toLowerCase().includes(query.toLowerCase()),
@@ -59,10 +118,10 @@ export default function FinancePage() {
       <main className="flex-1 p-8 max-[720px]:p-4">
         <PageHeader
           title="Financeiro"
-          subtitle="Abril 2026 · Atualizado agora"
+          subtitle={subtitle}
           actions={
             <>
-              <Button variant="line">
+              <Button variant="line" onClick={exportCSV} disabled={!data || data.charges.length === 0}>
                 <Icon name="download" /> Exportar CSV
               </Button>
               <Button variant="ink" onClick={() => setDialogOpen(true)}>
@@ -111,10 +170,45 @@ export default function FinancePage() {
                       {filteredCharges.length} registros
                     </p>
                   </div>
-                  <button className="text-ink-400 hover:text-ink-900">
+                  <button
+                    onClick={() => setFilterOpen((v) => !v)}
+                    className={`transition-colors ${filterOpen || !isCurrentPeriod ? "text-flame" : "text-ink-400 hover:text-ink-900"}`}
+                    title="Filtrar por período"
+                  >
                     <Icon name="filter" size="lg" />
                   </button>
                 </div>
+
+                {filterOpen && (
+                  <div className="flex items-center gap-3 px-6 py-3 border-b border-line bg-paper-50">
+                    <Select
+                      value={filterMonth}
+                      onChange={(e) => setFilterMonth(Number(e.target.value))}
+                      className="text-[0.82rem] py-1.5"
+                    >
+                      {MONTHS_PT.map((m, i) => (
+                        <option key={i} value={i + 1}>{m}</option>
+                      ))}
+                    </Select>
+                    <Select
+                      value={filterYear}
+                      onChange={(e) => setFilterYear(Number(e.target.value))}
+                      className="text-[0.82rem] py-1.5"
+                    >
+                      {YEAR_OPTIONS.map((y) => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </Select>
+                    {!isCurrentPeriod && (
+                      <button
+                        onClick={resetFilter}
+                        className="font-mono text-[0.72rem] text-ink-400 hover:text-ink-900 underline underline-offset-2 whitespace-nowrap"
+                      >
+                        Limpar filtro
+                      </button>
+                    )}
+                  </div>
+                )}
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>

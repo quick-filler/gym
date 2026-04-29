@@ -136,15 +136,19 @@ export function NewChargeDialog({
   const selectedStudent = students.find((s) => s.documentId === studentId);
   const selectedPlan = plans.find((p) => p.documentId === planId);
 
-  /** Returns an existing enrollment matching (student, plan) if any. */
+  /** Returns an existing enrollment for (student, plan) or the student's first active enrollment. */
   function findExistingEnrollment(): string | null {
-    if (!selectedStudent || !selectedPlan) return null;
-    const match = selectedStudent.enrollments?.find(
-      (e) =>
-        e?.plan?.documentId === selectedPlan.documentId &&
-        e.status === "active",
-    );
-    return match?.documentId ?? null;
+    if (!selectedStudent) return null;
+    if (selectedPlan) {
+      const match = selectedStudent.enrollments?.find(
+        (e) =>
+          e?.plan?.documentId === selectedPlan.documentId &&
+          e.status === "active",
+      );
+      return match?.documentId ?? null;
+    }
+    const any = selectedStudent.enrollments?.find((e) => e?.status === "active");
+    return any?.documentId ?? null;
   }
 
   function reset() {
@@ -175,12 +179,12 @@ export function NewChargeDialog({
     }
 
     if (!studentId) return setError("Selecione um aluno.");
-    if (!planId) return setError("Selecione um plano.");
     if (!amount || amount <= 0) return setError("Valor inválido.");
 
     try {
       let enrollmentId = findExistingEnrollment();
       if (!enrollmentId) {
+        if (!planId) return setError("Aluno sem matrícula ativa — selecione um plano.");
         const res = await createEnrollment({
           variables: {
             data: {
@@ -206,6 +210,7 @@ export function NewChargeDialog({
             dueDate,
             method,
             status,
+            paidAt: status === "paid" ? dueDate : undefined,
           },
         },
       });
@@ -255,21 +260,20 @@ export function NewChargeDialog({
         <Field
           label="Plano"
           help={
-            studentId
-              ? enrollmentExists
-                ? "Aluno já tem matrícula ativa neste plano — a cobrança será lançada nela."
-                : "Uma nova matrícula será criada com este plano."
-              : plans.length === 0
-                ? "Nenhum plano ativo. Cadastre um plano antes de gerar cobrança."
-                : undefined
+            plans.length === 0
+              ? "Nenhum plano ativo. Cadastre um plano antes de gerar cobrança."
+              : studentId && planId
+                ? enrollmentExists
+                  ? "Aluno já tem matrícula ativa neste plano — a cobrança será lançada nela."
+                  : "Uma nova matrícula será criada com este plano."
+                : "Opcional se o aluno já tiver matrícula ativa."
           }
         >
           <Combobox
-            required
             value={planId}
             onChange={handlePlanChange}
             disabled={plans.length === 0}
-            placeholder="Selecione um plano…"
+            placeholder="Selecione um plano… (opcional)"
             searchPlaceholder="Buscar plano"
             emptyMessage="Nenhum plano"
             options={plans.map((p) => ({

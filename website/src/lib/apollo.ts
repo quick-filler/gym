@@ -58,6 +58,12 @@ export const apolloClient = new ApolloClient({
       WorkoutPlan:   { keyFields: ['documentId'] },
       BodyAssessment:{ keyFields: ['documentId'] },
       Media:         { keyFields: ['documentId'] },
+      // Aggregate types have no stable identity across queries — disabling
+      // normalization prevents MetricCard { id: 'revenue' } from one month
+      // overwriting the same id from another month in the cache.
+      FinanceOverview: { keyFields: false },
+      MetricCard:      { keyFields: false },
+      MetricDelta:     { keyFields: false },
     },
   }),
 });

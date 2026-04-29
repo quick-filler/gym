@@ -395,9 +395,9 @@ export function useStudents(): DataSourceResult<StudentRow[]> {
   };
 }
 
-export function useFinance(): DataSourceResult<FinanceData> {
+export function useFinance(vars?: { month?: number; year?: number }): DataSourceResult<FinanceData> {
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  const q = useQuery(FINANCE_OVERVIEW, { skip: USE_MOCKS });
+  const q = useQuery(FINANCE_OVERVIEW, { skip: USE_MOCKS, variables: vars });
   if (USE_MOCKS) return useMockedValue(MOCK_FINANCE);
   if (q.loading) return loadingResult();
   if (q.error) return errorResult(q.error);
