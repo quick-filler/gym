@@ -1,9 +1,17 @@
 /**
  * GraphQL schema for the Plan (membership plan) content type.
+ * Tenancy: every read/write scoped by the caller's academy.
  */
 
 import type { Core } from '@strapi/strapi';
-import { resolveUserAcademyId, withAcademyScope } from '../helpers';
+import {
+  assertCanAccessDoc,
+  isPlatformAdmin,
+  requireAcademyId,
+  requireRole,
+  resolveUserAcademyId,
+  withAcademyScope,
+} from '../helpers';
 
 const UID = 'api::plan.plan';
 
@@ -43,7 +51,6 @@ export function buildPlan({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }
       t.int('maxStudents');
       t.list.string('features');
       t.boolean('isActive');
-      t.id('academy');
     },
   });
 
@@ -57,7 +64,6 @@ export function buildPlan({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }
       t.int('maxStudents');
       t.list.string('features');
       t.boolean('isActive');
-      t.id('academy');
     },
   });
 
@@ -69,8 +75,11 @@ export function buildPlan({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }
         args: { pagination: 'PaginationInput' },
         resolve: async (_root: any, args: any, ctx: any) => {
           const academyId = await resolveUserAcademyId(strapi, ctx);
+          const filters = (await isPlatformAdmin(strapi, ctx))
+            ? {}
+            : withAcademyScope({}, academyId);
           return await strapi.documents(UID).findMany({
-            filters: withAcademyScope({}, academyId),
+            filters,
             start: args.pagination?.start ?? 0,
             limit: Math.min(100, args.pagination?.limit ?? 25),
             sort: { price: 'asc' },
@@ -81,7 +90,8 @@ export function buildPlan({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }
       t.field('plan', {
         type: 'Plan',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
         },
       });
@@ -95,9 +105,10 @@ export function buildPlan({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }
         type: 'Plan',
         args: { data: nexus.nonNull(nexus.arg({ type: 'PlanInput' })) },
         resolve: async (_root: any, args: any, ctx: any) => {
-          const academyId = await resolveUserAcademyId(strapi, ctx);
+          await requireRole(strapi, ctx, ['academy_admin']);
+          const academyId = await requireAcademyId(strapi, ctx);
           return await strapi.documents(UID).create({
-            data: { ...args.data, academy: args.data.academy ?? academyId },
+            data: { ...args.data, academy: academyId },
           });
         },
       });
@@ -108,7 +119,9 @@ export function buildPlan({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }
           documentId: nexus.nonNull(nexus.idArg()),
           data: nexus.nonNull(nexus.arg({ type: 'PlanUpdateInput' })),
         },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          await requireRole(strapi, ctx, ['academy_admin']);
           return await strapi.documents(UID).update({
             documentId: args.documentId,
             data: args.data,
@@ -119,7 +132,9 @@ export function buildPlan({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }
       t.field('deletePlan', {
         type: 'Plan',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          await requireRole(strapi, ctx, ['academy_admin']);
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });
           return doc;

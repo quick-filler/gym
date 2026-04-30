@@ -1,0 +1,21 @@
+{
+  "kind": "collectionType",
+  "collectionName": "platform_admins",
+  "info": {
+    "singularName": "platform-admin",
+    "pluralName": "platform-admins",
+    "displayName": "Platform Admin",
+    "description": "Marks a users-permissions user as a platform super admin with cross-academy access."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "user": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}

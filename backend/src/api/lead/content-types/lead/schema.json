@@ -42,8 +42,15 @@
     },
     "status": {
       "type": "enumeration",
-      "enum": ["new", "read", "replied"],
+      "enum": ["new", "contacted", "demo_scheduled", "converted", "lost"],
       "default": "new"
+    },
+    "planInterest": {
+      "type": "enumeration",
+      "enum": ["starter", "business", "pro"]
+    },
+    "notes": {
+      "type": "text"
     }
   }
 }

@@ -58,6 +58,26 @@ type AdminDashboard {
   upcomingPayments: [DashboardPaymentRow!]!
 }
 
+"""
+Asaas credential update. Empty/null fields are preserved (never wipe an existing key with a blank submit).
+"""
+input AsaasSettingsInput {
+  apiKey: String
+  environment: String
+  webhookToken: String
+}
+
+"""
+Asaas configuration status — surfaces whether credentials are set without exposing them.
+"""
+type AsaasSettingsStatus {
+  apiKeyConfigured: Boolean!
+  apiKeyHint: String
+  environment: String!
+  webhookTokenConfigured: Boolean!
+  webhookUrl: String!
+}
+
 type BodyAssessment {
   bodyFat: Float
   date: String!
@@ -73,11 +93,12 @@ type BodyAssessment {
 input BodyAssessmentInput {
   bodyFat: Float
   date: String!
+  dependent: ID
   height: Float
   instructor: String
   measurements: MeasurementsInput
   notes: String
-  student: ID!
+  student: ID
   weight: Float
 }
 
@@ -88,7 +109,6 @@ input BodyAssessmentUpdateInput {
   instructor: String
   measurements: MeasurementsInput
   notes: String
-  student: ID
   weight: Float
 }
 
@@ -129,16 +149,15 @@ type ClassBooking {
 input ClassBookingInput {
   classSchedule: ID!
   date: String!
+  dependent: ID
   status: String
-  student: ID!
+  student: ID
 }
 
 input ClassBookingUpdateInput {
   checkedInAt: String
-  classSchedule: ID
   date: String
   status: String
-  student: ID
 }
 
 type ClassSchedule {
@@ -156,7 +175,6 @@ type ClassSchedule {
 }
 
 input ClassScheduleInput {
-  academy: ID
   endTime: String
   instructor: String
   isActive: Boolean
@@ -169,7 +187,6 @@ input ClassScheduleInput {
 }
 
 input ClassScheduleUpdateInput {
-  academy: ID
   endTime: String
   instructor: String
   isActive: Boolean
@@ -361,7 +378,6 @@ type Dependent {
 }
 
 input DependentInput {
-  academy: ID
   allergies: String
   birthdate: String!
   bloodType: String
@@ -402,21 +418,20 @@ type Enrollment {
 }
 
 input EnrollmentInput {
+  dependent: ID
   endDate: String
   paymentMethod: String
   plan: ID!
   startDate: String!
   status: String
-  student: ID!
+  student: ID
 }
 
 input EnrollmentUpdateInput {
   endDate: String
   paymentMethod: String
-  plan: ID
   startDate: String
   status: String
-  student: ID
 }
 
 type Error {
@@ -459,7 +474,6 @@ type Expense {
 }
 
 input ExpenseInput {
-  academy: ID
   amount: Float!
   category: String!
   date: String!
@@ -646,6 +660,27 @@ input JSONFilterInput {
   startsWith: JSON
 }
 
+type Lead {
+  academyName: String
+  createdAt: String
+  documentId: String!
+  email: String!
+  message: String!
+  name: String!
+  notes: String
+  phone: String
+  planInterest: String
+  status: String!
+  studentCount: String
+}
+
+type LeadListResult {
+  items: [Lead!]!
+  page: Int!
+  pageSize: Int!
+  total: Int!
+}
+
 """
 The `BigInt` scalar type represents non-fractional signed whole numeric values.
 """
@@ -751,6 +786,12 @@ type Mutation {
   updateDependent(data: DependentUpdateInput!, documentId: ID!): Dependent
   updateEnrollment(data: EnrollmentUpdateInput!, documentId: ID!): Enrollment
   updateExpense(data: ExpenseUpdateInput!, documentId: ID!): Expense
+  updateLead(data: UpdateLeadInput!, documentId: ID!): Lead
+
+  """
+  Updates Asaas credentials for the caller's academy. Empty fields preserve the existing values — pass apiKey only when rotating.
+  """
+  updateMyAsaasSettings(data: AsaasSettingsInput!): AsaasSettingsStatus
   updatePayment(data: PaymentUpdateInput!, documentId: ID!): Payment
   updatePlan(data: PlanUpdateInput!, documentId: ID!): Plan
   updateStudent(data: StudentUpdateInput!, documentId: ID!): Student
@@ -810,7 +851,6 @@ type Plan {
 }
 
 input PlanInput {
-  academy: ID
   billingCycle: String!
   description: String
   features: [String]
@@ -821,7 +861,6 @@ input PlanInput {
 }
 
 input PlanUpdateInput {
-  academy: ID
   billingCycle: String
   description: String
   features: [String]
@@ -829,6 +868,31 @@ input PlanUpdateInput {
   maxStudents: Int
   name: String
   price: Float
+}
+
+type PlatformAcademy {
+  createdAt: String
+  documentId: String!
+  email: String
+  isActive: Boolean!
+  name: String!
+  plan: String!
+  slug: String!
+  studentCount: Int!
+}
+
+type PlatformAcademyList {
+  items: [PlatformAcademy!]!
+  total: Int!
+}
+
+type PlatformDashboard {
+  activeAcademies: Int!
+  leadsThisMonth: Int!
+  mrr: String!
+  openLeads: Int!
+  totalAcademies: Int!
+  totalStudents: Int!
 }
 
 enum PublicationStatus {
@@ -843,6 +907,7 @@ type Query {
   """Public — returns branding config for the given slug."""
   academyBySlug(slug: String!): Academy
   adminDashboard: AdminDashboard
+  allAcademies(page: Int, pageSize: Int): PlatformAcademyList
   bodyAssessment(documentId: ID!): BodyAssessment
   bodyAssessments(pagination: PaginationInput): [BodyAssessment]
   classBooking(documentId: ID!): ClassBooking
@@ -858,14 +923,21 @@ type Query {
   expenses(month: Int, pagination: PaginationInput, year: Int): [Expense]
   financeOverview(month: Int, year: Int): FinanceOverview
   guardians: [GuardianFamily!]
+  leads(page: Int, pageSize: Int, status: String): LeadListResult
 
   """Returns the authenticated user's linked Student profile."""
   me: Student
+
+  """
+  Returns the Asaas configuration status for the caller's academy. Never reveals the actual credentials.
+  """
+  myAsaasSettings: AsaasSettingsStatus
   myDependents: [Dependent]
   payment(documentId: ID!): Payment
   payments(pagination: PaginationInput): [Payment]
   plan(documentId: ID!): Plan
   plans(pagination: PaginationInput): [Plan]
+  platformDashboard: PlatformDashboard
 
   """Bookings for a given class schedule, optionally filtered by date."""
   scheduleBookings(date: String, documentId: ID!): [ClassBooking]
@@ -970,7 +1042,6 @@ input StudentInput {
 }
 
 input StudentUpdateInput {
-  academy: ID
   birthdate: String
   email: String
   isGuardian: Boolean
@@ -1010,6 +1081,12 @@ input TimeFilterInput {
   startsWith: Time
 }
 
+input UpdateLeadInput {
+  notes: String
+  planInterest: String
+  status: String
+}
+
 type WorkoutPlan {
   documentId: ID!
   exercises: [Exercise]
@@ -1022,11 +1099,12 @@ type WorkoutPlan {
 }
 
 input WorkoutPlanInput {
+  dependent: ID
   exercises: [ExerciseInput]
   instructor: String
   isActive: Boolean
   name: String!
-  student: ID!
+  student: ID
   validFrom: String
   validTo: String
 }
@@ -1036,7 +1114,6 @@ input WorkoutPlanUpdateInput {
   instructor: String
   isActive: Boolean
   name: String
-  student: ID
   validFrom: String
   validTo: String
 }

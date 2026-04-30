@@ -18,7 +18,11 @@
  */
 
 import type { Core } from '@strapi/strapi';
-import { resolveUserAcademyId, withAcademyScope } from '../helpers';
+import {
+  resolveUserAcademyId,
+  withAcademyScope,
+  withPaymentScope,
+} from '../helpers';
 import {
   BRL,
   BRL_SHORT,
@@ -30,15 +34,10 @@ import {
   monthWindow,
 } from '../aggregate-helpers';
 
-const ACADEMY = 'api::academy.academy';
 const STUDENT = 'api::student.student';
-const PLAN = 'api::plan.plan';
-const ENROLLMENT = 'api::enrollment.enrollment';
 const SCHEDULE = 'api::class-schedule.class-schedule';
-const BOOKING = 'api::class-booking.class-booking';
 const PAYMENT = 'api::payment.payment';
 const EXPENSE = 'api::expense.expense';
-const DEPENDENT = 'api::dependent.dependent';
 
 // ---------------------------------------------------------------------
 // Module
@@ -341,9 +340,7 @@ export function buildAggregates({
               limit: 100,
             }),
             strapi.documents(PAYMENT).findMany({
-              filters: academyId
-                ? { enrollment: { student: { academy: { documentId: academyId } } } }
-                : {},
+              filters: withPaymentScope(academyId),
               limit: 500,
               sort: { dueDate: 'desc' },
               populate: { enrollment: { populate: { student: true } } },
@@ -462,9 +459,7 @@ export function buildAggregates({
           const { start, end } = monthWindow(year, month);
 
           const payments = await strapi.documents(PAYMENT).findMany({
-            filters: academyId
-              ? { enrollment: { student: { academy: { documentId: academyId } } } }
-              : {},
+            filters: withPaymentScope(academyId),
             limit: 2000,
             sort: { dueDate: 'desc' },
             populate: { enrollment: { populate: { student: true } } },
@@ -602,9 +597,7 @@ export function buildAggregates({
               sort: { date: 'desc' },
             }),
             strapi.documents(PAYMENT).findMany({
-              filters: academyId
-                ? { enrollment: { student: { academy: { documentId: academyId } } } }
-                : {},
+              filters: withPaymentScope(academyId),
               limit: 5000,
             }),
           ]);

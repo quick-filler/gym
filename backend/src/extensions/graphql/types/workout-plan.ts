@@ -1,12 +1,21 @@
 /**
  * GraphQL schema for the WorkoutPlan content type.
  *
- * Exercises is a JSON field — exposed as a generic JSON scalar. The frontend
- * is responsible for shape validation against the agreed schema:
- * `Array<{ name, sets, reps, load, notes }>`.
+ * Tenancy via student/dependent → academy. Both academy_admin and
+ * instructor can manage workouts (instructors typically own the
+ * pedagogical layer).
  */
 
 import type { Core } from '@strapi/strapi';
+import {
+  assertCanAccessDoc,
+  isPlatformAdmin,
+  requireAcademyId,
+  requireRole,
+  resolveDocAcademyId,
+  resolveUserAcademyId,
+  withStudentScope,
+} from '../helpers';
 
 const UID = 'api::workout-plan.workout-plan';
 
@@ -61,7 +70,8 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
     name: 'WorkoutPlanInput',
     definition(t: any) {
       t.nonNull.string('name');
-      t.nonNull.id('student');
+      t.id('student');
+      t.id('dependent');
       t.string('instructor');
       t.list.field('exercises', { type: 'ExerciseInput' });
       t.string('validFrom');
@@ -74,7 +84,6 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
     name: 'WorkoutPlanUpdateInput',
     definition(t: any) {
       t.string('name');
-      t.id('student');
       t.string('instructor');
       t.list.field('exercises', { type: 'ExerciseInput' });
       t.string('validFrom');
@@ -89,8 +98,13 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
       t.list.field('workoutPlans', {
         type: 'WorkoutPlan',
         args: { pagination: 'PaginationInput' },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const academyId = await resolveUserAcademyId(strapi, ctx);
+          const filters = (await isPlatformAdmin(strapi, ctx))
+            ? {}
+            : withStudentScope({}, academyId);
           return await strapi.documents(UID).findMany({
+            filters,
             start: args.pagination?.start ?? 0,
             limit: Math.min(100, args.pagination?.limit ?? 25),
             sort: { validFrom: 'desc' },
@@ -101,7 +115,8 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
       t.field('workoutPlan', {
         type: 'WorkoutPlan',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
         },
       });
@@ -114,7 +129,28 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
       t.field('createWorkoutPlan', {
         type: 'WorkoutPlan',
         args: { data: nexus.nonNull(nexus.arg({ type: 'WorkoutPlanInput' })) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await requireRole(strapi, ctx, ['academy_admin', 'instructor']);
+          const academyId = await requireAcademyId(strapi, ctx);
+          if (!args.data.student && !args.data.dependent) {
+            throw new Error('Informe o aluno ou o dependente.');
+          }
+          if (args.data.student) {
+            const a = await resolveDocAcademyId(
+              strapi,
+              'api::student.student',
+              args.data.student,
+            );
+            if (a !== academyId) throw new Error('Aluno de outra academia.');
+          }
+          if (args.data.dependent) {
+            const a = await resolveDocAcademyId(
+              strapi,
+              'api::dependent.dependent',
+              args.data.dependent,
+            );
+            if (a !== academyId) throw new Error('Dependente de outra academia.');
+          }
           return await strapi.documents(UID).create({ data: args.data });
         },
       });
@@ -125,7 +161,9 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
           documentId: nexus.nonNull(nexus.idArg()),
           data: nexus.nonNull(nexus.arg({ type: 'WorkoutPlanUpdateInput' })),
         },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          await requireRole(strapi, ctx, ['academy_admin', 'instructor']);
           return await strapi.documents(UID).update({
             documentId: args.documentId,
             data: args.data,
@@ -136,7 +174,9 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
       t.field('deleteWorkoutPlan', {
         type: 'WorkoutPlan',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          await requireRole(strapi, ctx, ['academy_admin', 'instructor']);
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });
           return doc;

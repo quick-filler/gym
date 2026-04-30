@@ -3,7 +3,14 @@
  */
 
 import type { Core } from '@strapi/strapi';
-import { resolveUserAcademyId, withAcademyScope } from '../helpers';
+import {
+  assertCanAccessDoc,
+  isPlatformAdmin,
+  requireAcademyId,
+  requireRole,
+  resolveUserAcademyId,
+  withAcademyScope,
+} from '../helpers';
 
 const UID = 'api::expense.expense';
 
@@ -70,7 +77,6 @@ export function buildExpense({
       t.boolean('recurrent');
       t.int('recurrenceDay');
       t.string('notes');
-      t.id('academy');
     },
   });
 
@@ -104,7 +110,9 @@ export function buildExpense({
         },
         resolve: async (_root: any, args: any, ctx: any) => {
           const academyId = await resolveUserAcademyId(strapi, ctx);
-          const filters: any = withAcademyScope({}, academyId);
+          const filters: any = (await isPlatformAdmin(strapi, ctx))
+            ? {}
+            : withAcademyScope({}, academyId);
           if (args.year) {
             const mm = args.month
               ? String(args.month).padStart(2, '0')
@@ -134,8 +142,10 @@ export function buildExpense({
       t.field('expense', {
         type: 'Expense',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) =>
-          await strapi.documents(UID).findOne({ documentId: args.documentId }),
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          return await strapi.documents(UID).findOne({ documentId: args.documentId });
+        },
       });
     },
   });
@@ -147,9 +157,10 @@ export function buildExpense({
         type: 'Expense',
         args: { data: nexus.nonNull(nexus.arg({ type: 'ExpenseInput' })) },
         resolve: async (_root: any, args: any, ctx: any) => {
-          const academyId = await resolveUserAcademyId(strapi, ctx);
+          await requireRole(strapi, ctx, ['academy_admin']);
+          const academyId = await requireAcademyId(strapi, ctx);
           return await strapi.documents(UID).create({
-            data: { ...args.data, academy: args.data.academy ?? academyId },
+            data: { ...args.data, academy: academyId },
           });
         },
       });
@@ -160,17 +171,22 @@ export function buildExpense({
           documentId: nexus.nonNull(nexus.idArg()),
           data: nexus.nonNull(nexus.arg({ type: 'ExpenseUpdateInput' })),
         },
-        resolve: async (_root: any, args: any) =>
-          await strapi.documents(UID).update({
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          await requireRole(strapi, ctx, ['academy_admin']);
+          return await strapi.documents(UID).update({
             documentId: args.documentId,
             data: args.data,
-          }),
+          });
+        },
       });
 
       t.field('deleteExpense', {
         type: 'Expense',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          await requireRole(strapi, ctx, ['academy_admin']);
           const doc = await strapi
             .documents(UID)
             .findOne({ documentId: args.documentId });

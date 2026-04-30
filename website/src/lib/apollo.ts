@@ -61,9 +61,15 @@ export const apolloClient = new ApolloClient({
       // Aggregate types have no stable identity across queries — disabling
       // normalization prevents MetricCard { id: 'revenue' } from one month
       // overwriting the same id from another month in the cache.
-      FinanceOverview: { keyFields: false },
-      MetricCard:      { keyFields: false },
-      MetricDelta:     { keyFields: false },
+      FinanceOverview:    { keyFields: false },
+      MetricCard:         { keyFields: false },
+      MetricDelta:        { keyFields: false },
+      // Platform types are identified by documentId or are shapeless aggregates.
+      Lead:               { keyFields: ['documentId'] },
+      LeadListResult:     { keyFields: false },
+      PlatformDashboard:  { keyFields: false },
+      PlatformAcademy:    { keyFields: ['documentId'] },
+      PlatformAcademyList:{ keyFields: false },
     },
   }),
 });

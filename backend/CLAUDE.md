@@ -415,16 +415,50 @@ Asaas is the Brazilian payment gateway (PIX, boleto, credit card).
 Client code lives in `src/services/asaas.ts`; webhook dispatch in
 `src/services/asaas-webhook.ts`.
 
+### Multi-tenant credentials
+
+Each `Academy` carries its own Asaas credentials so each tenant bills
+through its own gateway account:
+
+- `Academy.asaasApiKey` — private string (not exposed via GraphQL)
+- `Academy.asaasWebhookToken` — private string for webhook validation
+- `Academy.asaasEnvironment` — `sandbox` (default) | `production`
+
+The factory `createAsaasClient({ apiKey, environment })` builds a
+client bound to those credentials. A higher-level helper
+`asaasForAcademy(academyDocumentId)` looks up the academy and returns
+the right client; falls back to `ASAAS_API_KEY` / `ASAAS_BASE_URL` env
+vars when the academy has no key (useful for fresh installs and the
+demo seed).
+
+The default export of `asaas.ts` (single env-bound client) is kept for
+back-compat but new code should call `asaasForAcademy(...)`.
+
 ### Flow
 
 1. Admin creates an Enrollment (via Strapi admin or `createEnrollment`
    GraphQL mutation).
-2. `afterCreate` calls Asaas → customer + subscription created → IDs
-   stored on the enrollment.
-3. Asaas generates charges automatically and pushes events to
-   `POST /api/payments/webhook`.
-4. The webhook upserts the local Payment record. Status changes are
-   visible immediately to the website + app via `payments` GraphQL query.
+2. `beforeCreate` validates that the linked student/dependent and plan
+   belong to the same Academy.
+3. `afterCreate` resolves the tenant via `asaasForAcademy(academyId)` →
+   creates customer + subscription → stores `asaasCustomerId` /
+   `asaasSubId` on the enrollment.
+4. Asaas pushes events to the academy's slugged webhook URL:
+   `POST /api/payments/webhook/<academy-slug>`.
+5. The webhook validates the `asaas-access-token` header against the
+   academy's stored `asaasWebhookToken`, then dispatches.
+6. `asaas-webhook.ts → handle(payload, { academyDocumentId })` does a
+   cross-tenant safety check: refuses the event if the resolved
+   enrollment belongs to a different academy than the URL slug claims.
+
+### Webhook routes
+
+| Path | Use |
+|---|---|
+| `POST /api/payments/webhook` | Legacy single-tenant — env-token only |
+| `POST /api/payments/webhook/:slug` | Multi-tenant — per-academy token + cross-tenant validation |
+
+Each academy registers its slugged URL + token in the Asaas dashboard.
 
 ### Asaas API reference
 
@@ -439,9 +473,6 @@ Client code lives in `src/services/asaas.ts`; webhook dispatch in
 - Webhook events handled:
   `PAYMENT_CREATED`, `PAYMENT_RECEIVED`, `PAYMENT_CONFIRMED`,
   `PAYMENT_OVERDUE`, `PAYMENT_DELETED`, `PAYMENT_REFUNDED`.
-
-The webhook validates an `asaas-access-token` header against the
-`ASAAS_WEBHOOK_TOKEN` env var. Invalid tokens get a 401.
 
 ## Bootstrap
 

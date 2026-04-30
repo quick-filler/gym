@@ -1,11 +1,20 @@
 /**
  * GraphQL schema for the BodyAssessment content type.
  *
- * Measurements is a JSON field — the agreed shape on the frontend is
- * `{ chest, waist, hips, arms, thighs, ... }` (all numbers, all optional).
+ * Tenancy via student/dependent → academy. Owned by both academy_admin and
+ * instructor (instructors typically run the avaliação física).
  */
 
 import type { Core } from '@strapi/strapi';
+import {
+  assertCanAccessDoc,
+  isPlatformAdmin,
+  requireAcademyId,
+  requireRole,
+  resolveDocAcademyId,
+  resolveUserAcademyId,
+  withStudentScope,
+} from '../helpers';
 
 const UID = 'api::body-assessment.body-assessment';
 
@@ -64,7 +73,8 @@ export function buildBodyAssessment({ nexus, strapi }: { nexus: any; strapi: Cor
   const BodyAssessmentInput = nexus.inputObjectType({
     name: 'BodyAssessmentInput',
     definition(t: any) {
-      t.nonNull.id('student');
+      t.id('student');
+      t.id('dependent');
       t.nonNull.string('date');
       t.string('instructor');
       t.float('weight');
@@ -78,7 +88,6 @@ export function buildBodyAssessment({ nexus, strapi }: { nexus: any; strapi: Cor
   const BodyAssessmentUpdateInput = nexus.inputObjectType({
     name: 'BodyAssessmentUpdateInput',
     definition(t: any) {
-      t.id('student');
       t.string('date');
       t.string('instructor');
       t.float('weight');
@@ -95,8 +104,13 @@ export function buildBodyAssessment({ nexus, strapi }: { nexus: any; strapi: Cor
       t.list.field('bodyAssessments', {
         type: 'BodyAssessment',
         args: { pagination: 'PaginationInput' },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const academyId = await resolveUserAcademyId(strapi, ctx);
+          const filters = (await isPlatformAdmin(strapi, ctx))
+            ? {}
+            : withStudentScope({}, academyId);
           return await strapi.documents(UID).findMany({
+            filters,
             start: args.pagination?.start ?? 0,
             limit: Math.min(100, args.pagination?.limit ?? 25),
             sort: { date: 'desc' },
@@ -107,7 +121,8 @@ export function buildBodyAssessment({ nexus, strapi }: { nexus: any; strapi: Cor
       t.field('bodyAssessment', {
         type: 'BodyAssessment',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
         },
       });
@@ -120,7 +135,28 @@ export function buildBodyAssessment({ nexus, strapi }: { nexus: any; strapi: Cor
       t.field('createBodyAssessment', {
         type: 'BodyAssessment',
         args: { data: nexus.nonNull(nexus.arg({ type: 'BodyAssessmentInput' })) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await requireRole(strapi, ctx, ['academy_admin', 'instructor']);
+          const academyId = await requireAcademyId(strapi, ctx);
+          if (!args.data.student && !args.data.dependent) {
+            throw new Error('Informe o aluno ou o dependente.');
+          }
+          if (args.data.student) {
+            const a = await resolveDocAcademyId(
+              strapi,
+              'api::student.student',
+              args.data.student,
+            );
+            if (a !== academyId) throw new Error('Aluno de outra academia.');
+          }
+          if (args.data.dependent) {
+            const a = await resolveDocAcademyId(
+              strapi,
+              'api::dependent.dependent',
+              args.data.dependent,
+            );
+            if (a !== academyId) throw new Error('Dependente de outra academia.');
+          }
           return await strapi.documents(UID).create({ data: args.data });
         },
       });
@@ -131,7 +167,9 @@ export function buildBodyAssessment({ nexus, strapi }: { nexus: any; strapi: Cor
           documentId: nexus.nonNull(nexus.idArg()),
           data: nexus.nonNull(nexus.arg({ type: 'BodyAssessmentUpdateInput' })),
         },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          await requireRole(strapi, ctx, ['academy_admin', 'instructor']);
           return await strapi.documents(UID).update({
             documentId: args.documentId,
             data: args.data,
@@ -142,7 +180,9 @@ export function buildBodyAssessment({ nexus, strapi }: { nexus: any; strapi: Cor
       t.field('deleteBodyAssessment', {
         type: 'BodyAssessment',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          await requireRole(strapi, ctx, ['academy_admin', 'instructor']);
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });
           return doc;
