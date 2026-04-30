@@ -257,3 +257,87 @@ Time Gym`;
     replyTo: process.env.CONTACT_NOTIFICATION_EMAIL,
   });
 }
+
+// ---------------------------------------------------------------------------
+// Academy welcome (lead → academy conversion)
+// ---------------------------------------------------------------------------
+
+interface AcademyWelcomeParams {
+  name: string;
+  email: string;
+  academyName: string;
+  resetUrl: string;
+}
+
+export async function sendAcademyWelcomeEmail(
+  strapi: Core.Strapi,
+  params: AcademyWelcomeParams,
+): Promise<void> {
+  const firstName = params.name.split(' ')[0];
+
+  const html = wrap(`
+    <h2 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#111827;">
+      Boas-vindas ao Gym, ${firstName}!
+    </h2>
+    <p style="margin:0 0 20px 0;font-size:15px;color:#374151;line-height:1.7;">
+      A conta da <strong>${params.academyName}</strong> foi criada com sucesso.
+      Para acessar o painel pela primeira vez, defina sua senha clicando no
+      botão abaixo. O link é pessoal e expira por segurança — caso ele não
+      funcione, peça à nossa equipe um novo.
+    </p>
+
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:28px;">
+      <tr>
+        <td>
+          <a href="${params.resetUrl}"
+             style="display:inline-block;background-color:#e8551c;color:#ffffff;text-decoration:none;padding:14px 30px;border-radius:8px;font-weight:600;font-size:15px;">
+            Definir minha senha
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <div style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+      <p style="margin:0 0 6px 0;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+        Seu e-mail de acesso
+      </p>
+      <p style="margin:0;font-size:15px;color:#111827;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;">
+        ${params.email}
+      </p>
+    </div>
+
+    <p style="margin:0 0 12px 0;font-size:14px;color:#6b7280;line-height:1.6;">
+      Se o botão não funcionar, copie e cole este endereço no navegador:
+    </p>
+    <p style="margin:0 0 24px 0;font-size:13px;color:#374151;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;">
+      ${params.resetUrl}
+    </p>
+
+    <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.6;">
+      Qualquer dúvida, é só responder este e-mail.<br>
+      <strong style="color:#111827;">Time Gym</strong>
+    </p>
+  `);
+
+  const text = `Boas-vindas ao Gym, ${firstName}!
+
+A conta da ${params.academyName} foi criada com sucesso. Para acessar
+o painel pela primeira vez, defina sua senha pelo link:
+
+${params.resetUrl}
+
+Seu e-mail de acesso: ${params.email}
+
+Qualquer dúvida, é só responder este e-mail.
+
+Atenciosamente,
+Time Gym`;
+
+  await sendEmail(strapi, {
+    to: params.email,
+    subject: `Sua academia está pronta — defina sua senha de acesso`,
+    html,
+    text,
+    replyTo: process.env.CONTACT_NOTIFICATION_EMAIL,
+  });
+}

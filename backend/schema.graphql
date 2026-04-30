@@ -211,6 +211,28 @@ type ContactFormResult {
   ok: Boolean!
 }
 
+"""
+Settings to provision the new Academy + admin user when converting a lead.
+"""
+input ConvertLeadInput {
+  academyName: String
+  businessType: String
+  plan: String!
+  primaryColor: String
+  secondaryColor: String
+  slug: String!
+}
+
+"""
+Outcome of a lead → academy conversion. passwordResetUrl is included so the platform admin can copy it manually if email delivery fails.
+"""
+type ConvertLeadResult {
+  academy: Academy!
+  adminEmail: String!
+  emailSent: Boolean!
+  passwordResetUrl: String!
+}
+
 type DRECashFlowPoint {
   expenses: Float!
   label: String!
@@ -757,6 +779,11 @@ type MetricDelta {
 type Mutation {
   """Mark a booking as attended and stamp checkedInAt."""
   checkInBooking(documentId: ID!): ClassBooking
+
+  """
+  Provisions a new Academy + academy_admin user from a converted lead, marks the lead as converted, and sends a password-reset email so the new admin can log in.
+  """
+  convertLead(data: ConvertLeadInput!, documentId: ID!): ConvertLeadResult
   createAcademy(data: AcademyInput!): Academy
   createBodyAssessment(data: BodyAssessmentInput!): BodyAssessment
   createClassBooking(data: ClassBookingInput!): ClassBooking

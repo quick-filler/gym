@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { Select } from "@/components/ui/Field";
 import { cn } from "@/lib/utils";
+import { ConvertLeadDialog } from "./ConvertLeadDialog";
 
 const LEADS = gql`
   query PlatformLeads($status: String, $page: Int) {
@@ -80,6 +81,7 @@ export default function PlatformLeadsPage() {
   const [selected, setSelected] = useState<any | null>(null);
   const [editNotes, setEditNotes] = useState("");
   const [editStatus, setEditStatus] = useState("");
+  const [convertOpen, setConvertOpen] = useState(false);
 
   const { data, loading, refetch } = useQuery(LEADS, {
     variables: { status: statusFilter || undefined, page },
@@ -278,7 +280,16 @@ export default function PlatformLeadsPage() {
               </div>
             </div>
 
-            <div className="p-6 border-t border-line">
+            <div className="p-6 border-t border-line flex flex-col gap-2">
+              {selected.status !== "converted" && (
+                <button
+                  onClick={() => setConvertOpen(true)}
+                  className="w-full bg-flame text-white font-semibold text-[0.88rem] py-3 rounded-xl hover:bg-flame-dark transition-colors flex items-center justify-center gap-2"
+                >
+                  <Icon name="sparkles" />
+                  Converter em academia
+                </button>
+              )}
               <button
                 onClick={handleSave}
                 disabled={saving}
@@ -290,6 +301,17 @@ export default function PlatformLeadsPage() {
           </div>
         </div>
       )}
+
+      <ConvertLeadDialog
+        open={convertOpen}
+        lead={selected}
+        onClose={() => setConvertOpen(false)}
+        onConverted={() => {
+          refetch();
+          setConvertOpen(false);
+          setSelected(null);
+        }}
+      />
     </>
   );
 }
