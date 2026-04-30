@@ -235,8 +235,8 @@
       "list": [
         "id",
         "student",
-        "plan",
-        "startDate"
+        "dependent",
+        "plan"
       ],
       "edit": [
         [
@@ -245,47 +245,47 @@
             "size": 6
           },
           {
-            "name": "plan",
+            "name": "dependent",
             "size": 6
           }
         ],
         [
+          {
+            "name": "plan",
+            "size": 6
+          },
           {
             "name": "startDate",
             "size": 4
-          },
+          }
+        ],
+        [
           {
             "name": "endDate",
             "size": 4
-          }
-        ],
-        [
+          },
           {
             "name": "status",
             "size": 6
-          },
+          }
+        ],
+        [
           {
             "name": "paymentMethod",
             "size": 6
-          }
-        ],
-        [
+          },
           {
             "name": "asaasCustomerId",
             "size": 6
-          },
-          {
-            "name": "asaasSubId",
-            "size": 6
           }
         ],
         [
           {
-            "name": "payments",
+            "name": "asaasSubId",
             "size": 6
           },
           {
-            "name": "dependent",
+            "name": "payments",
             "size": 6
           }
         ]

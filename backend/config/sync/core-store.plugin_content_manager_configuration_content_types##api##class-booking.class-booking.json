@@ -178,8 +178,8 @@
       "list": [
         "id",
         "student",
-        "classSchedule",
-        "date"
+        "dependent",
+        "classSchedule"
       ],
       "edit": [
         [
@@ -188,27 +188,27 @@
             "size": 6
           },
           {
-            "name": "classSchedule",
+            "name": "dependent",
             "size": 6
           }
         ],
         [
+          {
+            "name": "classSchedule",
+            "size": 6
+          },
           {
             "name": "date",
             "size": 4
-          },
-          {
-            "name": "status",
-            "size": 6
           }
         ],
         [
           {
-            "name": "checkedInAt",
+            "name": "status",
             "size": 6
           },
           {
-            "name": "dependent",
+            "name": "checkedInAt",
             "size": 6
           }
         ]
