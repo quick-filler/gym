@@ -2,6 +2,7 @@ import type { Core } from '@strapi/strapi';
 import { setupRolesAndPermissions } from './bootstrap/permissions';
 import { ensureDemoDevUser, seedDemoData } from './bootstrap/seed';
 import { registerGraphQL } from './extensions/graphql';
+import { registerUserPasswordLifecycle } from './bootstrap/user-password-lifecycle';
 
 export default {
   /**
@@ -11,6 +12,7 @@ export default {
    */
   register({ strapi }: { strapi: Core.Strapi }) {
     registerGraphQL(strapi);
+    registerUserPasswordLifecycle(strapi);
   },
 
   /**

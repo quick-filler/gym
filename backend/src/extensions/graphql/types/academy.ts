@@ -1,12 +1,23 @@
 /**
  * GraphQL schema for the Academy content type.
  *
- * Includes the public `academyBySlug` query which is the only auth-free
- * surface in the gym API — it powers the white-label theming on the
- * frontend (returns name, slug, colors, logo only).
+ * Tenancy:
+ *   - academyBySlug(slug)   public  — branding lookup for white-label theming
+ *   - academies()           platform admin only — cross-tenant listing
+ *   - academy(documentId)   regular users get their own academy only;
+ *                           platform admins fetch any
+ *   - createAcademy         platform admin only — provisions a new tenant
+ *   - updateAcademy         academy_admin (own academy) or platform admin
+ *   - deleteAcademy         platform admin only — destructive cross-tenant op
  */
 
 import type { Core } from '@strapi/strapi';
+import {
+  assertCanAccessDoc,
+  isPlatformAdmin,
+  resolveUserAcademyId,
+  requireRole,
+} from '../helpers';
 
 const UID = 'api::academy.academy';
 
@@ -79,26 +90,63 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
     },
   });
 
+  const AsaasSettingsStatus = nexus.objectType({
+    name: 'AsaasSettingsStatus',
+    description:
+      "Asaas configuration status — surfaces whether credentials are set without exposing them.",
+    definition(t: any) {
+      t.nonNull.boolean('apiKeyConfigured');
+      t.nonNull.boolean('webhookTokenConfigured');
+      t.nonNull.string('environment');
+      t.nonNull.string('webhookUrl');
+      t.string('apiKeyHint');
+    },
+  });
+
+  const AsaasSettingsInput = nexus.inputObjectType({
+    name: 'AsaasSettingsInput',
+    description:
+      'Asaas credential update. Empty/null fields are preserved (never wipe an existing key with a blank submit).',
+    definition(t: any) {
+      t.string('apiKey');
+      t.string('webhookToken');
+      t.string('environment');
+    },
+  });
+
   const queries = nexus.extendType({
     type: 'Query',
     definition(t: any) {
       t.list.field('academies', {
         type: 'Academy',
         args: { pagination: 'PaginationInput' },
-        resolve: async (_root: any, args: any) => {
-          return await strapi.documents(UID).findMany({
-            start: args.pagination?.start ?? 0,
-            limit: Math.min(100, args.pagination?.limit ?? 25),
-            sort: { name: 'asc' },
+        resolve: async (_root: any, args: any, ctx: any) => {
+          // Cross-tenant listing is restricted to platform admins.
+          // Regular users get only their own academy back.
+          if (await isPlatformAdmin(strapi, ctx)) {
+            return await strapi.documents(UID).findMany({
+              start: args.pagination?.start ?? 0,
+              limit: Math.min(100, args.pagination?.limit ?? 25),
+              sort: { name: 'asc' },
+            });
+          }
+          const academyId = await resolveUserAcademyId(strapi, ctx);
+          if (!academyId) return [];
+          const own = await strapi.documents(UID).findOne({
+            documentId: academyId,
           });
+          return own ? [own] : [];
         },
       });
 
       t.field('academy', {
         type: 'Academy',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) => {
-          return await strapi.documents(UID).findOne({ documentId: args.documentId });
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          return await strapi.documents(UID).findOne({
+            documentId: args.documentId,
+          });
         },
       });
 
@@ -114,6 +162,40 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
           return results[0] ?? null;
         },
       });
+
+      t.field('myAsaasSettings', {
+        type: 'AsaasSettingsStatus',
+        description:
+          "Returns the Asaas configuration status for the caller's academy. Never reveals the actual credentials.",
+        resolve: async (_root: any, _args: any, ctx: any) => {
+          const academyId = await resolveUserAcademyId(strapi, ctx);
+          if (!academyId) {
+            throw new Error(
+              'Sua conta não está vinculada a nenhuma academia.',
+            );
+          }
+          const academy: any = await strapi.documents(UID).findOne({
+            documentId: academyId,
+            fields: [
+              'slug',
+              'asaasApiKey',
+              'asaasWebhookToken',
+              'asaasEnvironment',
+            ] as any,
+          });
+          const apiBase =
+            process.env.PUBLIC_API_URL ?? 'http://localhost:7777';
+          return {
+            apiKeyConfigured: !!academy?.asaasApiKey,
+            webhookTokenConfigured: !!academy?.asaasWebhookToken,
+            environment: academy?.asaasEnvironment ?? 'sandbox',
+            webhookUrl: `${apiBase}/api/payments/webhook/${academy?.slug}`,
+            apiKeyHint: academy?.asaasApiKey
+              ? `…${academy.asaasApiKey.slice(-4)}`
+              : null,
+          };
+        },
+      });
     },
   });
 
@@ -123,7 +205,12 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.field('createAcademy', {
         type: 'Academy',
         args: { data: nexus.nonNull(nexus.arg({ type: 'AcademyInput' })) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          if (!(await isPlatformAdmin(strapi, ctx))) {
+            throw new Error(
+              'Acesso negado: apenas administradores da plataforma criam academias.',
+            );
+          }
           return await strapi.documents(UID).create({ data: args.data });
         },
       });
@@ -134,7 +221,12 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
           documentId: nexus.nonNull(nexus.idArg()),
           data: nexus.nonNull(nexus.arg({ type: 'AcademyUpdateInput' })),
         },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          // Platform admin can edit anything; academy_admin only their own.
+          if (!(await isPlatformAdmin(strapi, ctx))) {
+            await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+            await requireRole(strapi, ctx, ['academy_admin']);
+          }
           return await strapi.documents(UID).update({
             documentId: args.documentId,
             data: args.data,
@@ -145,24 +237,105 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.field('deleteAcademy', {
         type: 'Academy',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) => {
-          const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
+        resolve: async (_root: any, args: any, ctx: any) => {
+          if (!(await isPlatformAdmin(strapi, ctx))) {
+            throw new Error(
+              'Acesso negado: apenas administradores da plataforma deletam academias.',
+            );
+          }
+          const doc = await strapi.documents(UID).findOne({
+            documentId: args.documentId,
+          });
           await strapi.documents(UID).delete({ documentId: args.documentId });
           return doc;
+        },
+      });
+
+      t.field('updateMyAsaasSettings', {
+        type: 'AsaasSettingsStatus',
+        description:
+          "Updates Asaas credentials for the caller's academy. Empty fields preserve the existing values — pass apiKey only when rotating.",
+        args: { data: nexus.nonNull(nexus.arg({ type: 'AsaasSettingsInput' })) },
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await requireRole(strapi, ctx, ['academy_admin']);
+          const academyId = await resolveUserAcademyId(strapi, ctx);
+          if (!academyId) {
+            throw new Error(
+              'Sua conta não está vinculada a nenhuma academia.',
+            );
+          }
+
+          // Coerce empty strings to undefined so blanks never overwrite
+          // existing credentials (rotation requires a non-empty value).
+          const patch: Record<string, unknown> = {};
+          if (args.data.apiKey?.trim()) {
+            patch.asaasApiKey = args.data.apiKey.trim();
+          }
+          if (args.data.webhookToken?.trim()) {
+            patch.asaasWebhookToken = args.data.webhookToken.trim();
+          }
+          if (args.data.environment) {
+            if (!['sandbox', 'production'].includes(args.data.environment)) {
+              throw new Error(
+                'environment deve ser sandbox ou production.',
+              );
+            }
+            patch.asaasEnvironment = args.data.environment;
+          }
+
+          if (Object.keys(patch).length === 0) {
+            // Nothing to update — return current status.
+          } else {
+            await strapi.documents(UID).update({
+              documentId: academyId,
+              data: patch as any,
+            });
+          }
+
+          const academy: any = await strapi.documents(UID).findOne({
+            documentId: academyId,
+            fields: [
+              'slug',
+              'asaasApiKey',
+              'asaasWebhookToken',
+              'asaasEnvironment',
+            ] as any,
+          });
+          const apiBase =
+            process.env.PUBLIC_API_URL ?? 'http://localhost:7777';
+          return {
+            apiKeyConfigured: !!academy?.asaasApiKey,
+            webhookTokenConfigured: !!academy?.asaasWebhookToken,
+            environment: academy?.asaasEnvironment ?? 'sandbox',
+            webhookUrl: `${apiBase}/api/payments/webhook/${academy?.slug}`,
+            apiKeyHint: academy?.asaasApiKey
+              ? `…${academy.asaasApiKey.slice(-4)}`
+              : null,
+          };
         },
       });
     },
   });
 
   return {
-    types: [Academy, AcademyInput, AcademyUpdateInput, queries, mutations],
+    types: [
+      Academy,
+      AcademyInput,
+      AcademyUpdateInput,
+      AsaasSettingsStatus,
+      AsaasSettingsInput,
+      queries,
+      mutations,
+    ],
     resolversConfig: {
       'Query.academies': { auth: true },
       'Query.academy': { auth: true },
       'Query.academyBySlug': { auth: false },
+      'Query.myAsaasSettings': { auth: true },
       'Mutation.createAcademy': { auth: true },
       'Mutation.updateAcademy': { auth: true },
       'Mutation.deleteAcademy': { auth: true },
+      'Mutation.updateMyAsaasSettings': { auth: true },
     },
   };
 }

@@ -42,13 +42,26 @@ function buildPolyline(
 export default function DREPage() {
   const { data, loading, error } = useDRE();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const apollo = useApolloClient();
   const refresh = () =>
     apollo.refetchQueries({ include: ["DREOverview", "FinanceOverview"] });
 
+  const filteredExpenses = (data?.expenseRows ?? []).filter(
+    (r) =>
+      !query ||
+      r.description.toLowerCase().includes(query.toLowerCase()) ||
+      r.categoryLabel.toLowerCase().includes(query.toLowerCase()),
+  );
+
   return (
     <>
-      <Topbar title="DRE / Custos" />
+      <Topbar
+        title="DRE / Custos"
+        searchValue={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Buscar despesa…"
+      />
       <main className="flex-1 p-8 max-[720px]:p-4">
         <PageHeader
           title="Demonstrativo de Resultado"
@@ -268,7 +281,7 @@ export default function DREPage() {
                     Despesas do mês
                   </h3>
                   <p className="font-mono text-[0.7rem] uppercase tracking-[0.1em] text-ink-400 mt-1">
-                    {data.monthLabel} · {data.expenseRows.length} lançamentos
+                    {data.monthLabel} · {filteredExpenses.length} lançamentos
                   </p>
                 </div>
                 <Button variant="ink" onClick={() => setDialogOpen(true)}>
@@ -292,7 +305,7 @@ export default function DREPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.expenseRows.map((row: DREExpenseRow) => (
+                    {filteredExpenses.map((row: DREExpenseRow) => (
                       <tr
                         key={row.id}
                         className="border-b border-line/60 last:border-b-0 hover:bg-paper-50 transition-colors"

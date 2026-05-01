@@ -69,14 +69,11 @@ describe('mock-mode hooks', () => {
     }
   });
 
-  it('useFinance returns kpis + charges + method breakdown summing to ~100%', () => {
+  it('useFinance returns kpis + charges', () => {
     const { result } = renderHook(() => useFinance(), { wrapper });
     const f = result.current.data!;
     expect(f.kpis.length).toBe(4);
     expect(f.charges.length).toBeGreaterThan(0);
-    const percentSum = f.methodBreakdown.reduce((s, m) => s + m.percent, 0);
-    expect(percentSum).toBeGreaterThanOrEqual(95);
-    expect(percentSum).toBeLessThanOrEqual(105);
     for (const c of f.charges) {
       expect(typeof c.amountFormatted).toBe('string');
       expect(c.amountFormatted).toMatch(/^R\$/);

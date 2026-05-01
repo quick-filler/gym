@@ -1,14 +1,20 @@
 /**
  * GraphQL schema for the Dependent content type.
  *
- * Dependents belong to a guardian Student (via `guardian` relation) and
- * have their own enrollments, bookings, workout plans and assessments.
- * The guardian owns the login, the billing customer, and the payments
- * on Asaas; the dependent is the practitioner.
+ * Tenancy via direct academy relation. The guardian (a Student) owns the
+ * billing customer / payments on Asaas; the dependent is the practitioner.
  */
 
 import type { Core } from '@strapi/strapi';
-import { resolveUserAcademyId, withAcademyScope } from '../helpers';
+import {
+  assertCanAccessDoc,
+  isPlatformAdmin,
+  requireAcademyId,
+  requireRole,
+  resolveDocAcademyId,
+  resolveUserAcademyId,
+  withAcademyScope,
+} from '../helpers';
 
 const UID = 'api::dependent.dependent';
 
@@ -117,7 +123,6 @@ export function buildDependent({
       t.string('emergencyContactName');
       t.string('emergencyContactPhone');
       t.id('guardian');
-      t.id('academy');
     },
   });
 
@@ -146,8 +151,11 @@ export function buildDependent({
         args: { pagination: 'PaginationInput' },
         resolve: async (_root: any, args: any, ctx: any) => {
           const academyId = await resolveUserAcademyId(strapi, ctx);
+          const filters = (await isPlatformAdmin(strapi, ctx))
+            ? {}
+            : withAcademyScope({}, academyId);
           return await strapi.documents(UID).findMany({
-            filters: withAcademyScope({}, academyId),
+            filters,
             start: args.pagination?.start ?? 0,
             limit: Math.min(200, args.pagination?.limit ?? 100),
             sort: { name: 'asc' },
@@ -159,8 +167,10 @@ export function buildDependent({
       t.field('dependent', {
         type: 'Dependent',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) =>
-          await strapi.documents(UID).findOne({ documentId: args.documentId }),
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          return await strapi.documents(UID).findOne({ documentId: args.documentId });
+        },
       });
 
       t.list.field('myDependents', {
@@ -192,9 +202,23 @@ export function buildDependent({
           data: nexus.nonNull(nexus.arg({ type: 'DependentInput' })),
         },
         resolve: async (_root: any, args: any, ctx: any) => {
-          const academyId = await resolveUserAcademyId(strapi, ctx);
+          await requireRole(strapi, ctx, ['academy_admin']);
+          const academyId = await requireAcademyId(strapi, ctx);
+
+          // Guardian (when provided) must belong to the same academy.
+          if (args.data.guardian) {
+            const ga = await resolveDocAcademyId(
+              strapi,
+              'api::student.student',
+              args.data.guardian,
+            );
+            if (ga !== academyId) {
+              throw new Error('Responsável de outra academia.');
+            }
+          }
+
           const created = await strapi.documents(UID).create({
-            data: { ...args.data, academy: args.data.academy ?? academyId },
+            data: { ...args.data, academy: academyId },
           });
           if (args.data.guardian) {
             await strapi.documents('api::student.student').update({
@@ -212,17 +236,22 @@ export function buildDependent({
           documentId: nexus.nonNull(nexus.idArg()),
           data: nexus.nonNull(nexus.arg({ type: 'DependentUpdateInput' })),
         },
-        resolve: async (_root: any, args: any) =>
-          await strapi.documents(UID).update({
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          await requireRole(strapi, ctx, ['academy_admin']);
+          return await strapi.documents(UID).update({
             documentId: args.documentId,
             data: args.data,
-          }),
+          });
+        },
       });
 
       t.field('deleteDependent', {
         type: 'Dependent',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          await requireRole(strapi, ctx, ['academy_admin']);
           const doc = await strapi
             .documents(UID)
             .findOne({ documentId: args.documentId });

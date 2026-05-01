@@ -443,6 +443,10 @@ export interface ApiAcademyAcademy extends Struct.CollectionTypeSchema {
   };
   attributes: {
     address: Schema.Attribute.Text;
+    asaasApiKey: Schema.Attribute.String & Schema.Attribute.Private;
+    asaasEnvironment: Schema.Attribute.Enumeration<['sandbox', 'production']> &
+      Schema.Attribute.DefaultTo<'sandbox'>;
+    asaasWebhookToken: Schema.Attribute.String & Schema.Attribute.Private;
     billingMode: Schema.Attribute.Enumeration<['per_student', 'per_family']> &
       Schema.Attribute.DefaultTo<'per_student'>;
     businessType: Schema.Attribute.Enumeration<
@@ -797,6 +801,51 @@ export interface ApiExpenseExpense extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiLeadLead extends Struct.CollectionTypeSchema {
+  collectionName: 'leads';
+  info: {
+    description: 'Contact form submission / trial request from the marketing site.';
+    displayName: 'Lead';
+    pluralName: 'leads';
+    singularName: 'lead';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academyName: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.Email & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::lead.lead'> &
+      Schema.Attribute.Private;
+    message: Schema.Attribute.Text & Schema.Attribute.Required;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    notes: Schema.Attribute.Text;
+    phone: Schema.Attribute.String;
+    planInterest: Schema.Attribute.Enumeration<['starter', 'business', 'pro']>;
+    publishedAt: Schema.Attribute.DateTime;
+    status: Schema.Attribute.Enumeration<
+      ['new', 'contacted', 'demo_scheduled', 'converted', 'lost']
+    > &
+      Schema.Attribute.DefaultTo<'new'>;
+    studentCount: Schema.Attribute.Enumeration<
+      [
+        'menos_de_50',
+        'de_50_a_200',
+        'de_200_a_500',
+        'mais_de_500',
+        'ainda_nao_abri',
+      ]
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiPaymentPayment extends Struct.CollectionTypeSchema {
   collectionName: 'payments';
   info: {
@@ -879,6 +928,39 @@ export interface ApiPlanPlan extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPlatformAdminPlatformAdmin
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'platform_admins';
+  info: {
+    description: 'Marks a users-permissions user as a platform super admin with cross-academy access.';
+    displayName: 'Platform Admin';
+    pluralName: 'platform-admins';
+    singularName: 'platform-admin';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::platform-admin.platform-admin'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    user: Schema.Attribute.Relation<
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
   };
 }
 
@@ -1507,8 +1589,10 @@ declare module '@strapi/strapi' {
       'api::dependent.dependent': ApiDependentDependent;
       'api::enrollment.enrollment': ApiEnrollmentEnrollment;
       'api::expense.expense': ApiExpenseExpense;
+      'api::lead.lead': ApiLeadLead;
       'api::payment.payment': ApiPaymentPayment;
       'api::plan.plan': ApiPlanPlan;
+      'api::platform-admin.platform-admin': ApiPlatformAdminPlatformAdmin;
       'api::student.student': ApiStudentStudent;
       'api::workout-plan.workout-plan': ApiWorkoutPlanWorkoutPlan;
       'plugin::content-releases.release': PluginContentReleasesRelease;

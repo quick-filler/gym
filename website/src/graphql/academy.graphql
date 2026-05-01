@@ -28,3 +28,27 @@ query Academies($pagination: PaginationInput) {
     isActive
   }
 }
+
+# Asaas integration status for the caller's academy. Returns the boolean
+# status flags + webhook URL — never the raw credentials.
+query MyAsaasSettings {
+  myAsaasSettings {
+    apiKeyConfigured
+    webhookTokenConfigured
+    environment
+    webhookUrl
+    apiKeyHint
+  }
+}
+
+# Update Asaas credentials for the caller's academy. Empty fields preserve
+# the current values, so the operator can rotate one secret at a time.
+mutation UpdateMyAsaasSettings($data: AsaasSettingsInput!) {
+  updateMyAsaasSettings(data: $data) {
+    apiKeyConfigured
+    webhookTokenConfigured
+    environment
+    webhookUrl
+    apiKeyHint
+  }
+}

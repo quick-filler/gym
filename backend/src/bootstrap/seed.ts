@@ -364,6 +364,9 @@ export async function ensureDemoDevUser(strapi: Core.Strapi) {
   // only memorise one pair for both :7777/admin and the website login.
   await ensureStrapiAdminUser(strapi, email, password);
 
+  // Ensure platform admin user exists (separate credentials).
+  await ensurePlatformAdminUser(strapi);
+
   // Print the credentials prominently so the operator doesn't have to
   // grep source.
   const border = '═'.repeat(56);
@@ -372,7 +375,54 @@ export async function ensureDemoDevUser(strapi: Core.Strapi) {
   strapi.log.info(`          email:    ${email}`);
   strapi.log.info(`          password: ${password}`);
   strapi.log.info(`          academy:  ${ana.academy?.slug ?? 'gym-demo'}`);
+  strapi.log.info('[seed] Platform admin login:');
+  strapi.log.info(`          email:    platform@gym.app`);
+  strapi.log.info(`          password: gym-platform-admin`);
   strapi.log.info(border);
+}
+
+/**
+ * Creates a demo platform admin user (users-permissions) linked to a
+ * PlatformAdmin record. Idempotent — safe to call on every boot.
+ */
+async function ensurePlatformAdminUser(strapi: Core.Strapi) {
+  const email = process.env.PLATFORM_ADMIN_EMAIL ?? 'platform@gym.app';
+  const password = process.env.PLATFORM_ADMIN_PASSWORD ?? 'gym-platform-admin';
+
+  const roles = await strapi.plugin('users-permissions').service('role').find();
+  const authRole = roles.find(
+    (r: any) => r.type === 'authenticated' || r.name === 'Authenticated',
+  );
+  if (!authRole) return;
+
+  let user: any = await strapi.db
+    .query('plugin::users-permissions.user')
+    .findOne({ where: { email } });
+
+  if (!user) {
+    user = await strapi.plugin('users-permissions').service('user').add({
+      username: email,
+      email,
+      password,
+      provider: 'local',
+      role: authRole.id,
+      confirmed: true,
+      blocked: false,
+    });
+    strapi.log.info(`[seed] created platform admin user ${email}`);
+  }
+
+  const existing = await strapi.documents('api::platform-admin.platform-admin').findMany({
+    filters: { user: { id: user.id } },
+    limit: 1,
+  });
+
+  if (existing.length === 0) {
+    await strapi.documents('api::platform-admin.platform-admin').create({
+      data: { user: user.id } as any,
+    });
+    strapi.log.info(`[seed] PlatformAdmin record created for ${email}`);
+  }
 }
 
 /**

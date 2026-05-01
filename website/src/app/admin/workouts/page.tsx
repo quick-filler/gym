@@ -85,17 +85,28 @@ function WorkoutCard({ plan }: { plan: WorkoutPlanCard }) {
 export default function WorkoutsPage() {
   const { data, loading, error } = useWorkouts();
   const [activeTab, setActiveTab] = useState<WorkoutTab>("active");
+  const [query, setQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const apollo = useApolloClient();
 
-  const visibleCards =
-    data?.cards.filter((c) =>
-      activeTab === "archived" ? c.status === "archived" : c.status === "active",
-    ) ?? [];
+  const visibleCards = (data?.cards ?? []).filter((c) => {
+    const tabMatch =
+      activeTab === "archived" ? c.status === "archived" : c.status === "active";
+    const queryMatch =
+      !query ||
+      c.name.toLowerCase().includes(query.toLowerCase()) ||
+      c.instructorName.toLowerCase().includes(query.toLowerCase());
+    return tabMatch && queryMatch;
+  });
 
   return (
     <>
-      <Topbar title="Fichas de treino" />
+      <Topbar
+        title="Fichas de treino"
+        searchValue={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Buscar ficha…"
+      />
       <main className="flex-1 p-8 max-[720px]:p-4">
         <PageHeader
           title="Fichas de treino"

@@ -41,6 +41,26 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin =>
     },
   },
 
+  // Email — Nodemailer provider. Configure SMTP_ vars in .env.
+  // CONTACT_NOTIFICATION_EMAIL sets where new lead notifications land.
+  email: {
+    config: {
+      provider: 'nodemailer',
+      providerOptions: {
+        host: env('SMTP_HOST', 'smtp.gmail.com'),
+        port: env.int('SMTP_PORT', 587),
+        auth: {
+          user: env('SMTP_USERNAME'),
+          pass: env('SMTP_PASSWORD'),
+        },
+      },
+      settings: {
+        defaultFrom: env('SMTP_DEFAULT_FROM', 'Gym <contato@gym.app>'),
+        defaultReplyTo: env('SMTP_DEFAULT_REPLY_TO', 'contato@gym.app'),
+      },
+    },
+  },
+
   // config-sync — exports/imports core-store + permissions to /config/sync,
   // so role and admin config travels with the repo across environments.
   // importOnBootstrap is off so manual review is always required.

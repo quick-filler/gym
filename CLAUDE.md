@@ -228,7 +228,11 @@ DATABASE_USERNAME=gym
 DATABASE_PASSWORD=secret
 DATABASE_SSL=false
 
-# Asaas Payment Gateway
+# Asaas Payment Gateway — fallback only.
+# In multi-tenant SaaS each Academy carries its own asaasApiKey /
+# asaasWebhookToken / asaasEnvironment (see backend/CLAUDE.md). These
+# env vars are the fallback when an academy has no credentials yet
+# (fresh installs, demo seed, single-tenant dev).
 ASAAS_BASE_URL=https://sandbox.asaas.com/api/v3   # or .../api/v3 in prod
 ASAAS_API_KEY=...
 ASAAS_WEBHOOK_TOKEN=...                           # shared secret in the header

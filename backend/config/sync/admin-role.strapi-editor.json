@@ -1,12 +1,12 @@
 {
-  "documentId": "fpmecekwrlc8txj00sspv94c",
+  "documentId": "figu9agobxyzp4yhsl2ofcey",
   "name": "Editor",
   "code": "strapi-editor",
   "description": "Editors can manage and publish contents including those of other users.",
   "locale": null,
   "permissions": [
     {
-      "documentId": "ifuaasd08nd5rjsz9kvlma3i",
+      "documentId": "fmnlz0gbzea1xfe8fzbmfpfv",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::academy.academy",
@@ -24,14 +24,18 @@
           "address",
           "students",
           "plans",
-          "schedules"
+          "schedules",
+          "expenses",
+          "businessType",
+          "enabledModules",
+          "billingMode"
         ]
       },
       "conditions": [],
       "locale": null
     },
     {
-      "documentId": "k27ropvt1qnwlsjthvs2b4hq",
+      "documentId": "q6v2n61jyesunmbe708i4o9l",
       "action": "plugin::content-manager.explorer.delete",
       "actionParameters": {},
       "subject": "api::academy.academy",
@@ -40,7 +44,7 @@
       "locale": null
     },
     {
-      "documentId": "hum48rfgz03lwn5eq1fnfs20",
+      "documentId": "wj8hyim1dc4lehx9feuik9hs",
       "action": "plugin::content-manager.explorer.publish",
       "actionParameters": {},
       "subject": "api::academy.academy",
@@ -49,7 +53,7 @@
       "locale": null
     },
     {
-      "documentId": "eken6qahk47enpwrbjrgm5j9",
+      "documentId": "ztmtwxqyb223noq0ztc118fy",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::academy.academy",
@@ -67,14 +71,18 @@
           "address",
           "students",
           "plans",
-          "schedules"
+          "schedules",
+          "expenses",
+          "businessType",
+          "enabledModules",
+          "billingMode"
         ]
       },
       "conditions": [],
       "locale": null
     },
     {
-      "documentId": "wzb9oqm1a2vc2kcqt9uj1ks0",
+      "documentId": "sr67kaozovvihjznypuxndpb",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::academy.academy",
@@ -92,20 +100,25 @@
           "address",
           "students",
           "plans",
-          "schedules"
+          "schedules",
+          "expenses",
+          "businessType",
+          "enabledModules",
+          "billingMode"
         ]
       },
       "conditions": [],
       "locale": null
     },
     {
-      "documentId": "xgo47qjo9ijldgt3w4ocw2uu",
+      "documentId": "r780mfkmryiww9z6kohm5lm5",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::body-assessment.body-assessment",
       "properties": {
         "fields": [
           "student",
+          "dependent",
           "instructor",
           "date",
           "weight",
@@ -119,7 +132,7 @@
       "locale": null
     },
     {
-      "documentId": "xdldjkw0hh74y5k5wsjcoj3j",
+      "documentId": "dipm9w2yb876d8dqfnxilde4",
       "action": "plugin::content-manager.explorer.delete",
       "actionParameters": {},
       "subject": "api::body-assessment.body-assessment",
@@ -128,7 +141,7 @@
       "locale": null
     },
     {
-      "documentId": "ph6dtft0gff2a3xiowv0bu9t",
+      "documentId": "nwt9mg6oqkd8h28q4wvivgro",
       "action": "plugin::content-manager.explorer.publish",
       "actionParameters": {},
       "subject": "api::body-assessment.body-assessment",
@@ -137,13 +150,14 @@
       "locale": null
     },
     {
-      "documentId": "au3uynyqmev9jh1ybwcpwxqn",
+      "documentId": "c28pipc9udwi5aelfk1o8ryb",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::body-assessment.body-assessment",
       "properties": {
         "fields": [
           "student",
+          "dependent",
           "instructor",
           "date",
           "weight",
@@ -157,13 +171,14 @@
       "locale": null
     },
     {
-      "documentId": "q0a0qrho7a3v6lagzhomxw7o",
+      "documentId": "wwg955q1i8yz8nfzyxt0v0kv",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::body-assessment.body-assessment",
       "properties": {
         "fields": [
           "student",
+          "dependent",
           "instructor",
           "date",
           "weight",
@@ -177,13 +192,14 @@
       "locale": null
     },
     {
-      "documentId": "qi5beziwa09cg7pusnlntn2s",
+      "documentId": "ww5zoxqcf7j8v2eggj9wrk06",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::class-booking.class-booking",
       "properties": {
         "fields": [
           "student",
+          "dependent",
           "classSchedule",
           "date",
           "status",
@@ -194,7 +210,7 @@
       "locale": null
     },
     {
-      "documentId": "j68gh5vlw21asetpv3k072ad",
+      "documentId": "vz9ncto5jt5iict8lu4lm7pv",
       "action": "plugin::content-manager.explorer.delete",
       "actionParameters": {},
       "subject": "api::class-booking.class-booking",
@@ -203,7 +219,7 @@
       "locale": null
     },
     {
-      "documentId": "h7wdxpjndojyycx0znj69o69",
+      "documentId": "b96nxqv8dqc6was8o44bf64z",
       "action": "plugin::content-manager.explorer.publish",
       "actionParameters": {},
       "subject": "api::class-booking.class-booking",
@@ -212,13 +228,14 @@
       "locale": null
     },
     {
-      "documentId": "pzac995z33xyy0w757fxz360",
+      "documentId": "vshuloo0qsiytzya2q0b3owo",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::class-booking.class-booking",
       "properties": {
         "fields": [
           "student",
+          "dependent",
           "classSchedule",
           "date",
           "status",
@@ -229,13 +246,14 @@
       "locale": null
     },
     {
-      "documentId": "s5l03fcarllgcusvwazeo9ag",
+      "documentId": "eocg31docmrfzre9rrut13q6",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::class-booking.class-booking",
       "properties": {
         "fields": [
           "student",
+          "dependent",
           "classSchedule",
           "date",
           "status",
@@ -246,7 +264,7 @@
       "locale": null
     },
     {
-      "documentId": "e6z7neotqahl21dm8goknlv6",
+      "documentId": "tprjg0ff4sn8on0ek5pd97cl",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::class-schedule.class-schedule",
@@ -269,7 +287,7 @@
       "locale": null
     },
     {
-      "documentId": "zc4ifqsx0v2wkjouixmzwjp1",
+      "documentId": "mhuwpo68bu67530f76ciuvzx",
       "action": "plugin::content-manager.explorer.delete",
       "actionParameters": {},
       "subject": "api::class-schedule.class-schedule",
@@ -278,7 +296,7 @@
       "locale": null
     },
     {
-      "documentId": "qswmph2dh62v4x3khuff2rpp",
+      "documentId": "oadg80arlugh39bht61e9hyy",
       "action": "plugin::content-manager.explorer.publish",
       "actionParameters": {},
       "subject": "api::class-schedule.class-schedule",
@@ -287,31 +305,8 @@
       "locale": null
     },
     {
-      "documentId": "uhoyfdc82pluuoo9ginno96q",
+      "documentId": "ayjbu907tpi16nc5bdt1t5a3",
       "action": "plugin::content-manager.explorer.read",
-      "actionParameters": {},
-      "subject": "api::class-schedule.class-schedule",
-      "properties": {
-        "fields": [
-          "name",
-          "instructor",
-          "modality",
-          "weekdays",
-          "startTime",
-          "endTime",
-          "maxCapacity",
-          "room",
-          "isActive",
-          "academy",
-          "bookings"
-        ]
-      },
-      "conditions": [],
-      "locale": null
-    },
-    {
-      "documentId": "brjampvjn1clwwnq8xglxon9",
-      "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::class-schedule.class-schedule",
       "properties": {
@@ -333,13 +328,145 @@
       "locale": null
     },
     {
-      "documentId": "ksil405t0wqtajbpc9yn2lv0",
+      "documentId": "xxzgjn6gp1t8jb6x4u2w1k0h",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::class-schedule.class-schedule",
+      "properties": {
+        "fields": [
+          "name",
+          "instructor",
+          "modality",
+          "weekdays",
+          "startTime",
+          "endTime",
+          "maxCapacity",
+          "room",
+          "isActive",
+          "academy",
+          "bookings"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "anhxcmfqplecuurcnbvzifms",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::dependent.dependent",
+      "properties": {
+        "fields": [
+          "name",
+          "birthdate",
+          "photo",
+          "gender",
+          "relationship",
+          "status",
+          "bloodType",
+          "allergies",
+          "medicalNotes",
+          "medicalAlert",
+          "emergencyContactName",
+          "emergencyContactPhone",
+          "guardian",
+          "academy",
+          "enrollments",
+          "bookings",
+          "workoutPlans",
+          "assessments"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "ly3c0cybswj009pzj8tjeyg9",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::dependent.dependent",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "y2epp9fvy81ztqyu027tmgu8",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::dependent.dependent",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "adtmoox6jfzdqpmp7gt8ym3z",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::dependent.dependent",
+      "properties": {
+        "fields": [
+          "name",
+          "birthdate",
+          "photo",
+          "gender",
+          "relationship",
+          "status",
+          "bloodType",
+          "allergies",
+          "medicalNotes",
+          "medicalAlert",
+          "emergencyContactName",
+          "emergencyContactPhone",
+          "guardian",
+          "academy",
+          "enrollments",
+          "bookings",
+          "workoutPlans",
+          "assessments"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "j3iqxto4nt4nci0hybsjiwwo",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::dependent.dependent",
+      "properties": {
+        "fields": [
+          "name",
+          "birthdate",
+          "photo",
+          "gender",
+          "relationship",
+          "status",
+          "bloodType",
+          "allergies",
+          "medicalNotes",
+          "medicalAlert",
+          "emergencyContactName",
+          "emergencyContactPhone",
+          "guardian",
+          "academy",
+          "enrollments",
+          "bookings",
+          "workoutPlans",
+          "assessments"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "mmj2zuav42ahn38xwgbsn01p",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::enrollment.enrollment",
       "properties": {
         "fields": [
           "student",
+          "dependent",
           "plan",
           "startDate",
           "endDate",
@@ -354,7 +481,7 @@
       "locale": null
     },
     {
-      "documentId": "k7xy5ep1lzmqeyt7iz8p6w6w",
+      "documentId": "jgen8m542a8ds4qz4wl74le7",
       "action": "plugin::content-manager.explorer.delete",
       "actionParameters": {},
       "subject": "api::enrollment.enrollment",
@@ -363,7 +490,7 @@
       "locale": null
     },
     {
-      "documentId": "uaw4gcwzv1q5rfnhihez3y7u",
+      "documentId": "rn7huiiqblnooq4n7zqebr9v",
       "action": "plugin::content-manager.explorer.publish",
       "actionParameters": {},
       "subject": "api::enrollment.enrollment",
@@ -372,13 +499,14 @@
       "locale": null
     },
     {
-      "documentId": "z39g4b9usokscw3izr8c504g",
+      "documentId": "gsphcoszka3xcj8tf8o3z86i",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::enrollment.enrollment",
       "properties": {
         "fields": [
           "student",
+          "dependent",
           "plan",
           "startDate",
           "endDate",
@@ -393,13 +521,14 @@
       "locale": null
     },
     {
-      "documentId": "xchww1y3rmqkcqk3flfcct06",
+      "documentId": "xjd58wrhv1lrtpaou2s84gcq",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::enrollment.enrollment",
       "properties": {
         "fields": [
           "student",
+          "dependent",
           "plan",
           "startDate",
           "endDate",
@@ -414,7 +543,103 @@
       "locale": null
     },
     {
-      "documentId": "r169ntz424opg4ce8rbayr4b",
+      "documentId": "crivba5y6blhswsboofl2x90",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::expense.expense",
+      "properties": {
+        "fields": [
+          "description",
+          "subtitle",
+          "amount",
+          "date",
+          "dueDate",
+          "paidAt",
+          "category",
+          "type",
+          "status",
+          "recurrent",
+          "recurrenceDay",
+          "notes",
+          "receipt",
+          "academy"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "mfhc3ivrdmc1uzozvaibd8a2",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::expense.expense",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "xqc368e9oz8jejkci0j772t9",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::expense.expense",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "mbmfjcw35yw26jp2j53v2gg3",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::expense.expense",
+      "properties": {
+        "fields": [
+          "description",
+          "subtitle",
+          "amount",
+          "date",
+          "dueDate",
+          "paidAt",
+          "category",
+          "type",
+          "status",
+          "recurrent",
+          "recurrenceDay",
+          "notes",
+          "receipt",
+          "academy"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "pyxm277olmty3uwve6vet5sw",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::expense.expense",
+      "properties": {
+        "fields": [
+          "description",
+          "subtitle",
+          "amount",
+          "date",
+          "dueDate",
+          "paidAt",
+          "category",
+          "type",
+          "status",
+          "recurrent",
+          "recurrenceDay",
+          "notes",
+          "receipt",
+          "academy"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "jl1noi09evkh9xepj8suo3ce",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::payment.payment",
@@ -434,7 +659,7 @@
       "locale": null
     },
     {
-      "documentId": "rihrzgkv18dui75xs8lr1vpx",
+      "documentId": "c65g67hmmba8n9nes6g9uppp",
       "action": "plugin::content-manager.explorer.delete",
       "actionParameters": {},
       "subject": "api::payment.payment",
@@ -443,7 +668,7 @@
       "locale": null
     },
     {
-      "documentId": "p1l1wu7ekn71it3thxo7z3xq",
+      "documentId": "k1q2rns5d2zkm52f3skszzj2",
       "action": "plugin::content-manager.explorer.publish",
       "actionParameters": {},
       "subject": "api::payment.payment",
@@ -452,7 +677,7 @@
       "locale": null
     },
     {
-      "documentId": "f50of2p2cdo5jc5ivqphlwlc",
+      "documentId": "bppnalclix2dn5folxwhpvxq",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::payment.payment",
@@ -472,7 +697,7 @@
       "locale": null
     },
     {
-      "documentId": "hqen6o84hr4a6vi5i0b1maxc",
+      "documentId": "mkmfgc69cb9czb4arvg0mpt5",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::payment.payment",
@@ -492,7 +717,7 @@
       "locale": null
     },
     {
-      "documentId": "ahpw8n1lp5h8s2kbffi80sc9",
+      "documentId": "pjewgw70661iuqvb7qtvs6j6",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::plan.plan",
@@ -513,7 +738,7 @@
       "locale": null
     },
     {
-      "documentId": "dy78fizdlomov8u48adtewzg",
+      "documentId": "s8wb1h50nlda70owy9mrqzv0",
       "action": "plugin::content-manager.explorer.delete",
       "actionParameters": {},
       "subject": "api::plan.plan",
@@ -522,7 +747,7 @@
       "locale": null
     },
     {
-      "documentId": "skkw981z4dqczxt2xsaub0qr",
+      "documentId": "t7w3abqu9n9k8cji0tznvoxt",
       "action": "plugin::content-manager.explorer.publish",
       "actionParameters": {},
       "subject": "api::plan.plan",
@@ -531,7 +756,7 @@
       "locale": null
     },
     {
-      "documentId": "ginonn14t166uj3dy1l66q6a",
+      "documentId": "zcqqm0j3jra0vc3zdv9lacoh",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::plan.plan",
@@ -552,7 +777,7 @@
       "locale": null
     },
     {
-      "documentId": "duht5i7z88ijrkfkdum2wd3j",
+      "documentId": "lzdcs95iicq25vq9dl43bqqh",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::plan.plan",
@@ -573,7 +798,7 @@
       "locale": null
     },
     {
-      "documentId": "qe68s2a5ug3tnki8fctv0r1u",
+      "documentId": "r8mhq39d5s8j78vzuhjeltlt",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -585,20 +810,23 @@
           "photo",
           "birthdate",
           "status",
+          "role",
+          "isGuardian",
           "notes",
           "academy",
           "user",
           "enrollments",
           "bookings",
           "workoutPlans",
-          "assessments"
+          "assessments",
+          "dependents"
         ]
       },
       "conditions": [],
       "locale": null
     },
     {
-      "documentId": "iqub65pvogg1a1amod58v8u0",
+      "documentId": "fwnkyq9xx3plok1l0tbebws4",
       "action": "plugin::content-manager.explorer.delete",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -607,7 +835,7 @@
       "locale": null
     },
     {
-      "documentId": "g8e7okgh7l87u75ovxh2o2bp",
+      "documentId": "go48ghpwvzmfy640bmhxgdnu",
       "action": "plugin::content-manager.explorer.publish",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -616,7 +844,7 @@
       "locale": null
     },
     {
-      "documentId": "g0mdt4gb57ni0c0fflz0h0ds",
+      "documentId": "k5f6qfszrwb9pnm67ywmrwss",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -628,20 +856,23 @@
           "photo",
           "birthdate",
           "status",
+          "role",
+          "isGuardian",
           "notes",
           "academy",
           "user",
           "enrollments",
           "bookings",
           "workoutPlans",
-          "assessments"
+          "assessments",
+          "dependents"
         ]
       },
       "conditions": [],
       "locale": null
     },
     {
-      "documentId": "r2cby2un4juww1ou4t9hz3ss",
+      "documentId": "ngdxbynyrak3scxio1oznvdk",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -653,20 +884,23 @@
           "photo",
           "birthdate",
           "status",
+          "role",
+          "isGuardian",
           "notes",
           "academy",
           "user",
           "enrollments",
           "bookings",
           "workoutPlans",
-          "assessments"
+          "assessments",
+          "dependents"
         ]
       },
       "conditions": [],
       "locale": null
     },
     {
-      "documentId": "c5sp2wg2y083zk7tebroz2vu",
+      "documentId": "xramx8zuhkkdlftwizizpghi",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::workout-plan.workout-plan",
@@ -674,6 +908,7 @@
         "fields": [
           "name",
           "student",
+          "dependent",
           "instructor",
           "exercises",
           "validFrom",
@@ -685,7 +920,7 @@
       "locale": null
     },
     {
-      "documentId": "v9y4kokfp9wtnh3oclm9qon5",
+      "documentId": "hyrrzbtftv8hwgtrgkis1i1h",
       "action": "plugin::content-manager.explorer.delete",
       "actionParameters": {},
       "subject": "api::workout-plan.workout-plan",
@@ -694,7 +929,7 @@
       "locale": null
     },
     {
-      "documentId": "pbi5ae8aqr8sb07r9jjnsrdv",
+      "documentId": "txyzwrwyejoovbiawri4zg9a",
       "action": "plugin::content-manager.explorer.publish",
       "actionParameters": {},
       "subject": "api::workout-plan.workout-plan",
@@ -703,7 +938,7 @@
       "locale": null
     },
     {
-      "documentId": "ksdmunt8qqyuzmeft8ox3131",
+      "documentId": "cn5i75gulw5dughmixlmvnu4",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::workout-plan.workout-plan",
@@ -711,6 +946,7 @@
         "fields": [
           "name",
           "student",
+          "dependent",
           "instructor",
           "exercises",
           "validFrom",
@@ -722,7 +958,7 @@
       "locale": null
     },
     {
-      "documentId": "vlmdvqce4pkbes0ydc4c8kb9",
+      "documentId": "euzq9kmggze0baqrcbsid6v5",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::workout-plan.workout-plan",
@@ -730,6 +966,7 @@
         "fields": [
           "name",
           "student",
+          "dependent",
           "instructor",
           "exercises",
           "validFrom",
@@ -741,7 +978,7 @@
       "locale": null
     },
     {
-      "documentId": "mzkwtgrqe2da9e3574wljllr",
+      "documentId": "vvqjzjr6owshfsxx2xa6essg",
       "action": "plugin::upload.assets.copy-link",
       "actionParameters": {},
       "subject": null,
@@ -750,7 +987,7 @@
       "locale": null
     },
     {
-      "documentId": "fcgpcefmtpcit1meu5y3f4wm",
+      "documentId": "x140urf1s29o5rygya3na81s",
       "action": "plugin::upload.assets.create",
       "actionParameters": {},
       "subject": null,
@@ -759,7 +996,7 @@
       "locale": null
     },
     {
-      "documentId": "s197dmedx033x991932ob2yr",
+      "documentId": "lacdrzxa7e2g5fj2s8coij64",
       "action": "plugin::upload.assets.download",
       "actionParameters": {},
       "subject": null,
@@ -768,7 +1005,7 @@
       "locale": null
     },
     {
-      "documentId": "bnrw1h39in48jh7kjto6kfpv",
+      "documentId": "pcoxeesi0ixezczt4ukkpt0w",
       "action": "plugin::upload.assets.update",
       "actionParameters": {},
       "subject": null,
@@ -777,7 +1014,7 @@
       "locale": null
     },
     {
-      "documentId": "glzp3o0k9rfrmm81hsigiw7s",
+      "documentId": "id9hlz7vumrix52yoy0mdilh",
       "action": "plugin::upload.configure-view",
       "actionParameters": {},
       "subject": null,
@@ -786,7 +1023,7 @@
       "locale": null
     },
     {
-      "documentId": "mjp2m9xy0iddsp8mihgayy3o",
+      "documentId": "gt31cmxh56hjwcoy9p6p6izh",
       "action": "plugin::upload.read",
       "actionParameters": {},
       "subject": null,

@@ -18,7 +18,11 @@
  */
 
 import type { Core } from '@strapi/strapi';
-import { resolveUserAcademyId, withAcademyScope } from '../helpers';
+import {
+  resolveUserAcademyId,
+  withAcademyScope,
+  withPaymentScope,
+} from '../helpers';
 import {
   BRL,
   BRL_SHORT,
@@ -30,15 +34,10 @@ import {
   monthWindow,
 } from '../aggregate-helpers';
 
-const ACADEMY = 'api::academy.academy';
 const STUDENT = 'api::student.student';
-const PLAN = 'api::plan.plan';
-const ENROLLMENT = 'api::enrollment.enrollment';
 const SCHEDULE = 'api::class-schedule.class-schedule';
-const BOOKING = 'api::class-booking.class-booking';
 const PAYMENT = 'api::payment.payment';
 const EXPENSE = 'api::expense.expense';
-const DEPENDENT = 'api::dependent.dependent';
 
 // ---------------------------------------------------------------------
 // Module
@@ -341,9 +340,7 @@ export function buildAggregates({
               limit: 100,
             }),
             strapi.documents(PAYMENT).findMany({
-              filters: academyId
-                ? { enrollment: { student: { academy: { documentId: academyId } } } }
-                : {},
+              filters: withPaymentScope(academyId),
               limit: 500,
               sort: { dueDate: 'desc' },
               populate: { enrollment: { populate: { student: true } } },
@@ -462,9 +459,7 @@ export function buildAggregates({
           const { start, end } = monthWindow(year, month);
 
           const payments = await strapi.documents(PAYMENT).findMany({
-            filters: academyId
-              ? { enrollment: { student: { academy: { documentId: academyId } } } }
-              : {},
+            filters: withPaymentScope(academyId),
             limit: 2000,
             sort: { dueDate: 'desc' },
             populate: { enrollment: { populate: { student: true } } },
@@ -475,16 +470,27 @@ export function buildAggregates({
             return d && d >= start && d < end;
           };
 
+          const prev = month === 1 ? { m: 12, y: year - 1 } : { m: month - 1, y: year };
+          const prevWindow = monthWindow(prev.y, prev.m);
+
           const revenue = payments
             .filter((p: any) => p.status === 'paid' && inMonth(p))
             .reduce((sum: number, p: any) => sum + Number(p.amount ?? 0), 0);
-          const overdue = payments
-            .filter((p: any) => p.status === 'overdue')
+          const revenuePrev = payments
+            .filter((p: any) => p.status === 'paid' && p.dueDate >= prevWindow.start && p.dueDate < prevWindow.end)
             .reduce((sum: number, p: any) => sum + Number(p.amount ?? 0), 0);
+          const revenueDeltaPct = revenuePrev > 0 ? ((revenue - revenuePrev) / revenuePrev) * 100 : 0;
+          const revenueDeltaLabel = revenuePrev > 0
+            ? `${revenueDeltaPct >= 0 ? '+' : ''}${revenueDeltaPct.toFixed(1)}% vs ${MONTH_SHORT_PT[prev.m - 1]}`
+            : 'Primeiro mês';
+
+          const overduePayments = payments.filter((p: any) => p.status === 'overdue' && inMonth(p));
+          const overdue = overduePayments.reduce((sum: number, p: any) => sum + Number(p.amount ?? 0), 0);
+
           const todayIso = new Date().toISOString().slice(0, 10);
-          const processedToday = payments
-            .filter((p: any) => p.paidAt?.slice(0, 10) === todayIso)
-            .reduce((sum: number, p: any) => sum + Number(p.amount ?? 0), 0);
+          const processedTodayPayments = payments.filter((p: any) => p.paidAt?.slice(0, 10) === todayIso);
+          const processedToday = processedTodayPayments.reduce((sum: number, p: any) => sum + Number(p.amount ?? 0), 0);
+
           const pendingMonth = payments.filter(
             (p: any) => p.status === 'pending' && inMonth(p),
           ).length;
@@ -494,21 +500,21 @@ export function buildAggregates({
               id: 'revenue',
               label: 'Receita do mês',
               value: BRL(revenue),
-              delta: null,
+              delta: { value: revenueDeltaLabel, trend: revenueDeltaPct >= 0 ? 'up' : 'down' },
               highlighted: true,
             },
             {
               id: 'overdue',
               label: 'Em atraso',
               value: BRL(overdue),
-              delta: null,
+              delta: { value: `${overduePayments.length} cobranças`, trend: 'down' },
               highlighted: false,
             },
             {
               id: 'processed',
               label: 'Processado hoje',
               value: BRL(processedToday),
-              delta: null,
+              delta: { value: `${processedTodayPayments.length} pagamentos`, trend: processedTodayPayments.length > 0 ? 'up' : 'flat' },
               highlighted: false,
             },
             {
@@ -591,9 +597,7 @@ export function buildAggregates({
               sort: { date: 'desc' },
             }),
             strapi.documents(PAYMENT).findMany({
-              filters: academyId
-                ? { enrollment: { student: { academy: { documentId: academyId } } } }
-                : {},
+              filters: withPaymentScope(academyId),
               limit: 5000,
             }),
           ]);

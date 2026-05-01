@@ -32,12 +32,32 @@ const COLOR_CLS = {
 export default function SchedulePage() {
   const { data, loading, error } = useSchedule();
   const [view, setView] = useState<"grid" | "list">("grid");
+  const [query, setQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const apollo = useApolloClient();
 
+  const filteredClasses = (data?.classes ?? []).filter(
+    (c) =>
+      !query ||
+      c.name.toLowerCase().includes(query.toLowerCase()) ||
+      c.instructor.toLowerCase().includes(query.toLowerCase()),
+  );
+
+  const filteredUpcoming = (data?.upcoming ?? []).filter(
+    (u) =>
+      !query ||
+      u.name.toLowerCase().includes(query.toLowerCase()) ||
+      u.instructor.toLowerCase().includes(query.toLowerCase()),
+  );
+
   return (
     <>
-      <Topbar title="Agenda" />
+      <Topbar
+        title="Agenda"
+        searchValue={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Buscar aula…"
+      />
       <main className="flex-1 p-8 max-[720px]:p-4">
         <PageHeader
           title="Agenda"
@@ -131,7 +151,7 @@ export default function SchedulePage() {
                             {hour}
                           </div>
                           {WEEKDAYS.map((day) => {
-                            const cls = data.classes.find(
+                            const cls = filteredClasses.find(
                               (c) =>
                                 c.weekday === day.value && c.startTime === hour,
                             );
@@ -167,7 +187,7 @@ export default function SchedulePage() {
                   </div>
                 ) : (
                   <div className="divide-y divide-line">
-                    {data.classes.map((cls) => (
+                    {filteredClasses.map((cls) => (
                       <div
                         key={cls.id}
                         className="flex items-center gap-4 p-4 hover:bg-paper-50 transition-colors"
@@ -239,7 +259,7 @@ export default function SchedulePage() {
                     Próximas aulas
                   </h3>
                   <div className="flex flex-col gap-3">
-                    {data.upcoming.map((u) => (
+                    {filteredUpcoming.map((u) => (
                       <div
                         key={u.id}
                         className="p-3 rounded-xl border border-line bg-paper-50"

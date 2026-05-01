@@ -92,7 +92,12 @@ export default function StudentsPage() {
 
   return (
     <>
-      <Topbar title="Alunos" />
+      <Topbar
+        title="Alunos"
+        searchValue={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Buscar aluno…"
+      />
       <main className="flex-1 p-8 max-[720px]:p-4">
         <PageHeader
           title="Alunos"
@@ -126,21 +131,6 @@ export default function StudentsPage() {
               {f.label}
             </button>
           ))}
-          <div className="flex-1" />
-          <div className="relative">
-            <Icon
-              name="search"
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400"
-              size="lg"
-            />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar aluno…"
-              className="pl-10 pr-4 py-2 rounded-full bg-white border border-line text-[0.88rem] text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-ink-900 transition-all w-[260px] max-[720px]:w-full"
-            />
-          </div>
         </div>
 
         {loading && <div className="text-ink-400">Carregando…</div>}

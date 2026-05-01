@@ -50,7 +50,8 @@ export type IconName =
   | "building"
   | "book"
   | "flame"
-  | "heart-pulse";
+  | "heart-pulse"
+  | "log-out";
 
 type Size = "sm" | "md" | "lg" | "xl";
 

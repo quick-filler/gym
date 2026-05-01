@@ -97,6 +97,19 @@
       "type": "enumeration",
       "enum": ["per_student", "per_family"],
       "default": "per_student"
+    },
+    "asaasApiKey": {
+      "type": "string",
+      "private": true
+    },
+    "asaasWebhookToken": {
+      "type": "string",
+      "private": true
+    },
+    "asaasEnvironment": {
+      "type": "enumeration",
+      "enum": ["sandbox", "production"],
+      "default": "sandbox"
     }
   }
 }

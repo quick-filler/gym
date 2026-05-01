@@ -109,6 +109,7 @@ function FamilyCard({
 export default function DependentsPage() {
   const { data, loading, error } = useDependents();
   const [guardianDialog, setGuardianDialog] = useState(false);
+  const [query, setQuery] = useState("");
   const [depDialog, setDepDialog] = useState<{
     id: string;
     name: string;
@@ -116,11 +117,19 @@ export default function DependentsPage() {
   const apollo = useApolloClient();
   const refresh = () => apollo.refetchQueries({ include: ["Guardians"] });
 
+  const filteredFamilies = (data ?? []).filter(
+    (f) => !query || f.guardian.name.toLowerCase().includes(query.toLowerCase()),
+  );
   const totalDeps = data?.reduce((acc, f) => acc + f.dependents.length, 0) ?? 0;
 
   return (
     <>
-      <Topbar title="Dependentes" />
+      <Topbar
+        title="Dependentes"
+        searchValue={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Buscar responsável…"
+      />
       <main className="flex-1 p-8 max-[720px]:p-4">
         <PageHeader
           title="Famílias cadastradas"
@@ -158,7 +167,7 @@ export default function DependentsPage() {
             </div>
 
             <div className="grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5 max-[720px]:grid-cols-1">
-              {data.map((family) => (
+              {filteredFamilies.map((family) => (
                 <FamilyCard
                   key={family.id}
                   family={family}

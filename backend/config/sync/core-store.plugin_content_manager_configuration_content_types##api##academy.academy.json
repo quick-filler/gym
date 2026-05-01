@@ -262,6 +262,48 @@
           "sortable": true
         }
       },
+      "asaasApiKey": {
+        "edit": {
+          "label": "asaasApiKey",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "asaasApiKey",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "asaasWebhookToken": {
+        "edit": {
+          "label": "asaasWebhookToken",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "asaasWebhookToken",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "asaasEnvironment": {
+        "edit": {
+          "label": "asaasEnvironment",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "asaasEnvironment",
+          "searchable": true,
+          "sortable": true
+        }
+      },
       "createdAt": {
         "edit": {
           "label": "createdAt",
@@ -422,6 +464,20 @@
         [
           {
             "name": "billingMode",
+            "size": 6
+          },
+          {
+            "name": "asaasApiKey",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "asaasWebhookToken",
+            "size": 6
+          },
+          {
+            "name": "asaasEnvironment",
             "size": 6
           }
         ]

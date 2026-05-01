@@ -206,7 +206,7 @@
         "id",
         "name",
         "student",
-        "instructor"
+        "dependent"
       ],
       "edit": [
         [
@@ -220,6 +220,10 @@
           }
         ],
         [
+          {
+            "name": "dependent",
+            "size": 6
+          },
           {
             "name": "instructor",
             "size": 6
@@ -243,12 +247,6 @@
           {
             "name": "isActive",
             "size": 4
-          }
-        ],
-        [
-          {
-            "name": "dependent",
-            "size": 6
           }
         ]
       ]

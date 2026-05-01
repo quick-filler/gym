@@ -6,7 +6,7 @@ import { graphql } from "@/gql";
 import { Button } from "@/components/ui/Button";
 import { Combobox } from "@/components/ui/Combobox";
 import { Dialog } from "@/components/ui/Dialog";
-import { Field, Input, Select } from "@/components/ui/Field";
+import { CurrencyInput, Field, Input, Select } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { USE_MOCKS } from "@/lib/config";
 
@@ -81,6 +81,12 @@ const CREATE_PAYMENT = graphql(`
   }
 `);
 
+const CYCLE_LABEL: Record<string, string> = {
+  monthly: "Mensal",
+  quarterly: "Trimestral",
+  annual: "Anual",
+};
+
 export function NewChargeDialog({
   open,
   onClose,
@@ -99,7 +105,7 @@ export function NewChargeDialog({
 
   const [studentId, setStudentId] = useState("");
   const [planId, setPlanId] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(0);
   const [dueDate, setDueDate] = useState(todayIso);
   const [method, setMethod] = useState<"pix" | "credit_card" | "boleto">("pix");
   const [status, setStatus] = useState<"pending" | "paid" | "overdue">(
@@ -130,21 +136,25 @@ export function NewChargeDialog({
   const selectedStudent = students.find((s) => s.documentId === studentId);
   const selectedPlan = plans.find((p) => p.documentId === planId);
 
-  /** Returns an existing enrollment matching (student, plan) if any. */
+  /** Returns an existing enrollment for (student, plan) or the student's first active enrollment. */
   function findExistingEnrollment(): string | null {
-    if (!selectedStudent || !selectedPlan) return null;
-    const match = selectedStudent.enrollments?.find(
-      (e) =>
-        e?.plan?.documentId === selectedPlan.documentId &&
-        e.status === "active",
-    );
-    return match?.documentId ?? null;
+    if (!selectedStudent) return null;
+    if (selectedPlan) {
+      const match = selectedStudent.enrollments?.find(
+        (e) =>
+          e?.plan?.documentId === selectedPlan.documentId &&
+          e.status === "active",
+      );
+      return match?.documentId ?? null;
+    }
+    const any = selectedStudent.enrollments?.find((e) => e?.status === "active");
+    return any?.documentId ?? null;
   }
 
   function reset() {
     setStudentId("");
     setPlanId("");
-    setAmount("");
+    setAmount(0);
     setDueDate(todayIso);
     setMethod("pix");
     setStatus("pending");
@@ -154,10 +164,7 @@ export function NewChargeDialog({
   function handlePlanChange(nextPlanId: string) {
     setPlanId(nextPlanId);
     const next = plans.find((p) => p.documentId === nextPlanId);
-    // Overwrite the amount when the user hasn't customised it yet, or
-    // when switching plans (predictable default > preserving a stale
-    // value from a different plan).
-    if (next) setAmount(String(next.price));
+    if (next) setAmount(next.price);
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -171,14 +178,13 @@ export function NewChargeDialog({
       return;
     }
 
-    const amt = Number(amount);
     if (!studentId) return setError("Selecione um aluno.");
-    if (!planId) return setError("Selecione um plano.");
-    if (!amt || amt < 0) return setError("Valor inválido.");
+    if (!amount || amount <= 0) return setError("Valor inválido.");
 
     try {
       let enrollmentId = findExistingEnrollment();
       if (!enrollmentId) {
+        if (!planId) return setError("Aluno sem matrícula ativa — selecione um plano.");
         const res = await createEnrollment({
           variables: {
             data: {
@@ -200,10 +206,11 @@ export function NewChargeDialog({
         variables: {
           data: {
             enrollment: enrollmentId,
-            amount: amt,
+            amount,
             dueDate,
             method,
             status,
+            paidAt: status === "paid" ? dueDate : undefined,
           },
         },
       });
@@ -253,27 +260,26 @@ export function NewChargeDialog({
         <Field
           label="Plano"
           help={
-            studentId
-              ? enrollmentExists
-                ? "Aluno já tem matrícula ativa neste plano — a cobrança será lançada nela."
-                : "Uma nova matrícula será criada com este plano."
-              : plans.length === 0
-                ? "Nenhum plano ativo. Cadastre um plano antes de gerar cobrança."
-                : undefined
+            plans.length === 0
+              ? "Nenhum plano ativo. Cadastre um plano antes de gerar cobrança."
+              : studentId && planId
+                ? enrollmentExists
+                  ? "Aluno já tem matrícula ativa neste plano — a cobrança será lançada nela."
+                  : "Uma nova matrícula será criada com este plano."
+                : "Opcional se o aluno já tiver matrícula ativa."
           }
         >
           <Combobox
-            required
             value={planId}
             onChange={handlePlanChange}
             disabled={plans.length === 0}
-            placeholder="Selecione um plano…"
+            placeholder="Selecione um plano… (opcional)"
             searchPlaceholder="Buscar plano"
             emptyMessage="Nenhum plano"
             options={plans.map((p) => ({
               id: p.documentId,
               label: p.name,
-              sublabel: p.billingCycle,
+              sublabel: CYCLE_LABEL[p.billingCycle ?? ""] ?? p.billingCycle,
               hint: `R$ ${p.price.toLocaleString("pt-BR")}`,
             }))}
           />
@@ -281,14 +287,11 @@ export function NewChargeDialog({
 
         <div className="grid grid-cols-2 gap-4">
           <Field label="Valor (R$)">
-            <Input
+            <CurrencyInput
               required
-              type="number"
-              min="0"
-              step="0.01"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0,00"
+              onChange={setAmount}
+              disabled={!!planId}
             />
           </Field>
           <Field label="Vencimento">

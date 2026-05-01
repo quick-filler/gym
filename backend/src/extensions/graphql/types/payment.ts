@@ -1,12 +1,24 @@
 /**
  * GraphQL schema for the Payment content type.
  *
- * Payments are read-only over GraphQL — they're created by the Asaas
- * webhook (REST endpoint) and updated by the same handler. Admins can
- * still update status manually if needed via the Strapi admin UI.
+ * Tenancy: payment → enrollment → student/dependent → academy. Read scope
+ * via withPaymentScope; create/update validated through assertCanAccessDoc
+ * on the linked enrollment.
+ *
+ * Payments are normally created by the Asaas webhook (REST). The GraphQL
+ * createPayment is a manual escape hatch for academy_admins.
  */
 
 import type { Core } from '@strapi/strapi';
+import {
+  assertCanAccessDoc,
+  isPlatformAdmin,
+  requireAcademyId,
+  requireRole,
+  resolveDocAcademyId,
+  resolveUserAcademyId,
+  withPaymentScope,
+} from '../helpers';
 
 const UID = 'api::payment.payment';
 
@@ -64,8 +76,13 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.list.field('payments', {
         type: 'Payment',
         args: { pagination: 'PaginationInput' },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const academyId = await resolveUserAcademyId(strapi, ctx);
+          const filters = (await isPlatformAdmin(strapi, ctx))
+            ? {}
+            : withPaymentScope(academyId);
           return await strapi.documents(UID).findMany({
+            filters,
             start: args.pagination?.start ?? 0,
             limit: Math.min(100, args.pagination?.limit ?? 25),
             sort: { dueDate: 'desc' },
@@ -76,7 +93,8 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.field('payment', {
         type: 'Payment',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
         },
       });
@@ -89,7 +107,17 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.field('createPayment', {
         type: 'Payment',
         args: { data: nexus.nonNull(nexus.arg({ type: 'PaymentInput' })) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await requireRole(strapi, ctx, ['academy_admin']);
+          const academyId = await requireAcademyId(strapi, ctx);
+          const enrollmentAcademy = await resolveDocAcademyId(
+            strapi,
+            'api::enrollment.enrollment',
+            args.data.enrollment,
+          );
+          if (enrollmentAcademy !== academyId) {
+            throw new Error('Matrícula de outra academia.');
+          }
           return await strapi.documents(UID).create({
             data: {
               ...args.data,
@@ -106,7 +134,9 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
           documentId: nexus.nonNull(nexus.idArg()),
           data: nexus.nonNull(nexus.arg({ type: 'PaymentUpdateInput' })),
         },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          await requireRole(strapi, ctx, ['academy_admin']);
           return await strapi.documents(UID).update({
             documentId: args.documentId,
             data: args.data,

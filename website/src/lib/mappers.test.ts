@@ -261,7 +261,7 @@ describe('mapStudents', () => {
 });
 
 describe('mapFinance', () => {
-  it('maps kpis, charges (enum coercion), method breakdown', () => {
+  it('maps kpis and charges with enum coercion', () => {
     const out = mapFinance({
       kpis: [
         {
@@ -285,17 +285,11 @@ describe('mapFinance', () => {
           paidAt: '10/04/2026',
         },
       ],
-      methodBreakdown: [
-        { method: 'pix', label: 'PIX', amount: 'R$ 34.520', percent: 55 },
-        { method: 'credit_card', label: 'Cartão', amount: 'R$ 21.610', percent: 35 },
-        { method: 'boleto', label: 'Boleto', amount: 'R$ 6.350', percent: 10 },
-      ],
     });
     expect(out.kpis[0]!.highlighted).toBe(true);
     expect(out.charges[0]!.method).toBe('pix');
     expect(out.charges[0]!.status).toBe('paid');
     expect(out.charges[0]!.paidAt).toBe('10/04/2026');
-    expect(out.methodBreakdown.reduce((s, m) => s + m.percent, 0)).toBe(100);
   });
 
   it('null paidAt becomes undefined', () => {
@@ -314,7 +308,6 @@ describe('mapFinance', () => {
           paidAt: null,
         },
       ],
-      methodBreakdown: [],
     });
     expect(out.charges[0]!.paidAt).toBeUndefined();
   });

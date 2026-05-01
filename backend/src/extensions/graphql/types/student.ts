@@ -1,16 +1,23 @@
 /**
  * GraphQL schema for the Student content type.
  *
- * Custom queries:
- *   - me — returns the authenticated user's linked Student profile, deeply
- *     populated for the student-app dashboard (academy branding, active
- *     enrollment + plan, current workout).
+ * Tenancy: every read/write goes through helpers that scope by the caller's
+ * academy. Platform admins bypass the scope.
  *
- * List queries are scoped by the caller's academy unless they're a super admin.
+ * Custom queries:
+ *   me — returns the authenticated user's linked Student profile (deeply
+ *        populated for the student-app dashboard).
  */
 
 import type { Core } from '@strapi/strapi';
-import { resolveUserAcademyId, withAcademyScope } from '../helpers';
+import {
+  assertCanAccessDoc,
+  isPlatformAdmin,
+  requireAcademyId,
+  requireRole,
+  resolveUserAcademyId,
+  withAcademyScope,
+} from '../helpers';
 
 const UID = 'api::student.student';
 
@@ -116,7 +123,8 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.boolean('isGuardian');
       t.string('notes');
       t.id('photo');
-      t.id('academy');
+      // academy intentionally NOT updatable: we don't move students between
+      // tenants via the API.
     },
   });
 
@@ -128,8 +136,12 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
         args: { pagination: 'PaginationInput' },
         resolve: async (_root: any, args: any, ctx: any) => {
           const academyId = await resolveUserAcademyId(strapi, ctx);
+          // Platform admin sees everything; everyone else is scoped.
+          const filters = (await isPlatformAdmin(strapi, ctx))
+            ? {}
+            : withAcademyScope({}, academyId);
           return await strapi.documents(UID).findMany({
-            filters: withAcademyScope({}, academyId),
+            filters,
             start: args.pagination?.start ?? 0,
             limit: Math.min(100, args.pagination?.limit ?? 25),
             sort: { name: 'asc' },
@@ -140,14 +152,15 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.field('student', {
         type: 'Student',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
         },
       });
 
       t.field('me', {
         type: 'Student',
-        description: 'Returns the authenticated user\'s linked Student profile.',
+        description: "Returns the authenticated user's linked Student profile.",
         resolve: async (_root: any, _args: any, ctx: any) => {
           const userId = ctx?.state?.user?.id;
           if (!userId) return null;
@@ -174,12 +187,12 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
         type: 'Student',
         args: { data: nexus.nonNull(nexus.arg({ type: 'StudentInput' })) },
         resolve: async (_root: any, args: any, ctx: any) => {
-          // Default academy to the caller's so a new student always
-          // ends up in the same tenant the admin is viewing — otherwise
-          // the students() list would filter it out.
-          const academyId = await resolveUserAcademyId(strapi, ctx);
+          await requireRole(strapi, ctx, ['academy_admin']);
+          const academyId = await requireAcademyId(strapi, ctx);
+          // Always pin the new student to the caller's tenant — never trust
+          // an academy id sent from the client (would be a tenant-jump).
           return await strapi.documents(UID).create({
-            data: { ...args.data, academy: args.data.academy ?? academyId },
+            data: { ...args.data, academy: academyId },
           });
         },
       });
@@ -190,7 +203,9 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
           documentId: nexus.nonNull(nexus.idArg()),
           data: nexus.nonNull(nexus.arg({ type: 'StudentUpdateInput' })),
         },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          await requireRole(strapi, ctx, ['academy_admin']);
           return await strapi.documents(UID).update({
             documentId: args.documentId,
             data: args.data,
@@ -201,7 +216,9 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.field('deleteStudent', {
         type: 'Student',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
-        resolve: async (_root: any, args: any) => {
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
+          await requireRole(strapi, ctx, ['academy_admin']);
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });
           return doc;

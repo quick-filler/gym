@@ -219,8 +219,8 @@
       "list": [
         "id",
         "student",
-        "instructor",
-        "date"
+        "dependent",
+        "instructor"
       ],
       "edit": [
         [
@@ -229,15 +229,21 @@
             "size": 6
           },
           {
-            "name": "instructor",
+            "name": "dependent",
             "size": 6
           }
         ],
         [
           {
+            "name": "instructor",
+            "size": 6
+          },
+          {
             "name": "date",
             "size": 4
-          },
+          }
+        ],
+        [
           {
             "name": "weight",
             "size": 4
@@ -245,9 +251,7 @@
           {
             "name": "height",
             "size": 4
-          }
-        ],
-        [
+          },
           {
             "name": "bodyFat",
             "size": 4
@@ -262,10 +266,6 @@
         [
           {
             "name": "notes",
-            "size": 6
-          },
-          {
-            "name": "dependent",
             "size": 6
           }
         ]

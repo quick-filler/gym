@@ -8,18 +8,10 @@ import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { GRAPHQL_ENDPOINT, JWT_STORAGE_KEY, USE_MOCKS } from "@/lib/config";
+import { apolloClient } from "@/lib/apollo";
 
-/**
- * Default credentials come from the backend seed's `ensureDemoDevUser`
- * step. They're pre-filled so a fresh clone can log in with one click
- * — override via NEXT_PUBLIC_DEFAULT_LOGIN_EMAIL / _PASSWORD if you
- * changed the seed values. Production builds should leave the env
- * vars empty so the form starts blank.
- */
-const DEFAULT_EMAIL =
-  process.env.NEXT_PUBLIC_DEFAULT_LOGIN_EMAIL ?? "admin@gym-demo.com";
-const DEFAULT_PASSWORD =
-  process.env.NEXT_PUBLIC_DEFAULT_LOGIN_PASSWORD ?? "gym-demo-admin";
+const DEFAULT_EMAIL = process.env.NEXT_PUBLIC_DEFAULT_LOGIN_EMAIL ?? "";
+const DEFAULT_PASSWORD = process.env.NEXT_PUBLIC_DEFAULT_LOGIN_PASSWORD ?? "";
 
 export function LoginClient() {
   const router = useRouter();
@@ -58,7 +50,26 @@ export function LoginClient() {
       }
       const data = (await res.json()) as { jwt: string };
       localStorage.setItem(JWT_STORAGE_KEY, data.jwt);
-      router.push("/admin/dashboard");
+
+      // Clear any stale cache from a previous session so the new user
+      // never sees another academy's data.
+      await apolloClient.clearStore();
+
+      // Detect platform admins: if platformDashboard resolves, redirect
+      // to the platform panel; otherwise land on the academy admin panel.
+      const check = await fetch(GRAPHQL_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.jwt}`,
+        },
+        body: JSON.stringify({
+          query: `query { platformDashboard { totalAcademies } }`,
+        }),
+      });
+      const result = await check.json();
+      const isPlatformAdmin = !result.errors;
+      router.push(isPlatformAdmin ? "/platform/dashboard" : "/admin/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar.");
       setSubmitting(false);
