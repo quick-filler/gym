@@ -22,15 +22,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Check, Scan } from 'lucide-react-native';
 
-import { useDashboard } from '../hooks/useDashboard';
+import { useAcademyBranding } from '../hooks/useAcademyBranding';
 import { login } from '../lib/auth';
 import { theme, withAlpha } from '../lib/theme';
 
 export default function LoginScreen() {
-  const { data } = useDashboard();
-  const accent = data?.academy.primaryColor ?? '#0A84FF';
-  const academyName = data?.academy.name ?? 'Gym';
-  const initials = data?.academy.initials ?? 'G';
+  const branding = useAcademyBranding();
+  const accent = branding.primaryColor;
+  const academyName = branding.name;
+  const initials = branding.initials;
   const tagline = 'Unidade Vila Mariana';
 
   const [email, setEmail] = useState('');

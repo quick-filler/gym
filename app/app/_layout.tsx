@@ -23,6 +23,9 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="login" />
           <Stack.Screen name="dependents" />
+          <Stack.Screen name="workout/[id]" />
+          <Stack.Screen name="booking/[id]" />
+          <Stack.Screen name="payment/[id]" />
         </Stack>
       </SafeAreaProvider>
     </ApolloClientProvider>

@@ -33,3 +33,11 @@ export const USE_MOCKS: boolean = (
  */
 export const GRAPHQL_ENDPOINT: string =
   process.env.EXPO_PUBLIC_GRAPHQL_ENDPOINT ?? 'http://localhost:7777/graphql';
+
+/**
+ * Slug da academia dona deste build white-label. Cada cliente recebe
+ * um build compilado com o seu próprio slug. Deixe vazio para exibir
+ * branding genérico na tela de login antes da autenticação.
+ */
+export const ACADEMY_SLUG: string =
+  process.env.EXPO_PUBLIC_ACADEMY_SLUG ?? '';
