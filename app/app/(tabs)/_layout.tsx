@@ -9,11 +9,12 @@
  * mode we fall back to ink900 until the academy loads.
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as SecureStore from 'expo-secure-store';
 import {
   Calendar,
   CreditCard,
@@ -25,6 +26,7 @@ import {
 
 import { theme } from '../../lib/theme';
 import { useDashboard } from '../../hooks/useDashboard';
+import { USE_MOCKS } from '../../lib/config';
 
 /* ------------------------------------------------------------------
  * Icon registry — route name → lucide component + label. Adding a new
@@ -39,6 +41,20 @@ const TAB_ICONS: Record<string, { Icon: LucideIcon; label: string }> = {
 };
 
 export default function TabsLayout() {
+  const [authState, setAuthState] = useState<'loading' | 'ok' | 'redirect'>(
+    USE_MOCKS ? 'ok' : 'loading',
+  );
+
+  useEffect(() => {
+    if (USE_MOCKS) return;
+    SecureStore.getItemAsync('jwt').then((token) => {
+      setAuthState(token ? 'ok' : 'redirect');
+    });
+  }, []);
+
+  if (authState === 'loading') return null;
+  if (authState === 'redirect') return <Redirect href="/login" />;
+
   return (
     <Tabs
       screenOptions={{ headerShown: false }}

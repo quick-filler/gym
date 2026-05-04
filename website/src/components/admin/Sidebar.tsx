@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
 import { JWT_STORAGE_KEY } from "@/lib/config";
+import { clearAuthCookies } from "@/lib/auth";
 
 type NavItem = {
   href: string;
@@ -34,6 +35,7 @@ export function Sidebar() {
 
   function handleLogout() {
     localStorage.removeItem(JWT_STORAGE_KEY);
+    clearAuthCookies();
     router.push("/login");
   }
 

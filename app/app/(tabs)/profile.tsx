@@ -27,6 +27,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import {
   Bell,
   ChevronRight,
@@ -43,6 +44,7 @@ import {
 } from 'lucide-react-native';
 
 import { useDashboard } from '../../hooks/useDashboard';
+import { logout } from '../../lib/auth';
 import { MOCK_PROFILE } from '../../lib/mock-data';
 import { theme, withAlpha } from '../../lib/theme';
 import type { BodyAssessment } from '../../lib/types';
@@ -163,7 +165,14 @@ export default function ProfileScreen() {
           </View>
 
           {/* Logout */}
-          <TouchableOpacity activeOpacity={0.8} style={styles.logoutBtn}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.logoutBtn}
+            onPress={async () => {
+              await logout();
+              router.replace('/login');
+            }}
+          >
             <LogOut size={16} color="#be123c" strokeWidth={2.2} />
             <Text style={styles.logoutText}>Sair da conta</Text>
           </TouchableOpacity>
