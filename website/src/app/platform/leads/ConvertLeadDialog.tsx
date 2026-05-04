@@ -69,7 +69,16 @@ export function ConvertLeadDialog({
   } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const [convertLead, { loading }] = useMutation(CONVERT_LEAD);
+  type ConvertLeadData = {
+    convertLead: {
+      academy: { documentId: string; name: string; slug: string; plan: string };
+      passwordResetUrl: string;
+      adminEmail: string;
+      emailSent: boolean;
+    };
+  };
+
+  const [convertLead, { loading }] = useMutation<ConvertLeadData>(CONVERT_LEAD);
 
   // Reset state every time we open with a new lead.
   useEffect(() => {

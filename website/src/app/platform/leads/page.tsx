@@ -75,15 +75,33 @@ const STUDENT_COUNT_LABEL: Record<string, string> = {
   ainda_nao_abri: "Ainda não abri",
 };
 
+type LeadItem = {
+  documentId: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  academyName: string | null;
+  studentCount: string | null;
+  message: string | null;
+  status: string;
+  planInterest: string | null;
+  notes: string | null;
+  createdAt: string;
+};
+
+type LeadsData = {
+  leads: { items: LeadItem[]; total: number; page: number; pageSize: number };
+};
+
 export default function PlatformLeadsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<any | null>(null);
+  const [selected, setSelected] = useState<LeadItem | null>(null);
   const [editNotes, setEditNotes] = useState("");
   const [editStatus, setEditStatus] = useState("");
   const [convertOpen, setConvertOpen] = useState(false);
 
-  const { data, loading, refetch } = useQuery(LEADS, {
+  const { data, loading, refetch } = useQuery<LeadsData>(LEADS, {
     variables: { status: statusFilter || undefined, page },
     fetchPolicy: "cache-and-network",
   });
@@ -99,7 +117,7 @@ export default function PlatformLeadsPage() {
   const total = data?.leads?.total ?? 0;
   const pageSize = data?.leads?.pageSize ?? 25;
 
-  function openLead(lead: any) {
+  function openLead(lead: LeadItem) {
     setSelected(lead);
     setEditStatus(lead.status);
     setEditNotes(lead.notes ?? "");
