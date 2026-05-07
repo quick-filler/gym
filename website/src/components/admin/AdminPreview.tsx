@@ -1,16 +1,17 @@
 /**
  * Mini admin chrome preview rendered inside the settings page.
  *
- * Scope: CSS vars are applied as inline style on the wrapper, NOT on
- * <html>, so the preview reflects the unsaved form state without
- * leaking to the rest of the page. This is the inverse of
- * AcademyThemeProvider, which writes to document.documentElement once
- * the values are persisted.
+ * Scope: the same design-system tokens AcademyThemeProvider writes to
+ * <html> are applied as inline style on this wrapper instead, so the
+ * preview reflects unsaved form state without leaking to the rest of
+ * the page. After save, the global override takes over and the live
+ * chrome matches what the preview shows.
  */
 
 "use client";
 
 import type { CSSProperties } from "react";
+import { derivePalette, deriveSecondaryPalette } from "@/lib/theme";
 
 interface AdminPreviewProps {
   name: string;
@@ -25,12 +26,19 @@ export function AdminPreview({
   secondaryColor,
   logoUrl,
 }: AdminPreviewProps) {
-  // Inline vars — Tailwind utilities like bg-[var(--color-primary)]
-  // would read these, but we reference them directly via inline style
-  // here to keep the preview self-contained.
+  const p = derivePalette(primaryColor);
+  const s = deriveSecondaryPalette(secondaryColor);
+
+  // Override the same tokens AcademyThemeProvider sets globally, but
+  // scoped to this wrapper. Tailwind utilities (text-flame, bg-flame-50,
+  // text-pine) inside this subtree read these instead of the cascade.
   const style: CSSProperties = {
-    ["--preview-primary" as string]: primaryColor,
-    ["--preview-secondary" as string]: secondaryColor,
+    ["--color-flame" as string]: p.base,
+    ["--color-flame-dark" as string]: p.dark,
+    ["--color-flame-50" as string]: p.l50,
+    ["--color-flame-100" as string]: p.l100,
+    ["--color-pine" as string]: s.base,
+    ["--color-pine-50" as string]: s.l50,
   };
 
   const initials =
@@ -57,7 +65,7 @@ export function AdminPreview({
             ) : (
               <div
                 className="w-7 h-7 rounded-md flex items-center justify-center text-white text-[0.7rem] font-semibold"
-                style={{ background: "var(--preview-primary)" }}
+                style={{ background: "var(--color-flame)" }}
               >
                 {initials}
               </div>
@@ -84,8 +92,8 @@ export function AdminPreview({
                 style={
                   item.active
                     ? {
-                        color: "var(--preview-primary)",
-                        borderLeft: "2px solid var(--preview-primary)",
+                        color: "var(--color-flame)",
+                        borderLeft: "2px solid var(--color-flame)",
                         marginLeft: "-2px",
                       }
                     : { color: "var(--ink-500, #6b7280)" }
@@ -106,7 +114,7 @@ export function AdminPreview({
                 <div className="text-[0.6rem] text-ink-400">Alunos</div>
                 <div
                   className="font-display text-[0.95rem] font-semibold"
-                  style={{ color: "var(--preview-primary)" }}
+                  style={{ color: "var(--color-flame)" }}
                 >
                   127
                 </div>
@@ -115,7 +123,7 @@ export function AdminPreview({
                 <div className="text-[0.6rem] text-ink-400">Receita</div>
                 <div
                   className="font-display text-[0.95rem] font-semibold"
-                  style={{ color: "var(--preview-secondary)" }}
+                  style={{ color: "var(--color-pine)" }}
                 >
                   R$ 18k
                 </div>
@@ -124,7 +132,7 @@ export function AdminPreview({
             <button
               type="button"
               className="mt-1 w-full py-1.5 rounded-md text-white text-[0.72rem] font-medium"
-              style={{ background: "var(--preview-primary)" }}
+              style={{ background: "var(--color-flame)" }}
             >
               Novo aluno
             </button>

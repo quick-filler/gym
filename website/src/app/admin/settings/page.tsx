@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Topbar } from "@/components/admin/Topbar";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { AdminPreview } from "@/components/admin/AdminPreview";
+import { ContrastWarning } from "@/components/admin/ContrastWarning";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Field, Input } from "@/components/ui/Field";
@@ -264,6 +265,10 @@ export default function SettingsPage() {
                             className="flex-1 bg-transparent border-0 font-mono text-[0.88rem] text-ink-900 outline-none uppercase"
                           />
                         </div>
+                        <ContrastWarning
+                          hex={form.primaryColor}
+                          label="Cor primária"
+                        />
                       </Field>
                       <Field label="Cor secundária">
                         <div className="flex items-center gap-3 p-3 rounded-xl border border-line-strong bg-white">
@@ -284,6 +289,10 @@ export default function SettingsPage() {
                             className="flex-1 bg-transparent border-0 font-mono text-[0.88rem] text-ink-900 outline-none uppercase"
                           />
                         </div>
+                        <ContrastWarning
+                          hex={form.secondaryColor}
+                          label="Cor secundária"
+                        />
                       </Field>
                     </div>
                     <Field label="Subdomínio do app">
