@@ -69,7 +69,9 @@ export function AcademyThemeProvider({ children }: { children: ReactNode }) {
   const primary = data?.primaryColor ?? null;
   const secondary = data?.secondaryColor ?? null;
   const slug = data?.slug ?? null;
-  const logoUrl = data?.logoUrl ?? null;
+  // Prefer the dedicated square logo for the favicon — landscape logos
+  // crop badly at 32×32. Fall back to the main logo when no square is set.
+  const faviconUrl = data?.logoSquareUrl ?? data?.logoUrl ?? null;
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -88,14 +90,14 @@ export function AcademyThemeProvider({ children }: { children: ReactNode }) {
       root.style.setProperty("--color-pine-50", s.l50);
     }
     if (slug) root.dataset.academy = slug;
-    applyAcademyFavicon(logoUrl);
+    applyAcademyFavicon(faviconUrl);
 
     return () => {
       for (const v of OVERRIDDEN_VARS) root.style.removeProperty(v);
       delete root.dataset.academy;
       applyAcademyFavicon(null);
     };
-  }, [primary, secondary, slug, logoUrl]);
+  }, [primary, secondary, slug, faviconUrl]);
 
   return <>{children}</>;
 }

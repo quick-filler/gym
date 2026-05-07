@@ -26,6 +26,11 @@
       "multiple": false,
       "allowedTypes": ["images"]
     },
+    "logoSquare": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
     "primaryColor": {
       "type": "string",
       "default": "#6366f1"

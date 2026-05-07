@@ -154,6 +154,8 @@ export interface AcademySettings {
   slug: string; // white-label subdomain
   logoUrl?: string;
   logoDocumentId?: string;
+  logoSquareUrl?: string;
+  logoSquareDocumentId?: string;
   primaryColor: string;
   secondaryColor: string;
   plan: PlanTier;

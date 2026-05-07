@@ -358,6 +358,7 @@ export interface RawAcademy {
   phone?: string | null;
   address?: string | null;
   logo?: { documentId?: string | null; url?: string | null } | null;
+  logoSquare?: { documentId?: string | null; url?: string | null } | null;
 }
 
 export function mapAcademy(a: RawAcademy): AcademySettings {
@@ -370,6 +371,8 @@ export function mapAcademy(a: RawAcademy): AcademySettings {
     slug: a.slug,
     logoUrl: a.logo?.url ?? undefined,
     logoDocumentId: a.logo?.documentId ?? undefined,
+    logoSquareUrl: a.logoSquare?.url ?? undefined,
+    logoSquareDocumentId: a.logoSquare?.documentId ?? undefined,
     primaryColor: a.primaryColor ?? "#0a84ff",
     secondaryColor: a.secondaryColor ?? "#0a84ff",
     plan: (["starter", "business", "pro"].includes(a.plan ?? "")

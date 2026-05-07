@@ -3,6 +3,7 @@
 import { useQuery } from "@apollo/client/react";
 import { gql } from "@apollo/client";
 import { Topbar } from "@/components/admin/Topbar";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { MetricCard } from "@/components/admin/MetricCard";
 import { Icon } from "@/components/ui/Icon";
@@ -75,7 +76,7 @@ export default function PlatformDashboardPage() {
           subtitle="Visão geral da plataforma"
         />
 
-        {loading && <div className="text-ink-400">Carregando…</div>}
+        {loading && <LoadingState />}
         {error && <div className="text-rose">{error.message}</div>}
 
         {d && (

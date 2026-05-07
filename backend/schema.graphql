@@ -11,6 +11,11 @@ type Academy {
   enabledModules: [String]
   isActive: Boolean
   logo: Media
+
+  """
+  Square version of the logo, used for favicon and small icons. Optional — fall back to logo when absent.
+  """
+  logoSquare: Media
   name: String!
   phone: String
   plan: String
@@ -27,6 +32,7 @@ input AcademyInput {
   enabledModules: [String]
   isActive: Boolean
   logo: ID
+  logoSquare: ID
   name: String!
   phone: String
   plan: String
@@ -43,6 +49,7 @@ input AcademyUpdateInput {
   enabledModules: [String]
   isActive: Boolean
   logo: ID
+  logoSquare: ID
   name: String
   phone: String
   plan: String

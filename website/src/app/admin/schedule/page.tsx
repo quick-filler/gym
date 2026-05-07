@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 import { Topbar } from "@/components/admin/Topbar";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -95,7 +96,7 @@ export default function SchedulePage() {
           }
         />
 
-        {loading && <div className="text-ink-400">Carregando…</div>}
+        {loading && <LoadingState />}
         {error && <div className="text-rose">{error.message}</div>}
 
         {data && (

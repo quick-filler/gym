@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 import { Topbar } from "@/components/admin/Topbar";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { MetricCard } from "@/components/admin/MetricCard";
 import { Avatar } from "@/components/admin/Avatar";
@@ -131,7 +132,7 @@ export default function FinancePage() {
           }
         />
 
-        {loading && <div className="text-ink-400">Carregando…</div>}
+        {loading && <LoadingState />}
         {error && <div className="text-rose">{error.message}</div>}
 
         {data && (

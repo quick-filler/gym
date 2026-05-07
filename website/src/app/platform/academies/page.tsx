@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery } from "@apollo/client/react";
 import { gql } from "@apollo/client";
 import { Topbar } from "@/components/admin/Topbar";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
@@ -82,7 +83,7 @@ export default function PlatformAcademiesPage() {
       <main className="flex-1 p-8 max-[720px]:p-4">
         <PageHeader title="Academias" subtitle={`${total} academias cadastradas`} />
 
-        {loading && <div className="text-ink-400">Carregando…</div>}
+        {loading && <LoadingState />}
 
         <Card className="p-0 overflow-hidden">
           <table className="w-full">

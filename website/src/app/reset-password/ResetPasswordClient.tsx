@@ -7,6 +7,7 @@ import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { GRAPHQL_ENDPOINT } from "@/lib/config";
 
 function ResetPasswordForm() {
@@ -153,7 +154,7 @@ function ResetPasswordForm() {
 
 export function ResetPasswordClient() {
   return (
-    <Suspense fallback={<div className="p-10 text-ink-500">Carregando…</div>}>
+    <Suspense fallback={<LoadingState />}>
       <ResetPasswordForm />
     </Suspense>
   );

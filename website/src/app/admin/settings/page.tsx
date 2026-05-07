@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Topbar } from "@/components/admin/Topbar";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { AdminPreview } from "@/components/admin/AdminPreview";
 import { ContrastWarning } from "@/components/admin/ContrastWarning";
@@ -39,6 +40,9 @@ function diffPayload(
   if (current.logoDocumentId !== initial.logoDocumentId) {
     patch.logo = current.logoDocumentId ?? null;
   }
+  if (current.logoSquareDocumentId !== initial.logoSquareDocumentId) {
+    patch.logoSquare = current.logoSquareDocumentId ?? null;
+  }
   return patch;
 }
 
@@ -48,8 +52,11 @@ export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>("identity");
   const [form, setForm] = useState<FormState | null>(null);
   const [initial, setInitial] = useState<FormState | null>(null);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingSlot, setUploadingSlot] = useState<
+    "logo" | "logoSquare" | null
+  >(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputSquareRef = useRef<HTMLInputElement>(null);
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -68,26 +75,34 @@ export default function SettingsPage() {
     if (initial) setForm(initial);
   }
 
-  async function handleLogoUpload(file: File) {
-    setUploadingLogo(true);
+  async function handleUpload(slot: "logo" | "logoSquare", file: File) {
+    setUploadingSlot(slot);
+    const urlKey = slot === "logo" ? "logoUrl" : "logoSquareUrl";
+    const idKey =
+      slot === "logo" ? "logoDocumentId" : "logoSquareDocumentId";
+    const successMsg =
+      slot === "logo"
+        ? "Logo enviado. Não esqueça de salvar."
+        : "Ícone enviado. Não esqueça de salvar.";
+    const failMsg =
+      slot === "logo" ? "Falha ao enviar o logo." : "Falha ao enviar o ícone.";
+
     try {
       if (USE_MOCKS) {
         const localUrl = URL.createObjectURL(file);
-        update_("logoUrl", localUrl);
-        update_("logoDocumentId", "mock-logo");
-        toast.success("Logo carregado (modo demo).");
+        update_(urlKey, localUrl);
+        update_(idKey, `mock-${slot}`);
+        toast.success("Carregado (modo demo).");
         return;
       }
       const media = await uploadMedia(file);
-      update_("logoUrl", media.url);
-      update_("logoDocumentId", media.documentId);
-      toast.success("Logo enviado. Não esqueça de salvar.");
+      update_(urlKey, media.url);
+      update_(idKey, media.documentId);
+      toast.success(successMsg);
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Falha ao enviar o logo.",
-      );
+      toast.error(err instanceof Error ? err.message : failMsg);
     } finally {
-      setUploadingLogo(false);
+      setUploadingSlot(null);
     }
   }
 
@@ -118,7 +133,7 @@ export default function SettingsPage() {
           subtitle="Identidade · Aparência · Integração"
         />
 
-        {loading && <div className="text-ink-400">Carregando…</div>}
+        {loading && <LoadingState />}
         {error && <div className="text-rose">{error.message}</div>}
 
         {form && (
@@ -165,14 +180,14 @@ export default function SettingsPage() {
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) handleLogoUpload(file);
+                          if (file) handleUpload("logo", file);
                           e.target.value = "";
                         }}
                       />
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingLogo}
+                        disabled={uploadingSlot === "logo"}
                         className="w-full border-2 border-dashed border-line-strong rounded-2xl p-8 flex flex-col items-center justify-center text-center hover:border-ink-900 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-wait"
                       >
                         {form.logoUrl ? (
@@ -184,7 +199,7 @@ export default function SettingsPage() {
                               className="max-h-20 max-w-full object-contain mb-3"
                             />
                             <div className="text-[0.82rem] text-ink-500">
-                              {uploadingLogo
+                              {uploadingSlot === "logo"
                                 ? "Enviando…"
                                 : "Clique para trocar"}
                             </div>
@@ -195,7 +210,7 @@ export default function SettingsPage() {
                               <Icon name="upload" size="lg" />
                             </div>
                             <div className="text-[0.88rem] font-semibold text-ink-900">
-                              {uploadingLogo
+                              {uploadingSlot === "logo"
                                 ? "Enviando…"
                                 : "Clique para enviar"}
                             </div>
@@ -308,6 +323,75 @@ export default function SettingsPage() {
                         </div>
                       </div>
                     </Field>
+
+                    <Field label="Ícone quadrado (favicon)">
+                      <input
+                        ref={fileInputSquareRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleUpload("logoSquare", file);
+                          e.target.value = "";
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputSquareRef.current?.click()}
+                        disabled={uploadingSlot === "logoSquare"}
+                        className="w-full border-2 border-dashed border-line-strong rounded-2xl p-6 flex items-center gap-4 text-left hover:border-ink-900 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+                      >
+                        {form.logoSquareUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={form.logoSquareUrl}
+                            alt="Ícone quadrado atual"
+                            className="w-16 h-16 rounded-lg object-contain bg-paper-50"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-lg bg-paper-2 flex items-center justify-center text-ink-600">
+                            <Icon name="upload" size="lg" />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <div className="text-[0.88rem] font-semibold text-ink-900">
+                            {uploadingSlot === "logoSquare"
+                              ? "Enviando…"
+                              : form.logoSquareUrl
+                                ? "Clique para trocar"
+                                : "Clique para enviar"}
+                          </div>
+                          <div className="text-[0.76rem] text-ink-400 mt-1">
+                            Recomendado 256×256. Opcional — sem ele, o logo
+                            principal é usado como favicon.
+                          </div>
+                        </div>
+                        {form.logoSquareUrl && (
+                          <span
+                            role="button"
+                            aria-label="Remover ícone quadrado"
+                            tabIndex={0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              update_("logoSquareUrl", undefined);
+                              update_("logoSquareDocumentId", undefined);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                update_("logoSquareUrl", undefined);
+                                update_("logoSquareDocumentId", undefined);
+                              }
+                            }}
+                            className="text-[0.76rem] text-ink-500 hover:text-rose px-2 py-1 cursor-pointer"
+                          >
+                            Remover
+                          </span>
+                        )}
+                      </button>
+                    </Field>
                   </Card>
                 )}
 
@@ -372,7 +456,7 @@ export default function SettingsPage() {
                   <Button
                     variant="ink"
                     onClick={handleSave}
-                    disabled={saving || uploadingLogo}
+                    disabled={saving || uploadingSlot !== null}
                   >
                     {saving ? "Salvando…" : "Salvar alterações"}
                   </Button>

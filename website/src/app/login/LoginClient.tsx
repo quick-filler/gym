@@ -53,10 +53,13 @@ export function LoginClient() {
 
   // Update tab icon when an academy is detected — gives the visitor
   // a hint they're on the right tenant before they even type the email.
+  // Square logo preferred (it's intended for favicons); falls back to
+  // the main logo when the academy hasn't uploaded a separate square.
+  const tabIcon = branding?.logoSquareUrl ?? branding?.logoUrl ?? null;
   useEffect(() => {
-    applyTabFavicon(branding?.logoUrl ?? null);
+    applyTabFavicon(tabIcon);
     return () => applyTabFavicon(null);
-  }, [branding?.logoUrl]);
+  }, [tabIcon]);
 
   // Scoped theme vars — applied to the page wrapper, not <html>, so
   // the public marketing pages (which share the same root) keep their

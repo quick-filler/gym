@@ -49,6 +49,19 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
           return doc?.logo ?? null;
         },
       });
+      t.field('logoSquare', {
+        type: 'Media',
+        description:
+          'Square version of the logo, used for favicon and small icons. Optional — fall back to logo when absent.',
+        resolve: async (parent: any) => {
+          if (parent.logoSquare !== undefined) return parent.logoSquare;
+          const doc: any = await strapi.documents(UID).findOne({
+            documentId: parent.documentId,
+            populate: { logoSquare: true },
+          });
+          return doc?.logoSquare ?? null;
+        },
+      });
     },
   });
 
@@ -68,6 +81,7 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('phone');
       t.string('address');
       t.id('logo');
+      t.id('logoSquare');
     },
   });
 
@@ -87,6 +101,7 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('phone');
       t.string('address');
       t.id('logo');
+      t.id('logoSquare');
     },
   });
 

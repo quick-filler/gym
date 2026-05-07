@@ -299,6 +299,11 @@ const MY_ACADEMY = graphql(`
           url
           alternativeText
         }
+        logoSquare {
+          documentId
+          url
+          alternativeText
+        }
       }
     }
   }
@@ -313,6 +318,10 @@ const ACADEMY_BY_SLUG = graphql(`
       primaryColor
       secondaryColor
       logo {
+        url
+        alternativeText
+      }
+      logoSquare {
         url
         alternativeText
       }
@@ -332,6 +341,11 @@ const UPDATE_ACADEMY = graphql(`
       phone
       address
       logo {
+        documentId
+        url
+        alternativeText
+      }
+      logoSquare {
         documentId
         url
         alternativeText
@@ -471,6 +485,7 @@ export interface LoginAcademyBranding {
   primaryColor: string | null;
   secondaryColor: string | null;
   logoUrl: string | null;
+  logoSquareUrl: string | null;
 }
 
 /**
@@ -498,6 +513,7 @@ export function useAcademyBranding(
       primaryColor: a.primaryColor ?? null,
       secondaryColor: a.secondaryColor ?? null,
       logoUrl: a.logo?.url ?? null,
+      logoSquareUrl: a.logoSquare?.url ?? null,
     },
     loading: false,
     error: null,
@@ -513,6 +529,7 @@ export interface UpdateAcademyInput {
   primaryColor?: string;
   secondaryColor?: string;
   logo?: string | null; // documentId of Media, or null to detach
+  logoSquare?: string | null;
 }
 
 /**
