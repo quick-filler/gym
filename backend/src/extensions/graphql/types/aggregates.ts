@@ -330,7 +330,8 @@ export function buildAggregates({
 
           const [students, schedules, payments] = await Promise.all([
             strapi.documents(STUDENT).findMany({
-              filters,
+              // Exclude staff (academy_admin / instructor) from member metrics.
+              filters: { ...filters, role: 'member' },
               sort: { createdAt: 'desc' },
               limit: 100,
               populate: { enrollments: { populate: { plan: true } } },

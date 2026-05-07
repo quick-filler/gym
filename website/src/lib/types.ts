@@ -146,12 +146,14 @@ export interface ScheduleData {
 }
 
 export interface AcademySettings {
+  documentId: string;
   name: string;
   email: string;
   phone: string;
   address: string;
   slug: string; // white-label subdomain
   logoUrl?: string;
+  logoDocumentId?: string;
   primaryColor: string;
   secondaryColor: string;
   plan: PlanTier;

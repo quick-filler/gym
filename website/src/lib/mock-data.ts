@@ -508,6 +508,7 @@ export const MOCK_SCHEDULE: ScheduleData = {
    ============================================================ */
 
 export const MOCK_ACADEMY: AcademySettings = {
+  documentId: "mock-academy",
   name: "Gym Demo",
   email: "contato@gymdemo.com.br",
   phone: "(11) 4002-8922",

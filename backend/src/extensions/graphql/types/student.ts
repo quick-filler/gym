@@ -137,11 +137,13 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
         resolve: async (_root: any, args: any, ctx: any) => {
           const academyId = await resolveUserAcademyId(strapi, ctx);
           // Platform admin sees everything; everyone else is scoped.
-          const filters = (await isPlatformAdmin(strapi, ctx))
+          const baseFilters = (await isPlatformAdmin(strapi, ctx))
             ? {}
             : withAcademyScope({}, academyId);
+          // Only actual students (alunos) — academy_admin and instructor
+          // share the Student table but must not show up in member listings.
           return await strapi.documents(UID).findMany({
-            filters,
+            filters: { ...baseFilters, role: 'member' },
             start: args.pagination?.start ?? 0,
             limit: Math.min(100, args.pagination?.limit ?? 25),
             sort: { name: 'asc' },

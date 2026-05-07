@@ -348,6 +348,7 @@ export function mapSchedule(s: RawScheduleWeek): ScheduleData {
  * ------------------------------------------------------------------ */
 
 export interface RawAcademy {
+  documentId: string;
   name: string;
   slug: string;
   primaryColor?: string | null;
@@ -356,17 +357,19 @@ export interface RawAcademy {
   email?: string | null;
   phone?: string | null;
   address?: string | null;
-  logo?: { url?: string | null } | null;
+  logo?: { documentId?: string | null; url?: string | null } | null;
 }
 
 export function mapAcademy(a: RawAcademy): AcademySettings {
   return {
+    documentId: a.documentId,
     name: a.name,
     email: a.email ?? "",
     phone: formatPhoneForDisplay(a.phone),
     address: a.address ?? "",
     slug: a.slug,
     logoUrl: a.logo?.url ?? undefined,
+    logoDocumentId: a.logo?.documentId ?? undefined,
     primaryColor: a.primaryColor ?? "#0a84ff",
     secondaryColor: a.secondaryColor ?? "#0a84ff",
     plan: (["starter", "business", "pro"].includes(a.plan ?? "")

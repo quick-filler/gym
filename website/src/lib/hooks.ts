@@ -17,7 +17,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useQuery } from "@apollo/client/react";
+import { useMutation, useQuery } from "@apollo/client/react";
 import { graphql } from "@/gql";
 import { USE_MOCKS } from "./config";
 import {
@@ -295,9 +295,30 @@ const MY_ACADEMY = graphql(`
         phone
         address
         logo {
+          documentId
           url
           alternativeText
         }
+      }
+    }
+  }
+`);
+
+const UPDATE_ACADEMY = graphql(`
+  mutation AdminUpdateAcademy($documentId: ID!, $data: AcademyUpdateInput!) {
+    updateAcademy(documentId: $documentId, data: $data) {
+      documentId
+      name
+      slug
+      primaryColor
+      secondaryColor
+      email
+      phone
+      address
+      logo {
+        documentId
+        url
+        alternativeText
       }
     }
   }
@@ -426,6 +447,36 @@ export function useAcademy(): DataSourceResult<AcademySettings> {
   const a = q.data?.me?.academy;
   if (!a) return { data: null, loading: false, error: null };
   return { data: mapAcademy(a), loading: false, error: null };
+}
+
+export interface UpdateAcademyInput {
+  name?: string;
+  slug?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  logo?: string | null; // documentId of Media, or null to detach
+}
+
+/**
+ * Updates the caller's academy. Mutation refetches MY_ACADEMY on success so
+ * the cached AcademySettings (and the AcademyThemeProvider that reads it)
+ * see the new values without a manual refetch.
+ */
+export function useUpdateAcademy() {
+  const [mutate, state] = useMutation(UPDATE_ACADEMY, {
+    refetchQueries: [{ query: MY_ACADEMY }],
+    awaitRefetchQueries: true,
+  });
+
+  async function update(documentId: string, data: UpdateAcademyInput) {
+    if (USE_MOCKS) return; // demo mode: no-op
+    await mutate({ variables: { documentId, data } });
+  }
+
+  return { update, loading: state.loading, error: state.error ?? null };
 }
 
 export function useDRE(): DataSourceResult<DREData> {
