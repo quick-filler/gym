@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { CurrencyInput, Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
+import { Spinner } from "@/components/ui/LoadingState";
 import { USE_MOCKS } from "@/lib/config";
 import type { MembershipPlan } from "@/lib/types";
 
@@ -282,8 +283,17 @@ export function EditPlanDialog({
             form="edit-plan-form"
             disabled={updating}
           >
-            {updating ? "Salvando…" : "Salvar"}
-            <Icon name="check" />
+            {updating ? (
+              <>
+                <Spinner size={14} />
+                Salvando
+              </>
+            ) : (
+              <>
+                Salvar
+                <Icon name="check" />
+              </>
+            )}
           </Button>
         </div>
       </div>

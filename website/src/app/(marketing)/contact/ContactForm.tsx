@@ -5,6 +5,7 @@ import { useMutation } from "@apollo/client/react";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
+import { Spinner } from "@/components/ui/LoadingState";
 import { SubmitContactFormDocument } from "@/gql/graphql";
 import { USE_MOCKS } from "@/lib/config";
 
@@ -140,8 +141,17 @@ export function ContactForm() {
         disabled={loading}
         className="mt-2"
       >
-        {loading ? "Enviando…" : "Enviar mensagem"}
-        <Icon name="arrow-right" />
+        {loading ? (
+          <>
+            <Spinner size={14} />
+            Enviando
+          </>
+        ) : (
+          <>
+            Enviar mensagem
+            <Icon name="arrow-right" />
+          </>
+        )}
       </Button>
       <p className="text-[0.78rem] text-ink-400 mt-4 text-center">
         Ao enviar, você concorda com nossa{" "}

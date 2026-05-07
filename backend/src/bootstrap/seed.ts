@@ -5,9 +5,12 @@
  * Creates:
  *   - 1 academy "Gym Demo" (slug: gym-demo, indigo theme)
  *   - 2 plans (Mensal R$99, Anual R$890)
- *   - 3 students with active enrollments
- *   - 1 sample class schedule (Musculação Turma A)
+ *   - 3 students with active enrollments (1 guardian + 2 dependents)
+ *   - 2 sample class schedules (Musculação, Pilates)
+ *   - Class bookings spanning [-2, +2] days so /admin/attendance has
+ *     history + present + future to play with on first boot
  *   - 1 sample workout plan
+ *   - 6 sample expenses
  */
 
 import type { Core } from '@strapi/strapi';
@@ -128,36 +131,107 @@ export async function seedDemoData(strapi: Core.Strapi) {
     });
   }
 
-  // Sample class schedule
-  await strapi.documents('api::class-schedule.class-schedule').create({
-    data: {
-      name: 'Musculação Turma A',
-      instructor: 'Rafael',
-      modality: 'presential',
-      weekdays: [1, 3, 5], // Mon, Wed, Fri
-      startTime: '06:00',
-      endTime: '07:00',
-      maxCapacity: 20,
-      room: 'Sala 1',
-      isActive: true,
-      academy: academy.documentId,
-    },
-  });
+  // Sample class schedules — keep doc references so we can seed bookings.
+  const schedMusc: any = await strapi
+    .documents('api::class-schedule.class-schedule')
+    .create({
+      data: {
+        name: 'Musculação Turma A',
+        instructor: 'Rafael',
+        modality: 'presential',
+        weekdays: [1, 3, 5], // Mon, Wed, Fri
+        startTime: '06:00',
+        endTime: '07:00',
+        maxCapacity: 20,
+        room: 'Sala 1',
+        isActive: true,
+        academy: academy.documentId,
+      },
+    });
 
-  await strapi.documents('api::class-schedule.class-schedule').create({
-    data: {
-      name: 'Pilates Manhã',
-      instructor: 'Beatriz',
-      modality: 'presential',
-      weekdays: [2, 4],
-      startTime: '07:00',
-      endTime: '08:00',
-      maxCapacity: 12,
-      room: 'Sala 2',
-      isActive: true,
-      academy: academy.documentId,
-    },
-  });
+  const schedPilates: any = await strapi
+    .documents('api::class-schedule.class-schedule')
+    .create({
+      data: {
+        name: 'Pilates Manhã',
+        instructor: 'Beatriz',
+        modality: 'presential',
+        weekdays: [2, 4],
+        startTime: '07:00',
+        endTime: '08:00',
+        maxCapacity: 12,
+        room: 'Sala 2',
+        isActive: true,
+        academy: academy.documentId,
+      },
+    });
+
+  // Sample bookings — give the daily attendance page something to show
+  // out of the box. We seed yesterday/today/tomorrow + the next two
+  // class days so the admin can practice marking presence + see history.
+  const memberResults: any = await strapi
+    .documents('api::student.student')
+    .findMany({
+      filters: { academy: { documentId: academy.documentId }, role: 'member' },
+      limit: 50,
+    });
+  const members: any[] = memberResults ?? [];
+  const allSchedules: any[] = [schedMusc, schedPilates];
+
+  function isoDate(offsetDays: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return d.toISOString().slice(0, 10);
+  }
+  function weekdayOf(offsetDays: number): number {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return d.getDay();
+  }
+
+  // Patterns: [offsetDays, statusFn(memberIndex)] — covers history
+  // (attended/missed), today (mostly unmarked) and the future (confirmed).
+  const bookingPattern: Array<{
+    offset: number;
+    status: (idx: number) => 'confirmed' | 'attended' | 'missed';
+    withCheckIn?: boolean;
+  }> = [
+    { offset: -2, status: (i) => (i === 0 ? 'attended' : 'missed'), withCheckIn: true },
+    { offset: -1, status: () => 'attended', withCheckIn: true },
+    { offset: 0, status: () => 'confirmed' },
+    { offset: 1, status: () => 'confirmed' },
+    { offset: 2, status: () => 'confirmed' },
+  ];
+
+  let bookingsCreated = 0;
+  for (const pat of bookingPattern) {
+    const wd = weekdayOf(pat.offset);
+    const date = isoDate(pat.offset);
+    const todaysSchedules = allSchedules.filter((s) =>
+      Array.isArray(s.weekdays) && s.weekdays.includes(wd),
+    );
+    for (const sch of todaysSchedules) {
+      for (let i = 0; i < members.length; i++) {
+        const m = members[i];
+        const status = pat.status(i);
+        const data: any = {
+          student: m.documentId,
+          classSchedule: sch.documentId,
+          date,
+          status,
+        };
+        if (pat.withCheckIn && status === 'attended') {
+          // Time-stamp the check-in around the class start, just for realism.
+          const [h, mn] = String(sch.startTime ?? '06:00').split(':').map(Number);
+          const dt = new Date(`${date}T${String(h).padStart(2, '0')}:${String(mn ?? 0).padStart(2, '0')}:00`);
+          data.checkedInAt = new Date(dt.getTime() + 2 * 60_000).toISOString();
+        }
+        await strapi.documents('api::class-booking.class-booking').create({ data });
+        bookingsCreated++;
+      }
+    }
+  }
+  strapi.log.info(`[seed] ${bookingsCreated} class bookings created (history + today + upcoming)`);
 
   // Mark Ana Costa as a guardian and attach two dependents.
   const anaResults: any = await strapi.documents('api::student.student').findMany({
@@ -265,7 +339,7 @@ export async function seedDemoData(strapi: Core.Strapi) {
   }
 
   strapi.log.info(
-    '[seed] demo academy + 3 students (1 guardian w/ 2 dependents) + 2 plans + 2 schedules + 6 expenses created',
+    '[seed] demo academy + 3 students (1 guardian w/ 2 dependents) + 2 plans + 2 schedules + bookings + 6 expenses created',
   );
 }
 

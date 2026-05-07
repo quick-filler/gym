@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Topbar } from "@/components/admin/Topbar";
-import { LoadingState } from "@/components/ui/LoadingState";
+import { LoadingState, Spinner } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { AdminPreview } from "@/components/admin/AdminPreview";
 import { ContrastWarning } from "@/components/admin/ContrastWarning";
@@ -198,20 +198,29 @@ export default function SettingsPage() {
                               alt="Logo atual"
                               className="max-h-20 max-w-full object-contain mb-3"
                             />
-                            <div className="text-[0.82rem] text-ink-500">
-                              {uploadingSlot === "logo"
-                                ? "Enviando…"
-                                : "Clique para trocar"}
+                            <div className="inline-flex items-center gap-2 text-[0.82rem] text-ink-500">
+                              {uploadingSlot === "logo" ? (
+                                <>
+                                  <Spinner size={12} />
+                                  Enviando
+                                </>
+                              ) : (
+                                "Clique para trocar"
+                              )}
                             </div>
                           </>
                         ) : (
                           <>
                             <div className="w-12 h-12 rounded-xl bg-paper-2 flex items-center justify-center text-ink-600 mb-3">
-                              <Icon name="upload" size="lg" />
+                              {uploadingSlot === "logo" ? (
+                                <Spinner size={20} />
+                              ) : (
+                                <Icon name="upload" size="lg" />
+                              )}
                             </div>
                             <div className="text-[0.88rem] font-semibold text-ink-900">
                               {uploadingSlot === "logo"
-                                ? "Enviando…"
+                                ? "Enviando"
                                 : "Clique para enviar"}
                             </div>
                             <div className="text-[0.76rem] text-ink-400 mt-1">
@@ -351,16 +360,25 @@ export default function SettingsPage() {
                           />
                         ) : (
                           <div className="w-16 h-16 rounded-lg bg-paper-2 flex items-center justify-center text-ink-600">
-                            <Icon name="upload" size="lg" />
+                            {uploadingSlot === "logoSquare" ? (
+                              <Spinner size={20} />
+                            ) : (
+                              <Icon name="upload" size="lg" />
+                            )}
                           </div>
                         )}
                         <div className="flex-1">
-                          <div className="text-[0.88rem] font-semibold text-ink-900">
-                            {uploadingSlot === "logoSquare"
-                              ? "Enviando…"
-                              : form.logoSquareUrl
-                                ? "Clique para trocar"
-                                : "Clique para enviar"}
+                          <div className="inline-flex items-center gap-2 text-[0.88rem] font-semibold text-ink-900">
+                            {uploadingSlot === "logoSquare" ? (
+                              <>
+                                <Spinner size={14} />
+                                Enviando
+                              </>
+                            ) : form.logoSquareUrl ? (
+                              "Clique para trocar"
+                            ) : (
+                              "Clique para enviar"
+                            )}
                           </div>
                           <div className="text-[0.76rem] text-ink-400 mt-1">
                             Recomendado 256×256. Opcional — sem ele, o logo
@@ -458,7 +476,14 @@ export default function SettingsPage() {
                     onClick={handleSave}
                     disabled={saving || uploadingSlot !== null}
                   >
-                    {saving ? "Salvando…" : "Salvar alterações"}
+                    {saving ? (
+                      <>
+                        <Spinner size={14} />
+                        Salvando
+                      </>
+                    ) : (
+                      "Salvar alterações"
+                    )}
                   </Button>
                 </div>
               </div>

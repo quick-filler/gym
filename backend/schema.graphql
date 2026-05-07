@@ -294,6 +294,30 @@ type DREOverview {
   revenue: DREHeroRevenue!
 }
 
+"""Roster of all classes happening on a given date."""
+type DailyAttendance {
+  classes: [DailyAttendanceClass!]!
+  date: String!
+  weekdayLabel: String!
+}
+
+"""
+A class occurring on a specific date with its booking roster, used by the daily attendance page.
+"""
+type DailyAttendanceClass {
+  attendedCount: Int!
+  bookedCount: Int!
+  bookings: [ClassBooking!]!
+  capacity: Int
+  endTime: String!
+  instructor: String
+  missedCount: Int!
+  name: String!
+  room: String
+  scheduleDocumentId: ID!
+  startTime: String!
+}
+
 type DashboardClassRow {
   booked: Int!
   capacity: Int!
@@ -963,6 +987,11 @@ type Query {
   classBookings(pagination: PaginationInput): [ClassBooking]
   classSchedule(documentId: ID!): ClassSchedule
   classSchedules(pagination: PaginationInput): [ClassSchedule]
+
+  """
+  Returns every active class scheduled to occur on the given date with its booking roster, ordered by startTime.
+  """
+  dailyAttendance(date: String!): DailyAttendance
   dependent(documentId: ID!): Dependent
   dependents(pagination: PaginationInput): [Dependent]
   dreOverview(month: Int, year: Int): DREOverview
@@ -990,6 +1019,11 @@ type Query {
 
   """Bookings for a given class schedule, optionally filtered by date."""
   scheduleBookings(date: String, documentId: ID!): [ClassBooking]
+
+  """
+  Returns existing schedules that would clash with the input on instructor or room. Empty list = no conflict. Tenant-scoped to the caller's academy.
+  """
+  scheduleConflicts(input: ScheduleConflictInput!): [ScheduleConflict!]
   scheduleWeek(weekStart: String): ScheduleWeek
   student(documentId: ID!): Student
   students(pagination: PaginationInput): [Student]
@@ -1008,9 +1042,29 @@ type ScheduleClass {
   endTime: String!
   id: String!
   instructor: String
+  modality: String
   name: String!
+  scheduleDocumentId: ID!
   startTime: String!
   weekday: Int!
+}
+
+"""
+Existing ClassSchedule that collides with a proposed input on instructor or room.
+"""
+type ScheduleConflict {
+  days: [Int!]!
+  reason: String!
+  schedule: ClassSchedule!
+}
+
+input ScheduleConflictInput {
+  endTime: String!
+  excludeDocumentId: ID
+  instructor: String
+  room: String
+  startTime: String!
+  weekdays: [Int!]!
 }
 
 type ScheduleStats {

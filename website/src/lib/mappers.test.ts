@@ -322,6 +322,7 @@ describe('mapSchedule', () => {
       classes: [
         {
           id: 'c1',
+          scheduleDocumentId: 'sch-c1',
           name: 'CrossFit',
           instructor: 'Carol',
           weekday: 1,
@@ -333,6 +334,7 @@ describe('mapSchedule', () => {
         },
         {
           id: 'c2',
+          scheduleDocumentId: 'sch-c2',
           name: 'Hue',
           instructor: null,
           weekday: 2,

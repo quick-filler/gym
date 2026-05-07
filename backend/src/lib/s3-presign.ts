@@ -30,6 +30,15 @@ function getClient(): S3Client {
             secretAccessKey: process.env.S3_SECRET_KEY,
           }
         : undefined, // fall back to default chain (env, profile, IAM role)
+    // Disable AWS SDK v3's automatic per-request CRC32 checksum (default
+    // since Jan 2025). Backblaze B2 and other S3-compatible providers
+    // reject presigned PUTs that carry the placeholder checksum query
+    // params (x-amz-checksum-crc32=AAAAAA==) because the browser never
+    // computes the real checksum at upload time. Setting both knobs to
+    // WHEN_REQUIRED tells the SDK to only add a checksum if the API
+    // operation explicitly demands it (PutObject does not).
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
   });
   return cachedClient;
 }

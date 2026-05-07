@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { gql } from "@apollo/client";
 import { Topbar } from "@/components/admin/Topbar";
-import { LoadingState } from "@/components/ui/LoadingState";
+import { LoadingState, Spinner } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
@@ -312,9 +312,16 @@ export default function PlatformLeadsPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full bg-ink-900 text-paper font-semibold text-[0.88rem] py-3 rounded-xl hover:bg-ink-700 transition-colors disabled:opacity-50"
+                className="w-full bg-ink-900 text-paper font-semibold text-[0.88rem] py-3 rounded-xl hover:bg-ink-700 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
               >
-                {saving ? "Salvando…" : "Salvar alterações"}
+                {saving ? (
+                  <>
+                    <Spinner size={14} />
+                    Salvando
+                  </>
+                ) : (
+                  "Salvar alterações"
+                )}
               </button>
             </div>
           </div>
