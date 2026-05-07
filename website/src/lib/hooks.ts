@@ -304,6 +304,22 @@ const MY_ACADEMY = graphql(`
   }
 `);
 
+const ACADEMY_BY_SLUG = graphql(`
+  query AcademyBySlugForLogin($slug: String!) {
+    academyBySlug(slug: $slug) {
+      documentId
+      name
+      slug
+      primaryColor
+      secondaryColor
+      logo {
+        url
+        alternativeText
+      }
+    }
+  }
+`);
+
 const UPDATE_ACADEMY = graphql(`
   mutation AdminUpdateAcademy($documentId: ID!, $data: AcademyUpdateInput!) {
     updateAcademy(documentId: $documentId, data: $data) {
@@ -447,6 +463,45 @@ export function useAcademy(): DataSourceResult<AcademySettings> {
   const a = q.data?.me?.academy;
   if (!a) return { data: null, loading: false, error: null };
   return { data: mapAcademy(a), loading: false, error: null };
+}
+
+export interface LoginAcademyBranding {
+  name: string;
+  slug: string;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+  logoUrl: string | null;
+}
+
+/**
+ * Public lookup used by /login to brand the page before any JWT exists.
+ * Returns null when slug is null/empty or when the academy isn't found.
+ */
+export function useAcademyBranding(
+  slug: string | null,
+): DataSourceResult<LoginAcademyBranding> {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const q = useQuery(ACADEMY_BY_SLUG, {
+    variables: { slug: slug ?? "" },
+    skip: !slug || USE_MOCKS,
+  });
+  if (!slug) return { data: null, loading: false, error: null };
+  if (USE_MOCKS) return { data: null, loading: false, error: null };
+  if (q.loading) return loadingResult();
+  if (q.error) return errorResult(q.error);
+  const a = q.data?.academyBySlug;
+  if (!a) return { data: null, loading: false, error: null };
+  return {
+    data: {
+      name: a.name,
+      slug: a.slug,
+      primaryColor: a.primaryColor ?? null,
+      secondaryColor: a.secondaryColor ?? null,
+      logoUrl: a.logo?.url ?? null,
+    },
+    loading: false,
+    error: null,
+  };
 }
 
 export interface UpdateAcademyInput {

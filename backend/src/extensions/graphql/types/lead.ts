@@ -14,7 +14,10 @@
 
 import crypto from 'node:crypto';
 import { isPlatformAdmin } from '../helpers';
-import { sendAcademyWelcomeEmail } from '../../../lib/email';
+import {
+  getAcademyBranding,
+  sendAcademyWelcomeEmail,
+} from '../../../lib/email';
 
 export function buildLead({ nexus, strapi }: any) {
   const LEAD = 'api::lead.lead';
@@ -343,11 +346,20 @@ export function buildLead({ nexus, strapi }: any) {
 
           let emailSent = false;
           try {
+            // Pull branding (logo + primaryColor) so the welcome email
+            // matches the academy's identity. Brand-new academies have
+            // only the seed defaults — that's fine, infra is wired for
+            // when the dono customizes later.
+            const branding = await getAcademyBranding(
+              strapi,
+              academy.documentId,
+            );
             await sendAcademyWelcomeEmail(strapi, {
               name: lead.name,
               email: adminEmail,
               academyName: academy.name,
               resetUrl,
+              branding,
             });
             emailSent = true;
           } catch (err) {
