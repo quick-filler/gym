@@ -20,7 +20,7 @@ export function Topbar({ title, searchValue, onSearchChange, searchPlaceholder }
   }
 
   return (
-    <header className="sticky top-0 z-40 h-16 bg-paper/85 backdrop-blur-xl border-b border-line flex items-center gap-4 px-8 max-[720px]:px-4">
+    <header className="sticky top-0 z-40 h-16 bg-paper/85 backdrop-blur-xl border-b border-line flex items-center gap-4 px-8 max-[980px]:pl-14 max-[720px]:pr-4">
       <h1 className="font-display text-[1.2rem] font-semibold text-ink-900 shrink-0">
         {title}
       </h1>

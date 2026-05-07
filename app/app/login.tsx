@@ -22,22 +22,37 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Check, Scan } from 'lucide-react-native';
 
-import { useDashboard } from '../hooks/useDashboard';
+import { useAcademyBranding } from '../hooks/useAcademyBranding';
+import { login } from '../lib/auth';
 import { theme, withAlpha } from '../lib/theme';
 
 export default function LoginScreen() {
-  const { data } = useDashboard();
-  const accent = data?.academy.primaryColor ?? '#0A84FF';
-  const academyName = data?.academy.name ?? 'Gym';
-  const initials = data?.academy.initials ?? 'G';
+  const branding = useAcademyBranding();
+  const accent = branding.primaryColor;
+  const academyName = branding.name;
+  const initials = branding.initials;
   const tagline = 'Unidade Vila Mariana';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [keepSignedIn, setKeepSignedIn] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = () => {
-    router.replace('/(tabs)');
+  const handleSubmit = async () => {
+    if (!email.trim() || !password) {
+      setError('Preencha e-mail e senha.');
+      return;
+    }
+    setError(null);
+    setSubmitting(true);
+    try {
+      await login(email, password);
+      router.replace('/(tabs)');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao entrar.');
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -135,12 +150,19 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
 
+            {error && (
+              <Text style={styles.errorText}>{error}</Text>
+            )}
+
             <TouchableOpacity
-              style={[styles.primaryBtn, { backgroundColor: accent }]}
+              style={[styles.primaryBtn, { backgroundColor: accent, opacity: submitting ? 0.7 : 1 }]}
               onPress={handleSubmit}
               activeOpacity={0.85}
+              disabled={submitting}
             >
-              <Text style={styles.primaryBtnText}>Entrar</Text>
+              <Text style={styles.primaryBtnText}>
+                {submitting ? 'Entrando…' : 'Entrar'}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.biometricBtn} activeOpacity={0.7}>
@@ -272,6 +294,11 @@ const styles = StyleSheet.create({
   forgot: {
     fontSize: 13,
     fontWeight: '500',
+  },
+  errorText: {
+    fontSize: 13,
+    color: '#be123c',
+    marginBottom: 10,
   },
   primaryBtn: {
     width: '100%',

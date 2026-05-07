@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { GRAPHQL_ENDPOINT, JWT_STORAGE_KEY, USE_MOCKS } from "@/lib/config";
+import { setAuthCookies } from "@/lib/auth";
 import { apolloClient } from "@/lib/apollo";
 
 const DEFAULT_EMAIL = process.env.NEXT_PUBLIC_DEFAULT_LOGIN_EMAIL ?? "";
@@ -30,6 +31,7 @@ export function LoginClient() {
       // see the "session" exists. No real auth check.
       if (typeof window !== "undefined") {
         localStorage.setItem(JWT_STORAGE_KEY, "mock-demo-token");
+        setAuthCookies("academy_admin");
       }
       setTimeout(() => router.push("/admin/dashboard"), 300);
       return;
@@ -69,6 +71,7 @@ export function LoginClient() {
       });
       const result = await check.json();
       const isPlatformAdmin = !result.errors;
+      setAuthCookies(isPlatformAdmin ? "platform_admin" : "academy_admin");
       router.push(isPlatformAdmin ? "/platform/dashboard" : "/admin/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar.");

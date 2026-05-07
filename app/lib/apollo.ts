@@ -23,6 +23,47 @@ const httpLink = new HttpLink({
 });
 
 /**
+ * Catches authentication errors (Strapi 401/403) and redirects to login.
+ * Uses the same Observable + subscribe pattern as authLink to stay
+ * compatible with Apollo's internal Observable (not RxJS).
+ */
+const errorLink = new ApolloLink((operation, forward) => {
+  return new Observable((observer) => {
+    const sub = forward(operation).subscribe({
+      next: (response) => {
+        const isAuthError = (response.errors ?? []).some((err: { extensions?: Record<string, unknown>; message?: string }) => {
+          const code = String(err.extensions?.code ?? '').toUpperCase();
+          const msg = (err.message ?? '').toLowerCase();
+          return (
+            code === 'UNAUTHORIZED' ||
+            code === 'FORBIDDEN' ||
+            msg.includes('unauthorized') ||
+            msg.includes('forbidden') ||
+            msg.includes('access denied')
+          );
+        });
+
+        if (isAuthError) {
+          SecureStore.deleteItemAsync('jwt').catch(() => {});
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const { router } = require('expo-router');
+            router.replace('/login');
+          } catch {
+            // Navigator not mounted yet — safe to ignore during startup
+          }
+        }
+
+        observer.next(response);
+      },
+      error: observer.error.bind(observer),
+      complete: observer.complete.bind(observer),
+    });
+    return () => sub.unsubscribe();
+  });
+});
+
+/**
  * Async auth middleware — reads the JWT from SecureStore on every request
  * and attaches it to the outgoing operation.
  */
@@ -50,7 +91,7 @@ const authLink = new ApolloLink((operation, forward) => {
 });
 
 export const apolloClient = new ApolloClient({
-  link: from([authLink, httpLink]),
+  link: from([errorLink, authLink, httpLink]),
   cache: new InMemoryCache({
     typePolicies: {
       Academy:       { keyFields: ['documentId'] },

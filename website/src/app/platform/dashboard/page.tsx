@@ -20,8 +20,19 @@ const PLATFORM_DASHBOARD = gql`
   }
 `;
 
+type PlatformDashboardData = {
+  platformDashboard: {
+    totalAcademies: number;
+    activeAcademies: number;
+    totalStudents: number;
+    mrr: string;
+    openLeads: number;
+    leadsThisMonth: number;
+  };
+};
+
 export default function PlatformDashboardPage() {
-  const { data, loading, error } = useQuery(PLATFORM_DASHBOARD, {
+  const { data, loading, error } = useQuery<PlatformDashboardData>(PLATFORM_DASHBOARD, {
     fetchPolicy: "cache-and-network",
   });
 
@@ -40,13 +51,11 @@ export default function PlatformDashboardPage() {
           id: "students",
           label: "Alunos ativos",
           value: String(d.totalStudents),
-          delta: null,
         },
         {
           id: "mrr",
           label: "MRR do mês",
           value: d.mrr,
-          delta: null,
         },
         {
           id: "leads",

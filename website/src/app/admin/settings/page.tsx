@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Topbar } from "@/components/admin/Topbar";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/Button";
@@ -17,9 +17,13 @@ export default function SettingsPage() {
   const { data, loading, error } = useAcademy();
   const [tab, setTab] = useState<Tab>("identity");
   const [form, setForm] = useState<typeof data>(null);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    if (data) setForm(data);
+    if (data && !initialized.current) {
+      initialized.current = true;
+      setForm(data);
+    }
   }, [data]);
 
   function update<K extends keyof NonNullable<typeof form>>(

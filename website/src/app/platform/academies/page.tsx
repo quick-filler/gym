@@ -38,11 +38,26 @@ const PLAN_COLOR: Record<string, string> = {
   pro: "bg-pine/10 text-pine",
 };
 
+type AcademyItem = {
+  documentId: string;
+  name: string;
+  slug: string;
+  plan: string;
+  isActive: boolean;
+  email: string | null;
+  studentCount: number;
+  createdAt: string;
+};
+
+type AllAcademiesData = {
+  allAcademies: { items: AcademyItem[]; total: number };
+};
+
 export default function PlatformAcademiesPage() {
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
 
-  const { data, loading } = useQuery(ALL_ACADEMIES, {
+  const { data, loading } = useQuery<AllAcademiesData>(ALL_ACADEMIES, {
     variables: { page },
     fetchPolicy: "cache-and-network",
   });
@@ -84,7 +99,7 @@ export default function PlatformAcademiesPage() {
               </tr>
             </thead>
             <tbody>
-              {academies.map((a: any) => (
+              {academies.map((a) => (
                 <tr
                   key={a.documentId}
                   className="border-b border-line/60 last:border-b-0 hover:bg-paper-50 transition-colors"
