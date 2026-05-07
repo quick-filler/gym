@@ -781,6 +781,11 @@ type Mutation {
   checkInBooking(documentId: ID!): ClassBooking
 
   """
+  Registers a previously-uploaded S3 object as a Strapi Media file. Run after a successful PUT to the URL returned by mintUploadUrl.
+  """
+  confirmUpload(name: String!, url: String!): Media
+
+  """
   Provisions a new Academy + academy_admin user from a converted lead, marks the lead as converted, and sends a password-reset email so the new admin can log in.
   """
   convertLead(data: ConvertLeadInput!, documentId: ID!): ConvertLeadResult
@@ -805,6 +810,7 @@ type Mutation {
   deletePlan(documentId: ID!): Plan
   deleteStudent(documentId: ID!): Student
   deleteWorkoutPlan(documentId: ID!): WorkoutPlan
+  mintUploadUrl(contentType: String!, filename: String!, size: Int!): PresignedUpload
   submitContactForm(input: ContactFormInput!): ContactFormResult
   updateAcademy(data: AcademyUpdateInput!, documentId: ID!): Academy
   updateBodyAssessment(data: BodyAssessmentUpdateInput!, documentId: ID!): BodyAssessment
@@ -920,6 +926,15 @@ type PlatformDashboard {
   openLeads: Int!
   totalAcademies: Int!
   totalStudents: Int!
+}
+
+"""
+URL set returned by mintUploadUrl. Frontend PUTs bytes to uploadUrl, then calls confirmUpload(publicUrl, name) once it succeeds.
+"""
+type PresignedUpload {
+  key: String!
+  publicUrl: String!
+  uploadUrl: String!
 }
 
 enum PublicationStatus {

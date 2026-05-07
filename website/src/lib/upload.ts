@@ -1,15 +1,49 @@
 /**
- * Strapi media upload helpers. Strapi's `/api/upload` is REST-only —
- * the GraphQL plugin doesn't expose multipart, so we hit the REST
- * endpoint directly with the JWT from localStorage and return the
- * uploaded media's documentId for linking via `updateAcademy`.
+ * Direct-to-S3 upload pipeline.
+ *
+ * Three steps so the bytes never go through our backend:
+ *   1. mintUploadUrl  → backend signs a 15-min PUT URL (S3 ACL public-read)
+ *   2. PUT bytes       → browser → S3 directly (Content-Type matches what we signed)
+ *   3. confirmUpload   → backend HEADs the public URL, creates plugin::upload.file
+ *                        so Strapi Media admin and Academy.logo relations see it
+ *
+ * Pattern ported from quickfiller-strapi-api. Same uploadMedia(file)
+ * signature as the original POST-based helper, so callers (settings page)
+ * don't change.
  */
 
 "use client";
 
-import { GRAPHQL_ENDPOINT, JWT_STORAGE_KEY } from "./config";
+import { graphql } from "@/gql";
+import { apolloClient } from "./apollo";
 
-const UPLOAD_ENDPOINT = `${GRAPHQL_ENDPOINT.replace(/\/graphql$/, "")}/api/upload`;
+const MINT_UPLOAD_URL = graphql(`
+  mutation MintUploadUrl(
+    $filename: String!
+    $contentType: String!
+    $size: Int!
+  ) {
+    mintUploadUrl(
+      filename: $filename
+      contentType: $contentType
+      size: $size
+    ) {
+      uploadUrl
+      publicUrl
+      key
+    }
+  }
+`);
+
+const CONFIRM_UPLOAD = graphql(`
+  mutation ConfirmUpload($url: String!, $name: String!) {
+    confirmUpload(url: $url, name: $name) {
+      documentId
+      url
+      mime
+    }
+  }
+`);
 
 export interface UploadedMedia {
   documentId: string;
@@ -19,48 +53,52 @@ export interface UploadedMedia {
   size: number;
 }
 
-interface RawStrapiUpload {
-  documentId: string;
-  url: string;
-  name: string;
-  mime: string;
-  size: number;
-}
-
 export async function uploadMedia(file: File): Promise<UploadedMedia> {
-  const jwt =
-    typeof window !== "undefined"
-      ? window.localStorage.getItem(JWT_STORAGE_KEY)
-      : null;
-  if (!jwt) {
-    throw new Error("Sessão expirada. Faça login novamente.");
+  // 1. Ask backend for a presigned PUT URL.
+  const mintRes = await apolloClient.mutate({
+    mutation: MINT_UPLOAD_URL,
+    variables: {
+      filename: file.name,
+      contentType: file.type || "application/octet-stream",
+      size: file.size,
+    },
+  });
+  const minted = mintRes.data?.mintUploadUrl;
+  if (!minted) {
+    throw new Error("Não foi possível gerar a URL de upload.");
   }
 
-  const body = new FormData();
-  body.append("files", file);
-
-  const res = await fetch(UPLOAD_ENDPOINT, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${jwt}` },
-    body,
+  // 2. PUT bytes straight to S3. The Content-Type header MUST match the
+  //    one signed in step 1 — S3 rejects the upload otherwise.
+  const put = await fetch(minted.uploadUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": file.type || "application/octet-stream",
+    },
+    body: file,
   });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
+  if (!put.ok) {
+    const text = await put.text().catch(() => "");
     throw new Error(
-      text || `Falha no upload (${res.status} ${res.statusText}).`,
+      text || `Falha no upload para o S3 (${put.status} ${put.statusText}).`,
     );
   }
 
-  const json = (await res.json()) as RawStrapiUpload[];
-  const first = json[0];
-  if (!first?.documentId) {
-    throw new Error("Upload concluído, mas o servidor não retornou o arquivo.");
+  // 3. Tell the backend to register the uploaded object as a Media file.
+  const confirm = await apolloClient.mutate({
+    mutation: CONFIRM_UPLOAD,
+    variables: { url: minted.publicUrl, name: file.name },
+  });
+  const confirmed = confirm.data?.confirmUpload;
+  if (!confirmed?.documentId) {
+    throw new Error("Upload feito, mas o registro Media não foi criado.");
   }
+
   return {
-    documentId: first.documentId,
-    url: first.url,
-    name: first.name,
-    mime: first.mime,
-    size: first.size,
+    documentId: confirmed.documentId,
+    url: confirmed.url ?? minted.publicUrl,
+    name: file.name,
+    mime: confirmed.mime ?? file.type,
+    size: file.size,
   };
 }

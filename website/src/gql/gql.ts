@@ -48,6 +48,8 @@ type Documents = {
     "\n  mutation AdminUpdateAcademy($documentId: ID!, $data: AcademyUpdateInput!) {\n    updateAcademy(documentId: $documentId, data: $data) {\n      documentId\n      name\n      slug\n      primaryColor\n      secondaryColor\n      email\n      phone\n      address\n      logo {\n        documentId\n        url\n        alternativeText\n      }\n    }\n  }\n": typeof types.AdminUpdateAcademyDocument,
     "\n  query PricingPlansPublic {\n    plans {\n      documentId\n      name\n      description\n      price\n      billingCycle\n      maxStudents\n      features\n      isActive\n    }\n  }\n": typeof types.PricingPlansPublicDocument,
     "\n  query AdminPlans {\n    plans {\n      documentId\n      name\n      description\n      price\n      billingCycle\n      maxStudents\n      features\n      isActive\n    }\n  }\n": typeof types.AdminPlansDocument,
+    "\n  mutation MintUploadUrl(\n    $filename: String!\n    $contentType: String!\n    $size: Int!\n  ) {\n    mintUploadUrl(\n      filename: $filename\n      contentType: $contentType\n      size: $size\n    ) {\n      uploadUrl\n      publicUrl\n      key\n    }\n  }\n": typeof types.MintUploadUrlDocument,
+    "\n  mutation ConfirmUpload($url: String!, $name: String!) {\n    confirmUpload(url: $url, name: $name) {\n      documentId\n      url\n      mime\n    }\n  }\n": typeof types.ConfirmUploadDocument,
 };
 const documents: Documents = {
     "\n  mutation AdminCreateDependent($data: DependentInput!) {\n    createDependent(data: $data) {\n      documentId\n      name\n      birthdate\n    }\n  }\n": types.AdminCreateDependentDocument,
@@ -84,6 +86,8 @@ const documents: Documents = {
     "\n  mutation AdminUpdateAcademy($documentId: ID!, $data: AcademyUpdateInput!) {\n    updateAcademy(documentId: $documentId, data: $data) {\n      documentId\n      name\n      slug\n      primaryColor\n      secondaryColor\n      email\n      phone\n      address\n      logo {\n        documentId\n        url\n        alternativeText\n      }\n    }\n  }\n": types.AdminUpdateAcademyDocument,
     "\n  query PricingPlansPublic {\n    plans {\n      documentId\n      name\n      description\n      price\n      billingCycle\n      maxStudents\n      features\n      isActive\n    }\n  }\n": types.PricingPlansPublicDocument,
     "\n  query AdminPlans {\n    plans {\n      documentId\n      name\n      description\n      price\n      billingCycle\n      maxStudents\n      features\n      isActive\n    }\n  }\n": types.AdminPlansDocument,
+    "\n  mutation MintUploadUrl(\n    $filename: String!\n    $contentType: String!\n    $size: Int!\n  ) {\n    mintUploadUrl(\n      filename: $filename\n      contentType: $contentType\n      size: $size\n    ) {\n      uploadUrl\n      publicUrl\n      key\n    }\n  }\n": types.MintUploadUrlDocument,
+    "\n  mutation ConfirmUpload($url: String!, $name: String!) {\n    confirmUpload(url: $url, name: $name) {\n      documentId\n      url\n      mime\n    }\n  }\n": types.ConfirmUploadDocument,
 };
 
 /**
@@ -236,6 +240,14 @@ export function graphql(source: "\n  query PricingPlansPublic {\n    plans {\n  
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query AdminPlans {\n    plans {\n      documentId\n      name\n      description\n      price\n      billingCycle\n      maxStudents\n      features\n      isActive\n    }\n  }\n"): (typeof documents)["\n  query AdminPlans {\n    plans {\n      documentId\n      name\n      description\n      price\n      billingCycle\n      maxStudents\n      features\n      isActive\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation MintUploadUrl(\n    $filename: String!\n    $contentType: String!\n    $size: Int!\n  ) {\n    mintUploadUrl(\n      filename: $filename\n      contentType: $contentType\n      size: $size\n    ) {\n      uploadUrl\n      publicUrl\n      key\n    }\n  }\n"): (typeof documents)["\n  mutation MintUploadUrl(\n    $filename: String!\n    $contentType: String!\n    $size: Int!\n  ) {\n    mintUploadUrl(\n      filename: $filename\n      contentType: $contentType\n      size: $size\n    ) {\n      uploadUrl\n      publicUrl\n      key\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ConfirmUpload($url: String!, $name: String!) {\n    confirmUpload(url: $url, name: $name) {\n      documentId\n      url\n      mime\n    }\n  }\n"): (typeof documents)["\n  mutation ConfirmUpload($url: String!, $name: String!) {\n    confirmUpload(url: $url, name: $name) {\n      documentId\n      url\n      mime\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};
