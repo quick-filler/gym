@@ -25,18 +25,26 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        "rounded-[var(--radius-lg)] p-6 border transition-all",
+        "rounded-[var(--radius-lg)] p-6 border transition-all relative overflow-hidden",
         metric.highlighted
-          ? "bg-ink-900 text-paper border-ink-700 shadow-[var(--shadow-gym-2)] relative overflow-hidden"
+          ? "bg-ink-900 text-paper border-ink-700 shadow-[var(--shadow-gym-2)]"
           : "bg-white border-line shadow-[var(--shadow-gym-1)]",
       )}
     >
-      {metric.highlighted && (
+      {metric.highlighted ? (
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             backgroundImage:
-              "radial-gradient(circle at top right, color-mix(in srgb, var(--color-flame) 22%, transparent), transparent 60%)",
+              "radial-gradient(circle at top right, color-mix(in srgb, var(--color-flame) 28%, transparent), transparent 60%), radial-gradient(circle at bottom left, color-mix(in srgb, var(--color-pine) 22%, transparent), transparent 55%)",
+          }}
+        />
+      ) : (
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(to bottom, var(--color-flame), var(--color-pine))",
           }}
         />
       )}
@@ -51,12 +59,12 @@ export function MetricCard({
         </div>
         {icon && (
           <div
-            className={cn(
-              "w-9 h-9 rounded-lg flex items-center justify-center",
-              metric.highlighted
-                ? "bg-flame/20 text-flame"
-                : "bg-flame-50 text-flame",
-            )}
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-flame"
+            style={{
+              background: metric.highlighted
+                ? "linear-gradient(135deg, color-mix(in srgb, var(--color-flame) 25%, transparent), color-mix(in srgb, var(--color-pine) 25%, transparent))"
+                : "linear-gradient(135deg, var(--color-flame-50), var(--color-pine-50))",
+            }}
           >
             {icon}
           </div>

@@ -5,7 +5,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { Topbar } from "@/components/admin/Topbar";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { MetricCard } from "@/components/admin/MetricCard";
+import { HeroCard } from "@/components/admin/HeroCard";
 import { Avatar } from "@/components/admin/Avatar";
 import {
   PaymentMethodLabel,
@@ -138,25 +138,36 @@ export default function FinancePage() {
         {data && (
           <>
             <div className="grid grid-cols-4 gap-5 max-[980px]:grid-cols-2 max-[540px]:grid-cols-1">
-              {data.kpis.map((kpi) => (
-                <MetricCard
-                  key={kpi.id}
-                  metric={kpi}
-                  icon={
-                    <Icon
-                      name={
-                        kpi.id === "revenue"
-                          ? "money"
-                          : kpi.id === "overdue"
-                            ? "chart"
-                            : kpi.id === "processed"
-                              ? "zap"
-                              : "trending"
-                      }
-                    />
-                  }
-                />
-              ))}
+              {data.kpis.map((kpi, idx) => {
+                const iconName =
+                  kpi.id === "revenue"
+                    ? "money"
+                    : kpi.id === "overdue"
+                      ? "chart"
+                      : kpi.id === "processed"
+                        ? "zap"
+                        : "trending";
+                return (
+                  <HeroCard
+                    key={kpi.id}
+                    variant={idx % 2 === 0 ? "primary" : "secondary"}
+                    label={kpi.label}
+                    value={kpi.value}
+                    icon={iconName}
+                  >
+                    {kpi.delta && (
+                      <div className="text-[0.82rem] mt-2 text-white/90 relative">
+                        {kpi.delta.trend === "up"
+                          ? "↑"
+                          : kpi.delta.trend === "down"
+                            ? "↓"
+                            : "→"}{" "}
+                        {kpi.delta.value}
+                      </div>
+                    )}
+                  </HeroCard>
+                );
+              })}
             </div>
 
             <div className="grid grid-cols-[1.5fr_1fr] gap-5 mt-8 max-[980px]:grid-cols-1">

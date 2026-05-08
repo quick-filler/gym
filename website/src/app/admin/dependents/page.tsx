@@ -140,7 +140,7 @@ export default function DependentsPage() {
               : undefined
           }
           actions={
-            <Button variant="ink" onClick={() => setGuardianDialog(true)}>
+            <Button variant="primary" onClick={() => setGuardianDialog(true)}>
               <Icon name="plus" /> Novo responsável
             </Button>
           }

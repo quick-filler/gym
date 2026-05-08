@@ -24,7 +24,7 @@ const PRIMARY: NavItem[] = [
   { href: "/admin/dre", label: "DRE / Custos", icon: "trending" },
   { href: "/admin/schedule", label: "Agenda", icon: "calendar" },
   { href: "/admin/attendance", label: "Presenças", icon: "check" },
-  { href: "/admin/workouts", label: "Treinos", icon: "dumbbell" },
+  { href: "/admin/workouts", label: "Treinos", icon: "heart-pulse" },
 ];
 
 const CONFIG: NavItem[] = [

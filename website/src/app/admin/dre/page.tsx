@@ -12,6 +12,7 @@ import { Pill } from "@/components/ui/Pill";
 import type { DRECashFlowPoint, DREExpenseRow, ExpenseStatus } from "@/lib/types";
 import { useDRE } from "@/lib/hooks";
 import { NewExpenseDialog } from "./NewExpenseDialog";
+import { HeroCard } from "@/components/admin/HeroCard";
 
 const TYPE_LABEL = { fixed: "Fixo", variable: "Variável" } as const;
 
@@ -102,46 +103,34 @@ export default function DREPage() {
           <>
             {/* DRE hero */}
             <div className="grid grid-cols-3 gap-5 max-[980px]:grid-cols-1 mb-8">
-              <div className="rounded-[var(--radius-lg)] p-6 relative overflow-hidden bg-gradient-to-br from-emerald to-pine text-white shadow-[var(--shadow-gym-2)]">
-                <div className="font-mono text-[0.7rem] uppercase tracking-[0.1em] text-white/75">
-                  Receita bruta
-                </div>
-                <div className="font-display text-[2.2rem] font-semibold mt-3 leading-none">
-                  {data.revenue.total}
-                </div>
-                <div className="text-[0.82rem] mt-2 text-white/90">
+              <HeroCard
+                variant="primary"
+                label="Receita bruta"
+                value={data.revenue.total}
+                icon="trending"
+              >
+                <div className="text-[0.82rem] mt-2 text-white/90 relative">
                   ↑ {data.revenue.deltaLabel}
                 </div>
-                <Icon
-                  name="trending"
-                  size="xl"
-                  className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20 text-white"
-                />
-              </div>
-              <div className="rounded-[var(--radius-lg)] p-6 relative overflow-hidden bg-gradient-to-br from-ink-900 to-pine-dark text-paper border border-ink-700 shadow-[var(--shadow-gym-2)]">
-                <div className="font-mono text-[0.7rem] uppercase tracking-[0.1em] text-ink-300">
-                  Total de despesas
-                </div>
-                <div className="font-display text-[2.2rem] font-semibold mt-3 leading-none text-paper">
-                  {data.expenses.total}
-                </div>
-                <div className="text-[0.82rem] mt-2 text-ink-300">
+              </HeroCard>
+
+              <HeroCard
+                variant="secondary"
+                label="Total de despesas"
+                value={data.expenses.total}
+                icon="money"
+              >
+                <div className="text-[0.82rem] mt-2 text-white/90 relative">
                   {data.expenses.fixed} fixos · {data.expenses.variable} variáveis
                 </div>
-                <Icon
-                  name="money"
-                  size="xl"
-                  className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20 text-paper"
-                />
-              </div>
-              <div className="rounded-[var(--radius-lg)] p-6 relative overflow-hidden bg-gradient-to-br from-flame to-flame-dark text-white shadow-[var(--shadow-gym-2)]">
-                <div className="font-mono text-[0.7rem] uppercase tracking-[0.1em] text-white/80">
-                  Lucro líquido
-                </div>
-                <div className="font-display text-[2.2rem] font-semibold mt-3 leading-none">
-                  {data.profit.total}
-                </div>
-                <div className="mt-3">
+              </HeroCard>
+
+              <HeroCard
+                variant="secondary"
+                label="Lucro líquido"
+                value={data.profit.total}
+              >
+                <div className="mt-3 relative">
                   <div className="text-[0.78rem] text-white/85 mb-1.5">
                     Margem: {data.profit.marginPercent.toFixed(1)}%
                   </div>
@@ -152,7 +141,7 @@ export default function DREPage() {
                     />
                   </div>
                 </div>
-              </div>
+              </HeroCard>
             </div>
 
             {/* Cashflow + category breakdown */}

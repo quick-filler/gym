@@ -104,7 +104,7 @@ export default function StudentsPage() {
           title="Alunos"
           subtitle={`${data?.length ?? 0} cadastrados · atualizado agora`}
           actions={
-            <Button variant="ink" onClick={() => setDialogOpen(true)}>
+            <Button variant="primary" onClick={() => setDialogOpen(true)}>
               <Icon name="plus" /> Adicionar aluno
             </Button>
           }
@@ -123,10 +123,10 @@ export default function StudentsPage() {
               key={f.value}
               onClick={() => setFilter(f.value)}
               className={cn(
-                "px-4 py-2 rounded-full text-[0.82rem] font-medium transition-all font-mono uppercase tracking-[0.06em]",
+                "px-4 py-2 rounded-full text-[0.82rem] font-medium transition-all font-mono uppercase tracking-[0.06em] border",
                 filter === f.value
-                  ? "bg-ink-900 text-flame border border-ink-900"
-                  : "bg-white border border-line text-ink-600 hover:border-ink-900",
+                  ? "bg-flame text-white border-flame"
+                  : "bg-white border-line text-ink-600 hover:border-flame hover:text-flame",
               )}
             >
               {f.label}
