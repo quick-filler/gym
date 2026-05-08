@@ -48,6 +48,10 @@ export function Sidebar() {
 
   return (
     <aside className="fixed top-0 left-0 w-[248px] h-screen bg-ink-900 text-paper flex flex-col border-r border-ink-700 max-[980px]:hidden">
+      {/* Brand stripe — picks up the academy primary so each tenant's
+          color signs the top of the sidebar even though the body stays
+          dark for legibility. */}
+      <div className="h-1 bg-flame shrink-0" aria-hidden />
       <div className="p-6 border-b border-ink-700">
         <div className="flex items-center gap-2 font-display font-bold text-[1.25rem] text-paper">
           {academyLogo ? (

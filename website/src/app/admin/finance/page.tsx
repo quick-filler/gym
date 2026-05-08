@@ -125,7 +125,7 @@ export default function FinancePage() {
               <Button variant="line" onClick={exportCSV} disabled={!data || data.charges.length === 0}>
                 <Icon name="download" /> Exportar CSV
               </Button>
-              <Button variant="ink" onClick={() => setDialogOpen(true)}>
+              <Button variant="primary" onClick={() => setDialogOpen(true)}>
                 <Icon name="plus" /> Nova cobrança
               </Button>
             </>

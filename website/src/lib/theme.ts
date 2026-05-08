@@ -35,6 +35,7 @@ export interface PrimaryPalette {
 
 export interface SecondaryPalette {
   base: string;
+  dark: string;
   l50: string;
 }
 
@@ -76,9 +77,10 @@ export function derivePalette(hex: string): PrimaryPalette {
 export function deriveSecondaryPalette(hex: string): SecondaryPalette {
   const safe = safeHex(hex);
   const parsed = parse(safe);
-  if (!parsed) return { base: FALLBACK, l50: FALLBACK };
+  if (!parsed) return { base: FALLBACK, dark: FALLBACK, l50: FALLBACK };
   return {
     base: safe,
+    dark: formatHex(adjustL(parsed, 0.4)) ?? safe,
     l50: formatHex(adjustL(parsed, 0.97)) ?? safe,
   };
 }

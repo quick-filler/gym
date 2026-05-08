@@ -88,7 +88,7 @@ export default function DREPage() {
                   <Icon name="arrow-right" />
                 </button>
               </div>
-              <Button variant="ink" onClick={() => setDialogOpen(true)}>
+              <Button variant="primary" onClick={() => setDialogOpen(true)}>
                 <Icon name="plus" /> Nova despesa
               </Button>
             </>
@@ -118,7 +118,7 @@ export default function DREPage() {
                   className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20 text-white"
                 />
               </div>
-              <div className="rounded-[var(--radius-lg)] p-6 relative overflow-hidden bg-ink-900 text-paper border border-ink-700 shadow-[var(--shadow-gym-2)]">
+              <div className="rounded-[var(--radius-lg)] p-6 relative overflow-hidden bg-gradient-to-br from-ink-900 to-pine-dark text-paper border border-ink-700 shadow-[var(--shadow-gym-2)]">
                 <div className="font-mono text-[0.7rem] uppercase tracking-[0.1em] text-ink-300">
                   Total de despesas
                 </div>
@@ -285,7 +285,7 @@ export default function DREPage() {
                     {data.monthLabel} · {filteredExpenses.length} lançamentos
                   </p>
                 </div>
-                <Button variant="ink" onClick={() => setDialogOpen(true)}>
+                <Button variant="primary" onClick={() => setDialogOpen(true)}>
                   <Icon name="plus" /> Nova despesa
                 </Button>
               </div>

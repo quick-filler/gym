@@ -25,7 +25,7 @@ export default function DashboardPage() {
           title="Visão geral"
           subtitle="Segunda-feira, 07 de abril de 2026"
           actions={
-            <Button variant="ink" href="/admin/students">
+            <Button variant="primary" href="/admin/students">
               <Icon name="plus" /> Adicionar aluno
             </Button>
           }

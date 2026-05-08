@@ -35,6 +35,7 @@ const OVERRIDDEN_VARS = [
   "--color-flame-50",
   "--color-flame-100",
   "--color-pine",
+  "--color-pine-dark",
   "--color-pine-50",
 ] as const;
 
@@ -87,6 +88,7 @@ export function AcademyThemeProvider({ children }: { children: ReactNode }) {
     if (secondary) {
       const s = deriveSecondaryPalette(secondary);
       root.style.setProperty("--color-pine", s.base);
+      root.style.setProperty("--color-pine-dark", s.dark);
       root.style.setProperty("--color-pine-50", s.l50);
     }
     if (slug) root.dataset.academy = slug;

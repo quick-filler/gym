@@ -32,7 +32,13 @@ export function MetricCard({
       )}
     >
       {metric.highlighted && (
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(232,85,28,0.2),transparent_60%)] pointer-events-none" />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at top right, color-mix(in srgb, var(--color-flame) 22%, transparent), transparent 60%)",
+          }}
+        />
       )}
       <div className="flex items-start justify-between relative">
         <div
@@ -49,7 +55,7 @@ export function MetricCard({
               "w-9 h-9 rounded-lg flex items-center justify-center",
               metric.highlighted
                 ? "bg-flame/20 text-flame"
-                : "bg-paper-2 text-ink-700",
+                : "bg-flame-50 text-flame",
             )}
           >
             {icon}

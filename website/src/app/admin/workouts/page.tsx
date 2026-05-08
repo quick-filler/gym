@@ -268,7 +268,7 @@ export default function WorkoutsPage() {
           title="Fichas de treino"
           subtitle={data?.subtitle}
           actions={
-            <Button variant="ink" onClick={() => setDialogOpen(true)}>
+            <Button variant="primary" onClick={() => setDialogOpen(true)}>
               <Icon name="plus" /> Nova ficha
             </Button>
           }

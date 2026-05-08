@@ -12,6 +12,7 @@ import { useSchedule } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { NewClassDialog } from "./NewClassDialog";
 import { EditClassDialog } from "./EditClassDialog";
+import { InlineClassEditor } from "./InlineClassEditor";
 import {
   BookingsDialog,
   type BookingsSelection,
@@ -82,6 +83,14 @@ export default function SchedulePage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selection, setSelection] = useState<BookingsSelection | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingInline, setEditingInline] = useState<{
+    scheduleDocumentId: string;
+    weekday: number;
+    hour: string;
+    dayIso: string;
+    dayLabel: string;
+    anchorRect: { top: number; left: number; right: number; bottom: number };
+  } | null>(null);
   const [modalityFilter, setModalityFilter] = useState<
     "" | "presential" | "online"
   >("");
@@ -168,6 +177,41 @@ export default function SchedulePage() {
     });
   }
 
+  function openInlineEditor(
+    cls: (typeof filteredClasses)[number],
+    day: (typeof weekDays)[number],
+    hour: string,
+    triggerEl: HTMLElement,
+  ) {
+    const rect = triggerEl.getBoundingClientRect();
+    setEditingInline({
+      scheduleDocumentId: cls.scheduleDocumentId,
+      weekday: day.value,
+      hour,
+      dayIso: day.iso,
+      dayLabel: `${day.label}, ${formatDayLabel(day.fullDate)}`,
+      anchorRect: {
+        top: rect.top,
+        left: rect.left,
+        right: rect.right,
+        bottom: rect.bottom,
+      },
+    });
+  }
+
+  function showBookingsForInline() {
+    if (!editingInline) return;
+    const cls = filteredClasses.find(
+      (c) =>
+        c.scheduleDocumentId === editingInline.scheduleDocumentId &&
+        c.weekday === editingInline.weekday &&
+        c.startTime === editingInline.hour,
+    );
+    if (!cls) return;
+    openBookings(cls, editingInline.dayIso, editingInline.dayLabel);
+    setEditingInline(null);
+  }
+
   return (
     <>
       <Topbar
@@ -188,7 +232,7 @@ export default function SchedulePage() {
                   className={cn(
                     "px-4 py-2 rounded-full text-[0.8rem] font-medium transition-colors inline-flex items-center gap-1",
                     view === "grid"
-                      ? "bg-ink-900 text-paper"
+                      ? "bg-flame text-white"
                       : "text-ink-500 hover:text-ink-900",
                   )}
                 >
@@ -199,14 +243,14 @@ export default function SchedulePage() {
                   className={cn(
                     "px-4 py-2 rounded-full text-[0.8rem] font-medium transition-colors inline-flex items-center gap-1",
                     view === "list"
-                      ? "bg-ink-900 text-paper"
+                      ? "bg-flame text-white"
                       : "text-ink-500 hover:text-ink-900",
                   )}
                 >
                   <Icon name="list" /> Lista
                 </button>
               </div>
-              <Button variant="ink" onClick={() => setDialogOpen(true)}>
+              <Button variant="primary" onClick={() => setDialogOpen(true)}>
                 <Icon name="plus" /> Nova aula
               </Button>
             </>
@@ -329,7 +373,7 @@ export default function SchedulePage() {
                           <div className="p-3 font-mono text-[0.78rem] text-ink-400 border-r border-line">
                             {hour}
                           </div>
-                          {weekDays.map((day) => {
+                          {weekDays.map((day, dayIdx) => {
                             const matches = filteredClasses.filter(
                               (c) =>
                                 c.weekday === day.value && c.startTime === hour,
@@ -340,10 +384,22 @@ export default function SchedulePage() {
                             // inside the 90px row instead of squashing
                             // the full card. Tooltip shows the instructor.
                             const compact = matches.length > 1;
+                            const isEditingHere =
+                              editingInline?.weekday === day.value &&
+                              editingInline?.hour === hour &&
+                              matches.some(
+                                (c) =>
+                                  c.scheduleDocumentId ===
+                                  editingInline.scheduleDocumentId,
+                              );
+                            // Anchor the editor toward the right on the
+                            // last three columns so it expands toward the
+                            // page interior instead of overflowing.
+                            const editorAlign = dayIdx >= 4 ? "right" : "left";
                             return (
                               <div
                                 key={day.value}
-                                className="p-2 border-l border-line/60 flex flex-col gap-1"
+                                className="relative p-2 border-l border-line/60 flex flex-col gap-1"
                               >
                                 {matches.map((cls) =>
                                   compact ? (
@@ -355,11 +411,12 @@ export default function SchedulePage() {
                                           ? `${cls.name} · ${cls.instructor}`
                                           : cls.name
                                       }
-                                      onClick={() =>
-                                        openBookings(
+                                      onClick={(e) =>
+                                        openInlineEditor(
                                           cls,
-                                          day.iso,
-                                          `${day.label}, ${formatDayLabel(day.fullDate)}`,
+                                          day,
+                                          hour,
+                                          e.currentTarget,
                                         )
                                       }
                                       className={cn(
@@ -378,11 +435,12 @@ export default function SchedulePage() {
                                     <button
                                       key={cls.id}
                                       type="button"
-                                      onClick={() =>
-                                        openBookings(
+                                      onClick={(e) =>
+                                        openInlineEditor(
                                           cls,
-                                          day.iso,
-                                          `${day.label}, ${formatDayLabel(day.fullDate)}`,
+                                          day,
+                                          hour,
+                                          e.currentTarget,
                                         )
                                       }
                                       className={cn(
@@ -403,6 +461,22 @@ export default function SchedulePage() {
                                       </div>
                                     </button>
                                   ),
+                                )}
+                                {isEditingHere && editingInline && (
+                                  <InlineClassEditor
+                                    documentId={
+                                      editingInline.scheduleDocumentId
+                                    }
+                                    anchorRect={editingInline.anchorRect}
+                                    align={editorAlign}
+                                    onClose={() => setEditingInline(null)}
+                                    onSaved={() =>
+                                      apollo.refetchQueries({
+                                        include: ["ScheduleWeek"],
+                                      })
+                                    }
+                                    onShowBookings={showBookingsForInline}
+                                  />
                                 )}
                               </div>
                             );
