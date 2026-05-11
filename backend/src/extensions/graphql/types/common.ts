@@ -27,5 +27,36 @@ export function buildCommonTypes({ nexus }: any) {
     },
   });
 
-  return [Media, PaginationInput];
+  // Structured address — used by Student and Dependent. Free-form enough
+  // to fit the variety of Brazilian formats (apartments, blocks, gated
+  // communities) without committing to ViaCEP-style sub-fields.
+  const Address = nexus.objectType({
+    name: 'Address',
+    definition(t: any) {
+      t.string('type');
+      t.string('cep');
+      t.string('street');
+      t.string('number');
+      t.string('complement');
+      t.string('neighborhood');
+      t.string('city');
+      t.string('state');
+    },
+  });
+
+  const AddressInput = nexus.inputObjectType({
+    name: 'AddressInput',
+    definition(t: any) {
+      t.string('type');
+      t.string('cep');
+      t.string('street');
+      t.string('number');
+      t.string('complement');
+      t.string('neighborhood');
+      t.string('city');
+      t.string('state');
+    },
+  });
+
+  return [Media, PaginationInput, Address, AddressInput];
 }

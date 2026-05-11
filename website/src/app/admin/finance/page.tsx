@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 import { Topbar } from "@/components/admin/Topbar";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -47,13 +48,27 @@ const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_OPTIONS = Array.from({ length: 4 }, (_, i) => CURRENT_YEAR - i);
 
 export default function FinancePage() {
+  // useSearchParams precisa de Suspense boundary pro prerender estático
+  // do Next.js não falhar.
+  return (
+    <Suspense fallback={null}>
+      <FinancePageInner />
+    </Suspense>
+  );
+}
+
+function FinancePageInner() {
   const now = new Date();
   const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
   const [filterYear, setFilterYear] = useState(now.getFullYear());
   const [filterOpen, setFilterOpen] = useState(false);
   const { data, loading, error } = useFinance({ month: filterMonth, year: filterYear });
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [query, setQuery] = useState("");
+  // Atalho usado por /admin/dependents → "Pagamentos" (?q=<nome>) e por
+  // outros pontos de partida que querem deep-link na busca.
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams?.get("q") ?? "";
+  const [query, setQuery] = useState(initialQuery);
   const apollo = useApolloClient();
 
   const isCurrentPeriod = filterMonth === now.getMonth() + 1 && filterYear === now.getFullYear();

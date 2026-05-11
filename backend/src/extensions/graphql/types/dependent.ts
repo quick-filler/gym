@@ -31,6 +31,8 @@ export function buildDependent({
       t.nonNull.id('documentId');
       t.nonNull.string('name');
       t.nonNull.string('birthdate');
+      t.string('cpf');
+      t.field('address', { type: 'Address' });
       t.string('gender');
       t.string('relationship');
       t.nonNull.string('status');
@@ -113,6 +115,8 @@ export function buildDependent({
     definition(t: any) {
       t.nonNull.string('name');
       t.nonNull.string('birthdate');
+      t.string('cpf');
+      t.field('address', { type: 'AddressInput' });
       t.string('gender');
       t.string('relationship');
       t.string('status');
@@ -131,6 +135,8 @@ export function buildDependent({
     definition(t: any) {
       t.string('name');
       t.string('birthdate');
+      t.string('cpf');
+      t.field('address', { type: 'AddressInput' });
       t.string('gender');
       t.string('relationship');
       t.string('status');

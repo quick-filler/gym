@@ -59,6 +59,46 @@ function centsToDisplay(cents: number): string {
   return `${withThousands},${decPart}`;
 }
 
+/**
+ * Máscara de CPF: exibe `000.000.000-00`, armazena só dígitos.
+ * Bloqueia entrada além de 11 dígitos. O valor de `value`/`onChange` é
+ * sempre a string com até 11 dígitos (sem pontuação) — pronto pro regex
+ * `^[0-9]{11}$` do schema Strapi.
+ */
+export function CpfInput({
+  value,
+  onChange,
+  className,
+  ...props
+}: Omit<ComponentProps<"input">, "value" | "onChange" | "type"> & {
+  value: string;
+  onChange: (digits: string) => void;
+}) {
+  function format(digits: string): string {
+    const d = digits.slice(0, 11);
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+    if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+    return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9, 11)}`;
+  }
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+    onChange(digits);
+  }
+  return (
+    <input
+      {...props}
+      type="text"
+      inputMode="numeric"
+      autoComplete="off"
+      value={format(value)}
+      onChange={handleChange}
+      placeholder={props.placeholder ?? "000.000.000-00"}
+      className={cn(inputBase, className)}
+    />
+  );
+}
+
 export function CurrencyInput({
   value,
   onChange,

@@ -549,6 +549,53 @@ right below. We want the history, not a clean slate.
 - **Revisit when** — Tailwind v4's config story changes again, or we
   hit a token we can't express with `@theme`.
 
+### 4.10 Bulk student import — XLSX parsing in the browser, GraphQL mutation, structured Address
+
+- **Decision** — The "import alunos por planilha" feature parses the
+  `.xlsx` in the admin's browser (via `xlsx`/sheetjs lazy-imported in
+  the page chunk), shows a preview table, and ships the cleaned rows
+  to a single `bulkImportStudents` GraphQL mutation. Address is a
+  structured `Address` object type (cep/street/number/complement/
+  neighborhood/city/state/type) — not a `JSON` scalar.
+- **Context** — The user provided a real spreadsheet
+  (`plan_cadstro aluno.xlsx`) with `prospect_*`, `responsavel_*`, and
+  `endereco_*` columns. The earlier v2 plan in `backend/CLAUDE.md`
+  sketched REST endpoints (`POST /api/imports/students/upload`) that
+  would parse the file server-side.
+- **Rationale**:
+  - **Parse in the browser** — Skips a multipart upload route
+    (Strapi REST), keeps the backend surface GraphQL-only per §3.1,
+    and lets the preview step iterate on the in-memory matrix
+    without network round-trips. The cost is shipping `xlsx` to the
+    admin bundle, mitigated by `await import('xlsx')` so it only
+    loads when the user opens `/admin/students/import`.
+  - **Single GraphQL mutation** — `bulkImportStudents(rows: [...])`
+    fits the existing `Frontend → GraphQL` rule (root CLAUDE.md §4)
+    and reuses Apollo's auth + cache. Each row reports its own
+    success/skip/error in the result so a partial batch never wedges
+    the whole import.
+  - **Structured Address** — Other JSON fields on the schema
+    (`Plan.features`, `WorkoutPlan.exercises`,
+    `BodyAssessment.measurements`) all use named object types via
+    Nexus, not the bare `JSON` scalar. Following the same convention
+    keeps the schema introspectable, codegen-friendly, and prevents
+    each frontend from inventing its own address shape.
+- **Consequences** — `Student` and `Dependent` get `cpf` (regex'd to
+  11 digits), `address` (Address), and (Student only) `gender`.
+  Detection of "adult vs family" is heuristic: rows where
+  `responsavel_nome` is empty or matches `prospect_nome` are adult
+  Students; otherwise the prospect becomes a Dependent and the
+  responsável a Student with `isGuardian = true`. Duplicate detection
+  is `(academy, cpf)` with email fallback for adults and
+  `(guardian, name+birthdate)` fallback for dependents — duplicates
+  are skipped (not updated) and reported per row in the result.
+- **Revisit when** — (a) we need server-side scheduling of large
+  imports (>10k rows) — at that point the browser parser becomes a
+  liability and we move to a multipart REST upload + background job;
+  (b) duplicate handling needs an "update existing" mode — extend
+  the mutation arg from a boolean `dryRun` to an enum
+  `mode: SKIP | UPDATE | OVERWRITE`.
+
 ---
 
 ## 5. Student app (Expo)
@@ -1332,3 +1379,10 @@ Explicit no's so we don't re-argue them.
   `lucide-react`. Marked §5.2 (NativeWind) as SUPERSEDED and added
   §5.6 (plain `StyleSheet` + shared `lib/theme.ts`) and §5.7
   (`lucide-react-native` for icons, no emoji).
+- **2026-05-11** — Added §4.10 covering the bulk student import
+  (`/admin/students/import`): browser-side `xlsx` parsing,
+  `bulkImportStudents` GraphQL mutation, and the structured `Address`
+  object type. Extended `Student` and `Dependent` schemas with `cpf`
+  (regex-validated, 11 digits), `address`, and `gender` (Student
+  only). Detection of adult-vs-family is heuristic on
+  `responsavel_nome` vs `prospect_nome`.

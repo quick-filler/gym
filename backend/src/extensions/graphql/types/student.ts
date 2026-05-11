@@ -30,6 +30,9 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.nonNull.string('email');
       t.string('phone');
       t.string('birthdate');
+      t.string('cpf');
+      t.string('gender');
+      t.field('address', { type: 'Address' });
       t.string('status');
       t.nonNull.string('role');
       t.boolean('isGuardian');
@@ -101,6 +104,9 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.nonNull.string('email');
       t.string('phone');
       t.string('birthdate');
+      t.string('cpf');
+      t.string('gender');
+      t.field('address', { type: 'AddressInput' });
       t.string('status');
       t.string('role');
       t.boolean('isGuardian');
@@ -118,6 +124,9 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('email');
       t.string('phone');
       t.string('birthdate');
+      t.string('cpf');
+      t.string('gender');
+      t.field('address', { type: 'AddressInput' });
       t.string('status');
       t.string('role');
       t.boolean('isGuardian');

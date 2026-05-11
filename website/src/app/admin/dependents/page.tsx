@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 import { Topbar } from "@/components/admin/Topbar";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -13,6 +14,7 @@ import type { Dependent, DependentStatus, GuardianFamily } from "@/lib/types";
 import { useDependents } from "@/lib/hooks";
 import { NewGuardianDialog } from "./NewGuardianDialog";
 import { NewDependentDialog } from "./NewDependentDialog";
+import { EditFamilyDialog } from "./EditFamilyDialog";
 
 function DependentStatusPill({ status }: { status: DependentStatus }) {
   if (status === "active") return <Pill tone="emerald">ATIVO</Pill>;
@@ -52,9 +54,13 @@ function DependentRow({ dep }: { dep: Dependent }) {
 function FamilyCard({
   family,
   onAddDependent,
+  onEdit,
+  onPayments,
 }: {
   family: GuardianFamily;
   onAddDependent: () => void;
+  onEdit: () => void;
+  onPayments: () => void;
 }) {
   const count = family.dependents.length;
   return (
@@ -93,13 +99,26 @@ function FamilyCard({
       </div>
 
       <div className="flex items-center gap-2 p-4 border-t border-line bg-paper-50">
-        <button className="font-mono text-[0.72rem] uppercase tracking-[0.08em] font-semibold text-white bg-ink-900 hover:bg-ink-700 transition-colors px-3 py-2 rounded-lg">
+        <button
+          type="button"
+          onClick={onPayments}
+          className="font-mono text-[0.72rem] uppercase tracking-[0.08em] font-semibold text-white bg-ink-900 hover:bg-ink-700 transition-colors px-3 py-2 rounded-lg"
+        >
           Pagamentos
         </button>
-        <button className="font-mono text-[0.72rem] uppercase tracking-[0.08em] font-semibold text-ink-900 border border-ink-900 hover:bg-ink-900 hover:text-paper transition-colors px-3 py-2 rounded-lg">
+        <button
+          type="button"
+          onClick={onEdit}
+          className="font-mono text-[0.72rem] uppercase tracking-[0.08em] font-semibold text-ink-900 border border-ink-900 hover:bg-ink-900 hover:text-paper transition-colors px-3 py-2 rounded-lg"
+        >
           Editar
         </button>
-        <button className="font-mono text-[0.72rem] uppercase tracking-[0.08em] font-semibold text-ink-500 hover:text-ink-900 transition-colors px-3 py-2 rounded-lg">
+        <button
+          type="button"
+          disabled
+          title="Em breve"
+          className="font-mono text-[0.72rem] uppercase tracking-[0.08em] font-semibold text-ink-300 cursor-not-allowed px-3 py-2 rounded-lg"
+        >
           Histórico
         </button>
       </div>
@@ -115,6 +134,8 @@ export default function DependentsPage() {
     id: string;
     name: string;
   } | null>(null);
+  const [editGuardianId, setEditGuardianId] = useState<string | null>(null);
+  const router = useRouter();
   const apollo = useApolloClient();
   const refresh = () => apollo.refetchQueries({ include: ["Guardians"] });
 
@@ -175,6 +196,12 @@ export default function DependentsPage() {
                   onAddDependent={() =>
                     setDepDialog({ id: family.id, name: family.guardian.name })
                   }
+                  onEdit={() => setEditGuardianId(family.id)}
+                  onPayments={() =>
+                    router.push(
+                      `/admin/finance?q=${encodeURIComponent(family.guardian.name)}`,
+                    )
+                  }
                 />
               ))}
             </div>
@@ -195,6 +222,13 @@ export default function DependentsPage() {
             onCreated={refresh}
           />
         )}
+
+        <EditFamilyDialog
+          open={!!editGuardianId}
+          guardianId={editGuardianId}
+          onClose={() => setEditGuardianId(null)}
+          onSaved={refresh}
+        />
       </main>
     </>
   );

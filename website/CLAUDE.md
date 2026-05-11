@@ -192,7 +192,8 @@ FAQPage / AboutPage / ContactPage) via `src/lib/seo.tsx → JsonLd`.
 |---|---|---|
 | `/admin` | Redirects to `/admin/dashboard` | ✅ |
 | `/admin/dashboard` | 4 metric cards + recent students table + today's classes + upcoming payments | ✅ |
-| `/admin/students` | Filter chips + search + students table with status pills and payment method | ✅ |
+| `/admin/students` | Filter chips (incl. **Sem plano**) + search + students table. Pill `+ Atribuir plano` substitui a coluna do plano quando o aluno está sem matrícula ativa e abre o `EditStudentDialog` direto na seção do plano. Item "Editar" no dropdown da linha abre o mesmo diálogo (todos os campos pré-preenchidos: dados pessoais, endereço, observações, atribuição de novo plano em uma única transação). | ✅ |
+| `/admin/students/import` | 3-step wizard (upload `.xlsx` → preview/validate → confirm) for bulk student/family imports. Lazy-loads `xlsx`; calls `bulkImportStudents` mutation; partial-failure tolerant. | ✅ |
 | `/admin/finance` | 4 KPI cards (first highlighted) + charges table + payment method breakdown with bar charts | ✅ |
 | `/admin/dre` | Revenue/expenses/profit hero, 6-month cashflow SVG chart, expense category breakdown, expenses table | ✅ |
 | `/admin/dependents` | Info banner + auto-fill family card grid (guardian + dependents + status/allergy alerts) | ✅ |

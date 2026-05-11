@@ -97,6 +97,10 @@ export interface StudentRow {
   nextPayment: string; // DD/MM/YYYY
   initials: string;
   avatarColor: string;
+  /** True quando o aluno tem pelo menos uma matrícula com status ativo.
+   *  Opcional só pra os mocks legados não precisarem ser reescritos — o
+   *  consumidor trata `undefined` como "tem plano" (mock implícito). */
+  hasActiveEnrollment?: boolean;
 }
 
 export interface PaymentRow {

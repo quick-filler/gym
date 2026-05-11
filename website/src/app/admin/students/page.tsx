@@ -12,22 +12,26 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
+import Link from "next/link";
 import { useStudents } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import type { StudentRow, StudentStatus } from "@/lib/types";
 import { useApolloClient, useMutation } from "@apollo/client/react";
 import { graphql } from "@/gql";
 import { NewStudentDialog } from "./NewStudentDialog";
+import { EditStudentDialog } from "./EditStudentDialog";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Pill } from "@/components/ui/Pill";
 
-type Filter = "all" | StudentStatus;
+type Filter = "all" | StudentStatus | "no_plan";
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: "all", label: "Todos" },
   { value: "active", label: "Ativos" },
   { value: "suspended", label: "Suspensos" },
   { value: "inactive", label: "Inativos" },
+  { value: "no_plan", label: "Sem plano" },
 ];
 
 const UPDATE_STUDENT_STATUS = graphql(`
@@ -55,6 +59,10 @@ export default function StudentsPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<{
+    id: string;
+    focusPlan: boolean;
+  } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<StudentRow | null>(null);
   const apollo = useApolloClient();
   const [updateStatus] = useMutation(UPDATE_STUDENT_STATUS);
@@ -85,7 +93,13 @@ export default function StudentsPage() {
   }
 
   const filtered = (data ?? []).filter((s) => {
-    if (filter !== "all" && s.status !== filter) return false;
+    if (filter === "no_plan") {
+      // hasActiveEnrollment é opcional — undefined nos mocks legados
+      // assume "tem plano", então filtra só quem está explicitamente em false.
+      if (s.hasActiveEnrollment !== false) return false;
+    } else if (filter !== "all" && s.status !== filter) {
+      return false;
+    }
     if (query && !`${s.name} ${s.email}`.toLowerCase().includes(query.toLowerCase()))
       return false;
     return true;
@@ -104,9 +118,17 @@ export default function StudentsPage() {
           title="Alunos"
           subtitle={`${data?.length ?? 0} cadastrados · atualizado agora`}
           actions={
-            <Button variant="primary" onClick={() => setDialogOpen(true)}>
-              <Icon name="plus" /> Adicionar aluno
-            </Button>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/admin/students/import"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-line-strong text-ink-700 font-mono uppercase text-[0.78rem] tracking-[0.06em] hover:border-ink-900 hover:text-ink-900 transition-colors"
+              >
+                <Icon name="upload" /> Importar planilha
+              </Link>
+              <Button variant="primary" onClick={() => setDialogOpen(true)}>
+                <Icon name="plus" /> Adicionar aluno
+              </Button>
+            </div>
           }
         />
 
@@ -187,12 +209,27 @@ export default function StudentsPage() {
                         {s.phone}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-[0.88rem] text-ink-900 font-semibold">
-                          {s.plan}
-                        </div>
-                        <div className="font-mono text-[0.76rem] text-ink-400">
-                          {s.planPrice}
-                        </div>
+                        {s.hasActiveEnrollment === false ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setEditTarget({ id: s.id, focusPlan: true })
+                            }
+                            className="inline-flex"
+                            title="Vincular plano"
+                          >
+                            <Pill tone="amber">+ Atribuir plano</Pill>
+                          </button>
+                        ) : (
+                          <>
+                            <div className="text-[0.88rem] text-ink-900 font-semibold">
+                              {s.plan}
+                            </div>
+                            <div className="font-mono text-[0.76rem] text-ink-400">
+                              {s.planPrice}
+                            </div>
+                          </>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <StudentStatusPill status={s.status} />
@@ -215,6 +252,25 @@ export default function StudentsPage() {
                             </button>
                           }
                           items={[
+                            {
+                              label: "Editar",
+                              icon: "edit",
+                              onSelect: () =>
+                                setEditTarget({ id: s.id, focusPlan: false }),
+                            },
+                            ...(s.hasActiveEnrollment === false
+                              ? [
+                                  {
+                                    label: "Atribuir plano",
+                                    icon: "plus",
+                                    onSelect: () =>
+                                      setEditTarget({
+                                        id: s.id,
+                                        focusPlan: true,
+                                      }),
+                                  } as const,
+                                ]
+                              : []),
                             {
                               label: "Copiar e-mail",
                               icon: "mail",
@@ -254,6 +310,17 @@ export default function StudentsPage() {
             </div>
           </Card>
         )}
+
+        <EditStudentDialog
+          open={!!editTarget}
+          documentId={editTarget?.id ?? null}
+          focusPlan={editTarget?.focusPlan ?? false}
+          onClose={() => setEditTarget(null)}
+          onSaved={() => {
+            setEditTarget(null);
+            refreshList();
+          }}
+        />
 
         <ConfirmDialog
           open={!!confirmDelete}

@@ -221,7 +221,8 @@ export function mapStudents(
   return (students ?? [])
     .filter((s): s is RawStudent => !!s)
     .map((s) => {
-      const enrolled = s.enrollments?.[0];
+      const active = s.enrollments?.find((e) => e?.status === "active");
+      const enrolled = active ?? s.enrollments?.[0];
       const price = enrolled?.plan?.price ?? 0;
       const method = (enrolled?.paymentMethod ?? "pix") as PaymentMethod;
       return {
@@ -230,16 +231,19 @@ export function mapStudents(
         email: s.email ?? "",
         phone: formatPhoneForDisplay(s.phone),
         plan: enrolled?.plan?.name ?? "—",
-        planPrice: `R$ ${price.toLocaleString("pt-BR", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
+        planPrice: enrolled
+          ? `R$ ${price.toLocaleString("pt-BR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`
+          : "—",
         status: (s.status as StudentStatus) ?? "active",
         paymentMethod: method,
         joinedAt: enrolled?.startDate ?? "",
         nextPayment: enrolled?.endDate ?? "—",
         initials: initialsFromName(s.name ?? ""),
         avatarColor: pickColor(s.documentId ?? ""),
+        hasActiveEnrollment: !!active,
       };
     });
 }

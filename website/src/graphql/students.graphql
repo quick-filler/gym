@@ -1,7 +1,8 @@
 # The list query (Students) lives inline in src/lib/hooks.ts.
 # This file keeps the detail + create operations used elsewhere.
 
-# Single student detail — used by /admin/students/[id]
+# Single student detail — usado por /admin/students/[id] e pelo
+# EditStudentDialog do /admin/students.
 query StudentById($documentId: ID!) {
   student(documentId: $documentId) {
     documentId
@@ -9,7 +10,21 @@ query StudentById($documentId: ID!) {
     email
     phone
     birthdate
+    cpf
+    gender
+    address {
+      type
+      cep
+      street
+      number
+      complement
+      neighborhood
+      city
+      state
+    }
+    role
     status
+    isGuardian
     notes
     photo {
       url
@@ -36,6 +51,42 @@ query StudentById($documentId: ID!) {
   }
 }
 
+# Lista de planos ativos pro select do EditStudentDialog.
+query AdminAvailablePlans {
+  plans(pagination: { limit: 100 }) {
+    documentId
+    name
+    price
+    billingCycle
+    isActive
+  }
+}
+
+# Mutation usada pelo EditStudentDialog para salvar os campos do aluno.
+mutation UpdateStudent($documentId: ID!, $data: StudentUpdateInput!) {
+  updateStudent(documentId: $documentId, data: $data) {
+    documentId
+    name
+    email
+    status
+  }
+}
+
+# Mutation usada pelo EditStudentDialog para vincular um plano sem ter
+# que ir até /admin/finance.
+mutation CreateEnrollmentFromStudent($data: EnrollmentInput!) {
+  createEnrollment(data: $data) {
+    documentId
+    status
+    startDate
+    paymentMethod
+    plan {
+      documentId
+      name
+    }
+  }
+}
+
 # Mutation used by the "New student" modal in the admin panel.
 mutation CreateStudent($data: StudentInput!) {
   createStudent(data: $data) {
@@ -43,5 +94,23 @@ mutation CreateStudent($data: StudentInput!) {
     name
     email
     status
+  }
+}
+
+# Bulk import — recebe linhas já parseadas no browser pelo wizard de
+# /admin/students/import. Mantemos `dryRun` para o passo de preview validar
+# duplicidades antes de persistir.
+mutation BulkImportStudents($rows: [StudentImportRow!]!, $dryRun: Boolean) {
+  bulkImportStudents(rows: $rows, dryRun: $dryRun) {
+    created
+    skipped
+    errors
+    items {
+      rowNumber
+      status
+      studentDocumentId
+      dependentDocumentId
+      message
+    }
   }
 }
