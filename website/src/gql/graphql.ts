@@ -38,6 +38,8 @@ export type Academy = {
   enabledModules?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
   isActive?: Maybe<Scalars['Boolean']['output']>;
   logo?: Maybe<Media>;
+  /** Square version of the logo, used for favicon and small icons. Optional — fall back to logo when absent. */
+  logoSquare?: Maybe<Media>;
   name: Scalars['String']['output'];
   phone?: Maybe<Scalars['String']['output']>;
   plan?: Maybe<Scalars['String']['output']>;
@@ -54,6 +56,7 @@ export type AcademyInput = {
   enabledModules?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   logo?: InputMaybe<Scalars['ID']['input']>;
+  logoSquare?: InputMaybe<Scalars['ID']['input']>;
   name: Scalars['String']['input'];
   phone?: InputMaybe<Scalars['String']['input']>;
   plan?: InputMaybe<Scalars['String']['input']>;
@@ -70,6 +73,7 @@ export type AcademyUpdateInput = {
   enabledModules?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   logo?: InputMaybe<Scalars['ID']['input']>;
+  logoSquare?: InputMaybe<Scalars['ID']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
   plan?: InputMaybe<Scalars['String']['input']>;
@@ -78,12 +82,52 @@ export type AcademyUpdateInput = {
   slug?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type Address = {
+  __typename?: 'Address';
+  cep?: Maybe<Scalars['String']['output']>;
+  city?: Maybe<Scalars['String']['output']>;
+  complement?: Maybe<Scalars['String']['output']>;
+  neighborhood?: Maybe<Scalars['String']['output']>;
+  number?: Maybe<Scalars['String']['output']>;
+  state?: Maybe<Scalars['String']['output']>;
+  street?: Maybe<Scalars['String']['output']>;
+  type?: Maybe<Scalars['String']['output']>;
+};
+
+export type AddressInput = {
+  cep?: InputMaybe<Scalars['String']['input']>;
+  city?: InputMaybe<Scalars['String']['input']>;
+  complement?: InputMaybe<Scalars['String']['input']>;
+  neighborhood?: InputMaybe<Scalars['String']['input']>;
+  number?: InputMaybe<Scalars['String']['input']>;
+  state?: InputMaybe<Scalars['String']['input']>;
+  street?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type AdminDashboard = {
   __typename?: 'AdminDashboard';
   metrics: Array<MetricCard>;
   recentStudents: Array<DashboardStudentRow>;
   todayClasses: Array<DashboardClassRow>;
   upcomingPayments: Array<DashboardPaymentRow>;
+};
+
+/** Asaas credential update. Empty/null fields are preserved (never wipe an existing key with a blank submit). */
+export type AsaasSettingsInput = {
+  apiKey?: InputMaybe<Scalars['String']['input']>;
+  environment?: InputMaybe<Scalars['String']['input']>;
+  webhookToken?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Asaas configuration status — surfaces whether credentials are set without exposing them. */
+export type AsaasSettingsStatus = {
+  __typename?: 'AsaasSettingsStatus';
+  apiKeyConfigured: Scalars['Boolean']['output'];
+  apiKeyHint?: Maybe<Scalars['String']['output']>;
+  environment: Scalars['String']['output'];
+  webhookTokenConfigured: Scalars['Boolean']['output'];
+  webhookUrl: Scalars['String']['output'];
 };
 
 export type BodyAssessment = {
@@ -102,11 +146,12 @@ export type BodyAssessment = {
 export type BodyAssessmentInput = {
   bodyFat?: InputMaybe<Scalars['Float']['input']>;
   date: Scalars['String']['input'];
+  dependent?: InputMaybe<Scalars['ID']['input']>;
   height?: InputMaybe<Scalars['Float']['input']>;
   instructor?: InputMaybe<Scalars['String']['input']>;
   measurements?: InputMaybe<MeasurementsInput>;
   notes?: InputMaybe<Scalars['String']['input']>;
-  student: Scalars['ID']['input'];
+  student?: InputMaybe<Scalars['ID']['input']>;
   weight?: InputMaybe<Scalars['Float']['input']>;
 };
 
@@ -117,7 +162,6 @@ export type BodyAssessmentUpdateInput = {
   instructor?: InputMaybe<Scalars['String']['input']>;
   measurements?: InputMaybe<MeasurementsInput>;
   notes?: InputMaybe<Scalars['String']['input']>;
-  student?: InputMaybe<Scalars['ID']['input']>;
   weight?: InputMaybe<Scalars['Float']['input']>;
 };
 
@@ -146,6 +190,23 @@ export type BooleanFilterInput = {
   startsWith?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+export type BulkImportItem = {
+  __typename?: 'BulkImportItem';
+  dependentDocumentId?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  rowNumber: Scalars['Int']['output'];
+  status: Scalars['String']['output'];
+  studentDocumentId?: Maybe<Scalars['String']['output']>;
+};
+
+export type BulkImportResult = {
+  __typename?: 'BulkImportResult';
+  created: Scalars['Int']['output'];
+  errors: Scalars['Int']['output'];
+  items: Array<BulkImportItem>;
+  skipped: Scalars['Int']['output'];
+};
+
 export type ClassBooking = {
   __typename?: 'ClassBooking';
   checkedInAt?: Maybe<Scalars['String']['output']>;
@@ -159,16 +220,15 @@ export type ClassBooking = {
 export type ClassBookingInput = {
   classSchedule: Scalars['ID']['input'];
   date: Scalars['String']['input'];
+  dependent?: InputMaybe<Scalars['ID']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
-  student: Scalars['ID']['input'];
+  student?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type ClassBookingUpdateInput = {
   checkedInAt?: InputMaybe<Scalars['String']['input']>;
-  classSchedule?: InputMaybe<Scalars['ID']['input']>;
   date?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
-  student?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type ClassSchedule = {
@@ -187,7 +247,6 @@ export type ClassSchedule = {
 };
 
 export type ClassScheduleInput = {
-  academy?: InputMaybe<Scalars['ID']['input']>;
   endTime?: InputMaybe<Scalars['String']['input']>;
   instructor?: InputMaybe<Scalars['String']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
@@ -200,7 +259,6 @@ export type ClassScheduleInput = {
 };
 
 export type ClassScheduleUpdateInput = {
-  academy?: InputMaybe<Scalars['ID']['input']>;
   endTime?: InputMaybe<Scalars['String']['input']>;
   instructor?: InputMaybe<Scalars['String']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
@@ -224,6 +282,25 @@ export type ContactFormInput = {
 export type ContactFormResult = {
   __typename?: 'ContactFormResult';
   ok: Scalars['Boolean']['output'];
+};
+
+/** Settings to provision the new Academy + admin user when converting a lead. */
+export type ConvertLeadInput = {
+  academyName?: InputMaybe<Scalars['String']['input']>;
+  businessType?: InputMaybe<Scalars['String']['input']>;
+  plan: Scalars['String']['input'];
+  primaryColor?: InputMaybe<Scalars['String']['input']>;
+  secondaryColor?: InputMaybe<Scalars['String']['input']>;
+  slug: Scalars['String']['input'];
+};
+
+/** Outcome of a lead → academy conversion. passwordResetUrl is included so the platform admin can copy it manually if email delivery fails. */
+export type ConvertLeadResult = {
+  __typename?: 'ConvertLeadResult';
+  academy: Academy;
+  adminEmail: Scalars['String']['output'];
+  emailSent: Scalars['Boolean']['output'];
+  passwordResetUrl: Scalars['String']['output'];
 };
 
 export type DreCashFlowPoint = {
@@ -285,6 +362,30 @@ export type DreOverview = {
   monthLabel: Scalars['String']['output'];
   profit: DreHeroProfit;
   revenue: DreHeroRevenue;
+};
+
+/** Roster of all classes happening on a given date. */
+export type DailyAttendance = {
+  __typename?: 'DailyAttendance';
+  classes: Array<DailyAttendanceClass>;
+  date: Scalars['String']['output'];
+  weekdayLabel: Scalars['String']['output'];
+};
+
+/** A class occurring on a specific date with its booking roster, used by the daily attendance page. */
+export type DailyAttendanceClass = {
+  __typename?: 'DailyAttendanceClass';
+  attendedCount: Scalars['Int']['output'];
+  bookedCount: Scalars['Int']['output'];
+  bookings: Array<ClassBooking>;
+  capacity?: Maybe<Scalars['Int']['output']>;
+  endTime: Scalars['String']['output'];
+  instructor?: Maybe<Scalars['String']['output']>;
+  missedCount: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  room?: Maybe<Scalars['String']['output']>;
+  scheduleDocumentId: Scalars['ID']['output'];
+  startTime: Scalars['String']['output'];
 };
 
 export type DashboardClassRow = {
@@ -375,10 +476,12 @@ export type DeleteMutationResponse = {
 export type Dependent = {
   __typename?: 'Dependent';
   academy?: Maybe<Academy>;
+  address?: Maybe<Address>;
   allergies?: Maybe<Scalars['String']['output']>;
   birthdate: Scalars['String']['output'];
   bloodType?: Maybe<Scalars['String']['output']>;
   bookings?: Maybe<Array<Maybe<ClassBooking>>>;
+  cpf?: Maybe<Scalars['String']['output']>;
   documentId: Scalars['ID']['output'];
   emergencyContactName?: Maybe<Scalars['String']['output']>;
   emergencyContactPhone?: Maybe<Scalars['String']['output']>;
@@ -395,10 +498,11 @@ export type Dependent = {
 };
 
 export type DependentInput = {
-  academy?: InputMaybe<Scalars['ID']['input']>;
+  address?: InputMaybe<AddressInput>;
   allergies?: InputMaybe<Scalars['String']['input']>;
   birthdate: Scalars['String']['input'];
   bloodType?: InputMaybe<Scalars['String']['input']>;
+  cpf?: InputMaybe<Scalars['String']['input']>;
   emergencyContactName?: InputMaybe<Scalars['String']['input']>;
   emergencyContactPhone?: InputMaybe<Scalars['String']['input']>;
   gender?: InputMaybe<Scalars['String']['input']>;
@@ -411,9 +515,11 @@ export type DependentInput = {
 };
 
 export type DependentUpdateInput = {
+  address?: InputMaybe<AddressInput>;
   allergies?: InputMaybe<Scalars['String']['input']>;
   birthdate?: InputMaybe<Scalars['String']['input']>;
   bloodType?: InputMaybe<Scalars['String']['input']>;
+  cpf?: InputMaybe<Scalars['String']['input']>;
   emergencyContactName?: InputMaybe<Scalars['String']['input']>;
   emergencyContactPhone?: InputMaybe<Scalars['String']['input']>;
   gender?: InputMaybe<Scalars['String']['input']>;
@@ -437,21 +543,20 @@ export type Enrollment = {
 };
 
 export type EnrollmentInput = {
+  dependent?: InputMaybe<Scalars['ID']['input']>;
   endDate?: InputMaybe<Scalars['String']['input']>;
   paymentMethod?: InputMaybe<Scalars['String']['input']>;
   plan: Scalars['ID']['input'];
   startDate: Scalars['String']['input'];
   status?: InputMaybe<Scalars['String']['input']>;
-  student: Scalars['ID']['input'];
+  student?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type EnrollmentUpdateInput = {
   endDate?: InputMaybe<Scalars['String']['input']>;
   paymentMethod?: InputMaybe<Scalars['String']['input']>;
-  plan?: InputMaybe<Scalars['ID']['input']>;
   startDate?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
-  student?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type Error = {
@@ -497,7 +602,6 @@ export type Expense = {
 };
 
 export type ExpenseInput = {
-  academy?: InputMaybe<Scalars['ID']['input']>;
   amount: Scalars['Float']['input'];
   category: Scalars['String']['input'];
   date: Scalars['String']['input'];
@@ -682,6 +786,29 @@ export type JsonFilterInput = {
   startsWith?: InputMaybe<Scalars['JSON']['input']>;
 };
 
+export type Lead = {
+  __typename?: 'Lead';
+  academyName?: Maybe<Scalars['String']['output']>;
+  createdAt?: Maybe<Scalars['String']['output']>;
+  documentId: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  phone?: Maybe<Scalars['String']['output']>;
+  planInterest?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  studentCount?: Maybe<Scalars['String']['output']>;
+};
+
+export type LeadListResult = {
+  __typename?: 'LeadListResult';
+  items: Array<Lead>;
+  page: Scalars['Int']['output'];
+  pageSize: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
 export type LongFilterInput = {
   and?: InputMaybe<Array<InputMaybe<Scalars['Long']['input']>>>;
   between?: InputMaybe<Array<InputMaybe<Scalars['Long']['input']>>>;
@@ -756,8 +883,13 @@ export type MetricDelta = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  bulkImportStudents?: Maybe<BulkImportResult>;
   /** Mark a booking as attended and stamp checkedInAt. */
   checkInBooking?: Maybe<ClassBooking>;
+  /** Registers a previously-uploaded S3 object as a Strapi Media file. Run after a successful PUT to the URL returned by mintUploadUrl. */
+  confirmUpload?: Maybe<Media>;
+  /** Provisions a new Academy + academy_admin user from a converted lead, marks the lead as converted, and sends a password-reset email so the new admin can log in. */
+  convertLead?: Maybe<ConvertLeadResult>;
   createAcademy?: Maybe<Academy>;
   createBodyAssessment?: Maybe<BodyAssessment>;
   createClassBooking?: Maybe<ClassBooking>;
@@ -779,6 +911,7 @@ export type Mutation = {
   deletePlan?: Maybe<Plan>;
   deleteStudent?: Maybe<Student>;
   deleteWorkoutPlan?: Maybe<WorkoutPlan>;
+  mintUploadUrl?: Maybe<PresignedUpload>;
   submitContactForm?: Maybe<ContactFormResult>;
   updateAcademy?: Maybe<Academy>;
   updateBodyAssessment?: Maybe<BodyAssessment>;
@@ -787,6 +920,9 @@ export type Mutation = {
   updateDependent?: Maybe<Dependent>;
   updateEnrollment?: Maybe<Enrollment>;
   updateExpense?: Maybe<Expense>;
+  updateLead?: Maybe<Lead>;
+  /** Updates Asaas credentials for the caller's academy. Empty fields preserve the existing values — pass apiKey only when rotating. */
+  updateMyAsaasSettings?: Maybe<AsaasSettingsStatus>;
   updatePayment?: Maybe<Payment>;
   updatePlan?: Maybe<Plan>;
   updateStudent?: Maybe<Student>;
@@ -794,7 +930,25 @@ export type Mutation = {
 };
 
 
+export type MutationBulkImportStudentsArgs = {
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  rows: Array<StudentImportRow>;
+};
+
+
 export type MutationCheckInBookingArgs = {
+  documentId: Scalars['ID']['input'];
+};
+
+
+export type MutationConfirmUploadArgs = {
+  name: Scalars['String']['input'];
+  url: Scalars['String']['input'];
+};
+
+
+export type MutationConvertLeadArgs = {
+  data: ConvertLeadInput;
   documentId: Scalars['ID']['input'];
 };
 
@@ -904,6 +1058,13 @@ export type MutationDeleteWorkoutPlanArgs = {
 };
 
 
+export type MutationMintUploadUrlArgs = {
+  contentType: Scalars['String']['input'];
+  filename: Scalars['String']['input'];
+  size: Scalars['Int']['input'];
+};
+
+
 export type MutationSubmitContactFormArgs = {
   input: ContactFormInput;
 };
@@ -948,6 +1109,17 @@ export type MutationUpdateEnrollmentArgs = {
 export type MutationUpdateExpenseArgs = {
   data: ExpenseUpdateInput;
   documentId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateLeadArgs = {
+  data: UpdateLeadInput;
+  documentId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateMyAsaasSettingsArgs = {
+  data: AsaasSettingsInput;
 };
 
 
@@ -1030,7 +1202,6 @@ export type Plan = {
 };
 
 export type PlanInput = {
-  academy?: InputMaybe<Scalars['ID']['input']>;
   billingCycle: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
   features?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
@@ -1041,7 +1212,6 @@ export type PlanInput = {
 };
 
 export type PlanUpdateInput = {
-  academy?: InputMaybe<Scalars['ID']['input']>;
   billingCycle?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   features?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
@@ -1049,6 +1219,42 @@ export type PlanUpdateInput = {
   maxStudents?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   price?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type PlatformAcademy = {
+  __typename?: 'PlatformAcademy';
+  createdAt?: Maybe<Scalars['String']['output']>;
+  documentId: Scalars['String']['output'];
+  email?: Maybe<Scalars['String']['output']>;
+  isActive: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  plan: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  studentCount: Scalars['Int']['output'];
+};
+
+export type PlatformAcademyList = {
+  __typename?: 'PlatformAcademyList';
+  items: Array<PlatformAcademy>;
+  total: Scalars['Int']['output'];
+};
+
+export type PlatformDashboard = {
+  __typename?: 'PlatformDashboard';
+  activeAcademies: Scalars['Int']['output'];
+  leadsThisMonth: Scalars['Int']['output'];
+  mrr: Scalars['String']['output'];
+  openLeads: Scalars['Int']['output'];
+  totalAcademies: Scalars['Int']['output'];
+  totalStudents: Scalars['Int']['output'];
+};
+
+/** URL set returned by mintUploadUrl. Frontend PUTs bytes to uploadUrl, then calls confirmUpload(publicUrl, name) once it succeeds. */
+export type PresignedUpload = {
+  __typename?: 'PresignedUpload';
+  key: Scalars['String']['output'];
+  publicUrl: Scalars['String']['output'];
+  uploadUrl: Scalars['String']['output'];
 };
 
 export enum PublicationStatus {
@@ -1063,12 +1269,15 @@ export type Query = {
   /** Public — returns branding config for the given slug. */
   academyBySlug?: Maybe<Academy>;
   adminDashboard?: Maybe<AdminDashboard>;
+  allAcademies?: Maybe<PlatformAcademyList>;
   bodyAssessment?: Maybe<BodyAssessment>;
   bodyAssessments?: Maybe<Array<Maybe<BodyAssessment>>>;
   classBooking?: Maybe<ClassBooking>;
   classBookings?: Maybe<Array<Maybe<ClassBooking>>>;
   classSchedule?: Maybe<ClassSchedule>;
   classSchedules?: Maybe<Array<Maybe<ClassSchedule>>>;
+  /** Returns every active class scheduled to occur on the given date with its booking roster, ordered by startTime. */
+  dailyAttendance?: Maybe<DailyAttendance>;
   dependent?: Maybe<Dependent>;
   dependents?: Maybe<Array<Maybe<Dependent>>>;
   dreOverview?: Maybe<DreOverview>;
@@ -1078,15 +1287,21 @@ export type Query = {
   expenses?: Maybe<Array<Maybe<Expense>>>;
   financeOverview?: Maybe<FinanceOverview>;
   guardians?: Maybe<Array<GuardianFamily>>;
+  leads?: Maybe<LeadListResult>;
   /** Returns the authenticated user's linked Student profile. */
   me?: Maybe<Student>;
+  /** Returns the Asaas configuration status for the caller's academy. Never reveals the actual credentials. */
+  myAsaasSettings?: Maybe<AsaasSettingsStatus>;
   myDependents?: Maybe<Array<Maybe<Dependent>>>;
   payment?: Maybe<Payment>;
   payments?: Maybe<Array<Maybe<Payment>>>;
   plan?: Maybe<Plan>;
   plans?: Maybe<Array<Maybe<Plan>>>;
+  platformDashboard?: Maybe<PlatformDashboard>;
   /** Bookings for a given class schedule, optionally filtered by date. */
   scheduleBookings?: Maybe<Array<Maybe<ClassBooking>>>;
+  /** Returns existing schedules that would clash with the input on instructor or room. Empty list = no conflict. Tenant-scoped to the caller's academy. */
+  scheduleConflicts?: Maybe<Array<ScheduleConflict>>;
   scheduleWeek?: Maybe<ScheduleWeek>;
   student?: Maybe<Student>;
   students?: Maybe<Array<Maybe<Student>>>;
@@ -1107,6 +1322,12 @@ export type QueryAcademyArgs = {
 
 export type QueryAcademyBySlugArgs = {
   slug: Scalars['String']['input'];
+};
+
+
+export type QueryAllAcademiesArgs = {
+  page?: InputMaybe<Scalars['Int']['input']>;
+  pageSize?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -1137,6 +1358,11 @@ export type QueryClassScheduleArgs = {
 
 export type QueryClassSchedulesArgs = {
   pagination?: InputMaybe<PaginationInput>;
+};
+
+
+export type QueryDailyAttendanceArgs = {
+  date: Scalars['String']['input'];
 };
 
 
@@ -1184,6 +1410,13 @@ export type QueryFinanceOverviewArgs = {
 };
 
 
+export type QueryLeadsArgs = {
+  page?: InputMaybe<Scalars['Int']['input']>;
+  pageSize?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryPaymentArgs = {
   documentId: Scalars['ID']['input'];
 };
@@ -1207,6 +1440,11 @@ export type QueryPlansArgs = {
 export type QueryScheduleBookingsArgs = {
   date?: InputMaybe<Scalars['String']['input']>;
   documentId: Scalars['ID']['input'];
+};
+
+
+export type QueryScheduleConflictsArgs = {
+  input: ScheduleConflictInput;
 };
 
 
@@ -1247,9 +1485,28 @@ export type ScheduleClass = {
   endTime: Scalars['String']['output'];
   id: Scalars['String']['output'];
   instructor?: Maybe<Scalars['String']['output']>;
+  modality?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  scheduleDocumentId: Scalars['ID']['output'];
   startTime: Scalars['String']['output'];
   weekday: Scalars['Int']['output'];
+};
+
+/** Existing ClassSchedule that collides with a proposed input on instructor or room. */
+export type ScheduleConflict = {
+  __typename?: 'ScheduleConflict';
+  days: Array<Scalars['Int']['output']>;
+  reason: Scalars['String']['output'];
+  schedule: ClassSchedule;
+};
+
+export type ScheduleConflictInput = {
+  endTime: Scalars['String']['input'];
+  excludeDocumentId?: InputMaybe<Scalars['ID']['input']>;
+  instructor?: InputMaybe<Scalars['String']['input']>;
+  room?: InputMaybe<Scalars['String']['input']>;
+  startTime: Scalars['String']['input'];
+  weekdays: Array<Scalars['Int']['input']>;
 };
 
 export type ScheduleStats = {
@@ -1304,11 +1561,14 @@ export type StringFilterInput = {
 export type Student = {
   __typename?: 'Student';
   academy?: Maybe<Academy>;
+  address?: Maybe<Address>;
   birthdate?: Maybe<Scalars['String']['output']>;
+  cpf?: Maybe<Scalars['String']['output']>;
   dependents?: Maybe<Array<Maybe<Dependent>>>;
   documentId: Scalars['ID']['output'];
   email: Scalars['String']['output'];
   enrollments?: Maybe<Array<Maybe<Enrollment>>>;
+  gender?: Maybe<Scalars['String']['output']>;
   isGuardian?: Maybe<Scalars['Boolean']['output']>;
   name: Scalars['String']['output'];
   notes?: Maybe<Scalars['String']['output']>;
@@ -1319,10 +1579,31 @@ export type Student = {
   workoutPlans?: Maybe<Array<Maybe<WorkoutPlan>>>;
 };
 
+export type StudentImportRow = {
+  address?: InputMaybe<AddressInput>;
+  birthdate?: InputMaybe<Scalars['String']['input']>;
+  cpf?: InputMaybe<Scalars['String']['input']>;
+  dependentBirthdate?: InputMaybe<Scalars['String']['input']>;
+  dependentCpf?: InputMaybe<Scalars['String']['input']>;
+  dependentGender?: InputMaybe<Scalars['String']['input']>;
+  dependentName?: InputMaybe<Scalars['String']['input']>;
+  email: Scalars['String']['input'];
+  emergencyContactName?: InputMaybe<Scalars['String']['input']>;
+  emergencyContactPhone?: InputMaybe<Scalars['String']['input']>;
+  gender?: InputMaybe<Scalars['String']['input']>;
+  kind: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  phone?: InputMaybe<Scalars['String']['input']>;
+  rowNumber?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type StudentInput = {
   academy?: InputMaybe<Scalars['ID']['input']>;
+  address?: InputMaybe<AddressInput>;
   birthdate?: InputMaybe<Scalars['String']['input']>;
+  cpf?: InputMaybe<Scalars['String']['input']>;
   email: Scalars['String']['input'];
+  gender?: InputMaybe<Scalars['String']['input']>;
   isGuardian?: InputMaybe<Scalars['Boolean']['input']>;
   name: Scalars['String']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
@@ -1334,9 +1615,11 @@ export type StudentInput = {
 };
 
 export type StudentUpdateInput = {
-  academy?: InputMaybe<Scalars['ID']['input']>;
+  address?: InputMaybe<AddressInput>;
   birthdate?: InputMaybe<Scalars['String']['input']>;
+  cpf?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
+  gender?: InputMaybe<Scalars['String']['input']>;
   isGuardian?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
@@ -1371,6 +1654,12 @@ export type TimeFilterInput = {
   startsWith?: InputMaybe<Scalars['Time']['input']>;
 };
 
+export type UpdateLeadInput = {
+  notes?: InputMaybe<Scalars['String']['input']>;
+  planInterest?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type WorkoutPlan = {
   __typename?: 'WorkoutPlan';
   documentId: Scalars['ID']['output'];
@@ -1384,11 +1673,12 @@ export type WorkoutPlan = {
 };
 
 export type WorkoutPlanInput = {
+  dependent?: InputMaybe<Scalars['ID']['input']>;
   exercises?: InputMaybe<Array<InputMaybe<ExerciseInput>>>;
   instructor?: InputMaybe<Scalars['String']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   name: Scalars['String']['input'];
-  student: Scalars['ID']['input'];
+  student?: InputMaybe<Scalars['ID']['input']>;
   validFrom?: InputMaybe<Scalars['String']['input']>;
   validTo?: InputMaybe<Scalars['String']['input']>;
 };
@@ -1398,10 +1688,32 @@ export type WorkoutPlanUpdateInput = {
   instructor?: InputMaybe<Scalars['String']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-  student?: InputMaybe<Scalars['ID']['input']>;
   validFrom?: InputMaybe<Scalars['String']['input']>;
   validTo?: InputMaybe<Scalars['String']['input']>;
 };
+
+export type AdminFamilyForEditQueryVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+}>;
+
+
+export type AdminFamilyForEditQuery = { __typename?: 'Query', student?: { __typename?: 'Student', documentId: string, name: string, email: string, phone?: string | null, birthdate?: string | null, cpf?: string | null, gender?: string | null, role: string, status?: string | null, notes?: string | null, address?: { __typename?: 'Address', type?: string | null, cep?: string | null, street?: string | null, number?: string | null, complement?: string | null, neighborhood?: string | null, city?: string | null, state?: string | null } | null, dependents?: Array<{ __typename?: 'Dependent', documentId: string, name: string, birthdate: string, cpf?: string | null, gender?: string | null, relationship?: string | null, status: string, bloodType?: string | null, allergies?: string | null, medicalNotes?: string | null, medicalAlert?: string | null, emergencyContactName?: string | null, emergencyContactPhone?: string | null, address?: { __typename?: 'Address', type?: string | null, cep?: string | null, street?: string | null, number?: string | null, complement?: string | null, neighborhood?: string | null, city?: string | null, state?: string | null } | null } | null> | null } | null };
+
+export type AdminUpdateGuardianFromFamilyDialogMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+  data: StudentUpdateInput;
+}>;
+
+
+export type AdminUpdateGuardianFromFamilyDialogMutation = { __typename?: 'Mutation', updateStudent?: { __typename?: 'Student', documentId: string, name: string, email: string } | null };
+
+export type AdminUpdateDependentFromFamilyDialogMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+  data: DependentUpdateInput;
+}>;
+
+
+export type AdminUpdateDependentFromFamilyDialogMutation = { __typename?: 'Mutation', updateDependent?: { __typename?: 'Dependent', documentId: string, name: string } | null };
 
 export type AdminCreateDependentMutationVariables = Exact<{
   data: DependentInput;
@@ -1472,12 +1784,42 @@ export type AdminCreateClassScheduleMutationVariables = Exact<{
 
 export type AdminCreateClassScheduleMutation = { __typename?: 'Mutation', createClassSchedule?: { __typename?: 'ClassSchedule', documentId: string, name: string, instructor?: string | null } | null };
 
+export type AdminStudentForEditQueryVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+}>;
+
+
+export type AdminStudentForEditQuery = { __typename?: 'Query', student?: { __typename?: 'Student', documentId: string, name: string, email: string, phone?: string | null, birthdate?: string | null, cpf?: string | null, gender?: string | null, role: string, status?: string | null, notes?: string | null, address?: { __typename?: 'Address', type?: string | null, cep?: string | null, street?: string | null, number?: string | null, complement?: string | null, neighborhood?: string | null, city?: string | null, state?: string | null } | null, enrollments?: Array<{ __typename?: 'Enrollment', documentId: string, status: string, startDate: string, plan?: { __typename?: 'Plan', documentId: string, name: string, price: number, billingCycle: string } | null } | null> | null } | null, plans?: Array<{ __typename?: 'Plan', documentId: string, name: string, price: number, billingCycle: string, isActive?: boolean | null } | null> | null };
+
+export type AdminUpdateStudentFromDialogMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+  data: StudentUpdateInput;
+}>;
+
+
+export type AdminUpdateStudentFromDialogMutation = { __typename?: 'Mutation', updateStudent?: { __typename?: 'Student', documentId: string, name: string, email: string } | null };
+
+export type AdminCreateEnrollmentFromDialogMutationVariables = Exact<{
+  data: EnrollmentInput;
+}>;
+
+
+export type AdminCreateEnrollmentFromDialogMutation = { __typename?: 'Mutation', createEnrollment?: { __typename?: 'Enrollment', documentId: string, status: string } | null };
+
 export type AdminCreateStudentMutationVariables = Exact<{
   data: StudentInput;
 }>;
 
 
 export type AdminCreateStudentMutation = { __typename?: 'Mutation', createStudent?: { __typename?: 'Student', documentId: string, name: string, email: string, status?: string | null } | null };
+
+export type AdminBulkImportStudentsMutationVariables = Exact<{
+  rows: Array<StudentImportRow> | StudentImportRow;
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type AdminBulkImportStudentsMutation = { __typename?: 'Mutation', bulkImportStudents?: { __typename?: 'BulkImportResult', created: number, skipped: number, errors: number, items: Array<{ __typename?: 'BulkImportItem', rowNumber: number, status: string, studentDocumentId?: string | null, dependentDocumentId?: string | null, message?: string | null }> } | null };
 
 export type AdminUpdateStudentStatusMutationVariables = Exact<{
   documentId: Scalars['ID']['input'];
@@ -1494,6 +1836,11 @@ export type AdminDeleteStudentMutationVariables = Exact<{
 
 export type AdminDeleteStudentMutation = { __typename?: 'Mutation', deleteStudent?: { __typename?: 'Student', documentId: string } | null };
 
+export type StudentsForWorkoutEditQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type StudentsForWorkoutEditQuery = { __typename?: 'Query', students?: Array<{ __typename?: 'Student', documentId: string, name: string } | null> | null };
+
 export type StudentsForWorkoutQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1505,6 +1852,49 @@ export type AdminCreateWorkoutPlanMutationVariables = Exact<{
 
 
 export type AdminCreateWorkoutPlanMutation = { __typename?: 'Mutation', createWorkoutPlan?: { __typename?: 'WorkoutPlan', documentId: string, name: string } | null };
+
+export type AdminDuplicateWorkoutPlanMutationVariables = Exact<{
+  data: WorkoutPlanInput;
+}>;
+
+
+export type AdminDuplicateWorkoutPlanMutation = { __typename?: 'Mutation', createWorkoutPlan?: { __typename?: 'WorkoutPlan', documentId: string, name: string } | null };
+
+export type AllAcademiesQueryVariables = Exact<{
+  page?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type AllAcademiesQuery = { __typename?: 'Query', allAcademies?: { __typename?: 'PlatformAcademyList', total: number, items: Array<{ __typename?: 'PlatformAcademy', documentId: string, name: string, slug: string, plan: string, isActive: boolean, email?: string | null, studentCount: number, createdAt?: string | null }> } | null };
+
+export type PlatformDashboardQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type PlatformDashboardQuery = { __typename?: 'Query', platformDashboard?: { __typename?: 'PlatformDashboard', totalAcademies: number, activeAcademies: number, totalStudents: number, mrr: string, openLeads: number, leadsThisMonth: number } | null };
+
+export type ConvertLeadMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+  data: ConvertLeadInput;
+}>;
+
+
+export type ConvertLeadMutation = { __typename?: 'Mutation', convertLead?: { __typename?: 'ConvertLeadResult', passwordResetUrl: string, adminEmail: string, emailSent: boolean, academy: { __typename?: 'Academy', documentId: string, name: string, slug: string, plan?: string | null } } | null };
+
+export type PlatformLeadsQueryVariables = Exact<{
+  status?: InputMaybe<Scalars['String']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type PlatformLeadsQuery = { __typename?: 'Query', leads?: { __typename?: 'LeadListResult', total: number, page: number, pageSize: number, items: Array<{ __typename?: 'Lead', documentId: string, name: string, email: string, phone?: string | null, academyName?: string | null, studentCount?: string | null, message: string, status: string, planInterest?: string | null, notes?: string | null, createdAt?: string | null }> } | null };
+
+export type UpdateLeadMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+  data: UpdateLeadInput;
+}>;
+
+
+export type UpdateLeadMutation = { __typename?: 'Mutation', updateLead?: { __typename?: 'Lead', documentId: string, status: string, notes?: string | null, planInterest?: string | null } | null };
 
 export type AcademyBySlugQueryVariables = Exact<{
   slug: Scalars['String']['input'];
@@ -1520,6 +1910,18 @@ export type AcademiesQueryVariables = Exact<{
 
 export type AcademiesQuery = { __typename?: 'Query', academies?: Array<{ __typename?: 'Academy', documentId: string, name: string, slug: string, plan?: string | null, isActive?: boolean | null } | null> | null };
 
+export type MyAsaasSettingsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MyAsaasSettingsQuery = { __typename?: 'Query', myAsaasSettings?: { __typename?: 'AsaasSettingsStatus', apiKeyConfigured: boolean, webhookTokenConfigured: boolean, environment: string, webhookUrl: string, apiKeyHint?: string | null } | null };
+
+export type UpdateMyAsaasSettingsMutationVariables = Exact<{
+  data: AsaasSettingsInput;
+}>;
+
+
+export type UpdateMyAsaasSettingsMutation = { __typename?: 'Mutation', updateMyAsaasSettings?: { __typename?: 'AsaasSettingsStatus', apiKeyConfigured: boolean, webhookTokenConfigured: boolean, environment: string, webhookUrl: string, apiKeyHint?: string | null } | null };
+
 export type SubmitContactFormMutationVariables = Exact<{
   input: ContactFormInput;
 }>;
@@ -1532,7 +1934,27 @@ export type StudentByIdQueryVariables = Exact<{
 }>;
 
 
-export type StudentByIdQuery = { __typename?: 'Query', student?: { __typename?: 'Student', documentId: string, name: string, email: string, phone?: string | null, birthdate?: string | null, status?: string | null, notes?: string | null, photo?: { __typename?: 'Media', url?: string | null } | null, enrollments?: Array<{ __typename?: 'Enrollment', documentId: string, status: string, startDate: string, endDate?: string | null, paymentMethod?: string | null, plan?: { __typename?: 'Plan', documentId: string, name: string, price: number, billingCycle: string } | null } | null> | null, workoutPlans?: Array<{ __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null, isActive?: boolean | null } | null> | null } | null };
+export type StudentByIdQuery = { __typename?: 'Query', student?: { __typename?: 'Student', documentId: string, name: string, email: string, phone?: string | null, birthdate?: string | null, cpf?: string | null, gender?: string | null, role: string, status?: string | null, isGuardian?: boolean | null, notes?: string | null, address?: { __typename?: 'Address', type?: string | null, cep?: string | null, street?: string | null, number?: string | null, complement?: string | null, neighborhood?: string | null, city?: string | null, state?: string | null } | null, photo?: { __typename?: 'Media', url?: string | null } | null, enrollments?: Array<{ __typename?: 'Enrollment', documentId: string, status: string, startDate: string, endDate?: string | null, paymentMethod?: string | null, plan?: { __typename?: 'Plan', documentId: string, name: string, price: number, billingCycle: string } | null } | null> | null, workoutPlans?: Array<{ __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null, isActive?: boolean | null } | null> | null } | null };
+
+export type AdminAvailablePlansQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AdminAvailablePlansQuery = { __typename?: 'Query', plans?: Array<{ __typename?: 'Plan', documentId: string, name: string, price: number, billingCycle: string, isActive?: boolean | null } | null> | null };
+
+export type UpdateStudentMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+  data: StudentUpdateInput;
+}>;
+
+
+export type UpdateStudentMutation = { __typename?: 'Mutation', updateStudent?: { __typename?: 'Student', documentId: string, name: string, email: string, status?: string | null } | null };
+
+export type CreateEnrollmentFromStudentMutationVariables = Exact<{
+  data: EnrollmentInput;
+}>;
+
+
+export type CreateEnrollmentFromStudentMutation = { __typename?: 'Mutation', createEnrollment?: { __typename?: 'Enrollment', documentId: string, status: string, startDate: string, paymentMethod?: string | null, plan?: { __typename?: 'Plan', documentId: string, name: string } | null } | null };
 
 export type CreateStudentMutationVariables = Exact<{
   data: StudentInput;
@@ -1540,6 +1962,14 @@ export type CreateStudentMutationVariables = Exact<{
 
 
 export type CreateStudentMutation = { __typename?: 'Mutation', createStudent?: { __typename?: 'Student', documentId: string, name: string, email: string, status?: string | null } | null };
+
+export type BulkImportStudentsMutationVariables = Exact<{
+  rows: Array<StudentImportRow> | StudentImportRow;
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type BulkImportStudentsMutation = { __typename?: 'Mutation', bulkImportStudents?: { __typename?: 'BulkImportResult', created: number, skipped: number, errors: number, items: Array<{ __typename?: 'BulkImportItem', rowNumber: number, status: string, studentDocumentId?: string | null, dependentDocumentId?: string | null, message?: string | null }> } | null };
 
 export type AdminDashboardQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1567,7 +1997,59 @@ export type ScheduleWeekQueryVariables = Exact<{
 }>;
 
 
-export type ScheduleWeekQuery = { __typename?: 'Query', scheduleWeek?: { __typename?: 'ScheduleWeek', weekLabel: string, weekNumber: number, stats: { __typename?: 'ScheduleStats', totalClasses: number, totalBookings: number, capacityFill: number }, classes: Array<{ __typename?: 'ScheduleClass', id: string, name: string, instructor?: string | null, weekday: number, startTime: string, endTime: string, booked: number, capacity: number, color: string }>, upcoming: Array<{ __typename?: 'ScheduleUpcoming', id: string, name: string, time: string, instructor?: string | null }> } | null };
+export type ScheduleWeekQuery = { __typename?: 'Query', scheduleWeek?: { __typename?: 'ScheduleWeek', weekLabel: string, weekNumber: number, stats: { __typename?: 'ScheduleStats', totalClasses: number, totalBookings: number, capacityFill: number }, classes: Array<{ __typename?: 'ScheduleClass', id: string, scheduleDocumentId: string, name: string, instructor?: string | null, modality?: string | null, weekday: number, startTime: string, endTime: string, booked: number, capacity: number, color: string }>, upcoming: Array<{ __typename?: 'ScheduleUpcoming', id: string, name: string, time: string, instructor?: string | null }> } | null };
+
+export type AdminClassScheduleQueryVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+}>;
+
+
+export type AdminClassScheduleQuery = { __typename?: 'Query', classSchedule?: { __typename?: 'ClassSchedule', documentId: string, name: string, instructor?: string | null, modality?: string | null, weekdays?: Array<number | null> | null, startTime?: string | null, endTime?: string | null, maxCapacity?: number | null, room?: string | null, isActive?: boolean | null } | null };
+
+export type AdminScheduleConflictsQueryVariables = Exact<{
+  input: ScheduleConflictInput;
+}>;
+
+
+export type AdminScheduleConflictsQuery = { __typename?: 'Query', scheduleConflicts?: Array<{ __typename?: 'ScheduleConflict', reason: string, days: Array<number>, schedule: { __typename?: 'ClassSchedule', documentId: string, name: string, instructor?: string | null, room?: string | null, startTime?: string | null, endTime?: string | null } }> | null };
+
+export type AdminUpdateClassScheduleMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+  data: ClassScheduleUpdateInput;
+}>;
+
+
+export type AdminUpdateClassScheduleMutation = { __typename?: 'Mutation', updateClassSchedule?: { __typename?: 'ClassSchedule', documentId: string, name: string, isActive?: boolean | null } | null };
+
+export type ScheduleBookingsQueryVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+  date?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type ScheduleBookingsQuery = { __typename?: 'Query', scheduleBookings?: Array<{ __typename?: 'ClassBooking', documentId: string, date: string, status: string, checkedInAt?: string | null, student?: { __typename?: 'Student', documentId: string, name: string, photo?: { __typename?: 'Media', url?: string | null } | null } | null } | null> | null };
+
+export type AdminCheckInBookingMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+}>;
+
+
+export type AdminCheckInBookingMutation = { __typename?: 'Mutation', checkInBooking?: { __typename?: 'ClassBooking', documentId: string, status: string, checkedInAt?: string | null } | null };
+
+export type AdminUpdateBookingStatusMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+  data: ClassBookingUpdateInput;
+}>;
+
+
+export type AdminUpdateBookingStatusMutation = { __typename?: 'Mutation', updateClassBooking?: { __typename?: 'ClassBooking', documentId: string, status: string, checkedInAt?: string | null } | null };
+
+export type AdminDailyAttendanceQueryVariables = Exact<{
+  date: Scalars['String']['input'];
+}>;
+
+
+export type AdminDailyAttendanceQuery = { __typename?: 'Query', dailyAttendance?: { __typename?: 'DailyAttendance', date: string, weekdayLabel: string, classes: Array<{ __typename?: 'DailyAttendanceClass', scheduleDocumentId: string, name: string, instructor?: string | null, room?: string | null, startTime: string, endTime: string, capacity?: number | null, bookedCount: number, attendedCount: number, missedCount: number, bookings: Array<{ __typename?: 'ClassBooking', documentId: string, date: string, status: string, checkedInAt?: string | null, student?: { __typename?: 'Student', documentId: string, name: string, photo?: { __typename?: 'Media', url?: string | null } | null } | null }> }> } | null };
 
 export type GuardiansQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1579,6 +2061,28 @@ export type AdminWorkoutsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type AdminWorkoutsQuery = { __typename?: 'Query', workoutPlans?: Array<{ __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null, isActive?: boolean | null, validFrom?: string | null, exercises?: Array<{ __typename?: 'Exercise', name: string, sets?: number | null, reps?: number | null, load?: string | null } | null> | null, student?: { __typename?: 'Student', documentId: string, name: string } | null } | null> | null };
 
+export type AdminWorkoutPlanQueryVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+}>;
+
+
+export type AdminWorkoutPlanQuery = { __typename?: 'Query', workoutPlan?: { __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null, isActive?: boolean | null, validFrom?: string | null, validTo?: string | null, exercises?: Array<{ __typename?: 'Exercise', name: string, sets?: number | null, reps?: number | null, load?: string | null, notes?: string | null } | null> | null, student?: { __typename?: 'Student', documentId: string, name: string } | null } | null };
+
+export type AdminUpdateWorkoutPlanMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+  data: WorkoutPlanUpdateInput;
+}>;
+
+
+export type AdminUpdateWorkoutPlanMutation = { __typename?: 'Mutation', updateWorkoutPlan?: { __typename?: 'WorkoutPlan', documentId: string, name: string, isActive?: boolean | null } | null };
+
+export type AdminDeleteWorkoutPlanMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+}>;
+
+
+export type AdminDeleteWorkoutPlanMutation = { __typename?: 'Mutation', deleteWorkoutPlan?: { __typename?: 'WorkoutPlan', documentId: string } | null };
+
 export type StudentsQueryVariables = Exact<{
   pagination?: InputMaybe<PaginationInput>;
 }>;
@@ -1589,7 +2093,22 @@ export type StudentsQuery = { __typename?: 'Query', students?: Array<{ __typenam
 export type MyAcademyQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MyAcademyQuery = { __typename?: 'Query', me?: { __typename?: 'Student', documentId: string, academy?: { __typename?: 'Academy', documentId: string, name: string, slug: string, primaryColor?: string | null, secondaryColor?: string | null, plan?: string | null, email?: string | null, phone?: string | null, address?: string | null, logo?: { __typename?: 'Media', url?: string | null, alternativeText?: string | null } | null } | null } | null };
+export type MyAcademyQuery = { __typename?: 'Query', me?: { __typename?: 'Student', documentId: string, name: string, email: string, role: string, photo?: { __typename?: 'Media', url?: string | null, alternativeText?: string | null } | null, academy?: { __typename?: 'Academy', documentId: string, name: string, slug: string, primaryColor?: string | null, secondaryColor?: string | null, plan?: string | null, email?: string | null, phone?: string | null, address?: string | null, logo?: { __typename?: 'Media', documentId: string, url?: string | null, alternativeText?: string | null } | null, logoSquare?: { __typename?: 'Media', documentId: string, url?: string | null, alternativeText?: string | null } | null } | null } | null };
+
+export type AcademyBySlugForLoginQueryVariables = Exact<{
+  slug: Scalars['String']['input'];
+}>;
+
+
+export type AcademyBySlugForLoginQuery = { __typename?: 'Query', academyBySlug?: { __typename?: 'Academy', documentId: string, name: string, slug: string, primaryColor?: string | null, secondaryColor?: string | null, logo?: { __typename?: 'Media', url?: string | null, alternativeText?: string | null } | null, logoSquare?: { __typename?: 'Media', url?: string | null, alternativeText?: string | null } | null } | null };
+
+export type AdminUpdateAcademyMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+  data: AcademyUpdateInput;
+}>;
+
+
+export type AdminUpdateAcademyMutation = { __typename?: 'Mutation', updateAcademy?: { __typename?: 'Academy', documentId: string, name: string, slug: string, primaryColor?: string | null, secondaryColor?: string | null, email?: string | null, phone?: string | null, address?: string | null, logo?: { __typename?: 'Media', documentId: string, url?: string | null, alternativeText?: string | null } | null, logoSquare?: { __typename?: 'Media', documentId: string, url?: string | null, alternativeText?: string | null } | null } | null };
 
 export type PricingPlansPublicQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1601,7 +2120,27 @@ export type AdminPlansQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type AdminPlansQuery = { __typename?: 'Query', plans?: Array<{ __typename?: 'Plan', documentId: string, name: string, description?: string | null, price: number, billingCycle: string, maxStudents?: number | null, features?: Array<string | null> | null, isActive?: boolean | null } | null> | null };
 
+export type MintUploadUrlMutationVariables = Exact<{
+  filename: Scalars['String']['input'];
+  contentType: Scalars['String']['input'];
+  size: Scalars['Int']['input'];
+}>;
 
+
+export type MintUploadUrlMutation = { __typename?: 'Mutation', mintUploadUrl?: { __typename?: 'PresignedUpload', uploadUrl: string, publicUrl: string, key: string } | null };
+
+export type ConfirmUploadMutationVariables = Exact<{
+  url: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+}>;
+
+
+export type ConfirmUploadMutation = { __typename?: 'Mutation', confirmUpload?: { __typename?: 'Media', documentId: string, url?: string | null, mime?: string | null } | null };
+
+
+export const AdminFamilyForEditDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminFamilyForEdit"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"student"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"birthdate"}},{"kind":"Field","name":{"kind":"Name","value":"cpf"}},{"kind":"Field","name":{"kind":"Name","value":"gender"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"address"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"cep"}},{"kind":"Field","name":{"kind":"Name","value":"street"}},{"kind":"Field","name":{"kind":"Name","value":"number"}},{"kind":"Field","name":{"kind":"Name","value":"complement"}},{"kind":"Field","name":{"kind":"Name","value":"neighborhood"}},{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"state"}}]}},{"kind":"Field","name":{"kind":"Name","value":"dependents"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"birthdate"}},{"kind":"Field","name":{"kind":"Name","value":"cpf"}},{"kind":"Field","name":{"kind":"Name","value":"gender"}},{"kind":"Field","name":{"kind":"Name","value":"relationship"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"bloodType"}},{"kind":"Field","name":{"kind":"Name","value":"allergies"}},{"kind":"Field","name":{"kind":"Name","value":"medicalNotes"}},{"kind":"Field","name":{"kind":"Name","value":"medicalAlert"}},{"kind":"Field","name":{"kind":"Name","value":"emergencyContactName"}},{"kind":"Field","name":{"kind":"Name","value":"emergencyContactPhone"}},{"kind":"Field","name":{"kind":"Name","value":"address"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"cep"}},{"kind":"Field","name":{"kind":"Name","value":"street"}},{"kind":"Field","name":{"kind":"Name","value":"number"}},{"kind":"Field","name":{"kind":"Name","value":"complement"}},{"kind":"Field","name":{"kind":"Name","value":"neighborhood"}},{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"state"}}]}}]}}]}}]}}]} as unknown as DocumentNode<AdminFamilyForEditQuery, AdminFamilyForEditQueryVariables>;
+export const AdminUpdateGuardianFromFamilyDialogDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdateGuardianFromFamilyDialog"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"StudentUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateStudent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}}]}}]} as unknown as DocumentNode<AdminUpdateGuardianFromFamilyDialogMutation, AdminUpdateGuardianFromFamilyDialogMutationVariables>;
+export const AdminUpdateDependentFromFamilyDialogDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdateDependentFromFamilyDialog"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DependentUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateDependent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<AdminUpdateDependentFromFamilyDialogMutation, AdminUpdateDependentFromFamilyDialogMutationVariables>;
 export const AdminCreateDependentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCreateDependent"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DependentInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createDependent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"birthdate"}}]}}]}}]} as unknown as DocumentNode<AdminCreateDependentMutation, AdminCreateDependentMutationVariables>;
 export const AdminCreateGuardianStudentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCreateGuardianStudent"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"StudentInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createStudent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"isGuardian"}}]}}]}}]} as unknown as DocumentNode<AdminCreateGuardianStudentMutation, AdminCreateGuardianStudentMutationVariables>;
 export const AdminCreateExpenseDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCreateExpense"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ExpenseInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createExpense"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<AdminCreateExpenseMutation, AdminCreateExpenseMutationVariables>;
@@ -1612,23 +2151,54 @@ export const AdminUpdatePlanDocument = {"kind":"Document","definitions":[{"kind"
 export const AdminDeletePlanDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminDeletePlan"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deletePlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}}]}}]}}]} as unknown as DocumentNode<AdminDeletePlanMutation, AdminDeletePlanMutationVariables>;
 export const AdminCreatePlanDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCreatePlan"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"PlanInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<AdminCreatePlanMutation, AdminCreatePlanMutationVariables>;
 export const AdminCreateClassScheduleDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCreateClassSchedule"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ClassScheduleInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createClassSchedule"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}}]}}]}}]} as unknown as DocumentNode<AdminCreateClassScheduleMutation, AdminCreateClassScheduleMutationVariables>;
+export const AdminStudentForEditDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminStudentForEdit"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"student"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"birthdate"}},{"kind":"Field","name":{"kind":"Name","value":"cpf"}},{"kind":"Field","name":{"kind":"Name","value":"gender"}},{"kind":"Field","name":{"kind":"Name","value":"address"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"cep"}},{"kind":"Field","name":{"kind":"Name","value":"street"}},{"kind":"Field","name":{"kind":"Name","value":"number"}},{"kind":"Field","name":{"kind":"Name","value":"complement"}},{"kind":"Field","name":{"kind":"Name","value":"neighborhood"}},{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"state"}}]}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"enrollments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"plans"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"100"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<AdminStudentForEditQuery, AdminStudentForEditQueryVariables>;
+export const AdminUpdateStudentFromDialogDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdateStudentFromDialog"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"StudentUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateStudent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}}]}}]} as unknown as DocumentNode<AdminUpdateStudentFromDialogMutation, AdminUpdateStudentFromDialogMutationVariables>;
+export const AdminCreateEnrollmentFromDialogDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCreateEnrollmentFromDialog"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"EnrollmentInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createEnrollment"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<AdminCreateEnrollmentFromDialogMutation, AdminCreateEnrollmentFromDialogMutationVariables>;
 export const AdminCreateStudentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCreateStudent"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"StudentInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createStudent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<AdminCreateStudentMutation, AdminCreateStudentMutationVariables>;
+export const AdminBulkImportStudentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminBulkImportStudents"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"rows"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"StudentImportRow"}}}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"dryRun"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"bulkImportStudents"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"rows"},"value":{"kind":"Variable","name":{"kind":"Name","value":"rows"}}},{"kind":"Argument","name":{"kind":"Name","value":"dryRun"},"value":{"kind":"Variable","name":{"kind":"Name","value":"dryRun"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"skipped"}},{"kind":"Field","name":{"kind":"Name","value":"errors"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"rowNumber"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"studentDocumentId"}},{"kind":"Field","name":{"kind":"Name","value":"dependentDocumentId"}},{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]} as unknown as DocumentNode<AdminBulkImportStudentsMutation, AdminBulkImportStudentsMutationVariables>;
 export const AdminUpdateStudentStatusDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdateStudentStatus"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"StudentUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateStudent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<AdminUpdateStudentStatusMutation, AdminUpdateStudentStatusMutationVariables>;
 export const AdminDeleteStudentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminDeleteStudent"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteStudent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}}]}}]}}]} as unknown as DocumentNode<AdminDeleteStudentMutation, AdminDeleteStudentMutationVariables>;
+export const StudentsForWorkoutEditDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"StudentsForWorkoutEdit"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"students"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"200"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<StudentsForWorkoutEditQuery, StudentsForWorkoutEditQueryVariables>;
 export const StudentsForWorkoutDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"StudentsForWorkout"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"students"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"200"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<StudentsForWorkoutQuery, StudentsForWorkoutQueryVariables>;
 export const AdminCreateWorkoutPlanDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCreateWorkoutPlan"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"WorkoutPlanInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createWorkoutPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<AdminCreateWorkoutPlanMutation, AdminCreateWorkoutPlanMutationVariables>;
+export const AdminDuplicateWorkoutPlanDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminDuplicateWorkoutPlan"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"WorkoutPlanInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createWorkoutPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<AdminDuplicateWorkoutPlanMutation, AdminDuplicateWorkoutPlanMutationVariables>;
+export const AllAcademiesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AllAcademies"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"page"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"allAcademies"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"page"},"value":{"kind":"Variable","name":{"kind":"Name","value":"page"}}},{"kind":"Argument","name":{"kind":"Name","value":"pageSize"},"value":{"kind":"IntValue","value":"20"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"plan"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"studentCount"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"total"}}]}}]}}]} as unknown as DocumentNode<AllAcademiesQuery, AllAcademiesQueryVariables>;
+export const PlatformDashboardDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PlatformDashboard"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"platformDashboard"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalAcademies"}},{"kind":"Field","name":{"kind":"Name","value":"activeAcademies"}},{"kind":"Field","name":{"kind":"Name","value":"totalStudents"}},{"kind":"Field","name":{"kind":"Name","value":"mrr"}},{"kind":"Field","name":{"kind":"Name","value":"openLeads"}},{"kind":"Field","name":{"kind":"Name","value":"leadsThisMonth"}}]}}]}}]} as unknown as DocumentNode<PlatformDashboardQuery, PlatformDashboardQueryVariables>;
+export const ConvertLeadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ConvertLead"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ConvertLeadInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"convertLead"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"academy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"plan"}}]}},{"kind":"Field","name":{"kind":"Name","value":"passwordResetUrl"}},{"kind":"Field","name":{"kind":"Name","value":"adminEmail"}},{"kind":"Field","name":{"kind":"Name","value":"emailSent"}}]}}]}}]} as unknown as DocumentNode<ConvertLeadMutation, ConvertLeadMutationVariables>;
+export const PlatformLeadsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PlatformLeads"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"status"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"page"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"leads"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"status"},"value":{"kind":"Variable","name":{"kind":"Name","value":"status"}}},{"kind":"Argument","name":{"kind":"Name","value":"page"},"value":{"kind":"Variable","name":{"kind":"Name","value":"page"}}},{"kind":"Argument","name":{"kind":"Name","value":"pageSize"},"value":{"kind":"IntValue","value":"25"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"academyName"}},{"kind":"Field","name":{"kind":"Name","value":"studentCount"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"planInterest"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"page"}},{"kind":"Field","name":{"kind":"Name","value":"pageSize"}}]}}]}}]} as unknown as DocumentNode<PlatformLeadsQuery, PlatformLeadsQueryVariables>;
+export const UpdateLeadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateLead"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateLeadInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateLead"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"planInterest"}}]}}]}}]} as unknown as DocumentNode<UpdateLeadMutation, UpdateLeadMutationVariables>;
 export const AcademyBySlugDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AcademyBySlug"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"academyBySlug"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"secondaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"plan"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}}]}}]}}]} as unknown as DocumentNode<AcademyBySlugQuery, AcademyBySlugQueryVariables>;
 export const AcademiesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Academies"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"PaginationInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"academies"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"plan"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<AcademiesQuery, AcademiesQueryVariables>;
+export const MyAsaasSettingsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyAsaasSettings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myAsaasSettings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"apiKeyConfigured"}},{"kind":"Field","name":{"kind":"Name","value":"webhookTokenConfigured"}},{"kind":"Field","name":{"kind":"Name","value":"environment"}},{"kind":"Field","name":{"kind":"Name","value":"webhookUrl"}},{"kind":"Field","name":{"kind":"Name","value":"apiKeyHint"}}]}}]}}]} as unknown as DocumentNode<MyAsaasSettingsQuery, MyAsaasSettingsQueryVariables>;
+export const UpdateMyAsaasSettingsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateMyAsaasSettings"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"AsaasSettingsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateMyAsaasSettings"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"apiKeyConfigured"}},{"kind":"Field","name":{"kind":"Name","value":"webhookTokenConfigured"}},{"kind":"Field","name":{"kind":"Name","value":"environment"}},{"kind":"Field","name":{"kind":"Name","value":"webhookUrl"}},{"kind":"Field","name":{"kind":"Name","value":"apiKeyHint"}}]}}]}}]} as unknown as DocumentNode<UpdateMyAsaasSettingsMutation, UpdateMyAsaasSettingsMutationVariables>;
 export const SubmitContactFormDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SubmitContactForm"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ContactFormInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"submitContactForm"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}}]}}]}}]} as unknown as DocumentNode<SubmitContactFormMutation, SubmitContactFormMutationVariables>;
-export const StudentByIdDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"StudentById"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"student"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"birthdate"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"photo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}},{"kind":"Field","name":{"kind":"Name","value":"enrollments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"endDate"}},{"kind":"Field","name":{"kind":"Name","value":"paymentMethod"}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"workoutPlans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]}}]} as unknown as DocumentNode<StudentByIdQuery, StudentByIdQueryVariables>;
+export const StudentByIdDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"StudentById"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"student"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"birthdate"}},{"kind":"Field","name":{"kind":"Name","value":"cpf"}},{"kind":"Field","name":{"kind":"Name","value":"gender"}},{"kind":"Field","name":{"kind":"Name","value":"address"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"cep"}},{"kind":"Field","name":{"kind":"Name","value":"street"}},{"kind":"Field","name":{"kind":"Name","value":"number"}},{"kind":"Field","name":{"kind":"Name","value":"complement"}},{"kind":"Field","name":{"kind":"Name","value":"neighborhood"}},{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"state"}}]}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"isGuardian"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"photo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}},{"kind":"Field","name":{"kind":"Name","value":"enrollments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"endDate"}},{"kind":"Field","name":{"kind":"Name","value":"paymentMethod"}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"workoutPlans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]}}]} as unknown as DocumentNode<StudentByIdQuery, StudentByIdQueryVariables>;
+export const AdminAvailablePlansDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminAvailablePlans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"plans"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"100"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<AdminAvailablePlansQuery, AdminAvailablePlansQueryVariables>;
+export const UpdateStudentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateStudent"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"StudentUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateStudent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<UpdateStudentMutation, UpdateStudentMutationVariables>;
+export const CreateEnrollmentFromStudentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateEnrollmentFromStudent"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"EnrollmentInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createEnrollment"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"paymentMethod"}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<CreateEnrollmentFromStudentMutation, CreateEnrollmentFromStudentMutationVariables>;
 export const CreateStudentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateStudent"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"StudentInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createStudent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<CreateStudentMutation, CreateStudentMutationVariables>;
+export const BulkImportStudentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"BulkImportStudents"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"rows"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"StudentImportRow"}}}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"dryRun"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"bulkImportStudents"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"rows"},"value":{"kind":"Variable","name":{"kind":"Name","value":"rows"}}},{"kind":"Argument","name":{"kind":"Name","value":"dryRun"},"value":{"kind":"Variable","name":{"kind":"Name","value":"dryRun"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"skipped"}},{"kind":"Field","name":{"kind":"Name","value":"errors"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"rowNumber"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"studentDocumentId"}},{"kind":"Field","name":{"kind":"Name","value":"dependentDocumentId"}},{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]} as unknown as DocumentNode<BulkImportStudentsMutation, BulkImportStudentsMutationVariables>;
 export const AdminDashboardDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminDashboard"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"adminDashboard"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"metrics"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"label"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"highlighted"}},{"kind":"Field","name":{"kind":"Name","value":"delta"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"trend"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"recentStudents"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"plan"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"initials"}},{"kind":"Field","name":{"kind":"Name","value":"joinedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"todayClasses"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"time"}},{"kind":"Field","name":{"kind":"Name","value":"booked"}},{"kind":"Field","name":{"kind":"Name","value":"capacity"}}]}},{"kind":"Field","name":{"kind":"Name","value":"upcomingPayments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"student"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"dueDate"}},{"kind":"Field","name":{"kind":"Name","value":"method"}}]}}]}}]}}]} as unknown as DocumentNode<AdminDashboardQuery, AdminDashboardQueryVariables>;
 export const FinanceOverviewDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"FinanceOverview"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"month"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"year"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"financeOverview"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"month"},"value":{"kind":"Variable","name":{"kind":"Name","value":"month"}}},{"kind":"Argument","name":{"kind":"Name","value":"year"},"value":{"kind":"Variable","name":{"kind":"Name","value":"year"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"kpis"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"label"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"highlighted"}},{"kind":"Field","name":{"kind":"Name","value":"delta"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"trend"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"charges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"student"}},{"kind":"Field","name":{"kind":"Name","value":"studentInitials"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"amountFormatted"}},{"kind":"Field","name":{"kind":"Name","value":"method"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"dueDate"}},{"kind":"Field","name":{"kind":"Name","value":"paidAt"}}]}}]}}]}}]} as unknown as DocumentNode<FinanceOverviewQuery, FinanceOverviewQueryVariables>;
 export const DreOverviewDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"DREOverview"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"month"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"year"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"dreOverview"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"month"},"value":{"kind":"Variable","name":{"kind":"Name","value":"month"}}},{"kind":"Argument","name":{"kind":"Name","value":"year"},"value":{"kind":"Variable","name":{"kind":"Name","value":"year"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"monthLabel"}},{"kind":"Field","name":{"kind":"Name","value":"revenue"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"deltaLabel"}},{"kind":"Field","name":{"kind":"Name","value":"trend"}}]}},{"kind":"Field","name":{"kind":"Name","value":"expenses"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"fixed"}},{"kind":"Field","name":{"kind":"Name","value":"variable"}}]}},{"kind":"Field","name":{"kind":"Name","value":"profit"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"marginPercent"}}]}},{"kind":"Field","name":{"kind":"Name","value":"cashFlow"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"label"}},{"kind":"Field","name":{"kind":"Name","value":"revenue"}},{"kind":"Field","name":{"kind":"Name","value":"expenses"}},{"kind":"Field","name":{"kind":"Name","value":"profit"}}]}},{"kind":"Field","name":{"kind":"Name","value":"categoryBreakdown"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"label"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"percent"}}]}},{"kind":"Field","name":{"kind":"Name","value":"expensesTotalLabel"}},{"kind":"Field","name":{"kind":"Name","value":"expenseRows"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"subtitle"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"categoryLabel"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"dueDate"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]}}]} as unknown as DocumentNode<DreOverviewQuery, DreOverviewQueryVariables>;
-export const ScheduleWeekDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ScheduleWeek"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"weekStart"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"scheduleWeek"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"weekStart"},"value":{"kind":"Variable","name":{"kind":"Name","value":"weekStart"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"weekLabel"}},{"kind":"Field","name":{"kind":"Name","value":"weekNumber"}},{"kind":"Field","name":{"kind":"Name","value":"stats"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalClasses"}},{"kind":"Field","name":{"kind":"Name","value":"totalBookings"}},{"kind":"Field","name":{"kind":"Name","value":"capacityFill"}}]}},{"kind":"Field","name":{"kind":"Name","value":"classes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"weekday"}},{"kind":"Field","name":{"kind":"Name","value":"startTime"}},{"kind":"Field","name":{"kind":"Name","value":"endTime"}},{"kind":"Field","name":{"kind":"Name","value":"booked"}},{"kind":"Field","name":{"kind":"Name","value":"capacity"}},{"kind":"Field","name":{"kind":"Name","value":"color"}}]}},{"kind":"Field","name":{"kind":"Name","value":"upcoming"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"time"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}}]}}]}}]}}]} as unknown as DocumentNode<ScheduleWeekQuery, ScheduleWeekQueryVariables>;
+export const ScheduleWeekDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ScheduleWeek"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"weekStart"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"scheduleWeek"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"weekStart"},"value":{"kind":"Variable","name":{"kind":"Name","value":"weekStart"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"weekLabel"}},{"kind":"Field","name":{"kind":"Name","value":"weekNumber"}},{"kind":"Field","name":{"kind":"Name","value":"stats"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalClasses"}},{"kind":"Field","name":{"kind":"Name","value":"totalBookings"}},{"kind":"Field","name":{"kind":"Name","value":"capacityFill"}}]}},{"kind":"Field","name":{"kind":"Name","value":"classes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"scheduleDocumentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"modality"}},{"kind":"Field","name":{"kind":"Name","value":"weekday"}},{"kind":"Field","name":{"kind":"Name","value":"startTime"}},{"kind":"Field","name":{"kind":"Name","value":"endTime"}},{"kind":"Field","name":{"kind":"Name","value":"booked"}},{"kind":"Field","name":{"kind":"Name","value":"capacity"}},{"kind":"Field","name":{"kind":"Name","value":"color"}}]}},{"kind":"Field","name":{"kind":"Name","value":"upcoming"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"time"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}}]}}]}}]}}]} as unknown as DocumentNode<ScheduleWeekQuery, ScheduleWeekQueryVariables>;
+export const AdminClassScheduleDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminClassSchedule"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"classSchedule"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"modality"}},{"kind":"Field","name":{"kind":"Name","value":"weekdays"}},{"kind":"Field","name":{"kind":"Name","value":"startTime"}},{"kind":"Field","name":{"kind":"Name","value":"endTime"}},{"kind":"Field","name":{"kind":"Name","value":"maxCapacity"}},{"kind":"Field","name":{"kind":"Name","value":"room"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<AdminClassScheduleQuery, AdminClassScheduleQueryVariables>;
+export const AdminScheduleConflictsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminScheduleConflicts"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ScheduleConflictInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"scheduleConflicts"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"reason"}},{"kind":"Field","name":{"kind":"Name","value":"days"}},{"kind":"Field","name":{"kind":"Name","value":"schedule"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"room"}},{"kind":"Field","name":{"kind":"Name","value":"startTime"}},{"kind":"Field","name":{"kind":"Name","value":"endTime"}}]}}]}}]}}]} as unknown as DocumentNode<AdminScheduleConflictsQuery, AdminScheduleConflictsQueryVariables>;
+export const AdminUpdateClassScheduleDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdateClassSchedule"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ClassScheduleUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateClassSchedule"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<AdminUpdateClassScheduleMutation, AdminUpdateClassScheduleMutationVariables>;
+export const ScheduleBookingsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ScheduleBookings"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"date"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"scheduleBookings"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"date"},"value":{"kind":"Variable","name":{"kind":"Name","value":"date"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"checkedInAt"}},{"kind":"Field","name":{"kind":"Name","value":"student"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"photo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]}}]} as unknown as DocumentNode<ScheduleBookingsQuery, ScheduleBookingsQueryVariables>;
+export const AdminCheckInBookingDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCheckInBooking"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"checkInBooking"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"checkedInAt"}}]}}]}}]} as unknown as DocumentNode<AdminCheckInBookingMutation, AdminCheckInBookingMutationVariables>;
+export const AdminUpdateBookingStatusDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdateBookingStatus"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ClassBookingUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateClassBooking"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"checkedInAt"}}]}}]}}]} as unknown as DocumentNode<AdminUpdateBookingStatusMutation, AdminUpdateBookingStatusMutationVariables>;
+export const AdminDailyAttendanceDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminDailyAttendance"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"date"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"dailyAttendance"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"date"},"value":{"kind":"Variable","name":{"kind":"Name","value":"date"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"weekdayLabel"}},{"kind":"Field","name":{"kind":"Name","value":"classes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"scheduleDocumentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"room"}},{"kind":"Field","name":{"kind":"Name","value":"startTime"}},{"kind":"Field","name":{"kind":"Name","value":"endTime"}},{"kind":"Field","name":{"kind":"Name","value":"capacity"}},{"kind":"Field","name":{"kind":"Name","value":"bookedCount"}},{"kind":"Field","name":{"kind":"Name","value":"attendedCount"}},{"kind":"Field","name":{"kind":"Name","value":"missedCount"}},{"kind":"Field","name":{"kind":"Name","value":"bookings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"checkedInAt"}},{"kind":"Field","name":{"kind":"Name","value":"student"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"photo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<AdminDailyAttendanceQuery, AdminDailyAttendanceQueryVariables>;
 export const GuardiansDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Guardians"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"guardians"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"guardian"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"initials"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}}]}},{"kind":"Field","name":{"kind":"Name","value":"dependents"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"age"}},{"kind":"Field","name":{"kind":"Name","value":"className"}},{"kind":"Field","name":{"kind":"Name","value":"classTime"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"gender"}},{"kind":"Field","name":{"kind":"Name","value":"medicalAlert"}}]}}]}}]}}]} as unknown as DocumentNode<GuardiansQuery, GuardiansQueryVariables>;
 export const AdminWorkoutsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminWorkouts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workoutPlans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"validFrom"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"sets"}},{"kind":"Field","name":{"kind":"Name","value":"reps"}},{"kind":"Field","name":{"kind":"Name","value":"load"}}]}},{"kind":"Field","name":{"kind":"Name","value":"student"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<AdminWorkoutsQuery, AdminWorkoutsQueryVariables>;
+export const AdminWorkoutPlanDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminWorkoutPlan"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workoutPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"validFrom"}},{"kind":"Field","name":{"kind":"Name","value":"validTo"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"sets"}},{"kind":"Field","name":{"kind":"Name","value":"reps"}},{"kind":"Field","name":{"kind":"Name","value":"load"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}}]}},{"kind":"Field","name":{"kind":"Name","value":"student"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<AdminWorkoutPlanQuery, AdminWorkoutPlanQueryVariables>;
+export const AdminUpdateWorkoutPlanDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdateWorkoutPlan"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"WorkoutPlanUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateWorkoutPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<AdminUpdateWorkoutPlanMutation, AdminUpdateWorkoutPlanMutationVariables>;
+export const AdminDeleteWorkoutPlanDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminDeleteWorkoutPlan"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteWorkoutPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}}]}}]}}]} as unknown as DocumentNode<AdminDeleteWorkoutPlanMutation, AdminDeleteWorkoutPlanMutationVariables>;
 export const StudentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Students"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"PaginationInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"students"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"isGuardian"}},{"kind":"Field","name":{"kind":"Name","value":"enrollments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"endDate"}},{"kind":"Field","name":{"kind":"Name","value":"paymentMethod"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}}]}}]}}]}}]}}]} as unknown as DocumentNode<StudentsQuery, StudentsQueryVariables>;
-export const MyAcademyDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyAcademy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"academy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"secondaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"plan"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"address"}},{"kind":"Field","name":{"kind":"Name","value":"logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}}]}}]}}]}}]} as unknown as DocumentNode<MyAcademyQuery, MyAcademyQueryVariables>;
+export const MyAcademyDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyAcademy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"photo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}},{"kind":"Field","name":{"kind":"Name","value":"academy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"secondaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"plan"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"address"}},{"kind":"Field","name":{"kind":"Name","value":"logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}},{"kind":"Field","name":{"kind":"Name","value":"logoSquare"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}}]}}]}}]}}]} as unknown as DocumentNode<MyAcademyQuery, MyAcademyQueryVariables>;
+export const AcademyBySlugForLoginDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AcademyBySlugForLogin"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"academyBySlug"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"secondaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}},{"kind":"Field","name":{"kind":"Name","value":"logoSquare"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}}]}}]}}]} as unknown as DocumentNode<AcademyBySlugForLoginQuery, AcademyBySlugForLoginQueryVariables>;
+export const AdminUpdateAcademyDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdateAcademy"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"AcademyUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateAcademy"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"secondaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"address"}},{"kind":"Field","name":{"kind":"Name","value":"logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}},{"kind":"Field","name":{"kind":"Name","value":"logoSquare"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}}]}}]}}]} as unknown as DocumentNode<AdminUpdateAcademyMutation, AdminUpdateAcademyMutationVariables>;
 export const PricingPlansPublicDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PricingPlansPublic"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"plans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}},{"kind":"Field","name":{"kind":"Name","value":"maxStudents"}},{"kind":"Field","name":{"kind":"Name","value":"features"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<PricingPlansPublicQuery, PricingPlansPublicQueryVariables>;
 export const AdminPlansDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminPlans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"plans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}},{"kind":"Field","name":{"kind":"Name","value":"maxStudents"}},{"kind":"Field","name":{"kind":"Name","value":"features"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<AdminPlansQuery, AdminPlansQueryVariables>;
+export const MintUploadUrlDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"MintUploadUrl"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"filename"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"contentType"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"size"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mintUploadUrl"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filename"},"value":{"kind":"Variable","name":{"kind":"Name","value":"filename"}}},{"kind":"Argument","name":{"kind":"Name","value":"contentType"},"value":{"kind":"Variable","name":{"kind":"Name","value":"contentType"}}},{"kind":"Argument","name":{"kind":"Name","value":"size"},"value":{"kind":"Variable","name":{"kind":"Name","value":"size"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"uploadUrl"}},{"kind":"Field","name":{"kind":"Name","value":"publicUrl"}},{"kind":"Field","name":{"kind":"Name","value":"key"}}]}}]}}]} as unknown as DocumentNode<MintUploadUrlMutation, MintUploadUrlMutationVariables>;
+export const ConfirmUploadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ConfirmUpload"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"url"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"name"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"confirmUpload"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"url"},"value":{"kind":"Variable","name":{"kind":"Name","value":"url"}}},{"kind":"Argument","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"name"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"mime"}}]}}]}}]} as unknown as DocumentNode<ConfirmUploadMutation, ConfirmUploadMutationVariables>;

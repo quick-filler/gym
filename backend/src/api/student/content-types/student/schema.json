@@ -31,6 +31,17 @@
     "birthdate": {
       "type": "date"
     },
+    "cpf": {
+      "type": "string",
+      "regex": "^[0-9]{11}$"
+    },
+    "gender": {
+      "type": "enumeration",
+      "enum": ["female", "male", "other"]
+    },
+    "address": {
+      "type": "json"
+    },
     "status": {
       "type": "enumeration",
       "enum": ["active", "inactive", "suspended"],

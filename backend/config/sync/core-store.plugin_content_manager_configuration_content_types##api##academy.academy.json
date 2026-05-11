@@ -62,6 +62,20 @@
           "sortable": false
         }
       },
+      "logoSquare": {
+        "edit": {
+          "label": "logoSquare",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "logoSquare",
+          "searchable": false,
+          "sortable": false
+        }
+      },
       "primaryColor": {
         "edit": {
           "label": "primaryColor",
@@ -478,6 +492,12 @@
           },
           {
             "name": "asaasEnvironment",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "logoSquare",
             "size": 6
           }
         ]

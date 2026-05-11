@@ -13,24 +13,19 @@
  */
 
 import { asaasForAcademy } from '../../../../services/asaas';
+import { pickRelationId, resolveNumericId } from '../../../../utils/relation';
 
 const ENROLLMENT = 'api::enrollment.enrollment';
 const STUDENT = 'api::student.student';
 const DEPENDENT = 'api::dependent.dependent';
 const PLAN = 'api::plan.plan';
 
-function pickRelationId(value: any): number | null {
-  if (value === undefined || value === null) return null;
-  if (typeof value === 'number') return value;
-  if (typeof value === 'object') {
-    return value.id ?? value.connect?.[0]?.id ?? null;
-  }
-  return null;
-}
-
-async function fetchAcademyId(uid: string, id: number): Promise<number | null> {
+async function fetchAcademyId(
+  uid: string,
+  numericId: number,
+): Promise<number | null> {
   const row: any = await strapi.db.query(uid).findOne({
-    where: { id },
+    where: { id: numericId },
     populate: { academy: { select: ['id'] } },
   });
   return row?.academy?.id ?? null;
@@ -39,24 +34,32 @@ async function fetchAcademyId(uid: string, id: number): Promise<number | null> {
 export default {
   async beforeCreate(event: any) {
     const { data } = event.params;
-    const studentId = pickRelationId(data?.student);
-    const dependentId = pickRelationId(data?.dependent);
-    const planId = pickRelationId(data?.plan);
+    const studentRef = pickRelationId(data?.student);
+    const dependentRef = pickRelationId(data?.dependent);
+    const planRef = pickRelationId(data?.plan);
 
-    if (!studentId && !dependentId) {
+    if (!studentRef && !dependentRef) {
       throw new Error('Matrícula requer um aluno ou dependente.');
     }
-    if (studentId && dependentId) {
+    if (studentRef && dependentRef) {
       throw new Error(
         'Matrícula não pode ter aluno e dependente simultaneamente.',
       );
     }
-    if (!planId) return;
+    if (!planRef) return;
 
-    const planAcademy = await fetchAcademyId(PLAN, planId);
-    const subjectAcademy = studentId
-      ? await fetchAcademyId(STUDENT, studentId)
-      : await fetchAcademyId(DEPENDENT, dependentId!);
+    const [planNumeric, subjectNumeric] = await Promise.all([
+      resolveNumericId(PLAN, planRef),
+      studentRef
+        ? resolveNumericId(STUDENT, studentRef)
+        : resolveNumericId(DEPENDENT, dependentRef!),
+    ]);
+    if (!planNumeric || !subjectNumeric) return;
+
+    const [planAcademy, subjectAcademy] = await Promise.all([
+      fetchAcademyId(PLAN, planNumeric),
+      fetchAcademyId(studentRef ? STUDENT : DEPENDENT, subjectNumeric),
+    ]);
 
     if (planAcademy && subjectAcademy && planAcademy !== subjectAcademy) {
       throw new Error(

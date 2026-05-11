@@ -485,6 +485,7 @@ export interface ApiAcademyAcademy extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     logo: Schema.Attribute.Media<'images'>;
+    logoSquare: Schema.Attribute.Media<'images'>;
     name: Schema.Attribute.String & Schema.Attribute.Required;
     phone: Schema.Attribute.String;
     plan: Schema.Attribute.Enumeration<['starter', 'business', 'pro']> &

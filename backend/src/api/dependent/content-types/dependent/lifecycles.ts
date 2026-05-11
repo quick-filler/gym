@@ -1,21 +1,18 @@
 /**
  * Dependent lifecycle hooks.
  *
- * Defense-in-depth: guardian (a Student) and dependent must belong to the
- * same Academy. Guardian validation also fires from the Strapi admin UI,
- * which bypasses the GraphQL resolver checks.
+ * Defense-in-depth:
+ *   1. guardian (a Student) and dependent must belong to the same Academy.
+ *   2. (academy, cpf) é único — mesmo CPF em academias diferentes é
+ *      permitido (multi-tenant SaaS), mas duplicado dentro da mesma
+ *      academia é bloqueado. Roda em GraphQL e na admin UI do Strapi.
  */
 
-const STUDENT = 'api::student.student';
+import { pickRelationId, resolveNumericId } from '../../../../utils/relation';
 
-function pickRelationId(value: any): number | null {
-  if (value === undefined || value === null) return null;
-  if (typeof value === 'number') return value;
-  if (typeof value === 'object') {
-    return value.id ?? value.connect?.[0]?.id ?? null;
-  }
-  return null;
-}
+const UID = 'api::dependent.dependent';
+const STUDENT = 'api::student.student';
+const ACADEMY = 'api::academy.academy';
 
 async function academyOf(uid: string, id: number): Promise<number | null> {
   const row: any = await strapi.db.query(uid).findOne({
@@ -25,33 +22,84 @@ async function academyOf(uid: string, id: number): Promise<number | null> {
   return row?.academy?.id ?? null;
 }
 
+async function findCpfDuplicate(params: {
+  cpf: string;
+  academyId: number;
+  excludeId?: number;
+}): Promise<boolean> {
+  const where: any = {
+    cpf: params.cpf,
+    academy: { id: params.academyId },
+  };
+  if (params.excludeId) where.id = { $ne: params.excludeId };
+  const existing = await strapi.db
+    .query(UID)
+    .findOne({ where, select: ['id'] });
+  return !!existing;
+}
+
 export default {
   async beforeCreate(event: any) {
     const { data } = event.params;
-    const guardianId = pickRelationId(data?.guardian);
-    const academyId = pickRelationId(data?.academy);
+    const guardianRef = pickRelationId(data?.guardian);
+    const academyRef = pickRelationId(data?.academy);
+    const academyId = await resolveNumericId(ACADEMY, academyRef);
+    if (!academyId) return;
 
-    if (!guardianId || !academyId) return;
+    if (guardianRef) {
+      const guardianNumeric = await resolveNumericId(STUDENT, guardianRef);
+      if (guardianNumeric) {
+        const guardianAcademy = await academyOf(STUDENT, guardianNumeric);
+        if (guardianAcademy && guardianAcademy !== academyId) {
+          throw new Error('Responsável (guardian) pertence a outra academia.');
+        }
+      }
+    }
 
-    const guardianAcademy = await academyOf(STUDENT, guardianId);
-    if (guardianAcademy && guardianAcademy !== academyId) {
+    if (data?.cpf && (await findCpfDuplicate({ cpf: data.cpf, academyId }))) {
       throw new Error(
-        'Responsável (guardian) pertence a outra academia.',
+        `Já existe um dependente com o CPF "${data.cpf}" nesta academia.`,
       );
     }
   },
 
   async beforeUpdate(event: any) {
-    const { data } = event.params;
-    const guardianId = pickRelationId(data?.guardian);
-    const academyId = pickRelationId(data?.academy);
-    if (!guardianId || !academyId) return;
+    const { data, where } = event.params;
+    if (!data?.guardian && !data?.academy && !data?.cpf) return;
 
-    const guardianAcademy = await academyOf(STUDENT, guardianId);
-    if (guardianAcademy && guardianAcademy !== academyId) {
-      throw new Error(
-        'Responsável (guardian) pertence a outra academia.',
-      );
+    const current: any = await strapi.db
+      .query(UID)
+      .findOne({ where, populate: { academy: { select: ['id'] } } });
+    if (!current) return;
+
+    const newAcademyId =
+      data?.academy !== undefined
+        ? await resolveNumericId(ACADEMY, pickRelationId(data.academy))
+        : current.academy?.id;
+
+    const guardianRef = pickRelationId(data?.guardian);
+    if (guardianRef && newAcademyId) {
+      const guardianNumeric = await resolveNumericId(STUDENT, guardianRef);
+      if (guardianNumeric) {
+        const guardianAcademy = await academyOf(STUDENT, guardianNumeric);
+        if (guardianAcademy && guardianAcademy !== newAcademyId) {
+          throw new Error('Responsável (guardian) pertence a outra academia.');
+        }
+      }
+    }
+
+    if (data?.cpf && newAcademyId) {
+      if (
+        await findCpfDuplicate({
+          cpf: data.cpf,
+          academyId: newAcademyId,
+          excludeId: current.id,
+        })
+      ) {
+        throw new Error(
+          `Já existe um dependente com o CPF "${data.cpf}" nesta academia.`,
+        );
+      }
     }
   },
 };

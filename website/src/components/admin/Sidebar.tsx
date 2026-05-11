@@ -6,6 +6,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
 import { JWT_STORAGE_KEY } from "@/lib/config";
 import { clearAuthCookies } from "@/lib/auth";
+import { useAcademy, useMe } from "@/lib/hooks";
 
 type NavItem = {
   href: string;
@@ -22,7 +23,8 @@ const PRIMARY: NavItem[] = [
   { href: "/admin/finance", label: "Financeiro", icon: "money" },
   { href: "/admin/dre", label: "DRE / Custos", icon: "trending" },
   { href: "/admin/schedule", label: "Agenda", icon: "calendar" },
-  { href: "/admin/workouts", label: "Treinos", icon: "dumbbell" },
+  { href: "/admin/attendance", label: "Presenças", icon: "check" },
+  { href: "/admin/workouts", label: "Treinos", icon: "heart-pulse" },
 ];
 
 const CONFIG: NavItem[] = [
@@ -32,6 +34,8 @@ const CONFIG: NavItem[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: academy } = useAcademy();
+  const { data: me } = useMe();
 
   function handleLogout() {
     localStorage.removeItem(JWT_STORAGE_KEY);
@@ -39,17 +43,35 @@ export function Sidebar() {
     router.push("/login");
   }
 
+  const academyName = academy?.name ?? "";
+  const academyLogo = academy?.logoSquareUrl ?? academy?.logoUrl ?? null;
+
   return (
     <aside className="fixed top-0 left-0 w-[248px] h-screen bg-ink-900 text-paper flex flex-col border-r border-ink-700 max-[980px]:hidden">
+      {/* Brand stripe — picks up the academy primary so each tenant's
+          color signs the top of the sidebar even though the body stays
+          dark for legibility. */}
+      <div className="h-1 bg-flame shrink-0" aria-hidden />
       <div className="p-6 border-b border-ink-700">
         <div className="flex items-center gap-2 font-display font-bold text-[1.25rem] text-paper">
-          <span className="w-8 h-8 rounded-[9px] bg-flame flex items-center justify-center">
-            <Icon name="dumbbell" />
-          </span>
-          Gym
+          {academyLogo ? (
+            <span className="w-8 h-8 rounded-[9px] overflow-hidden bg-paper-2 flex items-center justify-center shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={academyLogo}
+                alt={academyName}
+                className="w-full h-full object-cover"
+              />
+            </span>
+          ) : (
+            <span className="w-8 h-8 rounded-[9px] bg-flame flex items-center justify-center shrink-0">
+              <Icon name="dumbbell" />
+            </span>
+          )}
+          <span className="truncate">{academyName || "Gym"}</span>
         </div>
         <div className="font-mono text-[0.7rem] uppercase tracking-[0.1em] text-ink-300 mt-3">
-          Gym Demo — Painel
+          {academyName ? `${academyName} — Painel` : "Painel"}
         </div>
       </div>
 
@@ -66,15 +88,17 @@ export function Sidebar() {
       <div className="border-t border-ink-700 p-4">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-3 flex-1 min-w-0 p-2 rounded-xl hover:bg-ink-700/40 transition-colors cursor-pointer">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-flame to-flame-dark flex items-center justify-center font-mono text-[0.78rem] font-semibold text-white shrink-0">
-              GD
-            </div>
+            <UserAvatar
+              photoUrl={me?.photoUrl}
+              initials={me?.initials ?? "?"}
+              name={me?.name ?? ""}
+            />
             <div className="flex-1 min-w-0">
               <div className="text-[0.9rem] font-semibold text-paper truncate">
-                Gym Demo
+                {me?.name ?? ""}
               </div>
               <div className="font-mono text-[0.68rem] uppercase tracking-[0.08em] text-ink-300">
-                Administrador
+                {me?.roleLabel ?? ""}
               </div>
             </div>
           </div>
@@ -89,6 +113,34 @@ export function Sidebar() {
         </div>
       </div>
     </aside>
+  );
+}
+
+function UserAvatar({
+  photoUrl,
+  initials,
+  name,
+}: {
+  photoUrl?: string;
+  initials: string;
+  name: string;
+}) {
+  if (photoUrl) {
+    return (
+      <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-ink-700">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={photoUrl}
+          alt={name}
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
+  return (
+    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-flame to-flame-dark flex items-center justify-center font-mono text-[0.78rem] font-semibold text-white shrink-0">
+      {initials}
+    </div>
   );
 }
 

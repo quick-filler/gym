@@ -97,6 +97,10 @@ export interface StudentRow {
   nextPayment: string; // DD/MM/YYYY
   initials: string;
   avatarColor: string;
+  /** True quando o aluno tem pelo menos uma matrícula com status ativo.
+   *  Opcional só pra os mocks legados não precisarem ser reescritos — o
+   *  consumidor trata `undefined` como "tem plano" (mock implícito). */
+  hasActiveEnrollment?: boolean;
 }
 
 export interface PaymentRow {
@@ -116,16 +120,50 @@ export interface FinanceData {
   charges: PaymentRow[];
 }
 
+export type Modality = "presential" | "online";
+
 export interface ScheduleClass {
   id: string;
+  scheduleDocumentId: string;
   name: string;
   instructor: string;
+  modality: Modality | null;
   weekday: number; // 0 = Sunday
   startTime: string; // "06:00"
   endTime: string; // "07:00"
   booked: number;
   capacity: number;
   color: "ink" | "flame" | "pine";
+}
+
+export interface ScheduleBooking {
+  documentId: string;
+  date: string; // YYYY-MM-DD
+  status: "scheduled" | "confirmed" | "cancelled" | "attended" | "missed";
+  checkedInAt?: string;
+  studentName: string;
+  studentInitials: string;
+  studentPhotoUrl?: string;
+}
+
+export interface DailyAttendanceClass {
+  scheduleDocumentId: string;
+  name: string;
+  instructor: string;
+  room: string;
+  startTime: string;
+  endTime: string;
+  capacity: number | null;
+  bookings: ScheduleBooking[];
+  bookedCount: number;
+  attendedCount: number;
+  missedCount: number;
+}
+
+export interface DailyAttendanceData {
+  date: string; // YYYY-MM-DD
+  weekdayLabel: string;
+  classes: DailyAttendanceClass[];
 }
 
 export interface ScheduleData {
@@ -146,15 +184,31 @@ export interface ScheduleData {
 }
 
 export interface AcademySettings {
+  documentId: string;
   name: string;
   email: string;
   phone: string;
   address: string;
   slug: string; // white-label subdomain
   logoUrl?: string;
+  logoDocumentId?: string;
+  logoSquareUrl?: string;
+  logoSquareDocumentId?: string;
   primaryColor: string;
   secondaryColor: string;
   plan: PlanTier;
+}
+
+export type UserRole = "academy_admin" | "instructor" | "member";
+
+export interface MeProfile {
+  documentId: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  roleLabel: string;
+  photoUrl?: string;
+  initials: string;
 }
 
 /* ============================================================

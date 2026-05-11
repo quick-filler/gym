@@ -1,8 +1,9 @@
 "use client";
 
 import { Topbar } from "@/components/admin/Topbar";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { MetricCard } from "@/components/admin/MetricCard";
+import { HeroCard } from "@/components/admin/HeroCard";
 import { Avatar } from "@/components/admin/Avatar";
 import {
   PaymentMethodLabel,
@@ -24,36 +25,47 @@ export default function DashboardPage() {
           title="Visão geral"
           subtitle="Segunda-feira, 07 de abril de 2026"
           actions={
-            <Button variant="ink" href="/admin/students">
+            <Button variant="primary" href="/admin/students">
               <Icon name="plus" /> Adicionar aluno
             </Button>
           }
         />
 
-        {loading && <div className="text-ink-400">Carregando…</div>}
+        {loading && <LoadingState />}
         {error && <div className="text-rose">{error.message}</div>}
         {data && (
           <>
             <div className="grid grid-cols-4 gap-5 max-[880px]:grid-cols-2 max-[540px]:grid-cols-1">
-              {data.metrics.map((metric) => (
-                <MetricCard
-                  key={metric.id}
-                  metric={metric}
-                  icon={
-                    <Icon
-                      name={
-                        metric.id === "students"
-                          ? "users"
-                          : metric.id === "mrr"
-                            ? "money"
-                            : metric.id === "overdue"
-                              ? "chart"
-                              : "calendar"
-                      }
-                    />
-                  }
-                />
-              ))}
+              {data.metrics.map((metric, idx) => {
+                const iconName =
+                  metric.id === "students"
+                    ? "users"
+                    : metric.id === "mrr"
+                      ? "money"
+                      : metric.id === "overdue"
+                        ? "chart"
+                        : "calendar";
+                return (
+                  <HeroCard
+                    key={metric.id}
+                    variant={idx % 2 === 0 ? "primary" : "secondary"}
+                    label={metric.label}
+                    value={metric.value}
+                    icon={iconName}
+                  >
+                    {metric.delta && (
+                      <div className="text-[0.82rem] mt-2 text-white/90 relative">
+                        {metric.delta.trend === "up"
+                          ? "↑"
+                          : metric.delta.trend === "down"
+                            ? "↓"
+                            : "→"}{" "}
+                        {metric.delta.value}
+                      </div>
+                    )}
+                  </HeroCard>
+                );
+              })}
             </div>
 
             <div className="grid grid-cols-[1.5fr_1fr] gap-5 mt-8 max-[980px]:grid-cols-1">
@@ -130,36 +142,25 @@ export default function DashboardPage() {
                 <p className="font-mono text-[0.7rem] uppercase tracking-[0.1em] text-ink-400 mb-5">
                   {data.todayClasses.length} turmas programadas
                 </p>
-                <div className="flex flex-col gap-3">
-                  {data.todayClasses.map((cls) => {
-                    const fill = Math.round((cls.booked / cls.capacity) * 100);
-                    return (
-                      <div
-                        key={cls.id}
-                        className="p-3 rounded-xl border border-line bg-paper-50"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="font-semibold text-[0.88rem] text-ink-900 truncate">
-                              {cls.name}
-                            </div>
-                            <div className="text-[0.76rem] text-ink-400">
-                              {cls.instructor} · {cls.time}
-                            </div>
-                          </div>
-                          <div className="font-mono text-[0.78rem] text-ink-700 shrink-0">
-                            {cls.booked}/{cls.capacity}
-                          </div>
+                <div className="flex flex-col">
+                  {data.todayClasses.map((cls) => (
+                    <div
+                      key={cls.id}
+                      className="flex items-center justify-between gap-3 py-3 border-b border-line/60 last:border-b-0"
+                    >
+                      <div className="min-w-0">
+                        <div className="font-semibold text-[0.88rem] text-ink-900 truncate">
+                          {cls.name}
                         </div>
-                        <div className="h-[3px] bg-paper-3 rounded-full mt-2 overflow-hidden">
-                          <div
-                            className="h-full bg-flame rounded-full"
-                            style={{ width: `${fill}%` }}
-                          />
+                        <div className="font-mono text-[0.72rem] text-ink-400 mt-0.5">
+                          {cls.instructor} · {cls.time}
                         </div>
                       </div>
-                    );
-                  })}
+                      <div className="font-mono text-[0.78rem] text-ink-700 shrink-0">
+                        {cls.booked}/{cls.capacity}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </Card>
             </div>

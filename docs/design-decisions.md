@@ -215,6 +215,61 @@ right below. We want the history, not a clean slate.
   propagate. Then the bootstrap has to do a diff-based upsert, and we
   should use `config-sync` as the transport instead.
 
+### 2.6 Direct-to-S3 uploads via presigned PUT URLs (bypass `/api/upload`)
+
+- **Decision** — The admin's logo upload (and the pattern for future
+  uploads) uses a 3-step flow: `Mutation.mintUploadUrl` returns a
+  presigned PUT URL → browser PUTs the bytes directly to S3 →
+  `Mutation.confirmUpload` HEADs the public URL and creates the
+  `plugin::upload.file` record. The bytes never pass through the
+  backend container. Implementation lives in
+  `backend/src/lib/s3-presign.ts` +
+  `backend/src/extensions/graphql/types/upload.ts`.
+- **Context** — Strapi's `/api/upload` endpoint streams the file
+  through the backend before forwarding it to S3. For a logo (~100 KB
+  uploaded once per academy) this is fine, but the gym is meant to
+  scale to student photos, medical documents, comprovantes, etc. —
+  uploads where backend bandwidth and memory matter. Pattern is
+  ported from `quickfiller-strapi-api`'s `getUploadURL` controller
+  (REST) and `myCreate` document service.
+- **Rationale** — Three goals at once:
+  1. Backend never touches bytes — the API container's bandwidth/CPU
+     stays free for the actual data plane.
+  2. Performance — 1 hop (browser → S3) vs 2 hops (browser → backend
+     → S3), measurable on slow connections.
+  3. Architectural clarity — when more upload sites land (student
+     photos, comprovantes, attachments) the same `mintUploadUrl` /
+     `confirmUpload` mutations are reused; we don't grow a parallel
+     POST surface for each.
+  GraphQL (vs REST as in quickfiller) was chosen for consistency —
+  the gym already enforces "GraphQL is the only data API" (§3.1).
+  The path scheme `academies/<slug>/<nanoid(64)>.<ext>` derives the
+  slug **server-side from the JWT**, never from the client, so a
+  malicious caller can't drop files in another tenant's prefix.
+  ACL `public-read` matches the use case (logos referenced from
+  public `<img>` tags); `confirmUpload` re-validates mime/size via
+  HEAD instead of trusting the client.
+- **Consequences** —
+  - The bucket needs a CORS rule allowing PUT + `Content-Type` from
+    the website origin. Without it the browser blocks the upload.
+  - Some providers (AWS S3 since 2023) block ACLs by default; we
+    rely on `public-read` and need to ensure ACLs are enabled OR
+    swap to a bucket policy of public-read on the prefix.
+  - The legacy `/api/upload` endpoint stays available (Strapi admin
+    UI still uses it for direct CMS uploads) but the website's
+    `lib/upload.ts` no longer calls it.
+  - We lose Strapi's automatic image variant generation
+    (thumbnail/small/medium via `sharp`). For logos that doesn't
+    matter; for student photos at scale we may need to reintroduce
+    a server-side resize step (probably as a worker triggered after
+    `confirmUpload`).
+- **Revisit when** —
+  - We need image variants again (responsive `srcset` for big
+    photos) — add a post-confirm worker, don't go back to the POST
+    flow.
+  - We add private uploads (medical PDFs) — replace ACL public-read
+    with presigned GET URLs at read time.
+
 ---
 
 ## 3. GraphQL API
@@ -493,6 +548,53 @@ right below. We want the history, not a clean slate.
   color use Tailwind utilities.
 - **Revisit when** — Tailwind v4's config story changes again, or we
   hit a token we can't express with `@theme`.
+
+### 4.10 Bulk student import — XLSX parsing in the browser, GraphQL mutation, structured Address
+
+- **Decision** — The "import alunos por planilha" feature parses the
+  `.xlsx` in the admin's browser (via `xlsx`/sheetjs lazy-imported in
+  the page chunk), shows a preview table, and ships the cleaned rows
+  to a single `bulkImportStudents` GraphQL mutation. Address is a
+  structured `Address` object type (cep/street/number/complement/
+  neighborhood/city/state/type) — not a `JSON` scalar.
+- **Context** — The user provided a real spreadsheet
+  (`plan_cadstro aluno.xlsx`) with `prospect_*`, `responsavel_*`, and
+  `endereco_*` columns. The earlier v2 plan in `backend/CLAUDE.md`
+  sketched REST endpoints (`POST /api/imports/students/upload`) that
+  would parse the file server-side.
+- **Rationale**:
+  - **Parse in the browser** — Skips a multipart upload route
+    (Strapi REST), keeps the backend surface GraphQL-only per §3.1,
+    and lets the preview step iterate on the in-memory matrix
+    without network round-trips. The cost is shipping `xlsx` to the
+    admin bundle, mitigated by `await import('xlsx')` so it only
+    loads when the user opens `/admin/students/import`.
+  - **Single GraphQL mutation** — `bulkImportStudents(rows: [...])`
+    fits the existing `Frontend → GraphQL` rule (root CLAUDE.md §4)
+    and reuses Apollo's auth + cache. Each row reports its own
+    success/skip/error in the result so a partial batch never wedges
+    the whole import.
+  - **Structured Address** — Other JSON fields on the schema
+    (`Plan.features`, `WorkoutPlan.exercises`,
+    `BodyAssessment.measurements`) all use named object types via
+    Nexus, not the bare `JSON` scalar. Following the same convention
+    keeps the schema introspectable, codegen-friendly, and prevents
+    each frontend from inventing its own address shape.
+- **Consequences** — `Student` and `Dependent` get `cpf` (regex'd to
+  11 digits), `address` (Address), and (Student only) `gender`.
+  Detection of "adult vs family" is heuristic: rows where
+  `responsavel_nome` is empty or matches `prospect_nome` are adult
+  Students; otherwise the prospect becomes a Dependent and the
+  responsável a Student with `isGuardian = true`. Duplicate detection
+  is `(academy, cpf)` with email fallback for adults and
+  `(guardian, name+birthdate)` fallback for dependents — duplicates
+  are skipped (not updated) and reported per row in the result.
+- **Revisit when** — (a) we need server-side scheduling of large
+  imports (>10k rows) — at that point the browser parser becomes a
+  liability and we move to a multipart REST upload + background job;
+  (b) duplicate handling needs an "update existing" mode — extend
+  the mutation arg from a boolean `dryRun` to an enum
+  `mode: SKIP | UPDATE | OVERWRITE`.
 
 ---
 
@@ -1277,3 +1379,10 @@ Explicit no's so we don't re-argue them.
   `lucide-react`. Marked §5.2 (NativeWind) as SUPERSEDED and added
   §5.6 (plain `StyleSheet` + shared `lib/theme.ts`) and §5.7
   (`lucide-react-native` for icons, no emoji).
+- **2026-05-11** — Added §4.10 covering the bulk student import
+  (`/admin/students/import`): browser-side `xlsx` parsing,
+  `bulkImportStudents` GraphQL mutation, and the structured `Address`
+  object type. Extended `Student` and `Dependent` schemas with `cpf`
+  (regex-validated, 11 digits), `address`, and `gender` (Student
+  only). Detection of adult-vs-family is heuristic on
+  `responsavel_nome` vs `prospect_nome`.

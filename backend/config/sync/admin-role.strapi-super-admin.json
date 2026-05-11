@@ -6,7 +6,7 @@
   "locale": null,
   "permissions": [
     {
-      "documentId": "y0hl3nkynuf89fsi2pkrq8vw",
+      "documentId": "h2xsbar8yqf64kjiz6x57yrk",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::academy.academy",
@@ -15,6 +15,7 @@
           "name",
           "slug",
           "logo",
+          "logoSquare",
           "primaryColor",
           "secondaryColor",
           "plan",
@@ -56,7 +57,7 @@
       "locale": null
     },
     {
-      "documentId": "qjm3serbuojcffbzs2w4yt1z",
+      "documentId": "sw4382hkwphu4hg0kmsald9l",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::academy.academy",
@@ -65,6 +66,7 @@
           "name",
           "slug",
           "logo",
+          "logoSquare",
           "primaryColor",
           "secondaryColor",
           "plan",
@@ -88,7 +90,7 @@
       "locale": null
     },
     {
-      "documentId": "m9yw63nlek4wsv1uvpf65l8w",
+      "documentId": "koid54i0ca5swfn2omcnf1xw",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::academy.academy",
@@ -97,6 +99,7 @@
           "name",
           "slug",
           "logo",
+          "logoSquare",
           "primaryColor",
           "secondaryColor",
           "plan",
@@ -1121,6 +1124,60 @@
           "isActive"
         ]
       },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "z0v7rslmtpqclf6fpwxcualc",
+      "action": "admin::admin-tokens.access",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "wcvdggyfe6oodmhl1bzsn9ov",
+      "action": "admin::admin-tokens.create",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "ck7a9eqdlz4jqxaulfg0e3kk",
+      "action": "admin::admin-tokens.delete",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "d1xd254cxfjfevapi8igqgb4",
+      "action": "admin::admin-tokens.read",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "d6d562tksi3fvyfr63hoc9id",
+      "action": "admin::admin-tokens.regenerate",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "m3maji6mcd83rvavkbmgin95",
+      "action": "admin::admin-tokens.update",
+      "actionParameters": {},
+      "subject": null,
+      "properties": {},
       "conditions": [],
       "locale": null
     },

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useApolloClient } from "@apollo/client/react";
+import { useApolloClient, useMutation } from "@apollo/client/react";
 import { Topbar } from "@/components/admin/Topbar";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -10,10 +11,33 @@ import { Icon } from "@/components/ui/Icon";
 import { Pill } from "@/components/ui/Pill";
 import { cn } from "@/lib/utils";
 import type { WorkoutPlanCard, WorkoutTab } from "@/lib/types";
-import { useWorkouts } from "@/lib/hooks";
+import {
+  DELETE_WORKOUT_PLAN,
+  UPDATE_WORKOUT_PLAN,
+  WORKOUT_PLAN_BY_ID,
+  useWorkouts,
+} from "@/lib/hooks";
+import { graphql } from "@/gql";
+import { USE_MOCKS } from "@/lib/config";
 import { NewWorkoutDialog } from "./NewWorkoutDialog";
+import { EditWorkoutDialog } from "./EditWorkoutDialog";
 
-function WorkoutCard({ plan }: { plan: WorkoutPlanCard }) {
+interface CardActions {
+  onEdit: (id: string) => void;
+  onDuplicate: (id: string) => void;
+  onArchiveToggle: (id: string, currentlyActive: boolean) => void;
+  onDelete: (id: string) => void;
+  busyId: string | null;
+}
+
+function WorkoutCard({
+  plan,
+  actions,
+}: {
+  plan: WorkoutPlanCard;
+  actions: CardActions;
+}) {
+  const busy = actions.busyId === plan.id;
   return (
     <Card className="p-0 overflow-hidden flex flex-col">
       <div className="flex items-center gap-3.5 p-5 border-b border-line">
@@ -63,18 +87,52 @@ function WorkoutCard({ plan }: { plan: WorkoutPlanCard }) {
         ))}
       </div>
 
-      <div className="flex items-center gap-2 p-4 border-t border-line bg-paper-50">
-        <button className="font-mono text-[0.72rem] uppercase tracking-[0.08em] font-semibold text-white bg-ink-900 hover:bg-ink-700 transition-colors px-3 py-2 rounded-lg">
+      <div className="flex items-center gap-2 p-4 border-t border-line bg-paper-50 flex-wrap">
+        <button
+          type="button"
+          onClick={() => actions.onEdit(plan.id)}
+          disabled={busy}
+          className="font-mono text-[0.72rem] uppercase tracking-[0.08em] font-semibold text-white bg-ink-900 hover:bg-ink-700 transition-colors px-3 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           Editar
         </button>
-        <button className="font-mono text-[0.72rem] uppercase tracking-[0.08em] font-semibold text-ink-900 border border-ink-900 hover:bg-ink-900 hover:text-paper transition-colors px-3 py-2 rounded-lg">
+        <button
+          type="button"
+          onClick={() => actions.onDuplicate(plan.id)}
+          disabled={busy}
+          className="font-mono text-[0.72rem] uppercase tracking-[0.08em] font-semibold text-ink-900 border border-ink-900 hover:bg-ink-900 hover:text-paper transition-colors px-3 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           Duplicar
         </button>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
           {plan.status === "active" ? (
             <Pill tone="emerald">ATIVO</Pill>
           ) : (
             <Pill tone="ink">ARQUIVADO</Pill>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              actions.onArchiveToggle(plan.id, plan.status === "active")
+            }
+            disabled={busy}
+            title={plan.status === "active" ? "Arquivar" : "Restaurar"}
+            aria-label={plan.status === "active" ? "Arquivar" : "Restaurar"}
+            className="w-9 h-9 rounded-lg text-ink-500 hover:text-ink-900 hover:bg-paper-2 inline-flex items-center justify-center transition-colors disabled:opacity-50"
+          >
+            <Icon name={plan.status === "active" ? "download" : "upload"} />
+          </button>
+          {plan.status === "archived" && (
+            <button
+              type="button"
+              onClick={() => actions.onDelete(plan.id)}
+              disabled={busy}
+              title="Excluir definitivamente"
+              aria-label="Excluir"
+              className="w-9 h-9 rounded-lg text-rose hover:bg-rose/10 inline-flex items-center justify-center transition-colors disabled:opacity-50"
+            >
+              <Icon name="trash" />
+            </button>
           )}
         </div>
       </div>
@@ -82,12 +140,102 @@ function WorkoutCard({ plan }: { plan: WorkoutPlanCard }) {
   );
 }
 
+const CREATE_WORKOUT_PLAIN = graphql(`
+  mutation AdminDuplicateWorkoutPlan($data: WorkoutPlanInput!) {
+    createWorkoutPlan(data: $data) {
+      documentId
+      name
+    }
+  }
+`);
+
 export default function WorkoutsPage() {
   const { data, loading, error } = useWorkouts();
   const [activeTab, setActiveTab] = useState<WorkoutTab>("active");
   const [query, setQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const apollo = useApolloClient();
+
+  const refetch = () => apollo.refetchQueries({ include: ["AdminWorkouts"] });
+
+  const [updateWorkout] = useMutation(UPDATE_WORKOUT_PLAN, {
+    refetchQueries: ["AdminWorkouts"],
+  });
+  const [deleteWorkout] = useMutation(DELETE_WORKOUT_PLAN, {
+    refetchQueries: ["AdminWorkouts"],
+  });
+  const [createWorkout] = useMutation(CREATE_WORKOUT_PLAIN, {
+    refetchQueries: ["AdminWorkouts"],
+  });
+
+  async function handleArchiveToggle(id: string, currentlyActive: boolean) {
+    if (USE_MOCKS) return; // mock contract
+    setBusyId(id);
+    try {
+      await updateWorkout({
+        variables: { documentId: id, data: { isActive: !currentlyActive } },
+      });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (
+      !window.confirm(
+        "Excluir esta ficha definitivamente? A ação não pode ser desfeita.",
+      )
+    )
+      return;
+    if (USE_MOCKS) return;
+    setBusyId(id);
+    try {
+      await deleteWorkout({ variables: { documentId: id } });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleDuplicate(id: string) {
+    if (USE_MOCKS) return;
+    setBusyId(id);
+    try {
+      // Pull the full source so we copy exercises/notes verbatim — the
+      // listing query doesn't include `notes`.
+      const result = await apollo.query({
+        query: WORKOUT_PLAN_BY_ID,
+        variables: { documentId: id },
+        fetchPolicy: "network-only",
+      });
+      const src = result.data?.workoutPlan;
+      if (!src || !src.student?.documentId) return;
+      await createWorkout({
+        variables: {
+          data: {
+            name: `Cópia de ${src.name ?? "Ficha"}`,
+            instructor: src.instructor ?? undefined,
+            student: src.student.documentId,
+            validFrom:
+              src.validFrom ?? new Date().toISOString().slice(0, 10),
+            isActive: true,
+            exercises: (src.exercises ?? [])
+              .filter((e): e is NonNullable<typeof e> => !!e)
+              .map((e) => ({
+                name: e.name ?? "",
+                sets: e.sets ?? 0,
+                reps: e.reps ?? 0,
+                load: e.load ?? "—",
+                notes: e.notes ?? undefined,
+              })),
+          },
+        },
+      });
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   const visibleCards = (data?.cards ?? []).filter((c) => {
     const tabMatch =
@@ -98,6 +246,14 @@ export default function WorkoutsPage() {
       c.instructorName.toLowerCase().includes(query.toLowerCase());
     return tabMatch && queryMatch;
   });
+
+  const cardActions: CardActions = {
+    onEdit: (id) => setEditingId(id),
+    onDuplicate: handleDuplicate,
+    onArchiveToggle: handleArchiveToggle,
+    onDelete: handleDelete,
+    busyId,
+  };
 
   return (
     <>
@@ -112,13 +268,13 @@ export default function WorkoutsPage() {
           title="Fichas de treino"
           subtitle={data?.subtitle}
           actions={
-            <Button variant="ink" onClick={() => setDialogOpen(true)}>
+            <Button variant="primary" onClick={() => setDialogOpen(true)}>
               <Icon name="plus" /> Nova ficha
             </Button>
           }
         />
 
-        {loading && <div className="text-ink-400">Carregando…</div>}
+        {loading && <LoadingState />}
         {error && <div className="text-rose">{error.message}</div>}
 
         {data && (
@@ -170,7 +326,11 @@ export default function WorkoutsPage() {
             {activeTab !== "assessments" && visibleCards.length > 0 && (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5 max-[720px]:grid-cols-1">
                 {visibleCards.map((plan) => (
-                  <WorkoutCard key={plan.id} plan={plan} />
+                  <WorkoutCard
+                    key={plan.id}
+                    plan={plan}
+                    actions={cardActions}
+                  />
                 ))}
               </div>
             )}
@@ -180,9 +340,12 @@ export default function WorkoutsPage() {
         <NewWorkoutDialog
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}
-          onCreated={() =>
-            apollo.refetchQueries({ include: ["AdminWorkouts"] })
-          }
+          onCreated={refetch}
+        />
+        <EditWorkoutDialog
+          documentId={editingId}
+          onClose={() => setEditingId(null)}
+          onUpdated={refetch}
         />
       </main>
     </>

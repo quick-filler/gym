@@ -9,13 +9,16 @@
 
 import type {
   AcademySettings,
+  DailyAttendanceData,
   DREData,
   DashboardData,
   FinanceData,
   GuardianFamily,
+  MeProfile,
   MembershipPlan,
   PlansData,
   PricingPlan,
+  ScheduleBooking,
   ScheduleData,
   StudentRow,
   WorkoutsData,
@@ -470,36 +473,115 @@ export const MOCK_SCHEDULE: ScheduleData = {
   ],
   classes: [
     // Monday (1)
-    { id: "m1", name: "CrossFit 06h", instructor: "Carol M.", weekday: 1, startTime: "06:00", endTime: "07:00", booked: 18, capacity: 20, color: "flame" },
-    { id: "m2", name: "Musculação", instructor: "Rafael P.", weekday: 1, startTime: "08:00", endTime: "10:00", booked: 24, capacity: 30, color: "ink" },
-    { id: "m3", name: "Yoga flow", instructor: "Laura B.", weekday: 1, startTime: "18:30", endTime: "19:30", booked: 12, capacity: 14, color: "pine" },
-    { id: "m4", name: "HIIT", instructor: "Guilherme S.", weekday: 1, startTime: "19:30", endTime: "20:30", booked: 19, capacity: 22, color: "flame" },
+    { id: "m1", scheduleDocumentId: "mock-m1", modality: "presential", name: "CrossFit 06h", instructor: "Carol M.", weekday: 1, startTime: "06:00", endTime: "07:00", booked: 18, capacity: 20, color: "flame" },
+    { id: "m1b", scheduleDocumentId: "mock-m1b", modality: "presential", name: "Funcional 06h", instructor: "Pedro A.", weekday: 1, startTime: "06:00", endTime: "07:00", booked: 9, capacity: 12, color: "pine" },
+    { id: "m2", scheduleDocumentId: "mock-m2", modality: "presential", name: "Musculação", instructor: "Rafael P.", weekday: 1, startTime: "08:00", endTime: "10:00", booked: 24, capacity: 30, color: "ink" },
+    { id: "m3", scheduleDocumentId: "mock-m3", modality: "presential", name: "Yoga flow", instructor: "Laura B.", weekday: 1, startTime: "18:30", endTime: "19:30", booked: 12, capacity: 14, color: "pine" },
+    { id: "m4", scheduleDocumentId: "mock-m4", modality: "presential", name: "HIIT", instructor: "Guilherme S.", weekday: 1, startTime: "19:30", endTime: "20:30", booked: 19, capacity: 22, color: "flame" },
 
     // Tuesday (2)
-    { id: "t1", name: "CrossFit 06h", instructor: "Carol M.", weekday: 2, startTime: "06:00", endTime: "07:00", booked: 20, capacity: 20, color: "flame" },
-    { id: "t2", name: "Musculação", instructor: "Rafael P.", weekday: 2, startTime: "08:00", endTime: "10:00", booked: 22, capacity: 30, color: "ink" },
-    { id: "t3", name: "Funcional", instructor: "Pedro A.", weekday: 2, startTime: "17:00", endTime: "18:00", booked: 14, capacity: 18, color: "pine" },
-    { id: "t4", name: "HIIT", instructor: "Guilherme S.", weekday: 2, startTime: "19:30", endTime: "20:30", booked: 20, capacity: 22, color: "flame" },
+    { id: "t1", scheduleDocumentId: "mock-t1", modality: "presential", name: "CrossFit 06h", instructor: "Carol M.", weekday: 2, startTime: "06:00", endTime: "07:00", booked: 20, capacity: 20, color: "flame" },
+    { id: "t2", scheduleDocumentId: "mock-t2", modality: "presential", name: "Musculação", instructor: "Rafael P.", weekday: 2, startTime: "08:00", endTime: "10:00", booked: 22, capacity: 30, color: "ink" },
+    { id: "t3", scheduleDocumentId: "mock-t3", modality: "presential", name: "Funcional", instructor: "Pedro A.", weekday: 2, startTime: "17:00", endTime: "18:00", booked: 14, capacity: 18, color: "pine" },
+    { id: "t4", scheduleDocumentId: "mock-t4", modality: "presential", name: "HIIT", instructor: "Guilherme S.", weekday: 2, startTime: "19:30", endTime: "20:30", booked: 20, capacity: 22, color: "flame" },
 
     // Wednesday (3)
-    { id: "w1", name: "CrossFit 06h", instructor: "Carol M.", weekday: 3, startTime: "06:00", endTime: "07:00", booked: 17, capacity: 20, color: "flame" },
-    { id: "w2", name: "Musculação", instructor: "Rafael P.", weekday: 3, startTime: "08:00", endTime: "10:00", booked: 26, capacity: 30, color: "ink" },
-    { id: "w3", name: "Yoga flow", instructor: "Laura B.", weekday: 3, startTime: "18:30", endTime: "19:30", booked: 13, capacity: 14, color: "pine" },
+    { id: "w1", scheduleDocumentId: "mock-w1", modality: "presential", name: "CrossFit 06h", instructor: "Carol M.", weekday: 3, startTime: "06:00", endTime: "07:00", booked: 17, capacity: 20, color: "flame" },
+    { id: "w2", scheduleDocumentId: "mock-w2", modality: "presential", name: "Musculação", instructor: "Rafael P.", weekday: 3, startTime: "08:00", endTime: "10:00", booked: 26, capacity: 30, color: "ink" },
+    { id: "w3", scheduleDocumentId: "mock-w3", modality: "online", name: "Yoga flow (live)", instructor: "Laura B.", weekday: 3, startTime: "18:30", endTime: "19:30", booked: 13, capacity: 14, color: "pine" },
 
     // Thursday (4)
-    { id: "th1", name: "CrossFit 06h", instructor: "Carol M.", weekday: 4, startTime: "06:00", endTime: "07:00", booked: 19, capacity: 20, color: "flame" },
-    { id: "th2", name: "Musculação", instructor: "Rafael P.", weekday: 4, startTime: "08:00", endTime: "10:00", booked: 24, capacity: 30, color: "ink" },
-    { id: "th3", name: "Funcional", instructor: "Pedro A.", weekday: 4, startTime: "17:00", endTime: "18:00", booked: 16, capacity: 18, color: "pine" },
-    { id: "th4", name: "HIIT", instructor: "Guilherme S.", weekday: 4, startTime: "19:30", endTime: "20:30", booked: 21, capacity: 22, color: "flame" },
+    { id: "th1", scheduleDocumentId: "mock-th1", modality: "presential", name: "CrossFit 06h", instructor: "Carol M.", weekday: 4, startTime: "06:00", endTime: "07:00", booked: 19, capacity: 20, color: "flame" },
+    { id: "th2", scheduleDocumentId: "mock-th2", modality: "presential", name: "Musculação", instructor: "Rafael P.", weekday: 4, startTime: "08:00", endTime: "10:00", booked: 24, capacity: 30, color: "ink" },
+    { id: "th3", scheduleDocumentId: "mock-th3", modality: "presential", name: "Funcional", instructor: "Pedro A.", weekday: 4, startTime: "17:00", endTime: "18:00", booked: 16, capacity: 18, color: "pine" },
+    { id: "th4", scheduleDocumentId: "mock-th4", modality: "presential", name: "HIIT", instructor: "Guilherme S.", weekday: 4, startTime: "19:30", endTime: "20:30", booked: 21, capacity: 22, color: "flame" },
 
     // Friday (5)
-    { id: "f1", name: "CrossFit 06h", instructor: "Carol M.", weekday: 5, startTime: "06:00", endTime: "07:00", booked: 18, capacity: 20, color: "flame" },
-    { id: "f2", name: "Musculação", instructor: "Rafael P.", weekday: 5, startTime: "08:00", endTime: "10:00", booked: 23, capacity: 30, color: "ink" },
-    { id: "f3", name: "Yoga flow", instructor: "Laura B.", weekday: 5, startTime: "18:30", endTime: "19:30", booked: 14, capacity: 14, color: "pine" },
+    { id: "f1", scheduleDocumentId: "mock-f1", modality: "presential", name: "CrossFit 06h", instructor: "Carol M.", weekday: 5, startTime: "06:00", endTime: "07:00", booked: 18, capacity: 20, color: "flame" },
+    { id: "f2", scheduleDocumentId: "mock-f2", modality: "presential", name: "Musculação", instructor: "Rafael P.", weekday: 5, startTime: "08:00", endTime: "10:00", booked: 23, capacity: 30, color: "ink" },
+    { id: "f3", scheduleDocumentId: "mock-f3", modality: "online", name: "Yoga flow (live)", instructor: "Laura B.", weekday: 5, startTime: "18:30", endTime: "19:30", booked: 14, capacity: 14, color: "pine" },
 
     // Saturday (6)
-    { id: "sa1", name: "Open gym", instructor: "Rafael P.", weekday: 6, startTime: "09:00", endTime: "12:00", booked: 30, capacity: 40, color: "ink" },
-    { id: "sa2", name: "CrossFit comp.", instructor: "Carol M.", weekday: 6, startTime: "10:00", endTime: "11:30", booked: 16, capacity: 18, color: "flame" },
+    { id: "sa1", scheduleDocumentId: "mock-sa1", modality: "presential", name: "Open gym", instructor: "Rafael P.", weekday: 6, startTime: "09:00", endTime: "12:00", booked: 30, capacity: 40, color: "ink" },
+    { id: "sa2", scheduleDocumentId: "mock-sa2", modality: "presential", name: "CrossFit comp.", instructor: "Carol M.", weekday: 6, startTime: "10:00", endTime: "11:30", booked: 16, capacity: 18, color: "flame" },
+  ],
+};
+
+/**
+ * Mock bookings, indexed by `scheduleDocumentId` so the drawer can show
+ * a plausible attendance roster without a backend. Date is intentionally
+ * omitted — mock mode shows the same list regardless of which day was
+ * clicked, since the rules-of-mocks contract is "in-shape data, not real data".
+ */
+export const MOCK_SCHEDULE_BOOKINGS: Record<string, ScheduleBooking[]> = {
+  "mock-m1": [
+    { documentId: "b-m1-1", date: "2026-04-06", status: "attended", checkedInAt: "2026-04-06T06:02:11Z", studentName: "Ana Costa", studentInitials: "AC" },
+    { documentId: "b-m1-2", date: "2026-04-06", status: "confirmed", studentName: "Bruno Lima", studentInitials: "BL" },
+    { documentId: "b-m1-3", date: "2026-04-06", status: "confirmed", studentName: "Carla Souza", studentInitials: "CS" },
+    { documentId: "b-m1-4", date: "2026-04-06", status: "missed", studentName: "Diego Reis", studentInitials: "DR" },
+  ],
+  "mock-m2": [
+    { documentId: "b-m2-1", date: "2026-04-06", status: "attended", checkedInAt: "2026-04-06T08:05:00Z", studentName: "Eduardo Martins", studentInitials: "EM" },
+    { documentId: "b-m2-2", date: "2026-04-06", status: "confirmed", studentName: "Fernanda Pires", studentInitials: "FP" },
+  ],
+};
+
+/**
+ * Mock daily attendance — one weekday's worth of classes plus rosters.
+ * The `date` is ignored in the hook (always overlaid with the picked
+ * date), so the same fixture serves any selected day in mock mode.
+ */
+export const MOCK_DAILY_ATTENDANCE: DailyAttendanceData = {
+  date: "2026-04-06",
+  weekdayLabel: "Segunda-feira",
+  classes: [
+    {
+      scheduleDocumentId: "mock-m1",
+      name: "CrossFit 06h",
+      instructor: "Carol M.",
+      room: "Sala 1",
+      startTime: "06:00",
+      endTime: "07:00",
+      capacity: 20,
+      bookedCount: 4,
+      attendedCount: 1,
+      missedCount: 1,
+      bookings: [
+        { documentId: "b-m1-1", date: "2026-04-06", status: "attended", checkedInAt: "2026-04-06T06:02:11Z", studentName: "Ana Costa", studentInitials: "AC" },
+        { documentId: "b-m1-2", date: "2026-04-06", status: "confirmed", studentName: "Bruno Lima", studentInitials: "BL" },
+        { documentId: "b-m1-3", date: "2026-04-06", status: "confirmed", studentName: "Carla Souza", studentInitials: "CS" },
+        { documentId: "b-m1-4", date: "2026-04-06", status: "missed", studentName: "Diego Reis", studentInitials: "DR" },
+      ],
+    },
+    {
+      scheduleDocumentId: "mock-m2",
+      name: "Musculação",
+      instructor: "Rafael P.",
+      room: "Sala principal",
+      startTime: "08:00",
+      endTime: "10:00",
+      capacity: 30,
+      bookedCount: 2,
+      attendedCount: 1,
+      missedCount: 0,
+      bookings: [
+        { documentId: "b-m2-1", date: "2026-04-06", status: "attended", checkedInAt: "2026-04-06T08:05:00Z", studentName: "Eduardo Martins", studentInitials: "EM" },
+        { documentId: "b-m2-2", date: "2026-04-06", status: "confirmed", studentName: "Fernanda Pires", studentInitials: "FP" },
+      ],
+    },
+    {
+      scheduleDocumentId: "mock-m3",
+      name: "Yoga flow",
+      instructor: "Laura B.",
+      room: "Sala de meditação",
+      startTime: "18:30",
+      endTime: "19:30",
+      capacity: 14,
+      bookedCount: 0,
+      attendedCount: 0,
+      missedCount: 0,
+      bookings: [],
+    },
   ],
 };
 
@@ -508,6 +590,7 @@ export const MOCK_SCHEDULE: ScheduleData = {
    ============================================================ */
 
 export const MOCK_ACADEMY: AcademySettings = {
+  documentId: "mock-academy",
   name: "Gym Demo",
   email: "contato@gymdemo.com.br",
   phone: "(11) 4002-8922",
@@ -516,6 +599,15 @@ export const MOCK_ACADEMY: AcademySettings = {
   primaryColor: "#e8551c",
   secondaryColor: "#0f766e",
   plan: "business",
+};
+
+export const MOCK_ME: MeProfile = {
+  documentId: "mock-me",
+  name: "Ana Costa",
+  email: "ana@gymdemo.com.br",
+  role: "academy_admin",
+  roleLabel: "Administrador",
+  initials: "AC",
 };
 
 /* ============================================================

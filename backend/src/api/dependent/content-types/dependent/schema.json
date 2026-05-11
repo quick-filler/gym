@@ -20,6 +20,13 @@
       "type": "date",
       "required": true
     },
+    "cpf": {
+      "type": "string",
+      "regex": "^[0-9]{11}$"
+    },
+    "address": {
+      "type": "json"
+    },
     "photo": {
       "type": "media",
       "multiple": false,

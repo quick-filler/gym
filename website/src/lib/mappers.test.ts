@@ -251,7 +251,31 @@ describe('mapStudents', () => {
     expect(rows[0]!.plan).toBe('—');
     expect(rows[0]!.paymentMethod).toBe('pix');
     expect(rows[0]!.nextPayment).toBe('—');
-    expect(rows[0]!.planPrice).toBe('R$ 0,00');
+    // planPrice agora vira "—" quando não há matrícula — destaca melhor
+    // o estado "sem plano" na tabela e combina com a pill de atalho.
+    expect(rows[0]!.planPrice).toBe('—');
+    expect(rows[0]!.hasActiveEnrollment).toBe(false);
+  });
+
+  it('marca hasActiveEnrollment quando há enrollment ativa', () => {
+    const rows = mapStudents([
+      {
+        documentId: 's2',
+        name: 'Com plano',
+        email: 'c@x.com',
+        status: 'active',
+        enrollments: [
+          {
+            status: 'active',
+            paymentMethod: 'pix',
+            startDate: '2026-01-01',
+            plan: { name: 'Mensal', price: 149, billingCycle: 'monthly' },
+          },
+        ],
+      } as any,
+    ]);
+    expect(rows[0]!.hasActiveEnrollment).toBe(true);
+    expect(rows[0]!.plan).toBe('Mensal');
   });
 
   it('drops null rows', () => {
@@ -322,6 +346,7 @@ describe('mapSchedule', () => {
       classes: [
         {
           id: 'c1',
+          scheduleDocumentId: 'sch-c1',
           name: 'CrossFit',
           instructor: 'Carol',
           weekday: 1,
@@ -333,6 +358,7 @@ describe('mapSchedule', () => {
         },
         {
           id: 'c2',
+          scheduleDocumentId: 'sch-c2',
           name: 'Hue',
           instructor: null,
           weekday: 2,
@@ -355,6 +381,7 @@ describe('mapSchedule', () => {
 describe('mapAcademy', () => {
   it('maps branding with fallbacks', () => {
     const out = mapAcademy({
+      documentId: 'a1',
       name: 'Gym Demo',
       slug: 'gym-demo',
       primaryColor: '#0a84ff',
@@ -375,6 +402,7 @@ describe('mapAcademy', () => {
 
   it('coerces unknown plan to starter', () => {
     const out = mapAcademy({
+      documentId: 'a2',
       name: 'X',
       slug: 'x',
       plan: 'enterprise', // not in the starter|business|pro tier
@@ -383,7 +411,7 @@ describe('mapAcademy', () => {
   });
 
   it('logoUrl is undefined when logo is missing', () => {
-    const out = mapAcademy({ name: 'X', slug: 'x' });
+    const out = mapAcademy({ documentId: 'a3', name: 'X', slug: 'x' });
     expect(out.logoUrl).toBeUndefined();
   });
 });

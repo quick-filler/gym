@@ -76,7 +76,7 @@ export function buildPlatform({ nexus, strapi }: any) {
             await Promise.all([
               strapi.documents(ACADEMY).count({}),
               strapi.documents(ACADEMY).count({ filters: { isActive: true } }),
-              strapi.documents(STUDENT).count({ filters: { status: 'active' } }),
+              strapi.documents(STUDENT).count({ filters: { status: 'active', role: 'member' } }),
               strapi.documents(PAYMENT).findMany({
                 filters: { status: 'paid', dueDate: { $gte: monthStart, $lt: monthEnd } },
                 limit: 5000,
@@ -130,7 +130,7 @@ export function buildPlatform({ nexus, strapi }: any) {
             (academies as any[]).map(async (a) => {
               const studentCount = await strapi
                 .documents(STUDENT)
-                .count({ filters: { academy: { documentId: a.documentId }, status: 'active' } });
+                .count({ filters: { academy: { documentId: a.documentId }, status: 'active', role: 'member' } });
               return {
                 documentId: a.documentId,
                 name: a.name,

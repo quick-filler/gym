@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { JWT_STORAGE_KEY } from "@/lib/config";
+import { useMe } from "@/lib/hooks";
 
 interface TopbarProps {
   title: string;
@@ -13,6 +14,7 @@ interface TopbarProps {
 
 export function Topbar({ title, searchValue, onSearchChange, searchPlaceholder }: TopbarProps) {
   const router = useRouter();
+  const { data: me } = useMe();
 
   function handleLogout() {
     localStorage.removeItem(JWT_STORAGE_KEY);
@@ -50,9 +52,20 @@ export function Topbar({ title, searchValue, onSearchChange, searchPlaceholder }
         <Icon name="bell" size="lg" />
         <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-flame" />
       </button>
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-flame to-flame-dark text-white flex items-center justify-center font-mono text-[0.78rem] font-semibold">
-        GD
-      </div>
+      {me?.photoUrl ? (
+        <div className="w-10 h-10 rounded-full overflow-hidden bg-paper-2 shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={me.photoUrl}
+            alt={me.name}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ) : (
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-flame to-flame-dark text-white flex items-center justify-center font-mono text-[0.78rem] font-semibold">
+          {me?.initials ?? "?"}
+        </div>
+      )}
       <button
         onClick={handleLogout}
         aria-label="Sair"

@@ -31,6 +31,7 @@
 
   /* Secondary — pine (matches flame in this palette) */
   --color-pine: #0a84ff;
+  --color-pine-dark: #0a84ff;
   --color-pine-50: #eff6ff;
 
   /* Status */
@@ -142,4 +143,11 @@ h5 {
 }
 .animate-gym-pulse {
   animation: gym-pulse 2.4s infinite;
+}
+
+/* ===== Loading spinner rotation ===== */
+@keyframes gym-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

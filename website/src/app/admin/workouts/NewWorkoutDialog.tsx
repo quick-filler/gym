@@ -6,9 +6,14 @@ import { graphql } from "@/gql";
 import { Button } from "@/components/ui/Button";
 import { Combobox } from "@/components/ui/Combobox";
 import { Dialog } from "@/components/ui/Dialog";
-import { Field, Input, Textarea } from "@/components/ui/Field";
+import { Field, Input } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { USE_MOCKS } from "@/lib/config";
+import {
+  ExerciseEditor,
+  emptyExercise,
+  type ExerciseDraft,
+} from "./ExerciseEditor";
 
 const STUDENTS_FOR_WORKOUT = graphql(`
   query StudentsForWorkout {
@@ -28,34 +33,6 @@ const CREATE_WORKOUT = graphql(`
   }
 `);
 
-interface Exercise {
-  name: string;
-  sets: number;
-  reps: number;
-  load: string;
-}
-
-const SAMPLE_EXERCISES = `Supino Reto | 4 | 12 | 60kg
-Crucifixo Inclinado | 3 | 15 | 16kg
-Tríceps Corda | 4 | 12 | 25kg`;
-
-function parseExercises(raw: string): Exercise[] {
-  return raw
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0)
-    .map((line) => {
-      const parts = line.split("|").map((p) => p.trim());
-      return {
-        name: parts[0] ?? "",
-        sets: Number(parts[1] ?? 3),
-        reps: Number(parts[2] ?? 12),
-        load: parts[3] ?? "—",
-      };
-    })
-    .filter((e) => e.name);
-}
-
 export function NewWorkoutDialog({
   open,
   onClose,
@@ -74,7 +51,9 @@ export function NewWorkoutDialog({
   const [studentId, setStudentId] = useState("");
   const [instructor, setInstructor] = useState("");
   const [validFrom, setValidFrom] = useState(today);
-  const [exercisesText, setExercisesText] = useState(SAMPLE_EXERCISES);
+  const [exercises, setExercises] = useState<ExerciseDraft[]>(() => [
+    emptyExercise(),
+  ]);
   const [error, setError] = useState<string | null>(null);
   const [createWorkout, { loading }] = useMutation(CREATE_WORKOUT);
 
@@ -83,7 +62,7 @@ export function NewWorkoutDialog({
     setStudentId("");
     setInstructor("");
     setValidFrom(today);
-    setExercisesText(SAMPLE_EXERCISES);
+    setExercises([emptyExercise()]);
     setError(null);
   }
 
@@ -98,9 +77,9 @@ export function NewWorkoutDialog({
       return;
     }
 
-    const exercises = parseExercises(exercisesText);
-    if (exercises.length === 0) {
-      setError("Adicione ao menos um exercício.");
+    const valid = exercises.filter((e) => e.name.trim());
+    if (valid.length === 0) {
+      setError("Adicione ao menos um exercício com nome.");
       return;
     }
     if (!studentId) {
@@ -117,11 +96,12 @@ export function NewWorkoutDialog({
             student: studentId,
             validFrom,
             isActive: true,
-            exercises: exercises.map((e) => ({
-              name: e.name,
+            exercises: valid.map((e) => ({
+              name: e.name.trim(),
               sets: e.sets,
               reps: e.reps,
               load: e.load,
+              notes: e.notes?.trim() || undefined,
             })),
           },
         },
@@ -190,14 +170,9 @@ export function NewWorkoutDialog({
         </Field>
         <Field
           label="Exercícios"
-          help="Formato: nome | séries | reps | carga — uma linha por exercício."
+          help="Use as setas para reordenar e clique em Nota para adicionar uma instrução opcional."
         >
-          <Textarea
-            required
-            value={exercisesText}
-            onChange={(e) => setExercisesText(e.target.value)}
-            spellCheck={false}
-          />
+          <ExerciseEditor value={exercises} onChange={setExercises} />
         </Field>
         {error && <div className="text-[0.82rem] text-rose mb-3">{error}</div>}
       </form>

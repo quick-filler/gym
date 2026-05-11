@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
@@ -10,9 +10,34 @@ import { Icon } from "@/components/ui/Icon";
 import { GRAPHQL_ENDPOINT, JWT_STORAGE_KEY, USE_MOCKS } from "@/lib/config";
 import { setAuthCookies } from "@/lib/auth";
 import { apolloClient } from "@/lib/apollo";
+import { useAcademyBranding } from "@/lib/hooks";
+import { resolveAcademySlug } from "@/lib/subdomain";
+import { derivePalette, deriveSecondaryPalette } from "@/lib/theme";
 
 const DEFAULT_EMAIL = process.env.NEXT_PUBLIC_DEFAULT_LOGIN_EMAIL ?? "";
 const DEFAULT_PASSWORD = process.env.NEXT_PUBLIC_DEFAULT_LOGIN_PASSWORD ?? "";
+const FAVICON_MARKER = "data-academy-favicon";
+
+function applyTabFavicon(href: string | null) {
+  if (typeof document === "undefined") return;
+  const head = document.head;
+  const existing = head.querySelector(
+    `link[${FAVICON_MARKER}]`,
+  ) as HTMLLinkElement | null;
+  if (!href) {
+    existing?.remove();
+    return;
+  }
+  if (existing) {
+    if (existing.href !== href) existing.href = href;
+    return;
+  }
+  const link = document.createElement("link");
+  link.rel = "icon";
+  link.href = href;
+  link.setAttribute(FAVICON_MARKER, "true");
+  head.appendChild(link);
+}
 
 export function LoginClient() {
   const router = useRouter();
@@ -20,6 +45,42 @@ export function LoginClient() {
   const [password, setPassword] = useState(DEFAULT_PASSWORD);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Subdomain (or ?slug=) drives white-label branding before auth.
+  const [slug, setSlug] = useState<string | null>(null);
+  useEffect(() => setSlug(resolveAcademySlug()), []);
+  const { data: branding } = useAcademyBranding(slug);
+
+  // Update tab icon when an academy is detected — gives the visitor
+  // a hint they're on the right tenant before they even type the email.
+  // Square logo preferred (it's intended for favicons); falls back to
+  // the main logo when the academy hasn't uploaded a separate square.
+  const tabIcon = branding?.logoSquareUrl ?? branding?.logoUrl ?? null;
+  useEffect(() => {
+    applyTabFavicon(tabIcon);
+    return () => applyTabFavicon(null);
+  }, [tabIcon]);
+
+  // Scoped theme vars — applied to the page wrapper, not <html>, so
+  // the public marketing pages (which share the same root) keep their
+  // default tokens.
+  const themeStyle = useMemo<CSSProperties | undefined>(() => {
+    if (!branding?.primaryColor && !branding?.secondaryColor) return undefined;
+    const style: Record<string, string> = {};
+    if (branding.primaryColor) {
+      const p = derivePalette(branding.primaryColor);
+      style["--color-flame"] = p.base;
+      style["--color-flame-dark"] = p.dark;
+      style["--color-flame-50"] = p.l50;
+      style["--color-flame-100"] = p.l100;
+    }
+    if (branding.secondaryColor) {
+      const s = deriveSecondaryPalette(branding.secondaryColor);
+      style["--color-pine"] = s.base;
+      style["--color-pine-50"] = s.l50;
+    }
+    return style as CSSProperties;
+  }, [branding?.primaryColor, branding?.secondaryColor]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -80,14 +141,26 @@ export function LoginClient() {
   }
 
   return (
-    <div className="grid grid-cols-[1.05fr_0.95fr] min-h-screen max-[880px]:grid-cols-1">
+    <div
+      className="grid grid-cols-[1.05fr_0.95fr] min-h-screen max-[880px]:grid-cols-1"
+      style={themeStyle}
+    >
       {/* Form side */}
       <section
         className="bg-paper flex flex-col px-16 py-10 max-[720px]:px-6"
         aria-labelledby="login-title"
       >
         <header className="flex items-center justify-between">
-          <Brand />
+          {branding?.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={branding.logoUrl}
+              alt={`Logo ${branding.name}`}
+              className="h-10 max-w-[180px] object-contain"
+            />
+          ) : (
+            <Brand />
+          )}
           <Link
             href="/"
             className="inline-flex items-center gap-2 text-[0.88rem] text-ink-500 hover:text-ink-900 transition-colors"
@@ -104,7 +177,9 @@ export function LoginClient() {
             Bem-vindo de volta.
           </h1>
           <p className="text-ink-500 mt-3">
-            Acesse o painel da sua academia.
+            {branding
+              ? `Acesse o painel da ${branding.name}.`
+              : "Acesse o painel da sua academia."}
           </p>
 
           {USE_MOCKS && (

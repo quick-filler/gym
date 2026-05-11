@@ -71,7 +71,11 @@ Academy member (aluno).
 | phone | String | |
 | photo | Media | |
 | birthdate | Date | |
+| cpf | String | Brazilian CPF, 11 digits (regex `^[0-9]{11}$`). Frontend strips punctuation before write. |
+| gender | Enum | `female` / `male` / `other` |
+| address | JSON → `Address` | `{ type, cep, street, number, complement, neighborhood, city, state }` (CEP/UF as 8/2 chars when present) |
 | status | Enum | `active` / `inactive` / `suspended` |
+| isGuardian | Boolean | True when this Student has Dependents under them |
 | notes | Text | |
 | academy | Relation | manyToOne Academy |
 | user | Relation | oneToOne users-permissions.user (for student login) |
@@ -79,6 +83,10 @@ Academy member (aluno).
 | bookings | Relation | hasMany ClassBooking |
 | workoutPlans | Relation | hasMany WorkoutPlan |
 | assessments | Relation | hasMany BodyAssessment |
+| dependents | Relation | hasMany Dependent |
+
+The `Dependent` content type mirrors the same address/cpf shape — see
+`src/api/dependent/content-types/dependent/schema.json`.
 
 ### Plan (Plano de Matrícula)
 
@@ -276,6 +284,7 @@ Custom queries / mutations:
 | `Query.me` | required | Authenticated student's full profile (deeply populated) |
 | `Query.scheduleBookings(documentId, date?)` | required | Bookings for a schedule on a given date |
 | `Mutation.checkInBooking(documentId)` | required | Mark attendance + stamp `checkedInAt` |
+| `Mutation.bulkImportStudents(rows, dryRun?)` | required (`academy_admin`) | Cria Students adultos ou Student responsável + Dependent a partir de linhas pré-parseadas pelo wizard de `/admin/students/import`. Detecção de duplicidade por `(academy, cpf)` com fallback para email (Student) ou nome+nascimento (Dependent). Resultado por linha em `BulkImportResult.items` — partial-failure friendly. Lógica em `src/extensions/graphql/types/bulk-import.ts`. |
 
 ### Adding a new content type
 

@@ -20,6 +20,40 @@ import {
 } from '../helpers';
 
 const UID = 'api::academy.academy';
+const FILE_UID = 'plugin::upload.file';
+
+/**
+ * Strapi v5's documents API accepts `documentId` for most relations,
+ * but plugin::upload.file media relations still expect the numeric id.
+ * Translate the documentId we receive on AcademyInput / AcademyUpdateInput
+ * into the numeric id before handing the data to documents().update().
+ *
+ * Returns a new object — the original args.data from the GraphQL
+ * resolver is frozen by Nexus/Apollo, so in-place mutation silently
+ * no-ops in strict mode. Null means "detach the relation" and is
+ * preserved so Strapi clears the field.
+ */
+async function resolveMediaIds<T extends Record<string, unknown>>(
+  strapi: Core.Strapi,
+  data: T,
+): Promise<T> {
+  const out: Record<string, unknown> = { ...data };
+  for (const field of ['logo', 'logoSquare'] as const) {
+    const value = out[field];
+    if (typeof value !== 'string') continue; // null, undefined skip
+    // db.query is a more reliable shortcut to the numeric id than
+    // documents().findOne — plugin::upload.file's documents-API support
+    // is uneven in Strapi 5.x.
+    const file: any = await strapi.db
+      .query(FILE_UID)
+      .findOne({ where: { documentId: value }, select: ['id'] });
+    if (!file) {
+      throw new Error(`Arquivo não encontrado para ${field}.`);
+    }
+    out[field] = file.id;
+  }
+  return out as T;
+}
 
 export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }) {
   const Academy = nexus.objectType({
@@ -49,6 +83,19 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
           return doc?.logo ?? null;
         },
       });
+      t.field('logoSquare', {
+        type: 'Media',
+        description:
+          'Square version of the logo, used for favicon and small icons. Optional — fall back to logo when absent.',
+        resolve: async (parent: any) => {
+          if (parent.logoSquare !== undefined) return parent.logoSquare;
+          const doc: any = await strapi.documents(UID).findOne({
+            documentId: parent.documentId,
+            populate: { logoSquare: true },
+          });
+          return doc?.logoSquare ?? null;
+        },
+      });
     },
   });
 
@@ -68,6 +115,7 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('phone');
       t.string('address');
       t.id('logo');
+      t.id('logoSquare');
     },
   });
 
@@ -87,6 +135,7 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('phone');
       t.string('address');
       t.id('logo');
+      t.id('logoSquare');
     },
   });
 
@@ -211,7 +260,8 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
               'Acesso negado: apenas administradores da plataforma criam academias.',
             );
           }
-          return await strapi.documents(UID).create({ data: args.data });
+          const data = await resolveMediaIds(strapi, args.data);
+          return await strapi.documents(UID).create({ data });
         },
       });
 
@@ -227,9 +277,10 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
             await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
             await requireRole(strapi, ctx, ['academy_admin']);
           }
+          const data = await resolveMediaIds(strapi, args.data);
           return await strapi.documents(UID).update({
             documentId: args.documentId,
-            data: args.data,
+            data,
           });
         },
       });

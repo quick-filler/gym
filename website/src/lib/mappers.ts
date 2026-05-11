@@ -16,15 +16,18 @@ import type {
   DashboardData,
   FinanceData,
   GuardianFamily,
+  MeProfile,
   MembershipPlan,
   MetricDelta,
   PaymentMethod,
   PaymentStatus,
   PlansData,
   PricingPlan,
+  ScheduleClass,
   ScheduleData,
   StudentRow,
   StudentStatus,
+  UserRole,
   WorkoutPlanCard,
   WorkoutsData,
 } from "./types";
@@ -218,7 +221,8 @@ export function mapStudents(
   return (students ?? [])
     .filter((s): s is RawStudent => !!s)
     .map((s) => {
-      const enrolled = s.enrollments?.[0];
+      const active = s.enrollments?.find((e) => e?.status === "active");
+      const enrolled = active ?? s.enrollments?.[0];
       const price = enrolled?.plan?.price ?? 0;
       const method = (enrolled?.paymentMethod ?? "pix") as PaymentMethod;
       return {
@@ -227,16 +231,19 @@ export function mapStudents(
         email: s.email ?? "",
         phone: formatPhoneForDisplay(s.phone),
         plan: enrolled?.plan?.name ?? "—",
-        planPrice: `R$ ${price.toLocaleString("pt-BR", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
+        planPrice: enrolled
+          ? `R$ ${price.toLocaleString("pt-BR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`
+          : "—",
         status: (s.status as StudentStatus) ?? "active",
         paymentMethod: method,
         joinedAt: enrolled?.startDate ?? "",
         nextPayment: enrolled?.endDate ?? "—",
         initials: initialsFromName(s.name ?? ""),
         avatarColor: pickColor(s.documentId ?? ""),
+        hasActiveEnrollment: !!active,
       };
     });
 }
@@ -299,8 +306,10 @@ export interface RawScheduleWeek {
   stats: { totalClasses: number; totalBookings: number; capacityFill: number };
   classes: Array<{
     id: string;
+    scheduleDocumentId: string;
     name: string;
     instructor?: string | null;
+    modality?: string | null;
     weekday: number;
     startTime: string;
     endTime: string;
@@ -323,8 +332,12 @@ export function mapSchedule(s: RawScheduleWeek): ScheduleData {
     stats: s.stats,
     classes: s.classes.map((c) => ({
       id: c.id,
+      scheduleDocumentId: c.scheduleDocumentId,
       name: c.name,
       instructor: c.instructor ?? "",
+      modality: (c.modality === "presential" || c.modality === "online"
+        ? c.modality
+        : null) as ScheduleClass["modality"],
       weekday: c.weekday,
       startTime: c.startTime,
       endTime: c.endTime,
@@ -344,10 +357,86 @@ export function mapSchedule(s: RawScheduleWeek): ScheduleData {
 }
 
 /* ------------------------------------------------------------------
+ * Schedule bookings (drilldown)
+ * ------------------------------------------------------------------ */
+
+export interface RawClassBooking {
+  documentId: string;
+  date: string;
+  status: string;
+  checkedInAt?: string | null;
+  student?: {
+    name?: string | null;
+    photo?: { url?: string | null } | null;
+  } | null;
+}
+
+export interface RawDailyAttendance {
+  date: string;
+  weekdayLabel: string;
+  classes: Array<{
+    scheduleDocumentId: string;
+    name: string;
+    instructor?: string | null;
+    room?: string | null;
+    startTime: string;
+    endTime: string;
+    capacity?: number | null;
+    bookings: RawClassBooking[];
+    bookedCount: number;
+    attendedCount: number;
+    missedCount: number;
+  }>;
+}
+
+export function mapDailyAttendance(
+  d: RawDailyAttendance,
+): import("./types").DailyAttendanceData {
+  return {
+    date: d.date,
+    weekdayLabel: d.weekdayLabel,
+    classes: d.classes.map((c) => ({
+      scheduleDocumentId: c.scheduleDocumentId,
+      name: c.name,
+      instructor: c.instructor ?? "",
+      room: c.room ?? "",
+      startTime: c.startTime,
+      endTime: c.endTime,
+      capacity: c.capacity ?? null,
+      bookings: c.bookings.map(mapBooking),
+      bookedCount: c.bookedCount,
+      attendedCount: c.attendedCount,
+      missedCount: c.missedCount,
+    })),
+  };
+}
+
+export function mapBooking(b: RawClassBooking): import("./types").ScheduleBooking {
+  const studentName = b.student?.name ?? "Aluno";
+  const status = (
+    ["scheduled", "confirmed", "cancelled", "attended", "missed"].includes(
+      b.status,
+    )
+      ? b.status
+      : "scheduled"
+  ) as "scheduled" | "confirmed" | "cancelled" | "attended" | "missed";
+  return {
+    documentId: b.documentId,
+    date: b.date,
+    status,
+    checkedInAt: b.checkedInAt ?? undefined,
+    studentName,
+    studentInitials: initialsFromName(studentName),
+    studentPhotoUrl: b.student?.photo?.url ?? undefined,
+  };
+}
+
+/* ------------------------------------------------------------------
  * Academy (from `me.academy`)
  * ------------------------------------------------------------------ */
 
 export interface RawAcademy {
+  documentId: string;
   name: string;
   slug: string;
   primaryColor?: string | null;
@@ -356,22 +445,63 @@ export interface RawAcademy {
   email?: string | null;
   phone?: string | null;
   address?: string | null;
-  logo?: { url?: string | null } | null;
+  logo?: { documentId?: string | null; url?: string | null } | null;
+  logoSquare?: { documentId?: string | null; url?: string | null } | null;
 }
 
 export function mapAcademy(a: RawAcademy): AcademySettings {
   return {
+    documentId: a.documentId,
     name: a.name,
     email: a.email ?? "",
     phone: formatPhoneForDisplay(a.phone),
     address: a.address ?? "",
     slug: a.slug,
     logoUrl: a.logo?.url ?? undefined,
+    logoDocumentId: a.logo?.documentId ?? undefined,
+    logoSquareUrl: a.logoSquare?.url ?? undefined,
+    logoSquareDocumentId: a.logoSquare?.documentId ?? undefined,
     primaryColor: a.primaryColor ?? "#0a84ff",
     secondaryColor: a.secondaryColor ?? "#0a84ff",
     plan: (["starter", "business", "pro"].includes(a.plan ?? "")
       ? a.plan
       : "starter") as AcademySettings["plan"],
+  };
+}
+
+/* ------------------------------------------------------------------
+ * Authenticated profile (from `me`)
+ * ------------------------------------------------------------------ */
+
+export interface RawMe {
+  documentId: string;
+  name?: string | null;
+  email?: string | null;
+  role?: string | null;
+  photo?: { url?: string | null } | null;
+}
+
+const ROLE_LABEL: Record<UserRole, string> = {
+  academy_admin: "Administrador",
+  instructor: "Instrutor",
+  member: "Aluno",
+};
+
+export function mapMe(m: RawMe): MeProfile {
+  const role: UserRole = (
+    ["academy_admin", "instructor", "member"].includes(m.role ?? "")
+      ? m.role
+      : "member"
+  ) as UserRole;
+  const name = m.name?.trim() || m.email?.trim() || "";
+  return {
+    documentId: m.documentId,
+    name,
+    email: m.email ?? "",
+    role,
+    roleLabel: ROLE_LABEL[role],
+    photoUrl: m.photo?.url ?? undefined,
+    initials: initialsFromName(name),
   };
 }
 

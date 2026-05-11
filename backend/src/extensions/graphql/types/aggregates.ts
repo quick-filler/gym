@@ -36,8 +36,19 @@ import {
 
 const STUDENT = 'api::student.student';
 const SCHEDULE = 'api::class-schedule.class-schedule';
+const BOOKING = 'api::class-booking.class-booking';
 const PAYMENT = 'api::payment.payment';
 const EXPENSE = 'api::expense.expense';
+
+const WEEKDAY_LABEL_PT = [
+  'Domingo',
+  'Segunda-feira',
+  'Terça-feira',
+  'Quarta-feira',
+  'Quinta-feira',
+  'Sexta-feira',
+  'Sábado',
+];
 
 // ---------------------------------------------------------------------
 // Module
@@ -239,9 +250,14 @@ export function buildAggregates({
   const ScheduleClass = nexus.objectType({
     name: 'ScheduleClass',
     definition(t: any) {
+      // Synthetic id (`<scheduleDocumentId>-<weekday>`) — unique per
+      // (schedule × weekday) so the grid can `key={id}`. Use
+      // `scheduleDocumentId` when calling scheduleBookings/checkIn.
       t.nonNull.string('id');
+      t.nonNull.id('scheduleDocumentId');
       t.nonNull.string('name');
       t.string('instructor');
+      t.string('modality'); // 'presential' | 'online' | null
       t.nonNull.int('weekday'); // 0=Sunday
       t.nonNull.string('startTime');
       t.nonNull.string('endTime');
@@ -316,6 +332,35 @@ export function buildAggregates({
     },
   });
 
+  const DailyAttendanceClass = nexus.objectType({
+    name: 'DailyAttendanceClass',
+    description:
+      'A class occurring on a specific date with its booking roster, used by the daily attendance page.',
+    definition(t: any) {
+      t.nonNull.id('scheduleDocumentId');
+      t.nonNull.string('name');
+      t.string('instructor');
+      t.string('room');
+      t.nonNull.string('startTime');
+      t.nonNull.string('endTime');
+      t.int('capacity');
+      t.nonNull.list.nonNull.field('bookings', { type: 'ClassBooking' });
+      t.nonNull.int('bookedCount');
+      t.nonNull.int('attendedCount');
+      t.nonNull.int('missedCount');
+    },
+  });
+
+  const DailyAttendance = nexus.objectType({
+    name: 'DailyAttendance',
+    description: 'Roster of all classes happening on a given date.',
+    definition(t: any) {
+      t.nonNull.string('date'); // ISO yyyy-mm-dd
+      t.nonNull.string('weekdayLabel'); // PT-BR
+      t.nonNull.list.nonNull.field('classes', { type: 'DailyAttendanceClass' });
+    },
+  });
+
   // ----- Query extension -------------------------------------------
 
   const queries = nexus.extendType({
@@ -330,7 +375,8 @@ export function buildAggregates({
 
           const [students, schedules, payments] = await Promise.all([
             strapi.documents(STUDENT).findMany({
-              filters,
+              // Exclude staff (academy_admin / instructor) from member metrics.
+              filters: { ...filters, role: 'member' },
               sort: { createdAt: 'desc' },
               limit: 100,
               populate: { enrollments: { populate: { plan: true } } },
@@ -757,8 +803,10 @@ export function buildAggregates({
             weekdays.forEach((w: number) => {
               classes.push({
                 id: `${s.documentId}-${w}`,
+                scheduleDocumentId: s.documentId,
                 name: s.name,
                 instructor: s.instructor,
+                modality: s.modality ?? null,
                 weekday: w,
                 startTime: s.startTime,
                 endTime: s.endTime,
@@ -794,6 +842,75 @@ export function buildAggregates({
             classes,
             stats: { totalClasses, totalBookings, capacityFill },
             upcoming,
+          };
+        },
+      });
+
+      // ----- dailyAttendance --------------------------------------
+      t.field('dailyAttendance', {
+        type: 'DailyAttendance',
+        description:
+          'Returns every active class scheduled to occur on the given date with its booking roster, ordered by startTime.',
+        args: { date: nexus.nonNull(nexus.stringArg()) },
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const academyId = await resolveUserAcademyId(strapi, ctx);
+          const dateIso: string = args.date;
+          // Parse as local-noon to dodge DST/UTC edge cases — we only
+          // care about the weekday integer.
+          const weekday = new Date(`${dateIso}T12:00:00`).getDay();
+
+          const schedules: any[] = await strapi.documents(SCHEDULE).findMany({
+            filters: withAcademyScope({ isActive: true }, academyId),
+            limit: 200,
+            sort: { startTime: 'asc' },
+          });
+
+          // Filter to schedules whose recurrence includes this weekday.
+          const todays = schedules.filter((s: any) =>
+            Array.isArray(s.weekdays) && s.weekdays.includes(weekday),
+          );
+
+          // Bookings are fetched per-schedule. Could be a single $or
+          // query, but the schedule count per academy is small enough
+          // that the readability win beats the round-trip count.
+          const classes = await Promise.all(
+            todays.map(async (s: any) => {
+              const bookings: any[] = await strapi
+                .documents(BOOKING)
+                .findMany({
+                  filters: {
+                    classSchedule: { documentId: s.documentId },
+                    date: dateIso,
+                  },
+                  populate: { student: { populate: { photo: true } } },
+                  sort: { createdAt: 'asc' },
+                });
+              const attendedCount = bookings.filter(
+                (b) => b.status === 'attended',
+              ).length;
+              const missedCount = bookings.filter(
+                (b) => b.status === 'missed',
+              ).length;
+              return {
+                scheduleDocumentId: s.documentId,
+                name: s.name,
+                instructor: s.instructor ?? null,
+                room: s.room ?? null,
+                startTime: s.startTime,
+                endTime: s.endTime,
+                capacity: s.maxCapacity ?? null,
+                bookings,
+                bookedCount: bookings.length,
+                attendedCount,
+                missedCount,
+              };
+            }),
+          );
+
+          return {
+            date: dateIso,
+            weekdayLabel: WEEKDAY_LABEL_PT[weekday] ?? '',
+            classes,
           };
         },
       });
@@ -870,6 +987,8 @@ export function buildAggregates({
       ScheduleStats,
       ScheduleUpcoming,
       ScheduleWeek,
+      DailyAttendanceClass,
+      DailyAttendance,
       GuardianFamilyGuardian,
       GuardianFamilyDependent,
       GuardianFamily,
@@ -880,6 +999,7 @@ export function buildAggregates({
       'Query.financeOverview': { auth: true },
       'Query.dreOverview': { auth: true },
       'Query.scheduleWeek': { auth: true },
+      'Query.dailyAttendance': { auth: true },
       'Query.guardians': { auth: true },
     },
   };

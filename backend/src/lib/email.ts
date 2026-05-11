@@ -4,9 +4,49 @@
  * Uses Strapi's email plugin (configured with @strapi/provider-email-nodemailer
  * in config/plugins.ts). Every function accepts the strapi instance so they
  * are usable from lifecycle hooks without relying on the global.
+ *
+ * Branding: emails sent in the context of an academy (welcome, future
+ * payment reminders, etc.) accept an optional Branding object so the
+ * header logo and CTA color match the tenant. Pre-conversion emails
+ * (lead notification, lead confirmation) intentionally stay on the
+ * master Gym look — the prospect isn't a tenant yet.
  */
 
 import type { Core } from '@strapi/strapi';
+
+const ACADEMY_UID = 'api::academy.academy';
+
+// ---------------------------------------------------------------------------
+// Branding
+// ---------------------------------------------------------------------------
+
+export interface EmailBranding {
+  name: string;
+  logoUrl: string | null;
+  primaryColor: string | null;
+}
+
+/**
+ * Resolves the email branding for an academy. Returns null when the
+ * academy isn't found — caller falls back to the master Gym design.
+ */
+export async function getAcademyBranding(
+  strapi: Core.Strapi,
+  documentId: string,
+): Promise<EmailBranding | null> {
+  const academy: any = await strapi
+    .documents(ACADEMY_UID)
+    .findOne({
+      documentId,
+      populate: { logo: true },
+    });
+  if (!academy) return null;
+  return {
+    name: academy.name,
+    logoUrl: academy.logo?.url ?? null,
+    primaryColor: academy.primaryColor ?? null,
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Core sender
@@ -43,13 +83,39 @@ export async function sendEmail(
 // HTML wrapper
 // ---------------------------------------------------------------------------
 
-function wrap(content: string): string {
+/**
+ * Default accent (master Gym flame) — used as fallback when the email
+ * has no academy branding. Each call site that wants to override the
+ * accent should pass branding.primaryColor via wrap().
+ */
+const DEFAULT_ACCENT = '#e8551c';
+
+/**
+ * Helper for templates: returns the accent color for the email,
+ * falling back to DEFAULT_ACCENT. Exported so each email sender can
+ * use the same color in its inline CTA buttons without re-deriving.
+ */
+export function accentFor(branding?: EmailBranding | null): string {
+  return branding?.primaryColor ?? DEFAULT_ACCENT;
+}
+
+function wrap(content: string, branding?: EmailBranding | null): string {
+  const accent = accentFor(branding);
+  const headerLabel = branding?.name ?? 'Gym';
+
+  // Logo replaces the wordmark when present. Capped at 32px tall so
+  // landscape and square logos both render legibly. Fallback to the
+  // serif "Gym" wordmark when no logo is configured.
+  const headerInner = branding?.logoUrl
+    ? `<img src="${branding.logoUrl}" alt="${escapeAttr(headerLabel)}" style="display:block;max-height:32px;max-width:200px;width:auto;height:auto;">`
+    : `<span style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.03em;">${escapeHtml(headerLabel)}</span>`;
+
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gym</title>
+  <title>${escapeHtml(headerLabel)}</title>
 </head>
 <body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#f3f4f6;line-height:1.6;">
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f3f4f6;padding:40px 20px;">
@@ -60,14 +126,14 @@ function wrap(content: string): string {
           <!-- Header -->
           <tr>
             <td style="background-color:#0f0f0f;padding:28px 32px;">
-              <span style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.03em;">Gym</span>
+              ${headerInner}
             </td>
           </tr>
 
           <!-- Body -->
           <tr>
             <td style="padding:36px 32px;">
-              ${content}
+              ${content.replace(/__ACCENT__/g, accent)}
             </td>
           </tr>
 
@@ -78,7 +144,7 @@ function wrap(content: string): string {
                 <a href="https://gym.app" style="color:#ffffff;text-decoration:none;">gym.app</a>
               </p>
               <p style="margin:0;font-size:12px;color:#52525b;">
-                © ${new Date().getFullYear()} Gym. Todos os direitos reservados.
+                © ${new Date().getFullYear()} ${escapeHtml(headerLabel)}. Todos os direitos reservados.
               </p>
             </td>
           </tr>
@@ -89,6 +155,19 @@ function wrap(content: string): string {
   </table>
 </body>
 </html>`;
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function escapeAttr(s: string): string {
+  return s.replace(/"/g, '&quot;');
 }
 
 // ---------------------------------------------------------------------------
@@ -134,6 +213,9 @@ export async function sendLeadNotificationEmail(
       <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px;color:#111827;font-weight:500;">${value}</td>
     </tr>`;
 
+  // Lead notification goes to the Gym team — intentionally NOT branded
+  // by tenant. wrap() falls back to the master Gym accent when no
+  // branding is passed.
   const html = wrap(`
     <h2 style="margin:0 0 6px 0;font-size:20px;font-weight:700;color:#111827;">Novo lead recebido</h2>
     <p style="margin:0 0 24px 0;font-size:14px;color:#6b7280;">
@@ -142,13 +224,13 @@ export async function sendLeadNotificationEmail(
 
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:24px;">
       ${row('Nome', params.name)}
-      ${row('E-mail', `<a href="mailto:${params.email}" style="color:#e8551c;">${params.email}</a>`)}
+      ${row('E-mail', `<a href="mailto:${params.email}" style="color:__ACCENT__;">${params.email}</a>`)}
       ${row('WhatsApp', params.phone ?? '—')}
       ${row('Academia', params.academyName ?? '—')}
       ${row('Alunos ativos', countLabel)}
     </table>
 
-    <div style="background-color:#f9fafb;border-left:3px solid #e8551c;border-radius:4px;padding:16px 20px;margin-bottom:24px;">
+    <div style="background-color:#f9fafb;border-left:3px solid __ACCENT__;border-radius:4px;padding:16px 20px;margin-bottom:24px;">
       <p style="margin:0 0 6px 0;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">Mensagem</p>
       <p style="margin:0;font-size:15px;color:#111827;white-space:pre-wrap;">${params.message}</p>
     </div>
@@ -157,7 +239,7 @@ export async function sendLeadNotificationEmail(
       <tr>
         <td>
           <a href="mailto:${params.email}"
-             style="display:inline-block;background-color:#e8551c;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px;">
+             style="display:inline-block;background-color:__ACCENT__;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px;">
             Responder agora
           </a>
         </td>
@@ -267,6 +349,13 @@ interface AcademyWelcomeParams {
   email: string;
   academyName: string;
   resetUrl: string;
+  /**
+   * Optional academy branding. When passed, the email header shows the
+   * academy logo (instead of the master Gym wordmark) and the CTA
+   * button uses the academy's primary color. Passing null/undefined
+   * falls back to the master Gym design.
+   */
+  branding?: EmailBranding | null;
 }
 
 export async function sendAcademyWelcomeEmail(
@@ -275,12 +364,13 @@ export async function sendAcademyWelcomeEmail(
 ): Promise<void> {
   const firstName = params.name.split(' ')[0];
 
-  const html = wrap(`
+  const html = wrap(
+    `
     <h2 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#111827;">
-      Boas-vindas ao Gym, ${firstName}!
+      Boas-vindas ao ${escapeHtml(params.academyName)}, ${escapeHtml(firstName)}!
     </h2>
     <p style="margin:0 0 20px 0;font-size:15px;color:#374151;line-height:1.7;">
-      A conta da <strong>${params.academyName}</strong> foi criada com sucesso.
+      A conta da <strong>${escapeHtml(params.academyName)}</strong> foi criada com sucesso.
       Para acessar o painel pela primeira vez, defina sua senha clicando no
       botão abaixo. O link é pessoal e expira por segurança — caso ele não
       funcione, peça à nossa equipe um novo.
@@ -290,7 +380,7 @@ export async function sendAcademyWelcomeEmail(
       <tr>
         <td>
           <a href="${params.resetUrl}"
-             style="display:inline-block;background-color:#e8551c;color:#ffffff;text-decoration:none;padding:14px 30px;border-radius:8px;font-weight:600;font-size:15px;">
+             style="display:inline-block;background-color:__ACCENT__;color:#ffffff;text-decoration:none;padding:14px 30px;border-radius:8px;font-weight:600;font-size:15px;">
             Definir minha senha
           </a>
         </td>
@@ -302,7 +392,7 @@ export async function sendAcademyWelcomeEmail(
         Seu e-mail de acesso
       </p>
       <p style="margin:0;font-size:15px;color:#111827;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;">
-        ${params.email}
+        ${escapeHtml(params.email)}
       </p>
     </div>
 
@@ -317,9 +407,11 @@ export async function sendAcademyWelcomeEmail(
       Qualquer dúvida, é só responder este e-mail.<br>
       <strong style="color:#111827;">Time Gym</strong>
     </p>
-  `);
+  `,
+    params.branding,
+  );
 
-  const text = `Boas-vindas ao Gym, ${firstName}!
+  const text = `Boas-vindas ao ${params.academyName}, ${firstName}!
 
 A conta da ${params.academyName} foi criada com sucesso. Para acessar
 o painel pela primeira vez, defina sua senha pelo link:

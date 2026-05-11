@@ -9,6 +9,7 @@ import { Field, Input, Select } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { USE_MOCKS } from "@/lib/config";
 import { cn } from "@/lib/utils";
+import { ConflictWarning } from "./ConflictWarning";
 
 const CREATE_CLASS = graphql(`
   mutation AdminCreateClassSchedule($data: ClassScheduleInput!) {
@@ -201,6 +202,13 @@ export function NewClassDialog({
             placeholder="Sala 1"
           />
         </Field>
+        <ConflictWarning
+          weekdays={weekdays}
+          startTime={startTime}
+          endTime={endTime}
+          instructor={instructor}
+          room={room}
+        />
         {error && <div className="text-[0.82rem] text-rose mb-3">{error}</div>}
       </form>
 

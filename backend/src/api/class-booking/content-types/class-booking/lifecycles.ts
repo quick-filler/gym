@@ -11,16 +11,15 @@
  * bookings are excluded from the counts so a user can rebook after a no-show.
  */
 
+import { pickRelationId, resolveNumericId } from '../../../../utils/relation';
+
 const UID = 'api::class-booking.class-booking';
 const SCHEDULE_UID = 'api::class-schedule.class-schedule';
+const STUDENT_UID = 'api::student.student';
+const DEPENDENT_UID = 'api::dependent.dependent';
 
-function pickRelationId(value: any): number | null {
-  if (value === undefined || value === null) return null;
-  if (typeof value === 'number') return value;
-  if (typeof value === 'object') {
-    return value.id ?? value.connect?.[0]?.id ?? null;
-  }
-  return null;
+async function rel(uid: string, raw: any): Promise<number | null> {
+  return await resolveNumericId(uid, pickRelationId(raw));
 }
 
 async function activeBookingCount(scheduleId: number, date: string): Promise<number> {
@@ -58,9 +57,11 @@ async function findExistingBooking(params: {
 export default {
   async beforeCreate(event: any) {
     const { data } = event.params;
-    const scheduleId = pickRelationId(data?.classSchedule);
-    const studentId = pickRelationId(data?.student);
-    const dependentId = pickRelationId(data?.dependent);
+    const [scheduleId, studentId, dependentId] = await Promise.all([
+      rel(SCHEDULE_UID, data?.classSchedule),
+      rel(STUDENT_UID, data?.student),
+      rel(DEPENDENT_UID, data?.dependent),
+    ]);
     const date: string | undefined = data?.date;
     const status: string = data?.status ?? 'confirmed';
 
@@ -130,10 +131,13 @@ export default {
     if (nextStatus === 'cancelled') return;
 
     const scheduleId =
-      pickRelationId(data.classSchedule) ?? current.classSchedule?.id;
-    const studentId = pickRelationId(data.student) ?? current.student?.id ?? null;
+      (await rel(SCHEDULE_UID, data.classSchedule)) ??
+      current.classSchedule?.id;
+    const studentId =
+      (await rel(STUDENT_UID, data.student)) ?? current.student?.id ?? null;
     const dependentId =
-      pickRelationId(data.dependent) ?? current.dependent?.id ?? null;
+      (await rel(DEPENDENT_UID, data.dependent)) ??
+      current.dependent?.id ?? null;
     const date = data.date ?? current.date;
 
     if (!scheduleId || !date) return;

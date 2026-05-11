@@ -7,6 +7,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
 import { JWT_STORAGE_KEY } from "@/lib/config";
 import { clearAuthCookies } from "@/lib/auth";
+import { useAcademy, useMe } from "@/lib/hooks";
 
 const PRIMARY: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: "chart" },
@@ -16,7 +17,8 @@ const PRIMARY: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/finance", label: "Financeiro", icon: "money" },
   { href: "/admin/dre", label: "DRE / Custos", icon: "trending" },
   { href: "/admin/schedule", label: "Agenda", icon: "calendar" },
-  { href: "/admin/workouts", label: "Treinos", icon: "dumbbell" },
+  { href: "/admin/attendance", label: "Presenças", icon: "check" },
+  { href: "/admin/workouts", label: "Treinos", icon: "heart-pulse" },
 ];
 
 const CONFIG: { href: string; label: string; icon: IconName }[] = [
@@ -27,6 +29,8 @@ export function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { data: academy } = useAcademy();
+  const { data: me } = useMe();
 
   function close() {
     setOpen(false);
@@ -37,6 +41,9 @@ export function MobileNav() {
     clearAuthCookies();
     router.push("/login");
   }
+
+  const academyName = academy?.name ?? "";
+  const academyLogo = academy?.logoSquareUrl ?? academy?.logoUrl ?? null;
 
   return (
     <>
@@ -68,11 +75,22 @@ export function MobileNav() {
         )}
       >
         <div className="p-5 border-b border-ink-700 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-display font-bold text-[1.15rem] text-paper">
-            <span className="w-8 h-8 rounded-[9px] bg-flame flex items-center justify-center">
-              <Icon name="dumbbell" />
-            </span>
-            Gym
+          <div className="flex items-center gap-2 font-display font-bold text-[1.15rem] text-paper min-w-0">
+            {academyLogo ? (
+              <span className="w-8 h-8 rounded-[9px] overflow-hidden bg-paper-2 flex items-center justify-center shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={academyLogo}
+                  alt={academyName}
+                  className="w-full h-full object-cover"
+                />
+              </span>
+            ) : (
+              <span className="w-8 h-8 rounded-[9px] bg-flame flex items-center justify-center shrink-0">
+                <Icon name="dumbbell" />
+              </span>
+            )}
+            <span className="truncate">{academyName || "Gym"}</span>
           </div>
           <button
             onClick={close}
@@ -101,15 +119,26 @@ export function MobileNav() {
 
         <div className="border-t border-ink-700 p-4">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-flame to-flame-dark flex items-center justify-center font-mono text-[0.78rem] font-semibold text-white shrink-0">
-              GD
-            </div>
+            {me?.photoUrl ? (
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-ink-700 shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={me.photoUrl}
+                  alt={me.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-flame to-flame-dark flex items-center justify-center font-mono text-[0.78rem] font-semibold text-white shrink-0">
+                {me?.initials ?? "?"}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="text-[0.88rem] font-semibold text-paper truncate">
-                Gym Demo
+                {me?.name ?? ""}
               </div>
               <div className="font-mono text-[0.65rem] uppercase tracking-[0.08em] text-ink-300">
-                Administrador
+                {me?.roleLabel ?? ""}
               </div>
             </div>
             <button

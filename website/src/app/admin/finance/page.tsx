@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 import { Topbar } from "@/components/admin/Topbar";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { MetricCard } from "@/components/admin/MetricCard";
+import { HeroCard } from "@/components/admin/HeroCard";
 import { Avatar } from "@/components/admin/Avatar";
 import {
   PaymentMethodLabel,
@@ -46,13 +48,27 @@ const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_OPTIONS = Array.from({ length: 4 }, (_, i) => CURRENT_YEAR - i);
 
 export default function FinancePage() {
+  // useSearchParams precisa de Suspense boundary pro prerender estático
+  // do Next.js não falhar.
+  return (
+    <Suspense fallback={null}>
+      <FinancePageInner />
+    </Suspense>
+  );
+}
+
+function FinancePageInner() {
   const now = new Date();
   const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
   const [filterYear, setFilterYear] = useState(now.getFullYear());
   const [filterOpen, setFilterOpen] = useState(false);
   const { data, loading, error } = useFinance({ month: filterMonth, year: filterYear });
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [query, setQuery] = useState("");
+  // Atalho usado por /admin/dependents → "Pagamentos" (?q=<nome>) e por
+  // outros pontos de partida que querem deep-link na busca.
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams?.get("q") ?? "";
+  const [query, setQuery] = useState(initialQuery);
   const apollo = useApolloClient();
 
   const isCurrentPeriod = filterMonth === now.getMonth() + 1 && filterYear === now.getFullYear();
@@ -124,38 +140,49 @@ export default function FinancePage() {
               <Button variant="line" onClick={exportCSV} disabled={!data || data.charges.length === 0}>
                 <Icon name="download" /> Exportar CSV
               </Button>
-              <Button variant="ink" onClick={() => setDialogOpen(true)}>
+              <Button variant="primary" onClick={() => setDialogOpen(true)}>
                 <Icon name="plus" /> Nova cobrança
               </Button>
             </>
           }
         />
 
-        {loading && <div className="text-ink-400">Carregando…</div>}
+        {loading && <LoadingState />}
         {error && <div className="text-rose">{error.message}</div>}
 
         {data && (
           <>
             <div className="grid grid-cols-4 gap-5 max-[980px]:grid-cols-2 max-[540px]:grid-cols-1">
-              {data.kpis.map((kpi) => (
-                <MetricCard
-                  key={kpi.id}
-                  metric={kpi}
-                  icon={
-                    <Icon
-                      name={
-                        kpi.id === "revenue"
-                          ? "money"
-                          : kpi.id === "overdue"
-                            ? "chart"
-                            : kpi.id === "processed"
-                              ? "zap"
-                              : "trending"
-                      }
-                    />
-                  }
-                />
-              ))}
+              {data.kpis.map((kpi, idx) => {
+                const iconName =
+                  kpi.id === "revenue"
+                    ? "money"
+                    : kpi.id === "overdue"
+                      ? "chart"
+                      : kpi.id === "processed"
+                        ? "zap"
+                        : "trending";
+                return (
+                  <HeroCard
+                    key={kpi.id}
+                    variant={idx % 2 === 0 ? "primary" : "secondary"}
+                    label={kpi.label}
+                    value={kpi.value}
+                    icon={iconName}
+                  >
+                    {kpi.delta && (
+                      <div className="text-[0.82rem] mt-2 text-white/90 relative">
+                        {kpi.delta.trend === "up"
+                          ? "↑"
+                          : kpi.delta.trend === "down"
+                            ? "↓"
+                            : "→"}{" "}
+                        {kpi.delta.value}
+                      </div>
+                    )}
+                  </HeroCard>
+                );
+              })}
             </div>
 
             <div className="grid grid-cols-[1.5fr_1fr] gap-5 mt-8 max-[980px]:grid-cols-1">
