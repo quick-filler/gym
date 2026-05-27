@@ -68,8 +68,9 @@ export default function ContactPage() {
       <section className="py-20 max-[720px]:py-12">
         <Wrap>
           <div className="grid grid-cols-[0.95fr_1.05fr] gap-16 max-[880px]:grid-cols-1 max-[880px]:gap-10 items-start">
-            {/* Pitch — vira primeiro no mobile pra contextualizar antes do form */}
-            <aside className="max-[880px]:order-1">
+            {/* Pitch — desktop: 1ª coluna (esquerda). Mobile: order:2
+                pra cair depois do form sem reorganizar o DOM. */}
+            <aside className="max-[880px]:order-2">
               <Eyebrow>Teste grátis</Eyebrow>
               <h1 className="font-display text-[clamp(2.2rem,5vw,3.6rem)] font-semibold tracking-[-0.03em] leading-[1.05] mt-6">
                 Comece grátis.
@@ -126,9 +127,10 @@ export default function ContactPage() {
               </div>
             </aside>
 
-            {/* Formulário de signup */}
+            {/* Form — desktop: 2ª coluna (direita) sticky. Mobile: order:1
+                pra subir pro topo da página. */}
             <section
-              className="bg-white border border-line rounded-[var(--radius-lg)] p-10 shadow-[var(--shadow-gym-2)] max-[720px]:p-6 max-[880px]:order-2 sticky top-24 max-[880px]:static"
+              className="bg-white border border-line rounded-[var(--radius-lg)] p-10 shadow-[var(--shadow-gym-2)] max-[720px]:p-6 max-[880px]:order-1 sticky top-24 max-[880px]:static"
               aria-labelledby="form-title"
             >
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-flame-50 text-flame font-mono text-[0.7rem] uppercase tracking-[0.1em] mb-4">
