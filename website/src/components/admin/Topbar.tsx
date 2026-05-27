@@ -1,8 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
-import { JWT_STORAGE_KEY } from "@/lib/config";
+import { logoutAndRedirect } from "@/lib/auth";
 import { useMe } from "@/lib/hooks";
 
 interface TopbarProps {
@@ -13,12 +12,10 @@ interface TopbarProps {
 }
 
 export function Topbar({ title, searchValue, onSearchChange, searchPlaceholder }: TopbarProps) {
-  const router = useRouter();
   const { data: me } = useMe();
 
   function handleLogout() {
-    localStorage.removeItem(JWT_STORAGE_KEY);
-    router.push("/login");
+    logoutAndRedirect("/login");
   }
 
   return (

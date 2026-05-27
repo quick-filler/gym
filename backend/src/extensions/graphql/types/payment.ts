@@ -34,6 +34,7 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('method');
       t.string('externalId');
       t.string('receiptUrl');
+      t.string('description');
       t.field('enrollment', {
         type: 'Enrollment',
         resolve: async (parent: any) => {
@@ -45,13 +46,46 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
           return doc?.enrollment ?? null;
         },
       });
+      t.field('student', {
+        type: 'Student',
+        resolve: async (parent: any) => {
+          if (parent.student !== undefined) return parent.student;
+          // `populate` is cast as any because Strapi's generated types
+          // (`types/generated/contentTypes.d.ts`) only refresh on the
+          // next `strapi develop` boot. The new `student`/`dependent`
+          // relations exist in schema.json but the d.ts hasn't caught
+          // up yet — runtime is fine.
+          const doc: any = await strapi.documents(UID).findOne({
+            documentId: parent.documentId,
+            populate: { student: true } as any,
+          });
+          return doc?.student ?? null;
+        },
+      });
+      t.field('dependent', {
+        type: 'Dependent',
+        resolve: async (parent: any) => {
+          if (parent.dependent !== undefined) return parent.dependent;
+          const doc: any = await strapi.documents(UID).findOne({
+            documentId: parent.documentId,
+            populate: { dependent: true } as any,
+          });
+          return doc?.dependent ?? null;
+        },
+      });
     },
   });
 
   const PaymentInput = nexus.inputObjectType({
     name: 'PaymentInput',
     definition(t: any) {
-      t.nonNull.id('enrollment');
+      // Pelo menos um de `enrollment` / `student` / `dependent` precisa
+      // estar presente — validado no resolver (não dá pra expressar a
+      // restrição "1-de-3" puramente no schema).
+      t.id('enrollment');
+      t.id('student');
+      t.id('dependent');
+      t.string('description');
       t.nonNull.float('amount');
       t.nonNull.string('dueDate');
       t.string('method');
@@ -110,14 +144,48 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
         resolve: async (_root: any, args: any, ctx: any) => {
           await requireRole(strapi, ctx, ['academy_admin']);
           const academyId = await requireAcademyId(strapi, ctx);
-          const enrollmentAcademy = await resolveDocAcademyId(
-            strapi,
-            'api::enrollment.enrollment',
-            args.data.enrollment,
-          );
-          if (enrollmentAcademy !== academyId) {
-            throw new Error('Matrícula de outra academia.');
+
+          const { enrollment, student, dependent } = args.data;
+          if (!enrollment && !student && !dependent) {
+            throw new Error(
+              'Cobrança precisa estar vinculada a uma matrícula, aluno ou dependente.',
+            );
           }
+
+          // Cada ref informada precisa ser da mesma academia do caller.
+          // Cobranças avulsas (sem matrícula) podem apontar direto pro
+          // aluno/dependente, então validamos cada um que vier.
+          if (enrollment) {
+            const enrollmentAcademy = await resolveDocAcademyId(
+              strapi,
+              'api::enrollment.enrollment',
+              enrollment,
+            );
+            if (enrollmentAcademy !== academyId) {
+              throw new Error('Matrícula de outra academia.');
+            }
+          }
+          if (student) {
+            const studentAcademy = await resolveDocAcademyId(
+              strapi,
+              'api::student.student',
+              student,
+            );
+            if (studentAcademy !== academyId) {
+              throw new Error('Aluno de outra academia.');
+            }
+          }
+          if (dependent) {
+            const dependentAcademy = await resolveDocAcademyId(
+              strapi,
+              'api::dependent.dependent',
+              dependent,
+            );
+            if (dependentAcademy !== academyId) {
+              throw new Error('Dependente de outra academia.');
+            }
+          }
+
           return await strapi.documents(UID).create({
             data: {
               ...args.data,

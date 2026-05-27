@@ -714,6 +714,41 @@ export const MOCK_DRE: DREData = {
       status: "open",
     },
   ],
+  revenueTotalLabel: "R$ 18.420",
+  revenueRows: [
+    {
+      id: "r1",
+      student: "João Silva",
+      source: "Plano Mensal",
+      paidAt: "03/04/2026",
+      amount: "R$ 99,00",
+      method: "pix",
+    },
+    {
+      id: "r2",
+      student: "Ana Costa",
+      source: "Plano Trimestral",
+      paidAt: "01/04/2026",
+      amount: "R$ 270,00",
+      method: "credit_card",
+    },
+    {
+      id: "r3",
+      student: "Mariana Lopes",
+      source: "Plano Anual",
+      paidAt: "28/03/2026",
+      amount: "R$ 890,00",
+      method: "boleto",
+    },
+    {
+      id: "r4",
+      student: "Pedro Henrique",
+      source: "Taxa de matrícula",
+      paidAt: "10/04/2026",
+      amount: "R$ 50,00",
+      method: "pix",
+    },
+  ],
 };
 
 /* ============================================================

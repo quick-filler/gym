@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
-import { JWT_STORAGE_KEY } from "@/lib/config";
-import { clearAuthCookies } from "@/lib/auth";
+import { logoutAndRedirect } from "@/lib/auth";
 import { useAcademy, useMe } from "@/lib/hooks";
 
 type NavItem = {
@@ -33,14 +32,11 @@ const CONFIG: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { data: academy } = useAcademy();
   const { data: me } = useMe();
 
   function handleLogout() {
-    localStorage.removeItem(JWT_STORAGE_KEY);
-    clearAuthCookies();
-    router.push("/login");
+    logoutAndRedirect("/login");
   }
 
   const academyName = academy?.name ?? "";

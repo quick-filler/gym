@@ -256,6 +256,15 @@ export interface DREExpenseRow {
   status: ExpenseStatus;
 }
 
+export interface DRERevenueRow {
+  id: string;
+  student: string;
+  source: string; // nome do plano, descrição da cobrança ou "Avulsa"
+  paidAt: string; // DD/MM/YYYY
+  amount: string; // formatted
+  method: PaymentMethod;
+}
+
 export interface DREData {
   monthLabel: string; // "Abril 2026"
   revenue: {
@@ -276,6 +285,8 @@ export interface DREData {
   categoryBreakdown: DRECategoryBreakdown[];
   expensesTotalLabel: string; // "R$ 9.800"
   expenseRows: DREExpenseRow[];
+  revenueTotalLabel: string; // "R$ 18.420"
+  revenueRows: DRERevenueRow[];
 }
 
 /* ============================================================

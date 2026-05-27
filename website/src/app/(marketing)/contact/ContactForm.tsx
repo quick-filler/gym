@@ -62,19 +62,29 @@ export function ContactForm() {
         <div className="w-16 h-16 mx-auto rounded-full bg-emerald-50 text-emerald flex items-center justify-center mb-5">
           <Icon name="check" size="xl" />
         </div>
-        <h3 className="font-display text-[1.6rem] font-semibold">
-          Mensagem enviada!
+        <h3 className="font-display text-[1.5rem] font-semibold leading-[1.2]">
+          Cadastro recebido!
         </h3>
-        <p className="text-ink-500 mt-3 max-w-[28rem] mx-auto">
-          Obrigado! A gente responde no mesmo dia útil, geralmente em menos de
-          uma hora.
+        <p className="text-ink-500 mt-3 max-w-[28rem] mx-auto text-[0.95rem] leading-[1.55]">
+          A gente acabou de receber seus dados. Em poucos minutos você recebe
+          um e-mail com o link de acesso à sua conta — já liberada por 14
+          dias, sem cartão.
         </p>
-        <Button
-          variant="ink"
-          className="mt-6"
-          onClick={() => setSent(false)}
-        >
-          Enviar outra mensagem
+        <div className="mt-6 p-4 rounded-xl bg-paper-2 text-left max-w-[28rem] mx-auto text-[0.82rem] text-ink-600">
+          <strong className="block font-semibold text-ink-900 mb-1">
+            Não recebeu em 5 minutos?
+          </strong>
+          Confere a caixa de spam ou fala com a gente em{" "}
+          <a
+            href="mailto:contato@quickfiller.org"
+            className="text-flame hover:underline"
+          >
+            contato@quickfiller.org
+          </a>
+          .
+        </div>
+        <Button variant="ghost" className="mt-6" onClick={() => setSent(false)}>
+          Cadastrar outra academia
         </Button>
       </div>
     );
@@ -83,19 +93,33 @@ export function ContactForm() {
   return (
     <form onSubmit={handleSubmit} noValidate>
       <div className="grid grid-cols-2 gap-4 max-[720px]:grid-cols-1">
-        <Field label="Nome *">
-          <Input name="name" placeholder="Como te chamamos?" required />
+        <Field label="Seu nome *">
+          <Input
+            name="name"
+            placeholder="Como te chamamos?"
+            autoComplete="name"
+            required
+          />
         </Field>
-        <Field label="Academia">
-          <Input name="academy" placeholder="Nome da sua academia" />
+        <Field label="Nome da academia *">
+          <Input
+            name="academy"
+            placeholder="Ex: CrossFit Vila Mariana"
+            autoComplete="organization"
+            required
+          />
         </Field>
       </div>
       <div className="grid grid-cols-2 gap-4 max-[720px]:grid-cols-1">
-        <Field label="E-mail *">
+        <Field
+          label="E-mail *"
+          help="É pra cá que mandamos o link de acesso."
+        >
           <Input
             name="email"
             type="email"
             placeholder="voce@academia.com.br"
+            autoComplete="email"
             required
           />
         </Field>
@@ -106,11 +130,12 @@ export function ContactForm() {
             value={phone}
             onChange={(e) => setPhone(maskPhone(e.target.value))}
             inputMode="numeric"
+            autoComplete="tel"
           />
         </Field>
       </div>
-      <Field label="Quantos alunos ativos?">
-        <Select name="size" defaultValue="de_50_a_200">
+      <Field label="Quantos alunos ativos hoje? *">
+        <Select name="size" defaultValue="de_50_a_200" required>
           <option value="menos_de_50">Menos de 50</option>
           <option value="de_50_a_200">50 — 200</option>
           <option value="de_200_a_500">200 — 500</option>
@@ -119,14 +144,13 @@ export function ContactForm() {
         </Select>
       </Field>
       <Field
-        label="O que você quer saber? *"
-        help="Se for migração de outro sistema, conta qual."
+        label="Alguma observação? (opcional)"
+        help="Se está migrando de outro sistema, conta qual. Ajuda a gente a preparar a importação."
       >
         <Textarea
           name="message"
-          rows={5}
-          placeholder="Pode ser específico — quanto mais contexto, melhor a resposta."
-          required
+          rows={3}
+          placeholder="Ex: hoje uso o sistema X, preciso importar 350 alunos…"
         />
       </Field>
 
@@ -144,17 +168,19 @@ export function ContactForm() {
         {loading ? (
           <>
             <Spinner size={14} />
-            Enviando
+            Criando sua conta…
           </>
         ) : (
           <>
-            Enviar mensagem
+            Começar teste grátis
             <Icon name="arrow-right" />
           </>
         )}
       </Button>
-      <p className="text-[0.78rem] text-ink-400 mt-4 text-center">
-        Ao enviar, você concorda com nossa{" "}
+      <p className="text-[0.78rem] text-ink-400 mt-4 text-center leading-[1.5]">
+        Ao se cadastrar você libera 14 dias grátis, sem cartão de crédito.
+        <br className="max-[720px]:hidden" />
+        Concorda também com nossa{" "}
         <a href="/privacidade" className="text-flame hover:underline">
           Política de Privacidade
         </a>{" "}

@@ -653,6 +653,7 @@ export interface ApiDependentDependent extends Struct.CollectionTypeSchema {
   };
   attributes: {
     academy: Schema.Attribute.Relation<'manyToOne', 'api::academy.academy'>;
+    address: Schema.Attribute.JSON;
     allergies: Schema.Attribute.Text;
     assessments: Schema.Attribute.Relation<
       'oneToMany',
@@ -664,6 +665,7 @@ export interface ApiDependentDependent extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::class-booking.class-booking'
     >;
+    cpf: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -873,6 +875,11 @@ export interface ApiPaymentPayment extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    dependent: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::dependent.dependent'
+    >;
+    description: Schema.Attribute.String;
     dueDate: Schema.Attribute.Date & Schema.Attribute.Required;
     enrollment: Schema.Attribute.Relation<
       'manyToOne',
@@ -895,6 +902,7 @@ export interface ApiPaymentPayment extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'pending'>;
+    student: Schema.Attribute.Relation<'manyToOne', 'api::student.student'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -988,6 +996,7 @@ export interface ApiStudentStudent extends Struct.CollectionTypeSchema {
   };
   attributes: {
     academy: Schema.Attribute.Relation<'manyToOne', 'api::academy.academy'>;
+    address: Schema.Attribute.JSON;
     assessments: Schema.Attribute.Relation<
       'oneToMany',
       'api::body-assessment.body-assessment'
@@ -997,6 +1006,7 @@ export interface ApiStudentStudent extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::class-booking.class-booking'
     >;
+    cpf: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1009,6 +1019,7 @@ export interface ApiStudentStudent extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::enrollment.enrollment'
     >;
+    gender: Schema.Attribute.Enumeration<['female', 'male', 'other']>;
     isGuardian: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<

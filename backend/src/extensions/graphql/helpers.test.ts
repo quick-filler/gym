@@ -41,11 +41,13 @@ describe('withAcademyScope', () => {
 });
 
 describe('withPaymentScope', () => {
-  it('emits the 3-hop $or covering both student and dependent enrollments', () => {
+  it('emits the $or covering enrollment-backed and ad-hoc charges for both student and dependent', () => {
     expect(withPaymentScope(ACADEMY)).toEqual({
       $or: [
         { enrollment: { student: { academy: { documentId: ACADEMY } } } },
         { enrollment: { dependent: { academy: { documentId: ACADEMY } } } },
+        { student: { academy: { documentId: ACADEMY } } },
+        { dependent: { academy: { documentId: ACADEMY } } },
       ],
     });
   });
@@ -55,6 +57,8 @@ describe('withPaymentScope', () => {
       $or: [
         { enrollment: { student: { academy: { documentId: NO_ACADEMY } } } },
         { enrollment: { dependent: { academy: { documentId: NO_ACADEMY } } } },
+        { student: { academy: { documentId: NO_ACADEMY } } },
+        { dependent: { academy: { documentId: NO_ACADEMY } } },
       ],
     });
   });

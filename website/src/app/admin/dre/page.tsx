@@ -9,7 +9,14 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { Pill } from "@/components/ui/Pill";
-import type { DRECashFlowPoint, DREExpenseRow, ExpenseStatus } from "@/lib/types";
+import { Avatar } from "@/components/admin/Avatar";
+import { PaymentMethodLabel } from "@/components/admin/StatusPill";
+import type {
+  DRECashFlowPoint,
+  DREExpenseRow,
+  DRERevenueRow,
+  ExpenseStatus,
+} from "@/lib/types";
 import { useDRE } from "@/lib/hooks";
 import { NewExpenseDialog } from "./NewExpenseDialog";
 import { HeroCard } from "@/components/admin/HeroCard";
@@ -55,6 +62,22 @@ export default function DREPage() {
       r.description.toLowerCase().includes(query.toLowerCase()) ||
       r.categoryLabel.toLowerCase().includes(query.toLowerCase()),
   );
+
+  const filteredRevenue = (data?.revenueRows ?? []).filter(
+    (r: DRERevenueRow) =>
+      !query ||
+      r.student.toLowerCase().includes(query.toLowerCase()) ||
+      r.source.toLowerCase().includes(query.toLowerCase()),
+  );
+
+  function initialsFor(name: string): string {
+    return name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase() ?? "")
+      .join("");
+  }
 
   return (
     <>
@@ -262,6 +285,75 @@ export default function DREPage() {
                 </div>
               </Card>
             </div>
+
+            {/* Revenue table — espelho do que está em /admin/finance, mas
+                filtrado pra só "Pago no mês" porque é isso que entra na
+                receita do DRE. Sem essa tabela, mudar o status de uma
+                cobrança pra "Pago" só mexia nos cards agregados, sem
+                feedback list-level. */}
+            <Card className="p-0 overflow-hidden mb-8">
+              <div className="flex items-center justify-between p-6 border-b border-line">
+                <div>
+                  <h3 className="font-display text-[1.1rem] font-semibold text-ink-900">
+                    Receitas recebidas
+                  </h3>
+                  <p className="font-mono text-[0.7rem] uppercase tracking-[0.1em] text-ink-400 mt-1">
+                    {data.monthLabel} · {filteredRevenue.length} cobranças pagas · total {data.revenueTotalLabel}
+                  </p>
+                </div>
+              </div>
+              {filteredRevenue.length === 0 ? (
+                <div className="p-12 text-center text-ink-400">
+                  Nenhuma cobrança paga neste mês ainda.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-line bg-paper-50">
+                        {["Aluno", "Origem", "Recebido em", "Método", "Valor"].map((h) => (
+                          <th
+                            key={h}
+                            className="text-left px-6 py-3 font-mono text-[0.68rem] uppercase tracking-[0.1em] text-ink-400 font-medium"
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRevenue.map((row: DRERevenueRow) => (
+                        <tr
+                          key={row.id}
+                          className="border-b border-line/60 last:border-b-0 hover:bg-paper-50 transition-colors"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <Avatar initials={initialsFor(row.student)} size="sm" />
+                              <span className="text-[0.9rem] font-semibold text-ink-900">
+                                {row.student}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-[0.85rem] text-ink-700">
+                            {row.source}
+                          </td>
+                          <td className="px-6 py-4 font-mono text-[0.82rem] text-ink-500">
+                            {row.paidAt}
+                          </td>
+                          <td className="px-6 py-4">
+                            <PaymentMethodLabel method={row.method} />
+                          </td>
+                          <td className="px-6 py-4 font-mono text-[0.9rem] font-semibold text-emerald">
+                            {row.amount}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
 
             {/* Expenses table */}
             <Card className="p-0 overflow-hidden">

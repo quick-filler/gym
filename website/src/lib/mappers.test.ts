@@ -446,6 +446,17 @@ describe('mapDRE', () => {
         status: 'paid',
       },
     ],
+    revenueTotalLabel: 'R$ 18.420',
+    revenueRows: [
+      {
+        id: 'r1',
+        student: 'João Silva',
+        source: 'Plano Mensal',
+        paidAt: '03/04/2026',
+        amount: 'R$ 99,00',
+        method: 'pix',
+      },
+    ],
   };
 
   it('maps the hero + cashflow + categories + rows', () => {

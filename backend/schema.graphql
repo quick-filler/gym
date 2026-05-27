@@ -58,6 +58,28 @@ input AcademyUpdateInput {
   slug: String
 }
 
+type Address {
+  cep: String
+  city: String
+  complement: String
+  neighborhood: String
+  number: String
+  state: String
+  street: String
+  type: String
+}
+
+input AddressInput {
+  cep: String
+  city: String
+  complement: String
+  neighborhood: String
+  number: String
+  state: String
+  street: String
+  type: String
+}
+
 type AdminDashboard {
   metrics: [MetricCard!]!
   recentStudents: [DashboardStudentRow!]!
@@ -142,6 +164,21 @@ input BooleanFilterInput {
   null: Boolean
   or: [Boolean]
   startsWith: Boolean
+}
+
+type BulkImportItem {
+  dependentDocumentId: String
+  message: String
+  rowNumber: Int!
+  status: String!
+  studentDocumentId: String
+}
+
+type BulkImportResult {
+  created: Int!
+  errors: Int!
+  items: [BulkImportItem!]!
+  skipped: Int!
 }
 
 type ClassBooking {
@@ -292,6 +329,20 @@ type DREOverview {
   monthLabel: String!
   profit: DREHeroProfit!
   revenue: DREHeroRevenue!
+  revenueRows: [DRERevenueRow!]!
+  revenueTotalLabel: String!
+}
+
+"""
+A single recognised revenue line in the month — a payment that was marked as paid in the period.
+"""
+type DRERevenueRow {
+  amount: String!
+  id: String!
+  method: String!
+  paidAt: String!
+  source: String
+  student: String!
 }
 
 """Roster of all classes happening on a given date."""
@@ -411,10 +462,12 @@ type DeleteMutationResponse {
 
 type Dependent {
   academy: Academy
+  address: Address
   allergies: String
   birthdate: String!
   bloodType: String
   bookings: [ClassBooking]
+  cpf: String
   documentId: ID!
   emergencyContactName: String
   emergencyContactPhone: String
@@ -431,9 +484,11 @@ type Dependent {
 }
 
 input DependentInput {
+  address: AddressInput
   allergies: String
   birthdate: String!
   bloodType: String
+  cpf: String
   emergencyContactName: String
   emergencyContactPhone: String
   gender: String
@@ -446,9 +501,11 @@ input DependentInput {
 }
 
 input DependentUpdateInput {
+  address: AddressInput
   allergies: String
   birthdate: String
   bloodType: String
+  cpf: String
   emergencyContactName: String
   emergencyContactPhone: String
   gender: String
@@ -808,6 +865,8 @@ type MetricDelta {
 }
 
 type Mutation {
+  bulkImportStudents(dryRun: Boolean = false, rows: [StudentImportRow!]!): BulkImportResult
+
   """Mark a booking as attended and stamp checkedInAt."""
   checkInBooking(documentId: ID!): ClassBooking
 
@@ -876,6 +935,8 @@ input PaginationInput {
 
 type Payment {
   amount: Float!
+  dependent: Dependent
+  description: String
   documentId: ID!
   dueDate: String!
   enrollment: Enrollment
@@ -884,16 +945,20 @@ type Payment {
   paidAt: String
   receiptUrl: String
   status: String!
+  student: Student
 }
 
 input PaymentInput {
   amount: Float!
+  dependent: ID
+  description: String
   dueDate: String!
-  enrollment: ID!
+  enrollment: ID
   method: String
   paidAt: String
   receiptUrl: String
   status: String
+  student: ID
 }
 
 input PaymentUpdateInput {
@@ -1115,11 +1180,14 @@ input StringFilterInput {
 
 type Student {
   academy: Academy
+  address: Address
   birthdate: String
+  cpf: String
   dependents: [Dependent]
   documentId: ID!
   email: String!
   enrollments: [Enrollment]
+  gender: String
   isGuardian: Boolean
   name: String!
   notes: String
@@ -1130,10 +1198,31 @@ type Student {
   workoutPlans: [WorkoutPlan]
 }
 
+input StudentImportRow {
+  address: AddressInput
+  birthdate: String
+  cpf: String
+  dependentBirthdate: String
+  dependentCpf: String
+  dependentGender: String
+  dependentName: String
+  email: String!
+  emergencyContactName: String
+  emergencyContactPhone: String
+  gender: String
+  kind: String!
+  name: String!
+  phone: String
+  rowNumber: Int
+}
+
 input StudentInput {
   academy: ID
+  address: AddressInput
   birthdate: String
+  cpf: String
   email: String!
+  gender: String
   isGuardian: Boolean
   name: String!
   notes: String
@@ -1145,8 +1234,11 @@ input StudentInput {
 }
 
 input StudentUpdateInput {
+  address: AddressInput
   birthdate: String
+  cpf: String
   email: String
+  gender: String
   isGuardian: Boolean
   name: String
   notes: String

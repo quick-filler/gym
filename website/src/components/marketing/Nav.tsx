@@ -1,3 +1,6 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
@@ -11,6 +14,12 @@ const LINKS = [
 ];
 
 export function Nav() {
+  const pathname = usePathname();
+  // Esconder o CTA quando o visitante já está na página do trial — o
+  // botão ficava redundante (clicar leva pra mesma página) e confundia
+  // quem chegou ali via outro link.
+  const onTrialPage = pathname === "/contact";
+
   return (
     <header className="sticky top-0 z-50 bg-paper/80 backdrop-blur-xl backdrop-saturate-150 border-b border-line/70">
       <div className="w-full max-w-[1280px] mx-auto px-8 max-[720px]:px-5">
@@ -28,13 +37,19 @@ export function Nav() {
             ))}
           </nav>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" href="/login">
+            <Button
+              variant="ghost"
+              href="/login"
+              className="border border-line hover:border-ink-900"
+            >
               Entrar
             </Button>
-            <Button variant="ink" href="/contact">
-              Teste grátis
-              <Icon name="arrow-right" />
-            </Button>
+            {!onTrialPage && (
+              <Button variant="ink" href="/contact">
+                Teste grátis
+                <Icon name="arrow-right" />
+              </Button>
+            )}
           </div>
         </div>
       </div>

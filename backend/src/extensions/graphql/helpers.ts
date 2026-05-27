@@ -186,6 +186,10 @@ export async function resolveDocAcademyId(
               dependent: { populate: { academy: { fields: ['documentId'] } } },
             },
           },
+          // Cobranças avulsas (sem matrícula) podem apontar direto pro
+          // aluno ou dependente.
+          student: { populate: { academy: { fields: ['documentId'] } } },
+          dependent: { populate: { academy: { fields: ['documentId'] } } },
         };
       case 'api::workout-plan.workout-plan':
       case 'api::body-assessment.body-assessment':
@@ -228,6 +232,8 @@ export async function resolveDocAcademyId(
       return (
         enr?.student?.academy?.documentId ??
         enr?.dependent?.academy?.documentId ??
+        doc.student?.academy?.documentId ??
+        doc.dependent?.academy?.documentId ??
         null
       );
     }
@@ -296,6 +302,9 @@ export function withAcademyScope(filters: any, academyId: string | null): any {
  * Scopes Payment queries via enrollment → student/dependent → academy.
  * Both branches checked because an enrollment may belong to a Student OR
  * to a Dependent (whose payments are still funnelled through their guardian).
+ *
+ * Cobranças avulsas (sem matrícula) podem apontar direto pro aluno ou
+ * dependente — por isso os dois últimos braços do $or.
  */
 export function withPaymentScope(academyId: string | null): any {
   const id = academyId ?? NO_ACADEMY;
@@ -303,6 +312,8 @@ export function withPaymentScope(academyId: string | null): any {
     $or: [
       { enrollment: { student: { academy: { documentId: id } } } },
       { enrollment: { dependent: { academy: { documentId: id } } } },
+      { student: { academy: { documentId: id } } },
+      { dependent: { academy: { documentId: id } } },
     ],
   };
 }

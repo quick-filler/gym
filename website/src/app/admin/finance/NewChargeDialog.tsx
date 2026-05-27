@@ -105,6 +105,11 @@ export function NewChargeDialog({
 
   const [studentId, setStudentId] = useState("");
   const [planId, setPlanId] = useState("");
+  /** Avulsa: cobrança que não usa nem cria matrícula — vai direto pro
+   *  aluno com a descrição livre. Útil pra taxas, multas e aulas
+   *  experimentais. */
+  const [oneOff, setOneOff] = useState(false);
+  const [description, setDescription] = useState("");
   const [amount, setAmount] = useState(0);
   const [dueDate, setDueDate] = useState(todayIso);
   const [method, setMethod] = useState<"pix" | "credit_card" | "boleto">("pix");
@@ -154,6 +159,8 @@ export function NewChargeDialog({
   function reset() {
     setStudentId("");
     setPlanId("");
+    setOneOff(false);
+    setDescription("");
     setAmount(0);
     setDueDate(todayIso);
     setMethod("pix");
@@ -182,9 +189,34 @@ export function NewChargeDialog({
     if (!amount || amount <= 0) return setError("Valor inválido.");
 
     try {
+      // Avulsa: pula matrícula, manda direto pro aluno com a descrição
+      // livre (taxa, multa, aula avulsa, etc.).
+      if (oneOff) {
+        if (!description.trim()) {
+          return setError("Descreva a cobrança avulsa (ex: 'Taxa de matrícula').");
+        }
+        await createPayment({
+          variables: {
+            data: {
+              student: studentId,
+              description: description.trim(),
+              amount,
+              dueDate,
+              method,
+              status,
+              paidAt: status === "paid" ? dueDate : undefined,
+            },
+          },
+        });
+        onCreated?.();
+        reset();
+        onClose();
+        return;
+      }
+
       let enrollmentId = findExistingEnrollment();
       if (!enrollmentId) {
-        if (!planId) return setError("Aluno sem matrícula ativa — selecione um plano.");
+        if (!planId) return setError("Aluno sem matrícula ativa — selecione um plano ou marque como cobrança avulsa.");
         const res = await createEnrollment({
           variables: {
             data: {
@@ -257,33 +289,60 @@ export function NewChargeDialog({
           />
         </Field>
 
-        <Field
-          label="Plano"
-          help={
-            plans.length === 0
-              ? "Nenhum plano ativo. Cadastre um plano antes de gerar cobrança."
-              : studentId && planId
-                ? enrollmentExists
-                  ? "Aluno já tem matrícula ativa neste plano — a cobrança será lançada nela."
-                  : "Uma nova matrícula será criada com este plano."
-                : "Opcional se o aluno já tiver matrícula ativa."
-          }
-        >
-          <Combobox
-            value={planId}
-            onChange={handlePlanChange}
-            disabled={plans.length === 0}
-            placeholder="Selecione um plano… (opcional)"
-            searchPlaceholder="Buscar plano"
-            emptyMessage="Nenhum plano"
-            options={plans.map((p) => ({
-              id: p.documentId,
-              label: p.name,
-              sublabel: CYCLE_LABEL[p.billingCycle ?? ""] ?? p.billingCycle,
-              hint: `R$ ${p.price.toLocaleString("pt-BR")}`,
-            }))}
+        <label className="flex items-start gap-2 mb-3 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={oneOff}
+            onChange={(e) => setOneOff(e.target.checked)}
+            className="mt-1 accent-flame"
           />
-        </Field>
+          <span className="text-[0.85rem] text-ink-700">
+            <strong className="font-semibold">Cobrança avulsa</strong>
+            <span className="text-ink-500"> — sem matrícula nem plano. Útil pra taxa de matrícula, multa, aula experimental.</span>
+          </span>
+        </label>
+
+        {oneOff ? (
+          <Field
+            label="Descrição"
+            help="Aparece como o 'nome' da cobrança no Financeiro e no DRE."
+          >
+            <Input
+              required
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Ex: Taxa de matrícula, Aula experimental…"
+            />
+          </Field>
+        ) : (
+          <Field
+            label="Plano"
+            help={
+              plans.length === 0
+                ? "Nenhum plano ativo. Cadastre um plano antes de gerar cobrança."
+                : studentId && planId
+                  ? enrollmentExists
+                    ? "Aluno já tem matrícula ativa neste plano — a cobrança será lançada nela."
+                    : "Uma nova matrícula será criada com este plano."
+                  : "Opcional se o aluno já tiver matrícula ativa."
+            }
+          >
+            <Combobox
+              value={planId}
+              onChange={handlePlanChange}
+              disabled={plans.length === 0}
+              placeholder="Selecione um plano… (opcional)"
+              searchPlaceholder="Buscar plano"
+              emptyMessage="Nenhum plano"
+              options={plans.map((p) => ({
+                id: p.documentId,
+                label: p.name,
+                sublabel: CYCLE_LABEL[p.billingCycle ?? ""] ?? p.billingCycle,
+                hint: `R$ ${p.price.toLocaleString("pt-BR")}`,
+              }))}
+            />
+          </Field>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <Field label="Valor (R$)">

@@ -182,6 +182,15 @@ const DRE_OVERVIEW = graphql(`
         amount
         status
       }
+      revenueTotalLabel
+      revenueRows {
+        id
+        student
+        source
+        paidAt
+        amount
+        method
+      }
     }
   }
 `);
@@ -844,10 +853,18 @@ export function useUpdateAcademy() {
 }
 
 export function useDRE(): DataSourceResult<DREData> {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const q = useQuery(DRE_OVERVIEW, { skip: USE_MOCKS });
+  // cache-and-network: ao voltar da página de Financeiro pro DRE,
+  // a query roda de novo em background ainda que o cache esteja
+  // populado — caso contrário um "Marcar como pago" feito no
+  // /admin/finance só seria refletido após hard reload, porque
+  // refetchQueries({ include: [...] }) só refeta queries que
+  // estão observed naquele instante.
+  const q = useQuery(DRE_OVERVIEW, {
+    skip: USE_MOCKS,
+    fetchPolicy: "cache-and-network",
+  });
   if (USE_MOCKS) return useMockedValue(MOCK_DRE);
-  if (q.loading) return loadingResult();
+  if (q.loading && !q.data) return loadingResult();
   if (q.error) return errorResult(q.error);
   const d = q.data?.dreOverview;
   if (!d) return { data: null, loading: false, error: null };

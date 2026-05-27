@@ -538,6 +538,15 @@ export interface RawDREOverview {
     amount: string;
     status: string;
   }>;
+  revenueTotalLabel: string;
+  revenueRows: Array<{
+    id: string;
+    student: string;
+    source?: string | null;
+    paidAt: string;
+    amount: string;
+    method: string;
+  }>;
 }
 
 export function mapDRE(d: RawDREOverview): DREData {
@@ -582,6 +591,15 @@ export function mapDRE(d: RawDREOverview): DREData {
       dueDate: r.dueDate,
       amount: r.amount,
       status: r.status as DREData["expenseRows"][number]["status"],
+    })),
+    revenueTotalLabel: d.revenueTotalLabel,
+    revenueRows: d.revenueRows.map((r) => ({
+      id: r.id,
+      student: r.student,
+      source: r.source ?? "Avulsa",
+      paidAt: r.paidAt,
+      amount: r.amount,
+      method: r.method as DREData["revenueRows"][number]["method"],
     })),
   };
 }
