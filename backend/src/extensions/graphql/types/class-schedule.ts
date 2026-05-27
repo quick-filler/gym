@@ -12,6 +12,7 @@ import {
   isPlatformAdmin,
   requireAcademyId,
   requireRole,
+  requireActiveSubscription,
   resolveUserAcademyId,
   withAcademyScope,
 } from '../helpers';
@@ -292,6 +293,7 @@ export function buildClassSchedule({ nexus, strapi }: { nexus: any; strapi: Core
         args: { data: nexus.nonNull(nexus.arg({ type: 'ClassScheduleInput' })) },
         resolve: async (_root: any, args: any, ctx: any) => {
           await requireRole(strapi, ctx, ['academy_admin']);
+          await requireActiveSubscription(strapi, ctx);
           const academyId = await requireAcademyId(strapi, ctx);
 
           // Hard-block on conflicts at write time so the DB can't end up
@@ -325,6 +327,7 @@ export function buildClassSchedule({ nexus, strapi }: { nexus: any; strapi: Core
         resolve: async (_root: any, args: any, ctx: any) => {
           await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           await requireRole(strapi, ctx, ['academy_admin']);
+          await requireActiveSubscription(strapi, ctx);
 
           // Merge proposed patch onto current row so partial updates still
           // get the right time/weekday/instructor when checking conflicts.
@@ -376,6 +379,7 @@ export function buildClassSchedule({ nexus, strapi }: { nexus: any; strapi: Core
         resolve: async (_root: any, args: any, ctx: any) => {
           await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           await requireRole(strapi, ctx, ['academy_admin']);
+          await requireActiveSubscription(strapi, ctx);
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });
           return doc;

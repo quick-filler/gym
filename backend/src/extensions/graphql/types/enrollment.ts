@@ -16,6 +16,7 @@ import {
   isPlatformAdmin,
   requireAcademyId,
   requireRole,
+  requireActiveSubscription,
   resolveDocAcademyId,
   resolveUserAcademyId,
   withStudentScope,
@@ -130,6 +131,7 @@ export function buildEnrollment({ nexus, strapi }: { nexus: any; strapi: Core.St
         args: { data: nexus.nonNull(nexus.arg({ type: 'EnrollmentInput' })) },
         resolve: async (_root: any, args: any, ctx: any) => {
           await requireRole(strapi, ctx, ['academy_admin']);
+          await requireActiveSubscription(strapi, ctx);
           const academyId = await requireAcademyId(strapi, ctx);
 
           // Either student OR dependent must be set, not both.
@@ -181,6 +183,7 @@ export function buildEnrollment({ nexus, strapi }: { nexus: any; strapi: Core.St
         resolve: async (_root: any, args: any, ctx: any) => {
           await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           await requireRole(strapi, ctx, ['academy_admin']);
+          await requireActiveSubscription(strapi, ctx);
           return await strapi.documents(UID).update({
             documentId: args.documentId,
             data: args.data,
@@ -194,6 +197,7 @@ export function buildEnrollment({ nexus, strapi }: { nexus: any; strapi: Core.St
         resolve: async (_root: any, args: any, ctx: any) => {
           await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           await requireRole(strapi, ctx, ['academy_admin']);
+          await requireActiveSubscription(strapi, ctx);
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });
           return doc;

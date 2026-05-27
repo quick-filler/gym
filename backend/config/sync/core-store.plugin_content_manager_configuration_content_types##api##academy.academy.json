@@ -118,6 +118,36 @@
           "sortable": true
         }
       },
+      "subscription": {
+        "edit": {
+          "label": "subscription",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "asaasCustomerId"
+        },
+        "list": {
+          "label": "subscription",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "poolSettings": {
+        "edit": {
+          "label": "poolSettings",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "documentId"
+        },
+        "list": {
+          "label": "poolSettings",
+          "searchable": true,
+          "sortable": true
+        }
+      },
       "isActive": {
         "edit": {
           "label": "isActive",
@@ -498,6 +528,16 @@
         [
           {
             "name": "logoSquare",
+            "size": 6
+          },
+          {
+            "name": "subscription",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "poolSettings",
             "size": 6
           }
         ]

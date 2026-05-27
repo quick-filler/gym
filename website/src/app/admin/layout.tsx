@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { MobileNav } from "@/components/admin/MobileNav";
 import { AcademyThemeProvider } from "@/components/admin/AcademyThemeProvider";
+import { SubscriptionBanner } from "@/components/admin/SubscriptionBanner";
 
 export const metadata: Metadata = {
   title: "Painel administrativo",
@@ -17,6 +18,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <Sidebar />
         <MobileNav />
         <div className="pl-[248px] max-[980px]:pl-0 flex flex-col min-h-screen">
+          <SubscriptionBanner />
           {children}
         </div>
         <Toaster position="bottom-right" richColors closeButton />

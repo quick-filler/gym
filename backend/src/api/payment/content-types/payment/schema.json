@@ -18,6 +18,19 @@
       "target": "api::enrollment.enrollment",
       "inversedBy": "payments"
     },
+    "student": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::student.student"
+    },
+    "dependent": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::dependent.dependent"
+    },
+    "description": {
+      "type": "string"
+    },
     "amount": {
       "type": "decimal",
       "required": true

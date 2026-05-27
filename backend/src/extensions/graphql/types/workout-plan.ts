@@ -12,6 +12,7 @@ import {
   isPlatformAdmin,
   requireAcademyId,
   requireRole,
+  requireActiveSubscription,
   resolveDocAcademyId,
   resolveUserAcademyId,
   withStudentScope,
@@ -131,6 +132,7 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
         args: { data: nexus.nonNull(nexus.arg({ type: 'WorkoutPlanInput' })) },
         resolve: async (_root: any, args: any, ctx: any) => {
           await requireRole(strapi, ctx, ['academy_admin', 'instructor']);
+          await requireActiveSubscription(strapi, ctx);
           const academyId = await requireAcademyId(strapi, ctx);
           if (!args.data.student && !args.data.dependent) {
             throw new Error('Informe o aluno ou o dependente.');
@@ -164,6 +166,7 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
         resolve: async (_root: any, args: any, ctx: any) => {
           await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           await requireRole(strapi, ctx, ['academy_admin', 'instructor']);
+          await requireActiveSubscription(strapi, ctx);
           return await strapi.documents(UID).update({
             documentId: args.documentId,
             data: args.data,
@@ -177,6 +180,7 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
         resolve: async (_root: any, args: any, ctx: any) => {
           await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           await requireRole(strapi, ctx, ['academy_admin', 'instructor']);
+          await requireActiveSubscription(strapi, ctx);
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });
           return doc;

@@ -1,0 +1,67 @@
+{
+  "kind": "collectionType",
+  "collectionName": "platform_plans",
+  "info": {
+    "singularName": "platform-plan",
+    "pluralName": "platform-plans",
+    "displayName": "Platform Plan",
+    "description": "GYM SaaS tier (Starter/Business/Pro) — feeds the public /pricing page and the Academy.platformPlan relation. Source of truth for tier price/features/limits."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "tagline": {
+      "type": "string"
+    },
+    "tag": {
+      "type": "string"
+    },
+    "priceMonthly": {
+      "type": "decimal",
+      "required": true
+    },
+    "priceAnnual": {
+      "type": "decimal"
+    },
+    "currency": {
+      "type": "string",
+      "default": "BRL"
+    },
+    "features": {
+      "type": "json"
+    },
+    "limits": {
+      "type": "json"
+    },
+    "modules": {
+      "type": "json"
+    },
+    "ctaLabel": {
+      "type": "string",
+      "default": "Começar grátis"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "sortOrder": {
+      "type": "integer",
+      "default": 0
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

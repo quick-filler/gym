@@ -18,10 +18,17 @@
 
 import type { Core } from '@strapi/strapi';
 
-// Only the Asaas webhook is public — it's called by the external payment
-// gateway with a shared secret header. Everything else requires auth.
+// Only the Asaas webhook and the SaaS pricing catalog are public.
+//
+// - api::payment.payment.webhook — called by the external payment gateway
+//   with a shared secret header.
+// - api::platform-plan.platform-plan.find/findOne — feeds the public
+//   /pricing marketing page. The GraphQL resolver is also auth:false,
+//   but Strapi's REST controller still checks role permissions, so we
+//   need both layers open for tooling that hits REST directly.
 const PUBLIC_PERMISSIONS: Record<string, string[]> = {
   'api::payment.payment': ['webhook'],
+  'api::platform-plan.platform-plan': ['find', 'findOne'],
 };
 
 // Names of the legacy gym roles that used to live in users-permissions.

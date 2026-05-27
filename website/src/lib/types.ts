@@ -24,7 +24,8 @@ export interface DataSourceResult<T> {
    ============================================================ */
 
 export interface PricingPlan {
-  id: string;
+  id: string; // documentId
+  slug: string; // stable key: "starter" | "business" | "pro"
   name: string;
   tag: string;
   priceMonthly: number; // BRL per month
@@ -183,6 +184,15 @@ export interface ScheduleData {
   }>;
 }
 
+export type BusinessType =
+  | "gym"
+  | "swimming_school"
+  | "pilates"
+  | "ballet"
+  | "studio"
+  | "martial_arts"
+  | "other";
+
 export interface AcademySettings {
   documentId: string;
   name: string;
@@ -197,6 +207,9 @@ export interface AcademySettings {
   primaryColor: string;
   secondaryColor: string;
   plan: PlanTier;
+  businessType: BusinessType;
+  /** Lista de módulos toggleáveis ativos. Undefined = legado (todos ligados). */
+  enabledModules?: ToggleableModule[];
 }
 
 export type UserRole = "academy_admin" | "instructor" | "member";
@@ -209,6 +222,85 @@ export interface MeProfile {
   roleLabel: string;
   photoUrl?: string;
   initials: string;
+}
+
+/* ============================================================
+   Pool (natação) — pH, cloro, temperatura
+   ============================================================ */
+
+export type PoolStatus = "ok" | "warning" | "critical";
+export type PoolShift = "morning" | "evening";
+
+export interface PoolSettings {
+  documentId: string;
+  phMin: number | null;
+  phMax: number | null;
+  chlorineMin: number | null;
+  chlorineMax: number | null;
+  temperatureMin: number | null;
+  temperatureMax: number | null;
+  alertTolerance: number | null;
+  inspectionTimes: string[];
+}
+
+export interface PoolInspection {
+  documentId: string;
+  date: string;
+  shift: PoolShift;
+  scheduledTime: string | null;
+  chlorine: number | null;
+  ph: number | null;
+  temperature: number | null;
+  peopleCount: number | null;
+  peopleCountSource: "schedule" | "manual" | null;
+  notes: string | null;
+  status: PoolStatus;
+  createdAt: string | null;
+}
+
+/* ============================================================
+   Módulos toggleáveis (configurados em /admin/settings)
+   ============================================================ */
+
+export type ToggleableModule =
+  | "dependents"
+  | "workouts"
+  | "classes"
+  | "pool";
+
+export const ALL_TOGGLEABLE_MODULES: ToggleableModule[] = [
+  "dependents",
+  "workouts",
+  "classes",
+  "pool",
+];
+
+export const MODULE_LABELS: Record<ToggleableModule, string> = {
+  dependents: "Dependentes",
+  workouts: "Treinos",
+  classes: "Agenda & Presenças",
+  pool: "Piscina",
+};
+
+export type SubscriptionStatus =
+  | "trialing"
+  | "active"
+  | "past_due"
+  | "cancelled"
+  | "expired";
+
+export interface MySubscription {
+  documentId: string;
+  status: SubscriptionStatus;
+  recurrency: "monthly" | "annual";
+  trialEndsAt: string | null;
+  trialDaysLeft: number | null;
+  currentPeriodEnd: string | null;
+  planName: string;
+  planSlug: string;
+  /** True quando o backend recusa qualquer mutation CRUD por causa do
+   *  status atual — usado pra ramificar UI (banner + read-only). */
+  blocked: boolean;
 }
 
 /* ============================================================
@@ -256,6 +348,15 @@ export interface DREExpenseRow {
   status: ExpenseStatus;
 }
 
+export interface DRERevenueRow {
+  id: string;
+  student: string;
+  source: string; // nome do plano, descrição da cobrança ou "Avulsa"
+  paidAt: string; // DD/MM/YYYY
+  amount: string; // formatted
+  method: PaymentMethod;
+}
+
 export interface DREData {
   monthLabel: string; // "Abril 2026"
   revenue: {
@@ -276,6 +377,8 @@ export interface DREData {
   categoryBreakdown: DRECategoryBreakdown[];
   expensesTotalLabel: string; // "R$ 9.800"
   expenseRows: DREExpenseRow[];
+  revenueTotalLabel: string; // "R$ 18.420"
+  revenueRows: DRERevenueRow[];
 }
 
 /* ============================================================

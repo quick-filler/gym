@@ -14,6 +14,7 @@ import {
   assertCanAccessDoc,
   isPlatformAdmin,
   requireAcademyId,
+  requireActiveSubscription,
   requireRole,
   resolveUserAcademyId,
   withAcademyScope,
@@ -199,6 +200,7 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
         args: { data: nexus.nonNull(nexus.arg({ type: 'StudentInput' })) },
         resolve: async (_root: any, args: any, ctx: any) => {
           await requireRole(strapi, ctx, ['academy_admin']);
+          await requireActiveSubscription(strapi, ctx);
           const academyId = await requireAcademyId(strapi, ctx);
           // Always pin the new student to the caller's tenant — never trust
           // an academy id sent from the client (would be a tenant-jump).
@@ -217,6 +219,7 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
         resolve: async (_root: any, args: any, ctx: any) => {
           await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           await requireRole(strapi, ctx, ['academy_admin']);
+          await requireActiveSubscription(strapi, ctx);
           return await strapi.documents(UID).update({
             documentId: args.documentId,
             data: args.data,
@@ -230,6 +233,7 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
         resolve: async (_root: any, args: any, ctx: any) => {
           await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           await requireRole(strapi, ctx, ['academy_admin']);
+          await requireActiveSubscription(strapi, ctx);
           const doc = await strapi.documents(UID).findOne({ documentId: args.documentId });
           await strapi.documents(UID).delete({ documentId: args.documentId });
           return doc;

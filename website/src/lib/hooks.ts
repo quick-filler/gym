@@ -59,7 +59,10 @@ import type {
   FinanceData,
   GuardianFamily,
   MeProfile,
+  MySubscription,
   PlansData,
+  PoolInspection,
+  PoolSettings,
   PricingPlan,
   ScheduleBooking,
   ScheduleData,
@@ -181,6 +184,15 @@ const DRE_OVERVIEW = graphql(`
         dueDate
         amount
         status
+      }
+      revenueTotalLabel
+      revenueRows {
+        id
+        student
+        source
+        paidAt
+        amount
+        method
       }
     }
   }
@@ -476,6 +488,8 @@ const MY_ACADEMY = graphql(`
         primaryColor
         secondaryColor
         plan
+        businessType
+        enabledModules
         email
         phone
         address
@@ -539,16 +553,24 @@ const UPDATE_ACADEMY = graphql(`
   }
 `);
 
-const PRICING_PLANS_PUBLIC = graphql(`
-  query PricingPlansPublic {
-    plans {
+// Renomeada de PRICING_PLANS_PUBLIC: a query antiga apontava errado pro
+// resolver de planos de matrícula (auth-required, academy-scoped). Agora
+// chamamos `platformPlans` que é o resolver público dos tiers SaaS.
+const PLATFORM_PLANS_PUBLIC = graphql(`
+  query PlatformPlansPublic {
+    platformPlans {
       documentId
+      slug
       name
-      description
-      price
-      billingCycle
-      maxStudents
+      tagline
+      tag
+      priceMonthly
+      priceAnnual
+      currency
       features
+      ctaLabel
+      featured
+      sortOrder
       isActive
     }
   }
@@ -592,12 +614,12 @@ function errorResult<T>(error: unknown): DataSourceResult<T> {
 
 export function usePricingPlans(): DataSourceResult<PricingPlan[]> {
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  const q = useQuery(PRICING_PLANS_PUBLIC, { skip: USE_MOCKS });
+  const q = useQuery(PLATFORM_PLANS_PUBLIC, { skip: USE_MOCKS });
   if (USE_MOCKS) return useMockedValue(MOCK_PRICING_PLANS);
   if (q.loading) return loadingResult();
   if (q.error) return errorResult(q.error);
   return {
-    data: mapPricingPlans(q.data?.plans ?? null),
+    data: mapPricingPlans(q.data?.platformPlans ?? null),
     loading: false,
     error: null,
   };
@@ -843,11 +865,97 @@ export function useUpdateAcademy() {
   return { update, loading: state.loading, error: state.error ?? null };
 }
 
-export function useDRE(): DataSourceResult<DREData> {
+/* ============================================================
+   Subscription
+   ============================================================ */
+
+const MY_SUBSCRIPTION = graphql(`
+  query MySubscription {
+    mySubscription {
+      documentId
+      status
+      recurrency
+      trialEndsAt
+      trialDaysLeft
+      currentPeriodEnd
+      platformPlan {
+        documentId
+        slug
+        name
+      }
+    }
+  }
+`);
+
+/**
+ * Estado da subscription da academia do caller. Usado pelo banner do
+ * AdminLayout + pelo `<SubscriptionGate>` que envolve páginas críticas.
+ *
+ * Em mock mode devolve uma sub fictícia `active` pra UI continuar
+ * funcionando offline. Em live mode lê via GraphQL com
+ * `cache-and-network` pra refletir mudanças (upgrade/cancelamento)
+ * sem reload.
+ */
+export function useMySubscription(): DataSourceResult<MySubscription> {
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  const q = useQuery(DRE_OVERVIEW, { skip: USE_MOCKS });
+  const q = useQuery(MY_SUBSCRIPTION, {
+    skip: USE_MOCKS,
+    fetchPolicy: "cache-and-network",
+  });
+
+  if (USE_MOCKS) {
+    return useMockedValue<MySubscription>({
+      documentId: "mock-sub",
+      status: "active",
+      recurrency: "monthly",
+      trialEndsAt: null,
+      trialDaysLeft: null,
+      currentPeriodEnd: null,
+      planName: "Business",
+      planSlug: "business",
+      blocked: false,
+    });
+  }
+  if (q.loading && !q.data) return loadingResult();
+  if (q.error) return errorResult(q.error);
+  const s = q.data?.mySubscription;
+  if (!s) return { data: null, loading: false, error: null };
+
+  const status = s.status as MySubscription["status"];
+  // Espelha o `WRITE_ALLOWED_STATUSES` do backend (`trialing`/`active`).
+  // Qualquer outro estado bloqueia a UI de escrita.
+  const blocked = !(status === "trialing" || status === "active");
+
+  return {
+    data: {
+      documentId: s.documentId,
+      status,
+      recurrency: s.recurrency as "monthly" | "annual",
+      trialEndsAt: s.trialEndsAt ?? null,
+      trialDaysLeft: s.trialDaysLeft ?? null,
+      currentPeriodEnd: s.currentPeriodEnd ?? null,
+      planName: s.platformPlan?.name ?? "—",
+      planSlug: s.platformPlan?.slug ?? "starter",
+      blocked,
+    },
+    loading: false,
+    error: null,
+  };
+}
+
+export function useDRE(): DataSourceResult<DREData> {
+  // cache-and-network: ao voltar da página de Financeiro pro DRE,
+  // a query roda de novo em background ainda que o cache esteja
+  // populado — caso contrário um "Marcar como pago" feito no
+  // /admin/finance só seria refletido após hard reload, porque
+  // refetchQueries({ include: [...] }) só refeta queries que
+  // estão observed naquele instante.
+  const q = useQuery(DRE_OVERVIEW, {
+    skip: USE_MOCKS,
+    fetchPolicy: "cache-and-network",
+  });
   if (USE_MOCKS) return useMockedValue(MOCK_DRE);
-  if (q.loading) return loadingResult();
+  if (q.loading && !q.data) return loadingResult();
   if (q.error) return errorResult(q.error);
   const d = q.data?.dreOverview;
   if (!d) return { data: null, loading: false, error: null };
@@ -888,6 +996,96 @@ export function useMembershipPlans(): DataSourceResult<PlansData> {
   if (q.error) return errorResult(q.error);
   return {
     data: mapMembershipPlans(q.data?.plans ?? null),
+    loading: false,
+    error: null,
+  };
+}
+
+/* ============================================================
+   Pool (natação)
+   ============================================================ */
+
+const MY_POOL_SETTINGS = graphql(`
+  query MyPoolSettings {
+    myPoolSettings {
+      documentId
+      phMin
+      phMax
+      chlorineMin
+      chlorineMax
+      temperatureMin
+      temperatureMax
+      alertTolerance
+      inspectionTimes
+    }
+  }
+`);
+
+const POOL_INSPECTIONS = graphql(`
+  query PoolInspections($date: String) {
+    poolInspections(date: $date) {
+      documentId
+      date
+      shift
+      scheduledTime
+      chlorine
+      ph
+      temperature
+      peopleCount
+      peopleCountSource
+      notes
+      status
+      createdAt
+    }
+  }
+`);
+
+export function usePoolSettings(): DataSourceResult<PoolSettings | null> {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const q = useQuery(MY_POOL_SETTINGS, {
+    skip: USE_MOCKS,
+    fetchPolicy: "cache-and-network",
+  });
+  if (USE_MOCKS) {
+    return useMockedValue<PoolSettings>({
+      documentId: "mock-pool-settings",
+      phMin: 7.2,
+      phMax: 7.8,
+      chlorineMin: 1,
+      chlorineMax: 3,
+      temperatureMin: 28,
+      temperatureMax: 31,
+      alertTolerance: 0.2,
+      inspectionTimes: ["08:00", "18:00"],
+    });
+  }
+  if (q.loading && !q.data) return loadingResult();
+  if (q.error) return errorResult(q.error);
+  const s = q.data?.myPoolSettings ?? null;
+  return { data: s as PoolSettings | null, loading: false, error: null };
+}
+
+/**
+ * Inspeções da academia. `date` filtra a um dia (usado pelo
+ * /admin/pool no card "hoje"); sem `date`, devolve as últimas 60 pra
+ * tabela de histórico.
+ */
+export function usePoolInspections(
+  date?: string,
+): DataSourceResult<PoolInspection[]> {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const q = useQuery(POOL_INSPECTIONS, {
+    skip: USE_MOCKS,
+    variables: { date: date ?? null },
+    fetchPolicy: "cache-and-network",
+  });
+  if (USE_MOCKS) return useMockedValue<PoolInspection[]>([]);
+  if (q.loading && !q.data) return loadingResult();
+  if (q.error) return errorResult(q.error);
+  return {
+    data: (q.data?.poolInspections ?? []).filter(
+      (i): i is NonNullable<typeof i> => !!i,
+    ) as PoolInspection[],
     loading: false,
     error: null,
   };

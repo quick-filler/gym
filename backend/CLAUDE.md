@@ -102,6 +102,77 @@ The `Dependent` content type mirrors the same address/cpf shape — see
 | academy | Relation | manyToOne Academy |
 | enrollments | Relation | hasMany Enrollment |
 
+> **Não confundir com `PlatformPlan` abaixo.** `Plan` é o produto que
+> cada academia vende para seus alunos (Mensal/Trimestral/Anual).
+> `PlatformPlan` é o tier SaaS que a academia paga para a GYM usar a
+> plataforma (Starter/Business/Pro).
+
+### PlatformPlan (Tier SaaS — Starter/Business/Pro)
+
+Fonte de verdade dos planos da própria plataforma — alimenta a página
+pública `/pricing` no website e a relação `Academy.platformPlan`. Não
+pertence a academia nenhuma (cross-tenant).
+
+| Field | Type | Notes |
+|---|---|---|
+| slug | UID (req) | `starter` / `business` / `pro` — chave estável usada pelo backfill |
+| name | String (req) | Nome de exibição |
+| tagline | String | "Para quem está começando" |
+| tag | String | Selo no card ("Mais escolhido", "Multi-unidade") |
+| priceMonthly | Decimal (req) | BRL/mês na assinatura mensal |
+| priceAnnual | Decimal | BRL/mês equivalente quando paga anual |
+| currency | String | Default "BRL" |
+| features | JSON | Array de bullets exibidos no card |
+| limits | JSON | `{ maxStudents, maxInstructors, maxAdmins }` — dados sem enforcement por enquanto |
+| modules | JSON | Lista de módulos liberados (espelha `Academy.enabledModules`) |
+| ctaLabel | String | Texto do botão ("Começar grátis" / "Falar com vendas") |
+| featured | Boolean | Destaca o card e a coluna na tabela comparativa |
+| sortOrder | Integer | Ordem de exibição (10/20/30 nos tiers seed) |
+| isActive | Boolean | Esconde da `/pricing` quando falso |
+| academies | Relation | hasMany Academy (lado inverso) |
+
+**Tenancy**: público pra read (`Query.platformPlans`, `Query.platformPlan(slug)` ambas `auth: false`), restrito a `platform_admin` pra write. Seed em `src/bootstrap/platform-plans.ts → ensurePlatformPlans` cria os 3 tiers idempotente em todo boot.
+
+**Migração**: `Academy.plan` (enum legado) **continua** durante a transição como chave de backfill. O acesso ao tier acontece via `academy.subscription.platformPlan` — `Academy.platformPlan` (relation direta que existiu brevemente) foi removida porque a `AcademySubscription` cobre o caso. O enum será removido em PR futuro quando 100% das academias tiverem subscription criada.
+
+### AcademySubscription (Assinatura SaaS por academia)
+
+Tabela intermediária entre Academy e PlatformPlan. Espelha o padrão
+`UserSubscriptionPlan` do `quickfiller-strapi-api` — separa **catálogo**
+(`PlatformPlan`, raramente muda) da **assinatura ativa**
+(`AcademySubscription`, muda por academia e tem state próprio).
+
+| Field | Type | Notes |
+|---|---|---|
+| academy | Relation | oneToOne Academy (inversedBy `subscription`) |
+| platformPlan | Relation | manyToOne PlatformPlan — tier contratado |
+| status | Enum (req) | `trialing` / `active` / `past_due` / `cancelled` / `expired` |
+| recurrency | Enum (req) | `monthly` / `annual` — ciclo de cobrança |
+| startedAt | DateTime | Quando a sub começou |
+| trialEndsAt | DateTime | Fim do trial (14d por padrão) |
+| currentPeriodStart / currentPeriodEnd | DateTime | Início e fim do ciclo atual |
+| cancelAt | DateTime | Cancelamento agendado pro fim do período |
+| cancelledAt | DateTime | Efetivado |
+| asaasCustomerId | String (private) | Customer da GYM no Asaas (não exposto no GraphQL) |
+| asaasSubscriptionId | String (private) | Subscription recorrente da GYM no Asaas |
+| priceMonthlySnapshot / priceAnnualSnapshot | Decimal | Preço travado ao assinar — protege histórico se catálogo mudar |
+| featuresSnapshot / limitsSnapshot | JSON | Mesmo motivo, pra features e limites |
+| billingEmail / billingName | String | Pra onde manda fatura |
+| billingDocumentType (CPF/CNPJ) + billingDocumentNumber | Enum + String | Pra NF-e |
+| billingZipcode / billingState / billingCity / billingAddressLine1/Line2 / billingNumber | String | Endereço de cobrança |
+| notes | Text | Free-form (motivo de cancelamento, etc) |
+
+**GraphQL queries**: `mySubscription` (auth: true, sub do caller),
+`subscriptions(pagination)` (platform_admin only).
+**Mutations**: `updateMyBilling(data)` (academy_admin edita billing
+data), `changeSubscriptionPlan(documentId, platformPlanSlug, recurrency)`
+(platform_admin upgrade/downgrade manual — re-snapshota price/features/limits).
+
+**Lifecycle**: `src/api/academy/content-types/academy/lifecycles.ts →
+afterCreate` cria automaticamente uma subscription `trialing` com 14d
+e plano `starter` quando uma Academy nasce (signup, convertLead, seed).
+Sub backfilled pra academias pré-existentes nasce `active`.
+
 ### Enrollment (Matrícula)
 
 | Field | Type | Notes |
@@ -171,6 +242,46 @@ include them at all).
 | validFrom | Date | |
 | validTo | Date | |
 | isActive | Boolean | |
+
+### PoolSettings (Configuração da piscina)
+
+Configuração 1:1 com Academy pra alimentar o módulo Piscina. Defaults
+seguem a legislação brasileira (pH 7.2–7.8, cloro 1–3 mg/L, temp
+28–31°C). Criada via `Academy.afterCreate` lifecycle + backfill no
+boot pra academias antigas.
+
+| Field | Type | Notes |
+|---|---|---|
+| academy | Relation | oneToOne Academy (inversedBy `poolSettings`) |
+| phMin / phMax | Decimal | Faixa ideal de pH |
+| chlorineMin / chlorineMax | Decimal | mg/L |
+| temperatureMin / temperatureMax | Decimal | °C |
+| alertTolerance | Decimal | Margem em torno da faixa que vira "warning" antes de "critical" |
+| inspectionTimes | JSON | Horários esperados (default `["08:00","18:00"]`) |
+
+GraphQL: `Query.myPoolSettings` + `Mutation.updateMyPoolSettings` (academy_admin).
+
+### PoolInspection (Medição diária da piscina)
+
+Registro de medição (manhã/tarde) com pH, cloro, temperatura, ocupação.
+Status (ok/warning/critical) é **computed** no resolver baseado nas
+faixas de PoolSettings da academia.
+
+| Field | Type | Notes |
+|---|---|---|
+| date | Date (req) | Data da medição |
+| shift | Enum (req) | `morning` / `evening` |
+| scheduledTime | String | "08:00" / "18:00" |
+| chlorine / ph / temperature | Decimal | Medições (todas opcionais) |
+| peopleCount | Integer | Pessoas na piscina |
+| peopleCountSource | Enum | `schedule` (auto) / `manual` |
+| notes | Text | Observações livres |
+| academy | Relation | manyToOne Academy |
+| recordedBy | Relation | users-permissions user que registrou a medição (nome `createdBy` é reservado pelo Strapi pra `admin::user`) |
+
+GraphQL: `Query.poolInspections(date)`, `Mutation.createPoolInspection`,
+`Mutation.updatePoolInspection`. Mutations gateadas por
+`requireActiveSubscription` + role `academy_admin` ou `instructor`.
 
 ### BodyAssessment (Avaliação Física)
 

@@ -134,14 +134,94 @@ export async function requireRole(
   return role;
 }
 
+const SUBSCRIPTION_UID =
+  'api::academy-subscription.academy-subscription' as any;
+
+// Status que liberam escrita. Tudo fora dessa lista (expired, past_due,
+// cancelled, ou subscription ausente) bloqueia mutations CRUD.
+const WRITE_ALLOWED_STATUSES = new Set(['trialing', 'active']);
+
+/**
+ * Guard das mutations de "real work" (criar/editar/deletar Students,
+ * Enrollments, Payments, Plans, etc.). Recusa se a subscription da
+ * academia do caller estiver em estado que não permite escrita:
+ *
+ *   - `expired`       (trial venceu sem upgrade)
+ *   - `cancelled`     (admin cancelou)
+ *   - `past_due`      (pagamento falhou, aguardando regularização)
+ *   - subscription ausente (não deveria acontecer pós-backfill)
+ *
+ * Platform admin bypassa (precisa poder consertar academias com sub
+ * ruim). Caller sem academia vinculada também bypassa — esse caso
+ * já é gateado por `requireAcademyId` quando relevante.
+ *
+ * Mensagem do erro é user-friendly porque ela sobe até o toast no
+ * frontend. Inclui o `status` pra o UI poder ramificar (já vem do
+ * `mySubscription` query também, então frontend pode pré-bloquear).
+ */
+export async function requireActiveSubscription(
+  strapi: Core.Strapi,
+  ctx: any,
+): Promise<void> {
+  if (await isPlatformAdmin(strapi, ctx)) return;
+
+  const academyId = await resolveUserAcademyId(strapi, ctx);
+  if (!academyId) return; // outras guards (requireAcademyId) tratam
+
+  const rows: any[] = await strapi.documents(SUBSCRIPTION_UID).findMany({
+    filters: { academy: { documentId: academyId } } as any,
+    fields: ['status', 'trialEndsAt'] as any,
+    limit: 1,
+  });
+  const sub = rows[0];
+
+  // Sem sub: bloqueia escrita. Lifecycle + backfill cobrem 100% das
+  // academias em produção; cair aqui significa estado corrompido.
+  if (!sub) {
+    throw new Error(
+      'Sua academia não tem uma assinatura ativa. Acesse /admin/billing pra ativar.',
+    );
+  }
+
+  if (!WRITE_ALLOWED_STATUSES.has(sub.status)) {
+    const messageByStatus: Record<string, string> = {
+      expired:
+        'Seu período de teste expirou. Escolha um plano em /admin/billing pra continuar.',
+      cancelled:
+        'Sua assinatura está cancelada. Reative em /admin/billing pra voltar a operar.',
+      past_due:
+        'Sua assinatura está com pagamento em atraso. Regularize em /admin/billing.',
+    };
+    throw new Error(
+      messageByStatus[sub.status] ??
+        `Sua assinatura está em estado "${sub.status}" e não permite alterações.`,
+    );
+  }
+
+  // Defesa extra: subscription `trialing` mas trialEndsAt no passado.
+  // Não deveria ocorrer (cron flipa pra `expired`), mas se ocorrer
+  // tratamos como expirado pra evitar acesso pós-trial gratuito.
+  if (
+    sub.status === 'trialing' &&
+    sub.trialEndsAt &&
+    new Date(sub.trialEndsAt).getTime() < Date.now()
+  ) {
+    throw new Error(
+      'Seu período de teste expirou. Escolha um plano em /admin/billing pra continuar.',
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Document ownership
 // ─────────────────────────────────────────────────────────────────────────────
 
 type EntityUID =
   | 'api::academy.academy'
+  | 'api::academy-subscription.academy-subscription'
   | 'api::student.student'
   | 'api::plan.plan'
+  | 'api::platform-plan.platform-plan'
   | 'api::class-schedule.class-schedule'
   | 'api::expense.expense'
   | 'api::dependent.dependent'
@@ -149,7 +229,9 @@ type EntityUID =
   | 'api::payment.payment'
   | 'api::workout-plan.workout-plan'
   | 'api::body-assessment.body-assessment'
-  | 'api::class-booking.class-booking';
+  | 'api::class-booking.class-booking'
+  | 'api::pool-setting.pool-setting'
+  | 'api::pool-inspection.pool-inspection';
 
 /**
  * Walks each entity's relation chain to find the academy it belongs to.
@@ -164,6 +246,32 @@ export async function resolveDocAcademyId(
   documentId: string,
 ): Promise<string | null> {
   if (uid === 'api::academy.academy') return documentId;
+  // PlatformPlan é cross-tenant (não pertence a academia nenhuma).
+  // Retorna null pra qualquer assertCanAccessDoc rejeitar como
+  // "documento de outra academia" — guards reais ficam nos resolvers
+  // do platform-plan.ts (gated por isPlatformAdmin).
+  if (uid === 'api::platform-plan.platform-plan') return null;
+  // AcademySubscription pertence a uma academia via relação `academy`
+  // (1:1). Resolvemos populando essa relação.
+  if (uid === 'api::academy-subscription.academy-subscription') {
+    const doc: any = await strapi.documents(uid as any).findOne({
+      documentId,
+      populate: { academy: { fields: ['documentId'] } } as any,
+    });
+    return doc?.academy?.documentId ?? null;
+  }
+  // PoolSettings (1:1) e PoolInspection (manyToOne) ambos têm `academy`
+  // direto. Resolve igual.
+  if (
+    uid === 'api::pool-setting.pool-setting' ||
+    uid === 'api::pool-inspection.pool-inspection'
+  ) {
+    const doc: any = await strapi.documents(uid as any).findOne({
+      documentId,
+      populate: { academy: { fields: ['documentId'] } } as any,
+    });
+    return doc?.academy?.documentId ?? null;
+  }
 
   const populate: any = (() => {
     switch (uid) {
@@ -186,6 +294,10 @@ export async function resolveDocAcademyId(
               dependent: { populate: { academy: { fields: ['documentId'] } } },
             },
           },
+          // Cobranças avulsas (sem matrícula) podem apontar direto pro
+          // aluno ou dependente.
+          student: { populate: { academy: { fields: ['documentId'] } } },
+          dependent: { populate: { academy: { fields: ['documentId'] } } },
         };
       case 'api::workout-plan.workout-plan':
       case 'api::body-assessment.body-assessment':
@@ -228,6 +340,8 @@ export async function resolveDocAcademyId(
       return (
         enr?.student?.academy?.documentId ??
         enr?.dependent?.academy?.documentId ??
+        doc.student?.academy?.documentId ??
+        doc.dependent?.academy?.documentId ??
         null
       );
     }
@@ -296,6 +410,9 @@ export function withAcademyScope(filters: any, academyId: string | null): any {
  * Scopes Payment queries via enrollment → student/dependent → academy.
  * Both branches checked because an enrollment may belong to a Student OR
  * to a Dependent (whose payments are still funnelled through their guardian).
+ *
+ * Cobranças avulsas (sem matrícula) podem apontar direto pro aluno ou
+ * dependente — por isso os dois últimos braços do $or.
  */
 export function withPaymentScope(academyId: string | null): any {
   const id = academyId ?? NO_ACADEMY;
@@ -303,6 +420,8 @@ export function withPaymentScope(academyId: string | null): any {
     $or: [
       { enrollment: { student: { academy: { documentId: id } } } },
       { enrollment: { dependent: { academy: { documentId: id } } } },
+      { student: { academy: { documentId: id } } },
+      { dependent: { academy: { documentId: id } } },
     ],
   };
 }

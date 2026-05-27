@@ -1,0 +1,111 @@
+{
+  "kind": "collectionType",
+  "collectionName": "academy_subscriptions",
+  "info": {
+    "singularName": "academy-subscription",
+    "pluralName": "academy-subscriptions",
+    "displayName": "Academy Subscription",
+    "description": "Active SaaS subscription per Academy — links Academy to PlatformPlan with cycle/trial/billing state. Mirrors the SubscriptionPlan ↔ UserSubscriptionPlan split from quickfiller-strapi-api."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "academy": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::academy.academy",
+      "inversedBy": "subscription"
+    },
+    "platformPlan": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::platform-plan.platform-plan"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["trialing", "active", "past_due", "cancelled", "expired"],
+      "default": "trialing",
+      "required": true
+    },
+    "recurrency": {
+      "type": "enumeration",
+      "enum": ["monthly", "annual"],
+      "default": "monthly",
+      "required": true
+    },
+    "startedAt": {
+      "type": "datetime"
+    },
+    "trialEndsAt": {
+      "type": "datetime"
+    },
+    "currentPeriodStart": {
+      "type": "datetime"
+    },
+    "currentPeriodEnd": {
+      "type": "datetime"
+    },
+    "cancelAt": {
+      "type": "datetime"
+    },
+    "cancelledAt": {
+      "type": "datetime"
+    },
+    "asaasCustomerId": {
+      "type": "string",
+      "private": true
+    },
+    "asaasSubscriptionId": {
+      "type": "string",
+      "private": true
+    },
+    "priceMonthlySnapshot": {
+      "type": "decimal"
+    },
+    "priceAnnualSnapshot": {
+      "type": "decimal"
+    },
+    "featuresSnapshot": {
+      "type": "json"
+    },
+    "limitsSnapshot": {
+      "type": "json"
+    },
+    "billingEmail": {
+      "type": "email"
+    },
+    "billingName": {
+      "type": "string"
+    },
+    "billingDocumentType": {
+      "type": "enumeration",
+      "enum": ["CPF", "CNPJ"]
+    },
+    "billingDocumentNumber": {
+      "type": "string"
+    },
+    "billingZipcode": {
+      "type": "string"
+    },
+    "billingState": {
+      "type": "string"
+    },
+    "billingCity": {
+      "type": "string"
+    },
+    "billingAddressLine1": {
+      "type": "string"
+    },
+    "billingAddressLine2": {
+      "type": "string"
+    },
+    "billingNumber": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "text"
+    }
+  }
+}

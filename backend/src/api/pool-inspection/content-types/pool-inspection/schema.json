@@ -1,0 +1,59 @@
+{
+  "kind": "collectionType",
+  "collectionName": "pool_inspections",
+  "info": {
+    "singularName": "pool-inspection",
+    "pluralName": "pool-inspections",
+    "displayName": "Pool Inspection",
+    "description": "Daily pool quality measurement — pH, chlorine, temperature + occupancy. Two readings per day (morning/evening). Status derived from PoolSettings target ranges."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "date": {
+      "type": "date",
+      "required": true
+    },
+    "shift": {
+      "type": "enumeration",
+      "enum": ["morning", "evening"],
+      "required": true
+    },
+    "scheduledTime": {
+      "type": "string"
+    },
+    "chlorine": {
+      "type": "decimal"
+    },
+    "ph": {
+      "type": "decimal"
+    },
+    "temperature": {
+      "type": "decimal"
+    },
+    "peopleCount": {
+      "type": "integer",
+      "default": 0
+    },
+    "peopleCountSource": {
+      "type": "enumeration",
+      "enum": ["schedule", "manual"],
+      "default": "manual"
+    },
+    "notes": {
+      "type": "text"
+    },
+    "academy": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::academy.academy"
+    },
+    "recordedBy": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}

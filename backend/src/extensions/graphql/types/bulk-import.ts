@@ -8,7 +8,11 @@
  */
 
 import type { Core } from '@strapi/strapi';
-import { requireAcademyId, requireRole } from '../helpers';
+import {
+  requireAcademyId,
+  requireActiveSubscription,
+  requireRole,
+} from '../helpers';
 
 const STUDENT_UID = 'api::student.student';
 const DEPENDENT_UID = 'api::dependent.dependent';
@@ -78,6 +82,7 @@ export function buildBulkImport({
         },
         resolve: async (_root: any, args: any, ctx: any) => {
           await requireRole(strapi, ctx, ['academy_admin']);
+          await requireActiveSubscription(strapi, ctx);
           const academyId = await requireAcademyId(strapi, ctx);
 
           const items: Array<{

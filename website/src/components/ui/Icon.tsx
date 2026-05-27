@@ -4,6 +4,7 @@ export type IconName =
   | "arrow-right"
   | "arrow-left"
   | "arrow-up-right"
+  | "chevron-down"
   | "check"
   | "x"
   | "plus"

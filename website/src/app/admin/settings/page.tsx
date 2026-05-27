@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useLazyQuery } from "@apollo/client/react";
+import { graphql } from "@/gql";
 import { Topbar } from "@/components/admin/Topbar";
 import { LoadingState, Spinner } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -12,12 +14,38 @@ import { Card } from "@/components/ui/Card";
 import { Field, Input } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { useAcademy, useUpdateAcademy } from "@/lib/hooks";
-import type { AcademySettings } from "@/lib/types";
+import type {
+  AcademySettings,
+  BusinessType,
+  ToggleableModule,
+} from "@/lib/types";
+import {
+  ALL_TOGGLEABLE_MODULES,
+  MODULE_LABELS,
+} from "@/lib/types";
 import { uploadMedia } from "@/lib/upload";
 import { cn } from "@/lib/utils";
 import { APP_DOMAIN, USE_MOCKS } from "@/lib/config";
 
-type Tab = "identity" | "appearance" | "integration";
+type Tab = "identity" | "appearance" | "integration" | "modules";
+
+const BUSINESS_TYPE_LABEL: Record<BusinessType, string> = {
+  gym: "Academia / Musculação",
+  swimming_school: "Escola de Natação",
+  pilates: "Pilates",
+  ballet: "Ballet / Dança",
+  studio: "Studio (geral)",
+  martial_arts: "Artes Marciais",
+  other: "Outro",
+};
+
+const MODULE_HELP: Record<ToggleableModule, string> = {
+  dependents:
+    "Cadastro de responsável + crianças. Útil em escolas de natação, ballet, infantis.",
+  workouts: "Fichas de treino e avaliações físicas.",
+  classes: "Grade de aulas com agendamento e controle de presença.",
+  pool: "Inspeções de pH, cloro e temperatura da piscina (legislação BR).",
+};
 
 type FormState = AcademySettings;
 
@@ -42,6 +70,15 @@ function diffPayload(
   }
   if (current.logoSquareDocumentId !== initial.logoSquareDocumentId) {
     patch.logoSquare = current.logoSquareDocumentId ?? null;
+  }
+  if (current.businessType !== initial.businessType) {
+    patch.businessType = current.businessType;
+  }
+  // Compara arrays como sets — ordem não importa pra enabledModules.
+  const a = new Set(current.enabledModules ?? []);
+  const b = new Set(initial.enabledModules ?? []);
+  if (a.size !== b.size || [...a].some((m) => !b.has(m))) {
+    patch.enabledModules = Array.from(a);
   }
   return patch;
 }
@@ -144,6 +181,7 @@ export default function SettingsPage() {
                 [
                   { key: "identity", label: "Identidade" },
                   { key: "appearance", label: "Aparência" },
+                  { key: "modules", label: "Módulos" },
                   { key: "integration", label: "Integração" },
                 ] as const
               ).map((t) => (
@@ -413,6 +451,10 @@ export default function SettingsPage() {
                   </Card>
                 )}
 
+                {tab === "modules" && (
+                  <ModulesTab form={form} update_={update_} />
+                )}
+
                 {tab === "integration" && (
                   <Card>
                     <h3 className="font-display text-[1.1rem] font-semibold text-ink-900 mb-1">
@@ -562,5 +604,161 @@ export default function SettingsPage() {
         )}
       </main>
     </>
+  );
+}
+
+/* ============================================================
+   Tab "Módulos"
+   ============================================================ */
+
+const SUGGEST_MODULES = graphql(`
+  query SuggestModulesForBusinessType($businessType: String!) {
+    suggestModulesForBusinessType(businessType: $businessType) {
+      businessType
+      modules
+    }
+  }
+`);
+
+function ModulesTab({
+  form,
+  update_,
+}: {
+  form: FormState;
+  update_: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
+}) {
+  const enabled = form.enabledModules ?? [
+    "dependents",
+    "workouts",
+    "classes",
+    "pool",
+  ];
+  const [suggested, setSuggested] = useState<ToggleableModule[] | null>(null);
+  const [fetchSuggestion] = useLazyQuery(SUGGEST_MODULES);
+
+  function toggle(mod: ToggleableModule) {
+    const next = enabled.includes(mod)
+      ? enabled.filter((m) => m !== mod)
+      : [...enabled, mod];
+    update_("enabledModules", next as ToggleableModule[]);
+  }
+
+  async function handleBusinessTypeChange(next: BusinessType) {
+    update_("businessType", next);
+    // Busca o preset sugerido pro tipo e oferece aplicar.
+    try {
+      const res = await fetchSuggestion({ variables: { businessType: next } });
+      const mods = (res.data?.suggestModulesForBusinessType?.modules ??
+        []) as ToggleableModule[];
+      // Só sugere se for diferente do que tá ligado agora.
+      const a = new Set(enabled);
+      const b = new Set(mods);
+      const same = a.size === b.size && [...a].every((m) => b.has(m));
+      setSuggested(same ? null : mods);
+    } catch {
+      // Sem internet / backend fora — silenciosamente ignora.
+      setSuggested(null);
+    }
+  }
+
+  function applySuggestion() {
+    if (!suggested) return;
+    update_("enabledModules", suggested);
+    setSuggested(null);
+    toast.success("Preset aplicado. Não esqueça de salvar.");
+  }
+
+  return (
+    <Card>
+      <h3 className="font-display text-[1.1rem] font-semibold text-ink-900 mb-1">
+        Tipo de negócio e módulos
+      </h3>
+      <p className="text-[0.88rem] text-ink-500 mb-6">
+        Define o que aparece no menu lateral da sua academia. Alunos,
+        Financeiro, DRE e Planos ficam sempre disponíveis (são o core).
+      </p>
+
+      <Field
+        label="Tipo de negócio"
+        help="Influencia os módulos sugeridos abaixo."
+      >
+        <select
+          value={form.businessType}
+          onChange={(e) =>
+            void handleBusinessTypeChange(e.target.value as BusinessType)
+          }
+          className="w-full px-4 py-3 rounded-xl bg-paper-2 text-[0.92rem] text-ink-900 border border-transparent focus:border-ink-900 focus:bg-white outline-none transition-all"
+        >
+          {(Object.entries(BUSINESS_TYPE_LABEL) as [BusinessType, string][])
+            .map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+        </select>
+      </Field>
+
+      {suggested && (
+        <div className="mb-6 p-4 rounded-xl bg-flame-50 border border-flame/30">
+          <div className="flex items-start gap-3">
+            <Icon name="spark" className="text-flame mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <strong className="font-semibold text-ink-900 block mb-1">
+                Sugestão de módulos pra este tipo
+              </strong>
+              <p className="text-[0.82rem] text-ink-600 mb-3">
+                Pra <em>{BUSINESS_TYPE_LABEL[form.businessType]}</em> o
+                preset recomendado é:{" "}
+                <strong>
+                  {suggested.map((m) => MODULE_LABELS[m]).join(", ") ||
+                    "nenhum módulo opcional"}
+                </strong>
+                . Você pode aceitar e ajustar depois.
+              </p>
+              <div className="flex items-center gap-2">
+                <Button variant="primary" onClick={applySuggestion}>
+                  Aplicar preset
+                </Button>
+                <Button variant="ghost" onClick={() => setSuggested(null)}>
+                  Ignorar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="border-t border-line pt-6">
+        <div className="font-mono text-[0.7rem] uppercase tracking-[0.1em] text-ink-400 mb-4">
+          Módulos opcionais
+        </div>
+        <div className="flex flex-col gap-3">
+          {ALL_TOGGLEABLE_MODULES.map((mod) => {
+            const active = enabled.includes(mod);
+            return (
+              <label
+                key={mod}
+                className="flex items-start gap-3 p-4 rounded-xl border border-line hover:border-ink-700 transition-colors cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={active}
+                  onChange={() => toggle(mod)}
+                  className="mt-1 accent-flame w-4 h-4"
+                />
+                <div className="flex-1">
+                  <div className="font-semibold text-[0.95rem] text-ink-900">
+                    {MODULE_LABELS[mod]}
+                  </div>
+                  <div className="text-[0.82rem] text-ink-500 mt-0.5 leading-[1.4]">
+                    {MODULE_HELP[mod]}
+                  </div>
+                </div>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    </Card>
   );
 }

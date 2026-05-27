@@ -20,9 +20,9 @@ import { useApolloClient, useMutation } from "@apollo/client/react";
 import { graphql } from "@/gql";
 import { NewStudentDialog } from "./NewStudentDialog";
 import { EditStudentDialog } from "./EditStudentDialog";
-import { DropdownMenu } from "@/components/ui/DropdownMenu";
+import { AssignPlanMenu } from "./AssignPlanMenu";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { Pill } from "@/components/ui/Pill";
+import type { IconName } from "@/components/ui/Icon";
 
 type Filter = "all" | StudentStatus | "no_plan";
 
@@ -210,16 +210,10 @@ export default function StudentsPage() {
                       </td>
                       <td className="px-6 py-4">
                         {s.hasActiveEnrollment === false ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setEditTarget({ id: s.id, focusPlan: true })
-                            }
-                            className="inline-flex"
-                            title="Vincular plano"
-                          >
-                            <Pill tone="amber">+ Atribuir plano</Pill>
-                          </button>
+                          <AssignPlanMenu
+                            studentId={s.id}
+                            onAssigned={refreshList}
+                          />
                         ) : (
                           <>
                             <div className="text-[0.88rem] text-ink-900 font-semibold">
@@ -241,58 +235,33 @@ export default function StudentsPage() {
                         {s.nextPayment}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <DropdownMenu
-                          trigger={
-                            <button
-                              type="button"
-                              aria-label={`Ações para ${s.name}`}
-                              className="text-ink-400 hover:text-ink-900 transition-colors p-1 -m-1 rounded"
-                            >
-                              <Icon name="more" size="lg" />
-                            </button>
-                          }
-                          items={[
-                            {
-                              label: "Editar",
-                              icon: "edit",
-                              onSelect: () =>
-                                setEditTarget({ id: s.id, focusPlan: false }),
-                            },
-                            ...(s.hasActiveEnrollment === false
-                              ? [
-                                  {
-                                    label: "Atribuir plano",
-                                    icon: "plus",
-                                    onSelect: () =>
-                                      setEditTarget({
-                                        id: s.id,
-                                        focusPlan: true,
-                                      }),
-                                  } as const,
-                                ]
-                              : []),
-                            {
-                              label: "Copiar e-mail",
-                              icon: "mail",
-                              onSelect: () => copyEmail(s),
-                            },
-                            {
-                              label:
-                                s.status === "suspended"
-                                  ? "Reativar"
-                                  : "Suspender",
-                              icon:
-                                s.status === "suspended" ? "check" : "lock",
-                              onSelect: () => void toggleStatus(s),
-                            },
-                            {
-                              label: "Excluir",
-                              icon: "trash",
-                              tone: "danger",
-                              onSelect: () => setConfirmDelete(s),
-                            },
-                          ]}
-                        />
+                        <div className="inline-flex items-center gap-1">
+                          <RowIconButton
+                            icon="edit"
+                            label="Editar"
+                            onClick={() =>
+                              setEditTarget({ id: s.id, focusPlan: false })
+                            }
+                          />
+                          <RowIconButton
+                            icon="mail"
+                            label="Copiar e-mail"
+                            onClick={() => copyEmail(s)}
+                          />
+                          <RowIconButton
+                            icon={s.status === "suspended" ? "check" : "lock"}
+                            label={
+                              s.status === "suspended" ? "Reativar" : "Suspender"
+                            }
+                            onClick={() => void toggleStatus(s)}
+                          />
+                          <RowIconButton
+                            icon="trash"
+                            label="Excluir"
+                            tone="danger"
+                            onClick={() => setConfirmDelete(s)}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -338,5 +307,34 @@ export default function StudentsPage() {
         />
       </main>
     </>
+  );
+}
+
+function RowIconButton({
+  icon,
+  label,
+  onClick,
+  tone = "default",
+}: {
+  icon: IconName;
+  label: string;
+  onClick: () => void;
+  tone?: "default" | "danger";
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={cn(
+        "w-8 h-8 rounded-lg inline-flex items-center justify-center transition-colors",
+        tone === "danger"
+          ? "text-ink-400 hover:text-rose hover:bg-rose-50"
+          : "text-ink-400 hover:text-ink-900 hover:bg-paper-2",
+      )}
+    >
+      <Icon name={icon} size="lg" />
+    </button>
   );
 }

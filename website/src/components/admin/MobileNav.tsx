@@ -2,33 +2,50 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
-import { JWT_STORAGE_KEY } from "@/lib/config";
-import { clearAuthCookies } from "@/lib/auth";
+import { logoutAndRedirect } from "@/lib/auth";
 import { useAcademy, useMe } from "@/lib/hooks";
 
-const PRIMARY: { href: string; label: string; icon: IconName }[] = [
+import type { ToggleableModule } from "@/lib/types";
+
+type NavItem = {
+  href: string;
+  label: string;
+  icon: IconName;
+  module?: ToggleableModule;
+};
+
+const PRIMARY: NavItem[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: "chart" },
   { href: "/admin/students", label: "Alunos", icon: "users" },
-  { href: "/admin/dependents", label: "Dependentes", icon: "user" },
+  { href: "/admin/dependents", label: "Dependentes", icon: "user", module: "dependents" },
   { href: "/admin/plans", label: "Planos", icon: "credit" },
   { href: "/admin/finance", label: "Financeiro", icon: "money" },
   { href: "/admin/dre", label: "DRE / Custos", icon: "trending" },
-  { href: "/admin/schedule", label: "Agenda", icon: "calendar" },
-  { href: "/admin/attendance", label: "Presenças", icon: "check" },
-  { href: "/admin/workouts", label: "Treinos", icon: "heart-pulse" },
+  { href: "/admin/schedule", label: "Agenda", icon: "calendar", module: "classes" },
+  { href: "/admin/attendance", label: "Presenças", icon: "check", module: "classes" },
+  { href: "/admin/workouts", label: "Treinos", icon: "heart-pulse", module: "workouts" },
+  { href: "/admin/pool", label: "Piscina", icon: "droplet", module: "pool" },
 ];
 
+function filterByModules(
+  items: NavItem[],
+  enabled: ToggleableModule[] | undefined,
+): NavItem[] {
+  if (!enabled) return items;
+  return items.filter((it) => !it.module || enabled.includes(it.module));
+}
+
 const CONFIG: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/billing", label: "Assinatura", icon: "credit" },
   { href: "/admin/settings", label: "Configurações", icon: "settings" },
 ];
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
   const { data: academy } = useAcademy();
   const { data: me } = useMe();
 
@@ -37,9 +54,7 @@ export function MobileNav() {
   }
 
   function handleLogout() {
-    localStorage.removeItem(JWT_STORAGE_KEY);
-    clearAuthCookies();
-    router.push("/login");
+    logoutAndRedirect("/login");
   }
 
   const academyName = academy?.name ?? "";
@@ -104,7 +119,7 @@ export function MobileNav() {
         <nav className="flex-1 overflow-y-auto px-3 py-5">
           <NavGroup
             title="Principal"
-            items={PRIMARY}
+            items={filterByModules(PRIMARY, academy?.enabledModules)}
             pathname={pathname}
             onNavigate={close}
           />

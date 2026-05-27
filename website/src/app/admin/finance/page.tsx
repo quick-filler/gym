@@ -2,22 +2,22 @@
 
 import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useApolloClient } from "@apollo/client/react";
+import { useApolloClient, useMutation } from "@apollo/client/react";
+import { graphql } from "@/gql";
 import { Topbar } from "@/components/admin/Topbar";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { HeroCard } from "@/components/admin/HeroCard";
 import { Avatar } from "@/components/admin/Avatar";
-import {
-  PaymentMethodLabel,
-  PaymentStatusPill,
-} from "@/components/admin/StatusPill";
+import { PaymentMethodLabel } from "@/components/admin/StatusPill";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { Select } from "@/components/ui/Field";
+import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { useFinance } from "@/lib/hooks";
 import { formatBRL } from "@/lib/utils";
+import type { PaymentStatus } from "@/lib/types";
 import { NewChargeDialog } from "./NewChargeDialog";
 
 const METHOD_DEFS = [
@@ -38,6 +38,58 @@ const STATUS_LABEL: Record<string, string> = {
   overdue: "Vencido",
   cancelled: "Cancelado",
 };
+
+const STATUS_OPTIONS: {
+  value: PaymentStatus;
+  label: string;
+  icon: "check" | "clock" | "flame" | "x";
+}[] = [
+  { value: "paid", label: "Marcar como pago", icon: "check" },
+  { value: "pending", label: "Marcar como pendente", icon: "clock" },
+  { value: "overdue", label: "Marcar como vencido", icon: "flame" },
+  { value: "cancelled", label: "Cancelar cobrança", icon: "x" },
+];
+
+// Cores aplicadas direto na borda/sombra do trigger pra cada status
+// reforçar o feedback visual (a sombra ganha tinta do status).
+const STATUS_SELECTOR_STYLE: Record<
+  PaymentStatus,
+  { idle: string; hover: string; ring: string }
+> = {
+  paid: {
+    idle: "bg-emerald-50 text-emerald border-emerald/20",
+    hover: "hover:border-emerald/60 hover:shadow-[0_2px_8px_-2px_rgba(16,185,129,0.4)]",
+    ring: "focus-visible:ring-emerald/40",
+  },
+  pending: {
+    idle: "bg-amber-50 text-amber border-amber/20",
+    hover: "hover:border-amber/60 hover:shadow-[0_2px_8px_-2px_rgba(245,158,11,0.4)]",
+    ring: "focus-visible:ring-amber/40",
+  },
+  overdue: {
+    idle: "bg-rose-50 text-rose border-rose/20",
+    hover: "hover:border-rose/60 hover:shadow-[0_2px_8px_-2px_rgba(244,63,94,0.4)]",
+    ring: "focus-visible:ring-rose/40",
+  },
+  cancelled: {
+    idle: "bg-paper-2 text-ink-700 border-line-strong",
+    hover: "hover:border-ink-700 hover:shadow-[0_2px_8px_-2px_rgba(15,23,42,0.25)]",
+    ring: "focus-visible:ring-ink-700/30",
+  },
+};
+
+const UPDATE_PAYMENT_STATUS = graphql(`
+  mutation AdminUpdatePaymentStatus(
+    $documentId: ID!
+    $data: PaymentUpdateInput!
+  ) {
+    updatePayment(documentId: $documentId, data: $data) {
+      documentId
+      status
+      paidAt
+    }
+  }
+`);
 
 const MONTHS_PT = [
   "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
@@ -73,6 +125,29 @@ function FinancePageInner() {
 
   const isCurrentPeriod = filterMonth === now.getMonth() + 1 && filterYear === now.getFullYear();
   const subtitle = `${MONTHS_PT[filterMonth - 1]} ${filterYear}${isCurrentPeriod ? " · Atualizado agora" : " · Filtrado"}`;
+
+  const [updatePayment, { loading: updatingStatus }] =
+    useMutation(UPDATE_PAYMENT_STATUS);
+
+  async function changeStatus(chargeId: string, next: PaymentStatus) {
+    const today = new Date().toISOString().slice(0, 10);
+    await updatePayment({
+      variables: {
+        documentId: chargeId,
+        data: {
+          status: next,
+          // Quando marca como pago, carimba paidAt; em qualquer outro
+          // status remove o paidAt pra não ficar inconsistente no DRE.
+          paidAt: next === "paid" ? today : null,
+        },
+      },
+    });
+    // Atualiza Financeiro + DRE + Dashboard porque os três
+    // re-agregam o mesmo conjunto de pagamentos.
+    await apollo.refetchQueries({
+      include: ["FinanceOverview", "DREOverview", "AdminDashboard"],
+    });
+  }
 
   function resetFilter() {
     setFilterMonth(now.getMonth() + 1);
@@ -277,7 +352,13 @@ function FinancePageInner() {
                             <PaymentMethodLabel method={c.method} />
                           </td>
                           <td className="px-6 py-4">
-                            <PaymentStatusPill status={c.status} />
+                            <StatusSelector
+                              status={c.status}
+                              disabled={updatingStatus}
+                              onChange={(next) =>
+                                void changeStatus(c.id, next)
+                              }
+                            />
                           </td>
                           <td className="px-6 py-4 font-mono text-[0.82rem] text-ink-500">
                             {c.dueDate}
@@ -361,5 +442,50 @@ function FinancePageInner() {
         />
       </main>
     </>
+  );
+}
+
+/**
+ * Trigger + dropdown unificado pra mudar o status de uma cobrança.
+ *
+ * Visual: pill colorido da cor do status atual com chevron — comunica
+ * claramente "isso é selecionável". Hover reforça com borda + sombra
+ * tingida da cor do status; focus visível pra navegação por teclado.
+ *
+ * Comportamento: ao clicar, abre dropdown com as 3 transições possíveis
+ * (omite o status atual). "Cancelar cobrança" fica destacada como
+ * destrutiva.
+ */
+function StatusSelector({
+  status,
+  disabled,
+  onChange,
+}: {
+  status: PaymentStatus;
+  disabled?: boolean;
+  onChange: (next: PaymentStatus) => void;
+}) {
+  const style = STATUS_SELECTOR_STYLE[status];
+  return (
+    <DropdownMenu
+      align="start"
+      trigger={
+        <button
+          type="button"
+          title="Alterar status"
+          disabled={disabled}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 border font-mono text-[0.72rem] font-semibold tracking-[0.02em] uppercase transition-all focus-visible:outline-none focus-visible:ring-2 disabled:opacity-60 disabled:cursor-wait ${style.idle} ${style.hover} ${style.ring}`}
+        >
+          <span>{STATUS_LABEL[status] ?? status}</span>
+          <Icon name="chevron-down" />
+        </button>
+      }
+      items={STATUS_OPTIONS.filter((o) => o.value !== status).map((o) => ({
+        label: o.label,
+        icon: o.icon,
+        tone: o.value === "cancelled" ? "danger" : "default",
+        onSelect: () => onChange(o.value),
+      }))}
+    />
   );
 }

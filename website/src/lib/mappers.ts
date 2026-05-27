@@ -76,17 +76,26 @@ export function mapDelta(
 }
 
 /* ------------------------------------------------------------------
- * Marketing
+ * Marketing — Platform plans (Starter/Business/Pro)
  * ------------------------------------------------------------------ */
 
+/**
+ * Shape devolvida pela query pública `platformPlans`. Espelha os
+ * campos do content type PlatformPlan no backend. Tudo já vem pronto
+ * (preços, featured, tag, ctaLabel) — sem heurística no mapper.
+ */
 export interface RawPricingPlan {
   documentId: string;
+  slug: string;
   name: string;
-  description?: string | null;
-  price: number;
-  billingCycle: string;
-  maxStudents?: number | null;
+  tagline?: string | null;
+  tag?: string | null;
+  priceMonthly: number;
+  priceAnnual?: number | null;
   features?: Array<string | null> | null;
+  ctaLabel?: string | null;
+  featured?: boolean | null;
+  sortOrder?: number | null;
   isActive?: boolean | null;
 }
 
@@ -95,23 +104,21 @@ export function mapPricingPlans(
 ): PricingPlan[] {
   return (plans ?? [])
     .filter((p): p is RawPricingPlan => !!p && p.isActive !== false)
-    .map((p, idx) => {
-      const monthly =
-        p.billingCycle === "annual"
-          ? Math.round(p.price / 12)
-          : Math.round(p.price);
-      return {
-        id: p.documentId,
-        name: p.name,
-        tag: p.billingCycle === "annual" ? "Anual" : "Mensal",
-        priceMonthly: monthly,
-        priceAnnual: Math.round(monthly * 0.8),
-        tagline: p.description ?? "",
-        features: (p.features ?? []).filter((f): f is string => !!f),
-        featured: idx === 1,
-        ctaLabel: "Quero uma demonstração",
-      };
-    });
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+    .map((p) => ({
+      id: p.documentId,
+      slug: p.slug,
+      name: p.name,
+      tag: p.tag ?? "",
+      priceMonthly: Math.round(p.priceMonthly),
+      // Fallback: se priceAnnual não vier do servidor, repete o mensal
+      // pra não quebrar a UI (o componente exibe '/mês' nos dois modos).
+      priceAnnual: Math.round(p.priceAnnual ?? p.priceMonthly),
+      tagline: p.tagline ?? "",
+      features: (p.features ?? []).filter((f): f is string => !!f),
+      featured: !!p.featured,
+      ctaLabel: p.ctaLabel ?? "Começar grátis",
+    }));
 }
 
 /* ------------------------------------------------------------------
@@ -442,6 +449,8 @@ export interface RawAcademy {
   primaryColor?: string | null;
   secondaryColor?: string | null;
   plan?: string | null;
+  businessType?: string | null;
+  enabledModules?: Array<string | null> | null;
   email?: string | null;
   phone?: string | null;
   address?: string | null;
@@ -449,7 +458,34 @@ export interface RawAcademy {
   logoSquare?: { documentId?: string | null; url?: string | null } | null;
 }
 
+const VALID_BUSINESS_TYPES = [
+  "gym",
+  "swimming_school",
+  "pilates",
+  "ballet",
+  "studio",
+  "martial_arts",
+  "other",
+] as const;
+const VALID_TOGGLEABLE_MODULES = [
+  "dependents",
+  "workouts",
+  "classes",
+  "pool",
+] as const;
+
 export function mapAcademy(a: RawAcademy): AcademySettings {
+  const businessType = (VALID_BUSINESS_TYPES as readonly string[]).includes(
+    a.businessType ?? "",
+  )
+    ? (a.businessType as AcademySettings["businessType"])
+    : "gym";
+  const enabledModules = Array.isArray(a.enabledModules)
+    ? (a.enabledModules.filter(
+        (m): m is (typeof VALID_TOGGLEABLE_MODULES)[number] =>
+          !!m && (VALID_TOGGLEABLE_MODULES as readonly string[]).includes(m),
+      ) as AcademySettings["enabledModules"])
+    : undefined;
   return {
     documentId: a.documentId,
     name: a.name,
@@ -466,6 +502,8 @@ export function mapAcademy(a: RawAcademy): AcademySettings {
     plan: (["starter", "business", "pro"].includes(a.plan ?? "")
       ? a.plan
       : "starter") as AcademySettings["plan"],
+    businessType,
+    enabledModules,
   };
 }
 
@@ -538,6 +576,15 @@ export interface RawDREOverview {
     amount: string;
     status: string;
   }>;
+  revenueTotalLabel: string;
+  revenueRows: Array<{
+    id: string;
+    student: string;
+    source?: string | null;
+    paidAt: string;
+    amount: string;
+    method: string;
+  }>;
 }
 
 export function mapDRE(d: RawDREOverview): DREData {
@@ -582,6 +629,15 @@ export function mapDRE(d: RawDREOverview): DREData {
       dueDate: r.dueDate,
       amount: r.amount,
       status: r.status as DREData["expenseRows"][number]["status"],
+    })),
+    revenueTotalLabel: d.revenueTotalLabel,
+    revenueRows: d.revenueRows.map((r) => ({
+      id: r.id,
+      student: r.student,
+      source: r.source ?? "Avulsa",
+      paidAt: r.paidAt,
+      amount: r.amount,
+      method: r.method as DREData["revenueRows"][number]["method"],
     })),
   };
 }

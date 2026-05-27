@@ -96,6 +96,32 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
           return doc?.logoSquare ?? null;
         },
       });
+      t.field('subscription', {
+        type: 'AcademySubscription',
+        description:
+          'Active SaaS subscription. Holds the tier (via platformPlan), trial/cycle state, and billing data. Null only on legacy rows that the backfill could not link.',
+        resolve: async (parent: any) => {
+          if (parent.subscription !== undefined) return parent.subscription;
+          const doc: any = await strapi.documents(UID).findOne({
+            documentId: parent.documentId,
+            populate: { subscription: { populate: { platformPlan: true } } } as any,
+          });
+          return doc?.subscription ?? null;
+        },
+      });
+      t.field('poolSettings', {
+        type: 'PoolSettings',
+        description:
+          'Pool target ranges (pH/cloro/temperatura). Sempre presente: criada via lifecycle no afterCreate ou backfill no boot.',
+        resolve: async (parent: any) => {
+          if (parent.poolSettings !== undefined) return parent.poolSettings;
+          const doc: any = await strapi.documents(UID).findOne({
+            documentId: parent.documentId,
+            populate: { poolSettings: true } as any,
+          });
+          return doc?.poolSettings ?? null;
+        },
+      });
     },
   });
 

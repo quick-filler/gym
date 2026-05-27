@@ -90,6 +90,48 @@
           "sortable": true
         }
       },
+      "cpf": {
+        "edit": {
+          "label": "cpf",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "cpf",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "gender": {
+        "edit": {
+          "label": "gender",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "gender",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "address": {
+        "edit": {
+          "label": "address",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "address",
+          "searchable": false,
+          "sortable": false
+        }
+      },
       "status": {
         "edit": {
           "label": "status",
@@ -404,6 +446,22 @@
           {
             "name": "dependents",
             "size": 6
+          }
+        ],
+        [
+          {
+            "name": "cpf",
+            "size": 6
+          },
+          {
+            "name": "gender",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "address",
+            "size": 12
           }
         ]
       ]

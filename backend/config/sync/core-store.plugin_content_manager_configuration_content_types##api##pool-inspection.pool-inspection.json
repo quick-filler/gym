@@ -1,0 +1,296 @@
+{
+  "key": "plugin_content_manager_configuration_content_types::api::pool-inspection.pool-inspection",
+  "value": {
+    "settings": {
+      "bulkable": true,
+      "filterable": true,
+      "searchable": true,
+      "pageSize": 10,
+      "relationOpenMode": "modal",
+      "mainField": "scheduledTime",
+      "defaultSortBy": "scheduledTime",
+      "defaultSortOrder": "ASC"
+    },
+    "metadatas": {
+      "id": {
+        "edit": {},
+        "list": {
+          "label": "id",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "date": {
+        "edit": {
+          "label": "date",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "date",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "shift": {
+        "edit": {
+          "label": "shift",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "shift",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "scheduledTime": {
+        "edit": {
+          "label": "scheduledTime",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "scheduledTime",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "chlorine": {
+        "edit": {
+          "label": "chlorine",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "chlorine",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "ph": {
+        "edit": {
+          "label": "ph",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "ph",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "temperature": {
+        "edit": {
+          "label": "temperature",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "temperature",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "peopleCount": {
+        "edit": {
+          "label": "peopleCount",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "peopleCount",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "peopleCountSource": {
+        "edit": {
+          "label": "peopleCountSource",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "peopleCountSource",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "notes": {
+        "edit": {
+          "label": "notes",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "notes",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "academy": {
+        "edit": {
+          "label": "academy",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "academy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdAt": {
+        "edit": {
+          "label": "createdAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "createdAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedAt": {
+        "edit": {
+          "label": "updatedAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "updatedAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdBy": {
+        "edit": {
+          "label": "createdBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "createdBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedBy": {
+        "edit": {
+          "label": "updatedBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "updatedBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "documentId": {
+        "edit": {},
+        "list": {
+          "label": "documentId",
+          "searchable": true,
+          "sortable": true
+        }
+      }
+    },
+    "layouts": {
+      "list": [
+        "id",
+        "date",
+        "shift",
+        "scheduledTime"
+      ],
+      "edit": [
+        [
+          {
+            "name": "date",
+            "size": 4
+          },
+          {
+            "name": "shift",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "scheduledTime",
+            "size": 6
+          },
+          {
+            "name": "chlorine",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "ph",
+            "size": 4
+          },
+          {
+            "name": "temperature",
+            "size": 4
+          },
+          {
+            "name": "peopleCount",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "peopleCountSource",
+            "size": 6
+          },
+          {
+            "name": "notes",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "academy",
+            "size": 6
+          }
+        ]
+      ]
+    },
+    "uid": "api::pool-inspection.pool-inspection"
+  },
+  "type": "object",
+  "environment": null,
+  "tag": null
+}

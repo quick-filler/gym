@@ -27,6 +27,10 @@ import { buildCommonTypes } from './types/common';
 import { buildAcademy } from './types/academy';
 import { buildStudent } from './types/student';
 import { buildPlan } from './types/plan';
+import { buildPlatformPlan } from './types/platform-plan';
+import { buildAcademySubscription } from './types/academy-subscription';
+import { buildPool } from './types/pool';
+import { buildModulePresets } from './types/module-presets';
 import { buildEnrollment } from './types/enrollment';
 import { buildClassSchedule } from './types/class-schedule';
 import { buildClassBooking } from './types/class-booking';
@@ -51,6 +55,10 @@ export function registerGraphQL(strapi: Core.Strapi) {
       buildAcademy(ctx),
       buildStudent(ctx),
       buildPlan(ctx),
+      buildPlatformPlan(ctx),
+      buildAcademySubscription(ctx),
+      buildPool(ctx),
+      buildModulePresets(ctx),
       buildEnrollment(ctx),
       buildClassSchedule(ctx),
       buildClassBooking(ctx),

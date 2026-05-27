@@ -1,6 +1,12 @@
 import type { Core } from '@strapi/strapi';
 import { setupRolesAndPermissions } from './bootstrap/permissions';
 import { ensureDemoDevUser, seedDemoData } from './bootstrap/seed';
+import {
+  backfillAcademySubscriptions,
+  backfillPoolSettings,
+  ensurePlatformPlans,
+  expireStaleTrials,
+} from './bootstrap/platform-plans';
 import { registerGraphQL } from './extensions/graphql';
 import { registerUserPasswordLifecycle } from './bootstrap/user-password-lifecycle';
 
@@ -26,6 +32,22 @@ export default {
    */
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
     await setupRolesAndPermissions(strapi);
+
+    // SaaS tiers (Starter/Business/Pro) sempre presentes — sem isso, o
+    // /pricing público e o backfill abaixo não têm o que linkar.
+    await ensurePlatformPlans(strapi);
+    // Cria uma AcademySubscription pra cada academia que ainda não tem.
+    // Idempotente. Novas academias ganham subscription via lifecycle
+    // (Academy.afterCreate), então essa função só toca em rows pré-
+    // existentes na migração inicial.
+    await backfillAcademySubscriptions(strapi);
+    // Catch-up: vira `expired` subs que entraram em `trialing` e
+    // passaram do prazo durante downtime. Em prod, um cron externo
+    // (pg_cron / supercronic) deve rodar isso a cada hora.
+    await expireStaleTrials(strapi);
+    // PoolSettings com defaults da legislação brasileira pra academias
+    // que ainda não tinham (criadas antes do módulo de piscina existir).
+    await backfillPoolSettings(strapi);
 
     if (process.env.SEED_DEMO === 'true') {
       await seedDemoData(strapi);

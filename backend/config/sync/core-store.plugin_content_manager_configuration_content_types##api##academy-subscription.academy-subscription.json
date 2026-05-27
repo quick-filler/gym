@@ -1,0 +1,623 @@
+{
+  "key": "plugin_content_manager_configuration_content_types::api::academy-subscription.academy-subscription",
+  "value": {
+    "settings": {
+      "bulkable": true,
+      "filterable": true,
+      "searchable": true,
+      "pageSize": 10,
+      "relationOpenMode": "modal",
+      "mainField": "asaasCustomerId",
+      "defaultSortBy": "asaasCustomerId",
+      "defaultSortOrder": "ASC"
+    },
+    "metadatas": {
+      "id": {
+        "edit": {},
+        "list": {
+          "label": "id",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "academy": {
+        "edit": {
+          "label": "academy",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "academy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "platformPlan": {
+        "edit": {
+          "label": "platformPlan",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "platformPlan",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "status": {
+        "edit": {
+          "label": "status",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "status",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "recurrency": {
+        "edit": {
+          "label": "recurrency",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "recurrency",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "startedAt": {
+        "edit": {
+          "label": "startedAt",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "startedAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "trialEndsAt": {
+        "edit": {
+          "label": "trialEndsAt",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "trialEndsAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "currentPeriodStart": {
+        "edit": {
+          "label": "currentPeriodStart",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "currentPeriodStart",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "currentPeriodEnd": {
+        "edit": {
+          "label": "currentPeriodEnd",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "currentPeriodEnd",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "cancelAt": {
+        "edit": {
+          "label": "cancelAt",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "cancelAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "cancelledAt": {
+        "edit": {
+          "label": "cancelledAt",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "cancelledAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "asaasCustomerId": {
+        "edit": {
+          "label": "asaasCustomerId",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "asaasCustomerId",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "asaasSubscriptionId": {
+        "edit": {
+          "label": "asaasSubscriptionId",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "asaasSubscriptionId",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "priceMonthlySnapshot": {
+        "edit": {
+          "label": "priceMonthlySnapshot",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "priceMonthlySnapshot",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "priceAnnualSnapshot": {
+        "edit": {
+          "label": "priceAnnualSnapshot",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "priceAnnualSnapshot",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "featuresSnapshot": {
+        "edit": {
+          "label": "featuresSnapshot",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "featuresSnapshot",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "limitsSnapshot": {
+        "edit": {
+          "label": "limitsSnapshot",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "limitsSnapshot",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "billingEmail": {
+        "edit": {
+          "label": "billingEmail",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "billingEmail",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "billingName": {
+        "edit": {
+          "label": "billingName",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "billingName",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "billingDocumentType": {
+        "edit": {
+          "label": "billingDocumentType",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "billingDocumentType",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "billingDocumentNumber": {
+        "edit": {
+          "label": "billingDocumentNumber",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "billingDocumentNumber",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "billingZipcode": {
+        "edit": {
+          "label": "billingZipcode",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "billingZipcode",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "billingState": {
+        "edit": {
+          "label": "billingState",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "billingState",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "billingCity": {
+        "edit": {
+          "label": "billingCity",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "billingCity",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "billingAddressLine1": {
+        "edit": {
+          "label": "billingAddressLine1",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "billingAddressLine1",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "billingAddressLine2": {
+        "edit": {
+          "label": "billingAddressLine2",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "billingAddressLine2",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "billingNumber": {
+        "edit": {
+          "label": "billingNumber",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "billingNumber",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "notes": {
+        "edit": {
+          "label": "notes",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "notes",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdAt": {
+        "edit": {
+          "label": "createdAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "createdAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedAt": {
+        "edit": {
+          "label": "updatedAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "updatedAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdBy": {
+        "edit": {
+          "label": "createdBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "createdBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedBy": {
+        "edit": {
+          "label": "updatedBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "updatedBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "documentId": {
+        "edit": {},
+        "list": {
+          "label": "documentId",
+          "searchable": true,
+          "sortable": true
+        }
+      }
+    },
+    "layouts": {
+      "list": [
+        "id",
+        "academy",
+        "platformPlan",
+        "status"
+      ],
+      "edit": [
+        [
+          {
+            "name": "academy",
+            "size": 6
+          },
+          {
+            "name": "platformPlan",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "status",
+            "size": 6
+          },
+          {
+            "name": "recurrency",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "startedAt",
+            "size": 6
+          },
+          {
+            "name": "trialEndsAt",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "currentPeriodStart",
+            "size": 6
+          },
+          {
+            "name": "currentPeriodEnd",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "cancelAt",
+            "size": 6
+          },
+          {
+            "name": "cancelledAt",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "asaasCustomerId",
+            "size": 6
+          },
+          {
+            "name": "asaasSubscriptionId",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "priceMonthlySnapshot",
+            "size": 4
+          },
+          {
+            "name": "priceAnnualSnapshot",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "featuresSnapshot",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "limitsSnapshot",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "billingEmail",
+            "size": 6
+          },
+          {
+            "name": "billingName",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "billingDocumentType",
+            "size": 6
+          },
+          {
+            "name": "billingDocumentNumber",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "billingZipcode",
+            "size": 6
+          },
+          {
+            "name": "billingState",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "billingCity",
+            "size": 6
+          },
+          {
+            "name": "billingAddressLine1",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "billingAddressLine2",
+            "size": 6
+          },
+          {
+            "name": "billingNumber",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "notes",
+            "size": 6
+          }
+        ]
+      ]
+    },
+    "uid": "api::academy-subscription.academy-subscription"
+  },
+  "type": "object",
+  "environment": null,
+  "tag": null
+}

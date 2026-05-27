@@ -231,6 +231,20 @@ export function buildAggregates({
     },
   });
 
+  const DRERevenueRow = nexus.objectType({
+    name: 'DRERevenueRow',
+    description:
+      'A single recognised revenue line in the month — a payment that was marked as paid in the period.',
+    definition(t: any) {
+      t.nonNull.string('id');
+      t.nonNull.string('student');
+      t.string('source'); // plan name or "Avulsa"
+      t.nonNull.string('paidAt');
+      t.nonNull.string('amount');
+      t.nonNull.string('method');
+    },
+  });
+
   const DREOverview = nexus.objectType({
     name: 'DREOverview',
     definition(t: any) {
@@ -244,6 +258,8 @@ export function buildAggregates({
       });
       t.nonNull.string('expensesTotalLabel');
       t.nonNull.list.nonNull.field('expenseRows', { type: 'DREExpenseRow' });
+      t.nonNull.string('revenueTotalLabel');
+      t.nonNull.list.nonNull.field('revenueRows', { type: 'DRERevenueRow' });
     },
   });
 
@@ -389,7 +405,11 @@ export function buildAggregates({
               filters: withPaymentScope(academyId),
               limit: 500,
               sort: { dueDate: 'desc' },
-              populate: { enrollment: { populate: { student: true } } },
+              populate: {
+                enrollment: { populate: { student: true } },
+                student: true,
+                dependent: true,
+              },
             }),
           ]);
 
@@ -475,7 +495,12 @@ export function buildAggregates({
             .slice(0, 5)
             .map((p: any) => ({
               id: p.documentId,
-              student: p.enrollment?.student?.name ?? '—',
+              student:
+                p.enrollment?.student?.name ??
+                p.student?.name ??
+                p.dependent?.name ??
+                p.description ??
+                '—',
               amount: BRL(Number(p.amount ?? 0)),
               dueDate: fmtDateBR(p.dueDate),
               method: p.method ?? 'pix',
@@ -508,7 +533,11 @@ export function buildAggregates({
             filters: withPaymentScope(academyId),
             limit: 2000,
             sort: { dueDate: 'desc' },
-            populate: { enrollment: { populate: { student: true } } },
+            populate: {
+              enrollment: { populate: { student: true } },
+              student: true,
+              dependent: true,
+            },
           });
 
           const inMonth = (p: any): boolean => {
@@ -576,7 +605,12 @@ export function buildAggregates({
             .filter(inMonth)
             .slice(0, 20)
             .map((p: any) => {
-              const name = p.enrollment?.student?.name ?? '—';
+              const name =
+                p.enrollment?.student?.name ??
+                p.student?.name ??
+                p.dependent?.name ??
+                p.description ??
+                '—';
               const amount = Number(p.amount ?? 0);
               return {
                 id: p.documentId,
@@ -645,6 +679,13 @@ export function buildAggregates({
             strapi.documents(PAYMENT).findMany({
               filters: withPaymentScope(academyId),
               limit: 5000,
+              populate: {
+                enrollment: {
+                  populate: { student: true, plan: true },
+                },
+                student: true,
+                dependent: true,
+              } as any,
             }),
           ]);
 
@@ -738,6 +779,41 @@ export function buildAggregates({
             status: x.status ?? 'open',
           }));
 
+          // Receitas reconhecidas no mês = cobranças marcadas como
+          // pagas cujo paidAt cai dentro da janela. É o espelho da
+          // tabela "Despesas do mês" — sem essa lista, mudar status
+          // de uma cobrança pra "Pago" só mexia nos KPIs agregados,
+          // sem feedback visual em lista.
+          const paidInMonth = (payments as any[]).filter(
+            (p) =>
+              p.status === 'paid' &&
+              p.paidAt &&
+              p.paidAt.slice(0, 10) >= start &&
+              p.paidAt.slice(0, 10) < end,
+          );
+          const revenueRows = paidInMonth
+            .sort((a: any, b: any) =>
+              (b.paidAt ?? '').localeCompare(a.paidAt ?? ''),
+            )
+            .map((p: any) => {
+              const name =
+                p.enrollment?.student?.name ??
+                p.student?.name ??
+                p.dependent?.name ??
+                p.description ??
+                '—';
+              const source =
+                p.enrollment?.plan?.name ?? p.description ?? 'Avulsa';
+              return {
+                id: p.documentId,
+                student: name,
+                source,
+                paidAt: fmtDateBR(p.paidAt),
+                amount: BRL(Number(p.amount ?? 0)),
+                method: p.method ?? 'pix',
+              };
+            });
+
           return {
             monthLabel,
             revenue: {
@@ -758,6 +834,8 @@ export function buildAggregates({
             categoryBreakdown,
             expensesTotalLabel: BRL_SHORT(expensesTotal),
             expenseRows,
+            revenueTotalLabel: BRL_SHORT(revenue),
+            revenueRows,
           };
         },
       });
@@ -982,6 +1060,7 @@ export function buildAggregates({
       DRECashFlowPoint,
       DRECategoryBreakdown,
       DREExpenseRow,
+      DRERevenueRow,
       DREOverview,
       ScheduleClass,
       ScheduleStats,

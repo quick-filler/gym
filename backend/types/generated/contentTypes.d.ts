@@ -440,6 +440,71 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAcademySubscriptionAcademySubscription
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'academy_subscriptions';
+  info: {
+    description: 'Active SaaS subscription per Academy \u2014 links Academy to PlatformPlan with cycle/trial/billing state. Mirrors the SubscriptionPlan \u2194 UserSubscriptionPlan split from quickfiller-strapi-api.';
+    displayName: 'Academy Subscription';
+    pluralName: 'academy-subscriptions';
+    singularName: 'academy-subscription';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academy: Schema.Attribute.Relation<'oneToOne', 'api::academy.academy'>;
+    asaasCustomerId: Schema.Attribute.String & Schema.Attribute.Private;
+    asaasSubscriptionId: Schema.Attribute.String & Schema.Attribute.Private;
+    billingAddressLine1: Schema.Attribute.String;
+    billingAddressLine2: Schema.Attribute.String;
+    billingCity: Schema.Attribute.String;
+    billingDocumentNumber: Schema.Attribute.String;
+    billingDocumentType: Schema.Attribute.Enumeration<['CPF', 'CNPJ']>;
+    billingEmail: Schema.Attribute.Email;
+    billingName: Schema.Attribute.String;
+    billingNumber: Schema.Attribute.String;
+    billingState: Schema.Attribute.String;
+    billingZipcode: Schema.Attribute.String;
+    cancelAt: Schema.Attribute.DateTime;
+    cancelledAt: Schema.Attribute.DateTime;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    currentPeriodEnd: Schema.Attribute.DateTime;
+    currentPeriodStart: Schema.Attribute.DateTime;
+    featuresSnapshot: Schema.Attribute.JSON;
+    limitsSnapshot: Schema.Attribute.JSON;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::academy-subscription.academy-subscription'
+    > &
+      Schema.Attribute.Private;
+    notes: Schema.Attribute.Text;
+    platformPlan: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::platform-plan.platform-plan'
+    >;
+    priceAnnualSnapshot: Schema.Attribute.Decimal;
+    priceMonthlySnapshot: Schema.Attribute.Decimal;
+    publishedAt: Schema.Attribute.DateTime;
+    recurrency: Schema.Attribute.Enumeration<['monthly', 'annual']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'monthly'>;
+    startedAt: Schema.Attribute.DateTime;
+    status: Schema.Attribute.Enumeration<
+      ['trialing', 'active', 'past_due', 'cancelled', 'expired']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'trialing'>;
+    trialEndsAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiAcademyAcademy extends Struct.CollectionTypeSchema {
   collectionName: 'academies';
   info: {
@@ -492,6 +557,10 @@ export interface ApiAcademyAcademy extends Struct.CollectionTypeSchema {
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'starter'>;
     plans: Schema.Attribute.Relation<'oneToMany', 'api::plan.plan'>;
+    poolSettings: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::pool-setting.pool-setting'
+    >;
     primaryColor: Schema.Attribute.String &
       Schema.Attribute.DefaultTo<'#6366f1'>;
     publishedAt: Schema.Attribute.DateTime;
@@ -503,6 +572,10 @@ export interface ApiAcademyAcademy extends Struct.CollectionTypeSchema {
       Schema.Attribute.DefaultTo<'#8b5cf6'>;
     slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
     students: Schema.Attribute.Relation<'oneToMany', 'api::student.student'>;
+    subscription: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::academy-subscription.academy-subscription'
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -653,6 +726,7 @@ export interface ApiDependentDependent extends Struct.CollectionTypeSchema {
   };
   attributes: {
     academy: Schema.Attribute.Relation<'manyToOne', 'api::academy.academy'>;
+    address: Schema.Attribute.JSON;
     allergies: Schema.Attribute.Text;
     assessments: Schema.Attribute.Relation<
       'oneToMany',
@@ -664,6 +738,7 @@ export interface ApiDependentDependent extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::class-booking.class-booking'
     >;
+    cpf: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -873,6 +948,11 @@ export interface ApiPaymentPayment extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    dependent: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::dependent.dependent'
+    >;
+    description: Schema.Attribute.String;
     dueDate: Schema.Attribute.Date & Schema.Attribute.Required;
     enrollment: Schema.Attribute.Relation<
       'manyToOne',
@@ -895,6 +975,7 @@ export interface ApiPaymentPayment extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'pending'>;
+    student: Schema.Attribute.Relation<'manyToOne', 'api::student.student'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -975,6 +1056,132 @@ export interface ApiPlatformAdminPlatformAdmin
   };
 }
 
+export interface ApiPlatformPlanPlatformPlan
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'platform_plans';
+  info: {
+    description: 'GYM SaaS tier (Starter/Business/Pro) \u2014 feeds the public /pricing page and the Academy.platformPlan relation. Source of truth for tier price/features/limits.';
+    displayName: 'Platform Plan';
+    pluralName: 'platform-plans';
+    singularName: 'platform-plan';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    ctaLabel: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'Come\u00E7ar gr\u00E1tis'>;
+    currency: Schema.Attribute.String & Schema.Attribute.DefaultTo<'BRL'>;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    features: Schema.Attribute.JSON;
+    isActive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    limits: Schema.Attribute.JSON;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::platform-plan.platform-plan'
+    > &
+      Schema.Attribute.Private;
+    modules: Schema.Attribute.JSON;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    priceAnnual: Schema.Attribute.Decimal;
+    priceMonthly: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    sortOrder: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    tag: Schema.Attribute.String;
+    tagline: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPoolInspectionPoolInspection
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'pool_inspections';
+  info: {
+    description: 'Daily pool quality measurement \u2014 pH, chlorine, temperature + occupancy. Two readings per day (morning/evening). Status derived from PoolSettings target ranges.';
+    displayName: 'Pool Inspection';
+    pluralName: 'pool-inspections';
+    singularName: 'pool-inspection';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academy: Schema.Attribute.Relation<'manyToOne', 'api::academy.academy'>;
+    chlorine: Schema.Attribute.Decimal;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    date: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::pool-inspection.pool-inspection'
+    > &
+      Schema.Attribute.Private;
+    notes: Schema.Attribute.Text;
+    peopleCount: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    peopleCountSource: Schema.Attribute.Enumeration<['schedule', 'manual']> &
+      Schema.Attribute.DefaultTo<'manual'>;
+    ph: Schema.Attribute.Decimal;
+    publishedAt: Schema.Attribute.DateTime;
+    recordedBy: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    scheduledTime: Schema.Attribute.String;
+    shift: Schema.Attribute.Enumeration<['morning', 'evening']> &
+      Schema.Attribute.Required;
+    temperature: Schema.Attribute.Decimal;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPoolSettingPoolSetting extends Struct.CollectionTypeSchema {
+  collectionName: 'pool_settings';
+  info: {
+    description: 'Per-academy pool configuration \u2014 pH, chlorine, temperature target ranges + alert tolerance. Drives the colour status on PoolInspection records. Compliant with Brazilian pool legislation defaults (pH 7.2\u20137.8, chlorine 1\u20133 mg/L).';
+    displayName: 'Pool Settings';
+    pluralName: 'pool-settings';
+    singularName: 'pool-setting';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academy: Schema.Attribute.Relation<'oneToOne', 'api::academy.academy'>;
+    alertTolerance: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0.2>;
+    chlorineMax: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<3>;
+    chlorineMin: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<1>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    inspectionTimes: Schema.Attribute.JSON;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::pool-setting.pool-setting'
+    > &
+      Schema.Attribute.Private;
+    phMax: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<7.8>;
+    phMin: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<7.2>;
+    publishedAt: Schema.Attribute.DateTime;
+    temperatureMax: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<31>;
+    temperatureMin: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<28>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiStudentStudent extends Struct.CollectionTypeSchema {
   collectionName: 'students';
   info: {
@@ -988,6 +1195,7 @@ export interface ApiStudentStudent extends Struct.CollectionTypeSchema {
   };
   attributes: {
     academy: Schema.Attribute.Relation<'manyToOne', 'api::academy.academy'>;
+    address: Schema.Attribute.JSON;
     assessments: Schema.Attribute.Relation<
       'oneToMany',
       'api::body-assessment.body-assessment'
@@ -997,6 +1205,7 @@ export interface ApiStudentStudent extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::class-booking.class-booking'
     >;
+    cpf: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1009,6 +1218,7 @@ export interface ApiStudentStudent extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::enrollment.enrollment'
     >;
+    gender: Schema.Attribute.Enumeration<['female', 'male', 'other']>;
     isGuardian: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -1593,6 +1803,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::academy-subscription.academy-subscription': ApiAcademySubscriptionAcademySubscription;
       'api::academy.academy': ApiAcademyAcademy;
       'api::body-assessment.body-assessment': ApiBodyAssessmentBodyAssessment;
       'api::class-booking.class-booking': ApiClassBookingClassBooking;
@@ -1604,6 +1815,9 @@ declare module '@strapi/strapi' {
       'api::payment.payment': ApiPaymentPayment;
       'api::plan.plan': ApiPlanPlan;
       'api::platform-admin.platform-admin': ApiPlatformAdminPlatformAdmin;
+      'api::platform-plan.platform-plan': ApiPlatformPlanPlatformPlan;
+      'api::pool-inspection.pool-inspection': ApiPoolInspectionPoolInspection;
+      'api::pool-setting.pool-setting': ApiPoolSettingPoolSetting;
       'api::student.student': ApiStudentStudent;
       'api::workout-plan.workout-plan': ApiWorkoutPlanWorkoutPlan;
       'plugin::content-releases.release': PluginContentReleasesRelease;

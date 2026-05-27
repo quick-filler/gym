@@ -9,9 +9,16 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { Pill } from "@/components/ui/Pill";
-import type { DRECashFlowPoint, DREExpenseRow, ExpenseStatus } from "@/lib/types";
+import { Avatar } from "@/components/admin/Avatar";
+import { PaymentMethodLabel } from "@/components/admin/StatusPill";
+import type {
+  DRECashFlowPoint,
+  DREExpenseRow,
+  DRERevenueRow,
+  ExpenseStatus,
+} from "@/lib/types";
 import { useDRE } from "@/lib/hooks";
-import { NewExpenseDialog } from "./NewExpenseDialog";
+import { ExpenseDialog } from "./ExpenseDialog";
 import { HeroCard } from "@/components/admin/HeroCard";
 
 const TYPE_LABEL = { fixed: "Fixo", variable: "Variável" } as const;
@@ -43,7 +50,10 @@ function buildPolyline(
 
 export default function DREPage() {
   const { data, loading, error } = useDRE();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  // null aqui é o sentinel pra "criar"; string é "editar"; undefined é fechado.
+  const [dialogTarget, setDialogTarget] = useState<string | null | undefined>(
+    undefined,
+  );
   const [query, setQuery] = useState("");
   const apollo = useApolloClient();
   const refresh = () =>
@@ -55,6 +65,22 @@ export default function DREPage() {
       r.description.toLowerCase().includes(query.toLowerCase()) ||
       r.categoryLabel.toLowerCase().includes(query.toLowerCase()),
   );
+
+  const filteredRevenue = (data?.revenueRows ?? []).filter(
+    (r: DRERevenueRow) =>
+      !query ||
+      r.student.toLowerCase().includes(query.toLowerCase()) ||
+      r.source.toLowerCase().includes(query.toLowerCase()),
+  );
+
+  function initialsFor(name: string): string {
+    return name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase() ?? "")
+      .join("");
+  }
 
   return (
     <>
@@ -89,7 +115,7 @@ export default function DREPage() {
                   <Icon name="arrow-right" />
                 </button>
               </div>
-              <Button variant="primary" onClick={() => setDialogOpen(true)}>
+              <Button variant="primary" onClick={() => setDialogTarget(null)}>
                 <Icon name="plus" /> Nova despesa
               </Button>
             </>
@@ -263,6 +289,75 @@ export default function DREPage() {
               </Card>
             </div>
 
+            {/* Revenue table — espelho do que está em /admin/finance, mas
+                filtrado pra só "Pago no mês" porque é isso que entra na
+                receita do DRE. Sem essa tabela, mudar o status de uma
+                cobrança pra "Pago" só mexia nos cards agregados, sem
+                feedback list-level. */}
+            <Card className="p-0 overflow-hidden mb-8">
+              <div className="flex items-center justify-between p-6 border-b border-line">
+                <div>
+                  <h3 className="font-display text-[1.1rem] font-semibold text-ink-900">
+                    Receitas recebidas
+                  </h3>
+                  <p className="font-mono text-[0.7rem] uppercase tracking-[0.1em] text-ink-400 mt-1">
+                    {data.monthLabel} · {filteredRevenue.length} cobranças pagas · total {data.revenueTotalLabel}
+                  </p>
+                </div>
+              </div>
+              {filteredRevenue.length === 0 ? (
+                <div className="p-12 text-center text-ink-400">
+                  Nenhuma cobrança paga neste mês ainda.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-line bg-paper-50">
+                        {["Aluno", "Origem", "Recebido em", "Método", "Valor"].map((h) => (
+                          <th
+                            key={h}
+                            className="text-left px-6 py-3 font-mono text-[0.68rem] uppercase tracking-[0.1em] text-ink-400 font-medium"
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRevenue.map((row: DRERevenueRow) => (
+                        <tr
+                          key={row.id}
+                          className="border-b border-line/60 last:border-b-0 hover:bg-paper-50 transition-colors"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <Avatar initials={initialsFor(row.student)} size="sm" />
+                              <span className="text-[0.9rem] font-semibold text-ink-900">
+                                {row.student}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-[0.85rem] text-ink-700">
+                            {row.source}
+                          </td>
+                          <td className="px-6 py-4 font-mono text-[0.82rem] text-ink-500">
+                            {row.paidAt}
+                          </td>
+                          <td className="px-6 py-4">
+                            <PaymentMethodLabel method={row.method} />
+                          </td>
+                          <td className="px-6 py-4 font-mono text-[0.9rem] font-semibold text-emerald">
+                            {row.amount}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
+
             {/* Expenses table */}
             <Card className="p-0 overflow-hidden">
               <div className="flex items-center justify-between p-6 border-b border-line">
@@ -274,7 +369,7 @@ export default function DREPage() {
                     {data.monthLabel} · {filteredExpenses.length} lançamentos
                   </p>
                 </div>
-                <Button variant="primary" onClick={() => setDialogOpen(true)}>
+                <Button variant="primary" onClick={() => setDialogTarget(null)}>
                   <Icon name="plus" /> Nova despesa
                 </Button>
               </div>
@@ -298,7 +393,8 @@ export default function DREPage() {
                     {filteredExpenses.map((row: DREExpenseRow) => (
                       <tr
                         key={row.id}
-                        className="border-b border-line/60 last:border-b-0 hover:bg-paper-50 transition-colors"
+                        onClick={() => setDialogTarget(row.id)}
+                        className="border-b border-line/60 last:border-b-0 hover:bg-paper-50 transition-colors cursor-pointer"
                       >
                         <td className="px-6 py-4">
                           <div className="font-semibold text-ink-900 text-[0.9rem]">
@@ -328,8 +424,19 @@ export default function DREPage() {
                           <ExpenseStatusPill status={row.status} />
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button className="font-mono text-[0.72rem] uppercase tracking-[0.08em] text-ink-500 hover:text-ink-900">
-                            Ver
+                          <button
+                            type="button"
+                            aria-label={`Editar ${row.description}`}
+                            title="Editar"
+                            onClick={(e) => {
+                              // A `<tr>` inteira já é clicável; impede
+                              // double-trigger no botão.
+                              e.stopPropagation();
+                              setDialogTarget(row.id);
+                            }}
+                            className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-ink-400 hover:text-ink-900 hover:bg-paper-2 transition-colors"
+                          >
+                            <Icon name="edit" size="lg" />
                           </button>
                         </td>
                       </tr>
@@ -341,10 +448,11 @@ export default function DREPage() {
           </>
         )}
 
-        <NewExpenseDialog
-          open={dialogOpen}
-          onClose={() => setDialogOpen(false)}
-          onCreated={refresh}
+        <ExpenseDialog
+          open={dialogTarget !== undefined}
+          expenseId={dialogTarget ?? null}
+          onClose={() => setDialogTarget(undefined)}
+          onSaved={refresh}
         />
       </main>
     </>

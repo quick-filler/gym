@@ -31,6 +31,7 @@ import type {
 export const MOCK_PRICING_PLANS: PricingPlan[] = [
   {
     id: "starter",
+    slug: "starter",
     name: "Starter",
     tag: "Para começar",
     priceMonthly: 99,
@@ -47,6 +48,7 @@ export const MOCK_PRICING_PLANS: PricingPlan[] = [
   },
   {
     id: "business",
+    slug: "business",
     name: "Business",
     tag: "Mais escolhido",
     priceMonthly: 199,
@@ -65,6 +67,7 @@ export const MOCK_PRICING_PLANS: PricingPlan[] = [
   },
   {
     id: "pro",
+    slug: "pro",
     name: "Pro",
     tag: "Multi-unidade",
     priceMonthly: 399,
@@ -599,6 +602,8 @@ export const MOCK_ACADEMY: AcademySettings = {
   primaryColor: "#e8551c",
   secondaryColor: "#0f766e",
   plan: "business",
+  businessType: "gym",
+  enabledModules: ["dependents", "workouts", "classes", "pool"],
 };
 
 export const MOCK_ME: MeProfile = {
@@ -712,6 +717,41 @@ export const MOCK_DRE: DREData = {
       dueDate: "20/04/2026",
       amount: "R$ 350,00",
       status: "open",
+    },
+  ],
+  revenueTotalLabel: "R$ 18.420",
+  revenueRows: [
+    {
+      id: "r1",
+      student: "João Silva",
+      source: "Plano Mensal",
+      paidAt: "03/04/2026",
+      amount: "R$ 99,00",
+      method: "pix",
+    },
+    {
+      id: "r2",
+      student: "Ana Costa",
+      source: "Plano Trimestral",
+      paidAt: "01/04/2026",
+      amount: "R$ 270,00",
+      method: "credit_card",
+    },
+    {
+      id: "r3",
+      student: "Mariana Lopes",
+      source: "Plano Anual",
+      paidAt: "28/03/2026",
+      amount: "R$ 890,00",
+      method: "boleto",
+    },
+    {
+      id: "r4",
+      student: "Pedro Henrique",
+      source: "Taxa de matrícula",
+      paidAt: "10/04/2026",
+      amount: "R$ 50,00",
+      method: "pix",
     },
   ],
 };

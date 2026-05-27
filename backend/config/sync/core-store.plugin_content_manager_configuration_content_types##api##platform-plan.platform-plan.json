@@ -1,0 +1,375 @@
+{
+  "key": "plugin_content_manager_configuration_content_types::api::platform-plan.platform-plan",
+  "value": {
+    "settings": {
+      "bulkable": true,
+      "filterable": true,
+      "searchable": true,
+      "pageSize": 10,
+      "relationOpenMode": "modal",
+      "mainField": "name",
+      "defaultSortBy": "name",
+      "defaultSortOrder": "ASC"
+    },
+    "metadatas": {
+      "id": {
+        "edit": {},
+        "list": {
+          "label": "id",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "slug": {
+        "edit": {
+          "label": "slug",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "slug",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "name": {
+        "edit": {
+          "label": "name",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "name",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "tagline": {
+        "edit": {
+          "label": "tagline",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "tagline",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "tag": {
+        "edit": {
+          "label": "tag",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "tag",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "priceMonthly": {
+        "edit": {
+          "label": "priceMonthly",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "priceMonthly",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "priceAnnual": {
+        "edit": {
+          "label": "priceAnnual",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "priceAnnual",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "currency": {
+        "edit": {
+          "label": "currency",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "currency",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "features": {
+        "edit": {
+          "label": "features",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "features",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "limits": {
+        "edit": {
+          "label": "limits",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "limits",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "modules": {
+        "edit": {
+          "label": "modules",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "modules",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "ctaLabel": {
+        "edit": {
+          "label": "ctaLabel",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "ctaLabel",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "featured": {
+        "edit": {
+          "label": "featured",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "featured",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "sortOrder": {
+        "edit": {
+          "label": "sortOrder",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "sortOrder",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "isActive": {
+        "edit": {
+          "label": "isActive",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "isActive",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdAt": {
+        "edit": {
+          "label": "createdAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "createdAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedAt": {
+        "edit": {
+          "label": "updatedAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "updatedAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdBy": {
+        "edit": {
+          "label": "createdBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "createdBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedBy": {
+        "edit": {
+          "label": "updatedBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "updatedBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "documentId": {
+        "edit": {},
+        "list": {
+          "label": "documentId",
+          "searchable": true,
+          "sortable": true
+        }
+      }
+    },
+    "layouts": {
+      "list": [
+        "id",
+        "slug",
+        "name",
+        "tagline"
+      ],
+      "edit": [
+        [
+          {
+            "name": "slug",
+            "size": 6
+          },
+          {
+            "name": "name",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "tagline",
+            "size": 6
+          },
+          {
+            "name": "tag",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "priceMonthly",
+            "size": 4
+          },
+          {
+            "name": "priceAnnual",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "currency",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "features",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "limits",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "modules",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "ctaLabel",
+            "size": 6
+          },
+          {
+            "name": "featured",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "sortOrder",
+            "size": 4
+          },
+          {
+            "name": "isActive",
+            "size": 4
+          }
+        ]
+      ]
+    },
+    "uid": "api::platform-plan.platform-plan"
+  },
+  "type": "object",
+  "environment": null,
+  "tag": null
+}

@@ -2,14 +2,19 @@
  * Lead GraphQL module.
  *
  * Public surface:
- *   Mutation.submitContactForm — creates a Lead from the marketing /contact page.
+ *   Mutation.submitContactForm — cria Lead a partir do /contact E
+ *     **provisiona academia + usuário admin + envia welcome email no
+ *     mesmo passo**. Sem aprovação manual: o trial de 14 dias começa
+ *     na hora (lifecycle Academy.afterCreate cria a subscription),
+ *     bloqueio só rola quando o trial expira. Isso transforma o
+ *     formulário de "lead pra triagem" em "self-serve signup".
  *
  * Platform-admin surface (isPlatformAdmin guard):
  *   Query.leads(status, page, pageSize) — paginated lead list
  *   Mutation.updateLead(documentId, status, notes) — triage a lead
- *   Mutation.convertLead(documentId, data) — provisions Academy + admin user
- *     from a lead, marks the lead converted, and emails a password-reset
- *     link to the new admin.
+ *   Mutation.convertLead(documentId, data) — escape hatch pra
+ *     provisionar manualmente leads antigos (status != 'converted')
+ *     ou casos onde o platform admin quer customizar slug/plan/etc.
  */
 
 import crypto from 'node:crypto';
@@ -18,6 +23,178 @@ import {
   getAcademyBranding,
   sendAcademyWelcomeEmail,
 } from '../../../lib/email';
+
+const ACADEMY_UID = 'api::academy.academy';
+const STUDENT_UID = 'api::student.student';
+
+/**
+ * Normaliza nome → slug seguro pra URL/subdomínio.
+ * "CrossFit Vila Mariana!" → "crossfit-vila-mariana"
+ */
+function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+}
+
+/**
+ * Acha um slug livre na tabela academies — se "crossfit-sp" já existe,
+ * tenta "crossfit-sp-2", "-3"... Para em 100 pra não loopar infinito.
+ */
+async function findFreeSlug(strapi: any, base: string): Promise<string> {
+  const safe = slugify(base) || `academia-${Date.now().toString(36)}`;
+  let candidate = safe;
+  for (let n = 2; n < 100; n++) {
+    const taken: any[] = await strapi
+      .documents(ACADEMY_UID)
+      .findMany({ filters: { slug: candidate }, limit: 1 });
+    if (taken.length === 0) return candidate;
+    candidate = `${safe}-${n}`;
+  }
+  // Fallback paranoico — concatena timestamp pra garantir unicidade.
+  return `${safe}-${Date.now().toString(36)}`;
+}
+
+/**
+ * Provisionamento compartilhado entre `submitContactForm` (self-serve)
+ * e `convertLead` (manual via platform admin). Cria Academy + user
+ * users-permissions + Student academy_admin + token de reset + tenta
+ * mandar o welcome email.
+ *
+ * Lança erro com mensagem amigável quando: slug colide e auto-resolver
+ * falhar, email já tem conta, role Authenticated sumir.
+ */
+async function provisionAcademyAndAdmin(
+  strapi: any,
+  params: {
+    adminName: string;
+    adminEmail: string;
+    adminPhone?: string | null;
+    academyName: string;
+    slug: string;
+    plan: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    businessType?: string;
+  },
+): Promise<{
+  academy: any;
+  passwordResetUrl: string;
+  emailSent: boolean;
+}> {
+  const {
+    adminName,
+    adminEmail,
+    adminPhone,
+    academyName,
+    slug,
+    plan,
+    primaryColor = '#6366f1',
+    secondaryColor = '#8b5cf6',
+    businessType = 'gym',
+  } = params;
+
+  // ── email uniqueness ──────────────────────────────────────────────
+  const existingUser: any = await strapi.db
+    .query('plugin::users-permissions.user')
+    .findOne({ where: { email: adminEmail } });
+  if (existingUser) {
+    throw new Error(
+      `Já existe uma conta com o e-mail ${adminEmail}. Faça login ou use a recuperação de senha.`,
+    );
+  }
+
+  // ── 1. Academy (afterCreate lifecycle cria a subscription trialing) ─
+  const academy: any = await strapi.documents(ACADEMY_UID).create({
+    data: {
+      name: academyName,
+      slug,
+      plan,
+      primaryColor,
+      secondaryColor,
+      businessType,
+      isActive: true,
+      email: adminEmail,
+      phone: adminPhone ?? null,
+    } as any,
+  });
+
+  // ── 2. users-permissions user (Authenticated role) ────────────────
+  const roles = await strapi
+    .plugin('users-permissions')
+    .service('role')
+    .find();
+  const authRole = roles.find(
+    (r: any) => r.type === 'authenticated' || r.name === 'Authenticated',
+  );
+  if (!authRole) throw new Error('Role Authenticated não encontrada.');
+
+  // Senha throwaway — o admin define a real via o link de reset.
+  const tempPassword = crypto.randomBytes(16).toString('base64url');
+  const user: any = await strapi
+    .plugin('users-permissions')
+    .service('user')
+    .add({
+      username: adminEmail,
+      email: adminEmail,
+      password: tempPassword,
+      provider: 'local',
+      role: authRole.id,
+      confirmed: true,
+      blocked: false,
+    });
+
+  // ── 3. Reset token pro link de boas-vindas ────────────────────────
+  const resetPasswordToken = crypto.randomBytes(64).toString('hex');
+  await strapi.db
+    .query('plugin::users-permissions.user')
+    .update({
+      where: { id: user.id },
+      data: { resetPasswordToken },
+    });
+
+  // ── 4. Student academy_admin vinculado ao user ────────────────────
+  await strapi.documents(STUDENT_UID).create({
+    data: {
+      name: adminName,
+      email: adminEmail,
+      phone: adminPhone ?? null,
+      status: 'active',
+      role: 'academy_admin',
+      user: user.id,
+      academy: academy.documentId,
+      isGuardian: false,
+    } as any,
+  });
+
+  // ── 5. Welcome email (best-effort; não bloqueia provisionamento) ──
+  const websiteOrigin = process.env.WEBSITE_ORIGIN ?? 'http://localhost:9999';
+  const passwordResetUrl = `${websiteOrigin.replace(/\/$/, '')}/reset-password?code=${encodeURIComponent(resetPasswordToken)}`;
+  let emailSent = false;
+  try {
+    const branding = await getAcademyBranding(strapi, academy.documentId);
+    await sendAcademyWelcomeEmail(strapi, {
+      name: adminName,
+      email: adminEmail,
+      academyName: academy.name,
+      resetUrl: passwordResetUrl,
+      branding,
+    });
+    emailSent = true;
+  } catch (err) {
+    strapi.log.warn(
+      `[lead] welcome email failed for ${adminEmail}: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+    );
+  }
+
+  return { academy, passwordResetUrl, emailSent };
+}
 
 export function buildLead({ nexus, strapi }: any) {
   const LEAD = 'api::lead.lead';
@@ -168,8 +345,59 @@ export function buildLead({ nexus, strapi }: any) {
         type: 'ContactFormResult',
         args: { input: nexus.nonNull(nexus.arg({ type: 'ContactFormInput' })) },
         async resolve(_: any, { input }: any) {
-          await strapi.documents(LEAD).create({ data: input });
-          return { ok: true };
+          // Sanity de input — academyName é obrigatório pra derivar o
+          // slug; o form do website já marca como required, mas o
+          // resolver checa também porque ContactFormInput.academyName
+          // continua opcional no schema (compat com clientes velhos).
+          const adminName = String(input.name ?? '').trim();
+          const adminEmail = String(input.email ?? '').trim().toLowerCase();
+          const academyName =
+            String(input.academyName ?? '').trim() || adminName;
+          if (!adminName || !adminEmail) {
+            throw new Error('Nome e e-mail são obrigatórios.');
+          }
+          if (!academyName) {
+            throw new Error(
+              'Informe o nome da academia pra criarmos sua conta.',
+            );
+          }
+
+          // Persiste o lead independente do provisionamento — registro
+          // pra analytics + fallback se a criação automática falhar.
+          const lead: any = await strapi.documents(LEAD).create({
+            data: { ...input, status: 'new' },
+          });
+
+          try {
+            const slug = await findFreeSlug(strapi, academyName);
+            const { academy } = await provisionAcademyAndAdmin(strapi, {
+              adminName,
+              adminEmail,
+              adminPhone: input.phone ?? null,
+              academyName,
+              slug,
+              plan: 'starter',
+            });
+
+            // Lead vira "converted" + nota com o slug pra rastreio.
+            const noteLine = `[${new Date()
+              .toISOString()
+              .slice(0, 10)}] Auto-provisionado em "${academy.name}" (slug: ${slug}).`;
+            await strapi.documents(LEAD).update({
+              documentId: lead.documentId,
+              data: { status: 'converted', notes: noteLine } as any,
+            });
+            return { ok: true };
+          } catch (err) {
+            // Mantém o lead como `new` pra platform admin tratar via
+            // convertLead (manual). Propaga a mensagem pro frontend.
+            strapi.log.warn(
+              `[submitContactForm] auto-provision failed for ${adminEmail}: ${
+                err instanceof Error ? err.message : String(err)
+              }`,
+            );
+            throw err;
+          }
         },
       });
 
@@ -206,7 +434,7 @@ export function buildLead({ nexus, strapi }: any) {
       t.field('convertLead', {
         type: 'ConvertLeadResult',
         description:
-          'Provisions a new Academy + academy_admin user from a converted lead, marks the lead as converted, and sends a password-reset email so the new admin can log in.',
+          'Manual escape hatch: provisiona um lead específico com slug/plan custom (útil pra leads antigos ou casos onde o auto-provision falhou). Self-serve via submitContactForm cobre 99% dos casos.',
         args: {
           documentId: nexus.nonNull(nexus.idArg()),
           data: nexus.nonNull(nexus.arg({ type: 'ConvertLeadInput' })),
@@ -216,7 +444,6 @@ export function buildLead({ nexus, strapi }: any) {
             throw new Error('Forbidden');
           }
 
-          // ── load + validate lead ────────────────────────────────────────
           const lead: any = await strapi.documents(LEAD).findOne({
             documentId: args.documentId,
           });
@@ -225,12 +452,18 @@ export function buildLead({ nexus, strapi }: any) {
             throw new Error('Este lead já foi convertido.');
           }
 
-          // ── normalize + validate input ──────────────────────────────────
+          // Slug vem do form do platform admin — valida formato + uniqueness.
           const slug = String(args.data.slug ?? '').trim().toLowerCase();
           if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(slug)) {
             throw new Error(
               'Slug inválido: use apenas letras minúsculas, números e hífens (ex.: crossfit-sp).',
             );
+          }
+          const slugTaken: any[] = await strapi
+            .documents(ACADEMY_UID)
+            .findMany({ filters: { slug }, limit: 1 });
+          if (slugTaken.length > 0) {
+            throw new Error(`Já existe uma academia com o slug "${slug}".`);
           }
 
           const plan = String(args.data.plan ?? '');
@@ -238,96 +471,21 @@ export function buildLead({ nexus, strapi }: any) {
             throw new Error('Plano inválido (starter, business ou pro).');
           }
 
-          // ── slug uniqueness ─────────────────────────────────────────────
-          const slugTaken: any[] = await strapi
-            .documents('api::academy.academy')
-            .findMany({ filters: { slug }, limit: 1 });
-          if (slugTaken.length > 0) {
-            throw new Error(`Já existe uma academia com o slug "${slug}".`);
-          }
-
-          // ── email uniqueness in users-permissions ───────────────────────
           const adminEmail = String(lead.email).trim().toLowerCase();
-          const existingUser: any = await strapi.db
-            .query('plugin::users-permissions.user')
-            .findOne({ where: { email: adminEmail } });
-          if (existingUser) {
-            throw new Error(
-              `Já existe um usuário com o e-mail ${adminEmail}. Vincule manualmente ou use outro e-mail.`,
-            );
-          }
-
-          // ── 1. Create the Academy ───────────────────────────────────────
-          const academy: any = await strapi
-            .documents('api::academy.academy')
-            .create({
-              data: {
-                name: args.data.academyName ?? lead.academyName ?? lead.name,
-                slug,
-                plan,
-                primaryColor: args.data.primaryColor ?? '#6366f1',
-                secondaryColor: args.data.secondaryColor ?? '#8b5cf6',
-                businessType: args.data.businessType ?? 'gym',
-                isActive: true,
-                email: adminEmail,
-                phone: lead.phone ?? null,
-              } as any,
+          const { academy, passwordResetUrl, emailSent } =
+            await provisionAcademyAndAdmin(strapi, {
+              adminName: lead.name,
+              adminEmail,
+              adminPhone: lead.phone ?? null,
+              academyName:
+                args.data.academyName ?? lead.academyName ?? lead.name,
+              slug,
+              plan,
+              primaryColor: args.data.primaryColor ?? undefined,
+              secondaryColor: args.data.secondaryColor ?? undefined,
+              businessType: args.data.businessType ?? undefined,
             });
 
-          // ── 2. Create the users-permissions user ────────────────────────
-          const roles = await strapi
-            .plugin('users-permissions')
-            .service('role')
-            .find();
-          const authRole = roles.find(
-            (r: any) =>
-              r.type === 'authenticated' || r.name === 'Authenticated',
-          );
-          if (!authRole) {
-            throw new Error('Role Authenticated não encontrada.');
-          }
-
-          // Random throwaway password — the new admin sets their own via
-          // the reset link. Strapi requires SOMETHING to satisfy validators.
-          const tempPassword = crypto.randomBytes(16).toString('base64url');
-
-          const user: any = await strapi
-            .plugin('users-permissions')
-            .service('user')
-            .add({
-              username: adminEmail,
-              email: adminEmail,
-              password: tempPassword,
-              provider: 'local',
-              role: authRole.id,
-              confirmed: true,
-              blocked: false,
-            });
-
-          // ── 3. Generate password-reset token ────────────────────────────
-          const resetPasswordToken = crypto.randomBytes(64).toString('hex');
-          await strapi.db
-            .query('plugin::users-permissions.user')
-            .update({
-              where: { id: user.id },
-              data: { resetPasswordToken },
-            });
-
-          // ── 4. Create the academy_admin Student linked to the user ──────
-          await strapi.documents('api::student.student').create({
-            data: {
-              name: lead.name,
-              email: adminEmail,
-              phone: lead.phone ?? null,
-              status: 'active',
-              role: 'academy_admin',
-              user: user.id,
-              academy: academy.documentId,
-              isGuardian: false,
-            } as any,
-          });
-
-          // ── 5. Mark the lead as converted ───────────────────────────────
           const convertedNote = `[${new Date()
             .toISOString()
             .slice(0, 10)}] Convertido em academia "${academy.name}" (slug: ${slug}).`;
@@ -339,40 +497,9 @@ export function buildLead({ nexus, strapi }: any) {
             data: { status: 'converted', notes: mergedNotes },
           });
 
-          // ── 6. Send the welcome email ───────────────────────────────────
-          const websiteOrigin =
-            process.env.WEBSITE_ORIGIN ?? 'http://localhost:9999';
-          const resetUrl = `${websiteOrigin.replace(/\/$/, '')}/reset-password?code=${encodeURIComponent(resetPasswordToken)}`;
-
-          let emailSent = false;
-          try {
-            // Pull branding (logo + primaryColor) so the welcome email
-            // matches the academy's identity. Brand-new academies have
-            // only the seed defaults — that's fine, infra is wired for
-            // when the dono customizes later.
-            const branding = await getAcademyBranding(
-              strapi,
-              academy.documentId,
-            );
-            await sendAcademyWelcomeEmail(strapi, {
-              name: lead.name,
-              email: adminEmail,
-              academyName: academy.name,
-              resetUrl,
-              branding,
-            });
-            emailSent = true;
-          } catch (err) {
-            strapi.log.warn(
-              `[convertLead] welcome email failed for ${adminEmail}: ${
-                err instanceof Error ? err.message : String(err)
-              }`,
-            );
-          }
-
           return {
             academy,
-            passwordResetUrl: resetUrl,
+            passwordResetUrl,
             adminEmail,
             emailSent,
           };
