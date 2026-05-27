@@ -710,6 +710,59 @@ right below. We want the history, not a clean slate.
   hardens beyond a banner — read `academy.subscription.status` in a
   Next.js middleware and gate routes.
 
+### 4.13 Módulos toggleáveis + Piscina (legislação brasileira)
+
+- **Decision** — Quatro módulos viraram opt-in via `Academy.enabledModules`:
+  Dependentes, Treinos, Agenda+Presenças, Piscina. Cada um esconde
+  os itens correspondentes na Sidebar/MobileNav quando desligado.
+  Adicionados dois content types novos pro módulo Piscina:
+  `PoolSettings` (1:1 com Academy, faixas ideais de pH/cloro/temp)
+  e `PoolInspection` (medição diária com status derivado). Defaults
+  seguem legislação brasileira (pH 7.2–7.8, cloro 1–3 mg/L, temp
+  28–31°C). Mudar `Academy.businessType` dispara
+  `Query.suggestModulesForBusinessType` que devolve o preset
+  recomendado pro frontend mostrar como diff — nunca sobrescreve
+  escolhas manuais.
+- **Context** — O CLAUDE.md já listava esses módulos como v2; agora
+  precisamos pra escolas de natação (legislação obriga 2
+  inspeções/dia) e pra academias adultas que não querem entulhar o
+  menu com Dependentes ou Treinos que nunca vão usar. `businessType`
+  já existia como info; agora vira sinal pra UX.
+- **Rationale**:
+  - `enabledModules` como JSON array no Academy — Strapi v5 lê/escreve
+    JSON facilmente e a lista é pequena (< 10 strings). Tabela com FK
+    seria overengineering.
+  - Quatro core sempre ligados (Alunos, Financeiro+DRE, Planos,
+    Configurações) — sem isso o produto não é uma academia. Reduz
+    superfície de bugs ("e se desligarem Alunos?").
+  - PoolSettings como content type, não JSON em Academy — os campos
+    têm semântica (faixas com unidade, tolerância) e queremos
+    introspect via Strapi admin. Mesma decisão de §4.11.
+  - Status computed no resolver, não persistido — preço de persistir
+    está em manter sincronizado quando admin muda PoolSettings.
+    Computed dá a verdade certa toda vez por R$ 0 de consistency bug,
+    e a tabela de inspeções é pequena (≤ 2 rows/dia/academia).
+  - Suggestion via query separada — não acoplamos `updateAcademy` ao
+    reset de módulos. UI controla — admin decide se aceita.
+  - Pool inspection times default `["08:00","18:00"]` — legislação
+    pede 2x/dia; admin pode editar.
+  - Sidebar como filter declarativo — cada `NavItem` tem
+    `module?: ToggleableModule`. Items sem `module` são core (sempre
+    visíveis). Lista undefined = compat com academias legadas.
+- **Consequences** — 2 content types novos
+  (`api::pool-settings.pool-settings`, `api::pool-inspection.pool-inspection`),
+  novo módulo GraphQL (`types/pool.ts`), módulo auxiliar
+  (`types/module-presets.ts`), `Academy.afterCreate` cria PoolSettings
+  default, `backfillPoolSettings` cobre academias antigas, nova
+  página `/admin/pool`, nova aba "Módulos" em `/admin/settings`,
+  sidebar/mobile-nav agora condicionais.
+- **Revisit when** — (a) integrar `peopleCountSource: schedule` com
+  ClassBooking de natação confirmada (auto people count); (b) >60
+  inspeções/academia adicionar paginação; (c) lifecycle
+  `PoolInspection.afterCreate` notifica responsável quando
+  `status='critical'`; (d) se Módulos virar 8+, agrupar por
+  categoria na UI.
+
 ---
 
 ## 5. Student app (Expo)

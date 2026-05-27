@@ -61,6 +61,8 @@ import type {
   MeProfile,
   MySubscription,
   PlansData,
+  PoolInspection,
+  PoolSettings,
   PricingPlan,
   ScheduleBooking,
   ScheduleData,
@@ -486,6 +488,8 @@ const MY_ACADEMY = graphql(`
         primaryColor
         secondaryColor
         plan
+        businessType
+        enabledModules
         email
         phone
         address
@@ -992,6 +996,96 @@ export function useMembershipPlans(): DataSourceResult<PlansData> {
   if (q.error) return errorResult(q.error);
   return {
     data: mapMembershipPlans(q.data?.plans ?? null),
+    loading: false,
+    error: null,
+  };
+}
+
+/* ============================================================
+   Pool (natação)
+   ============================================================ */
+
+const MY_POOL_SETTINGS = graphql(`
+  query MyPoolSettings {
+    myPoolSettings {
+      documentId
+      phMin
+      phMax
+      chlorineMin
+      chlorineMax
+      temperatureMin
+      temperatureMax
+      alertTolerance
+      inspectionTimes
+    }
+  }
+`);
+
+const POOL_INSPECTIONS = graphql(`
+  query PoolInspections($date: String) {
+    poolInspections(date: $date) {
+      documentId
+      date
+      shift
+      scheduledTime
+      chlorine
+      ph
+      temperature
+      peopleCount
+      peopleCountSource
+      notes
+      status
+      createdAt
+    }
+  }
+`);
+
+export function usePoolSettings(): DataSourceResult<PoolSettings | null> {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const q = useQuery(MY_POOL_SETTINGS, {
+    skip: USE_MOCKS,
+    fetchPolicy: "cache-and-network",
+  });
+  if (USE_MOCKS) {
+    return useMockedValue<PoolSettings>({
+      documentId: "mock-pool-settings",
+      phMin: 7.2,
+      phMax: 7.8,
+      chlorineMin: 1,
+      chlorineMax: 3,
+      temperatureMin: 28,
+      temperatureMax: 31,
+      alertTolerance: 0.2,
+      inspectionTimes: ["08:00", "18:00"],
+    });
+  }
+  if (q.loading && !q.data) return loadingResult();
+  if (q.error) return errorResult(q.error);
+  const s = q.data?.myPoolSettings ?? null;
+  return { data: s as PoolSettings | null, loading: false, error: null };
+}
+
+/**
+ * Inspeções da academia. `date` filtra a um dia (usado pelo
+ * /admin/pool no card "hoje"); sem `date`, devolve as últimas 60 pra
+ * tabela de histórico.
+ */
+export function usePoolInspections(
+  date?: string,
+): DataSourceResult<PoolInspection[]> {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const q = useQuery(POOL_INSPECTIONS, {
+    skip: USE_MOCKS,
+    variables: { date: date ?? null },
+    fetchPolicy: "cache-and-network",
+  });
+  if (USE_MOCKS) return useMockedValue<PoolInspection[]>([]);
+  if (q.loading && !q.data) return loadingResult();
+  if (q.error) return errorResult(q.error);
+  return {
+    data: (q.data?.poolInspections ?? []).filter(
+      (i): i is NonNullable<typeof i> => !!i,
+    ) as PoolInspection[],
     loading: false,
     error: null,
   };

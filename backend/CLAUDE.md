@@ -243,6 +243,46 @@ include them at all).
 | validTo | Date | |
 | isActive | Boolean | |
 
+### PoolSettings (Configuração da piscina)
+
+Configuração 1:1 com Academy pra alimentar o módulo Piscina. Defaults
+seguem a legislação brasileira (pH 7.2–7.8, cloro 1–3 mg/L, temp
+28–31°C). Criada via `Academy.afterCreate` lifecycle + backfill no
+boot pra academias antigas.
+
+| Field | Type | Notes |
+|---|---|---|
+| academy | Relation | oneToOne Academy (inversedBy `poolSettings`) |
+| phMin / phMax | Decimal | Faixa ideal de pH |
+| chlorineMin / chlorineMax | Decimal | mg/L |
+| temperatureMin / temperatureMax | Decimal | °C |
+| alertTolerance | Decimal | Margem em torno da faixa que vira "warning" antes de "critical" |
+| inspectionTimes | JSON | Horários esperados (default `["08:00","18:00"]`) |
+
+GraphQL: `Query.myPoolSettings` + `Mutation.updateMyPoolSettings` (academy_admin).
+
+### PoolInspection (Medição diária da piscina)
+
+Registro de medição (manhã/tarde) com pH, cloro, temperatura, ocupação.
+Status (ok/warning/critical) é **computed** no resolver baseado nas
+faixas de PoolSettings da academia.
+
+| Field | Type | Notes |
+|---|---|---|
+| date | Date (req) | Data da medição |
+| shift | Enum (req) | `morning` / `evening` |
+| scheduledTime | String | "08:00" / "18:00" |
+| chlorine / ph / temperature | Decimal | Medições (todas opcionais) |
+| peopleCount | Integer | Pessoas na piscina |
+| peopleCountSource | Enum | `schedule` (auto) / `manual` |
+| notes | Text | Observações livres |
+| academy | Relation | manyToOne Academy |
+| recordedBy | Relation | users-permissions user que registrou a medição (nome `createdBy` é reservado pelo Strapi pra `admin::user`) |
+
+GraphQL: `Query.poolInspections(date)`, `Mutation.createPoolInspection`,
+`Mutation.updatePoolInspection`. Mutations gateadas por
+`requireActiveSubscription` + role `academy_admin` ou `instructor`.
+
 ### BodyAssessment (Avaliação Física)
 
 | Field | Type | Notes |

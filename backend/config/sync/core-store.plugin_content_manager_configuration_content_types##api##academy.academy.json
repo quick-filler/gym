@@ -133,6 +133,21 @@
           "sortable": true
         }
       },
+      "poolSettings": {
+        "edit": {
+          "label": "poolSettings",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "documentId"
+        },
+        "list": {
+          "label": "poolSettings",
+          "searchable": true,
+          "sortable": true
+        }
+      },
       "isActive": {
         "edit": {
           "label": "isActive",
@@ -517,6 +532,12 @@
           },
           {
             "name": "subscription",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "poolSettings",
             "size": 6
           }
         ]

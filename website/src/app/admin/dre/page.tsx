@@ -18,7 +18,7 @@ import type {
   ExpenseStatus,
 } from "@/lib/types";
 import { useDRE } from "@/lib/hooks";
-import { NewExpenseDialog } from "./NewExpenseDialog";
+import { ExpenseDialog } from "./ExpenseDialog";
 import { HeroCard } from "@/components/admin/HeroCard";
 
 const TYPE_LABEL = { fixed: "Fixo", variable: "Variável" } as const;
@@ -50,7 +50,10 @@ function buildPolyline(
 
 export default function DREPage() {
   const { data, loading, error } = useDRE();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  // null aqui é o sentinel pra "criar"; string é "editar"; undefined é fechado.
+  const [dialogTarget, setDialogTarget] = useState<string | null | undefined>(
+    undefined,
+  );
   const [query, setQuery] = useState("");
   const apollo = useApolloClient();
   const refresh = () =>
@@ -112,7 +115,7 @@ export default function DREPage() {
                   <Icon name="arrow-right" />
                 </button>
               </div>
-              <Button variant="primary" onClick={() => setDialogOpen(true)}>
+              <Button variant="primary" onClick={() => setDialogTarget(null)}>
                 <Icon name="plus" /> Nova despesa
               </Button>
             </>
@@ -366,7 +369,7 @@ export default function DREPage() {
                     {data.monthLabel} · {filteredExpenses.length} lançamentos
                   </p>
                 </div>
-                <Button variant="primary" onClick={() => setDialogOpen(true)}>
+                <Button variant="primary" onClick={() => setDialogTarget(null)}>
                   <Icon name="plus" /> Nova despesa
                 </Button>
               </div>
@@ -390,7 +393,8 @@ export default function DREPage() {
                     {filteredExpenses.map((row: DREExpenseRow) => (
                       <tr
                         key={row.id}
-                        className="border-b border-line/60 last:border-b-0 hover:bg-paper-50 transition-colors"
+                        onClick={() => setDialogTarget(row.id)}
+                        className="border-b border-line/60 last:border-b-0 hover:bg-paper-50 transition-colors cursor-pointer"
                       >
                         <td className="px-6 py-4">
                           <div className="font-semibold text-ink-900 text-[0.9rem]">
@@ -420,8 +424,19 @@ export default function DREPage() {
                           <ExpenseStatusPill status={row.status} />
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button className="font-mono text-[0.72rem] uppercase tracking-[0.08em] text-ink-500 hover:text-ink-900">
-                            Ver
+                          <button
+                            type="button"
+                            aria-label={`Editar ${row.description}`}
+                            title="Editar"
+                            onClick={(e) => {
+                              // A `<tr>` inteira já é clicável; impede
+                              // double-trigger no botão.
+                              e.stopPropagation();
+                              setDialogTarget(row.id);
+                            }}
+                            className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-ink-400 hover:text-ink-900 hover:bg-paper-2 transition-colors"
+                          >
+                            <Icon name="edit" size="lg" />
                           </button>
                         </td>
                       </tr>
@@ -433,10 +448,11 @@ export default function DREPage() {
           </>
         )}
 
-        <NewExpenseDialog
-          open={dialogOpen}
-          onClose={() => setDialogOpen(false)}
-          onCreated={refresh}
+        <ExpenseDialog
+          open={dialogTarget !== undefined}
+          expenseId={dialogTarget ?? null}
+          onClose={() => setDialogTarget(undefined)}
+          onSaved={refresh}
         />
       </main>
     </>

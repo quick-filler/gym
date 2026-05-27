@@ -557,6 +557,10 @@ export interface ApiAcademyAcademy extends Struct.CollectionTypeSchema {
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'starter'>;
     plans: Schema.Attribute.Relation<'oneToMany', 'api::plan.plan'>;
+    poolSettings: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::pool-setting.pool-setting'
+    >;
     primaryColor: Schema.Attribute.String &
       Schema.Attribute.DefaultTo<'#6366f1'>;
     publishedAt: Schema.Attribute.DateTime;
@@ -1090,6 +1094,88 @@ export interface ApiPlatformPlanPlatformPlan
     sortOrder: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     tag: Schema.Attribute.String;
     tagline: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPoolInspectionPoolInspection
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'pool_inspections';
+  info: {
+    description: 'Daily pool quality measurement \u2014 pH, chlorine, temperature + occupancy. Two readings per day (morning/evening). Status derived from PoolSettings target ranges.';
+    displayName: 'Pool Inspection';
+    pluralName: 'pool-inspections';
+    singularName: 'pool-inspection';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academy: Schema.Attribute.Relation<'manyToOne', 'api::academy.academy'>;
+    chlorine: Schema.Attribute.Decimal;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    date: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::pool-inspection.pool-inspection'
+    > &
+      Schema.Attribute.Private;
+    notes: Schema.Attribute.Text;
+    peopleCount: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    peopleCountSource: Schema.Attribute.Enumeration<['schedule', 'manual']> &
+      Schema.Attribute.DefaultTo<'manual'>;
+    ph: Schema.Attribute.Decimal;
+    publishedAt: Schema.Attribute.DateTime;
+    recordedBy: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    scheduledTime: Schema.Attribute.String;
+    shift: Schema.Attribute.Enumeration<['morning', 'evening']> &
+      Schema.Attribute.Required;
+    temperature: Schema.Attribute.Decimal;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPoolSettingPoolSetting extends Struct.CollectionTypeSchema {
+  collectionName: 'pool_settings';
+  info: {
+    description: 'Per-academy pool configuration \u2014 pH, chlorine, temperature target ranges + alert tolerance. Drives the colour status on PoolInspection records. Compliant with Brazilian pool legislation defaults (pH 7.2\u20137.8, chlorine 1\u20133 mg/L).';
+    displayName: 'Pool Settings';
+    pluralName: 'pool-settings';
+    singularName: 'pool-setting';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academy: Schema.Attribute.Relation<'oneToOne', 'api::academy.academy'>;
+    alertTolerance: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0.2>;
+    chlorineMax: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<3>;
+    chlorineMin: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<1>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    inspectionTimes: Schema.Attribute.JSON;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::pool-setting.pool-setting'
+    > &
+      Schema.Attribute.Private;
+    phMax: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<7.8>;
+    phMin: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<7.2>;
+    publishedAt: Schema.Attribute.DateTime;
+    temperatureMax: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<31>;
+    temperatureMin: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<28>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1730,6 +1816,8 @@ declare module '@strapi/strapi' {
       'api::plan.plan': ApiPlanPlan;
       'api::platform-admin.platform-admin': ApiPlatformAdminPlatformAdmin;
       'api::platform-plan.platform-plan': ApiPlatformPlanPlatformPlan;
+      'api::pool-inspection.pool-inspection': ApiPoolInspectionPoolInspection;
+      'api::pool-setting.pool-setting': ApiPoolSettingPoolSetting;
       'api::student.student': ApiStudentStudent;
       'api::workout-plan.workout-plan': ApiWorkoutPlanWorkoutPlan;
       'plugin::content-releases.release': PluginContentReleasesRelease;

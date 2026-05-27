@@ -3,6 +3,7 @@ import { setupRolesAndPermissions } from './bootstrap/permissions';
 import { ensureDemoDevUser, seedDemoData } from './bootstrap/seed';
 import {
   backfillAcademySubscriptions,
+  backfillPoolSettings,
   ensurePlatformPlans,
   expireStaleTrials,
 } from './bootstrap/platform-plans';
@@ -44,6 +45,9 @@ export default {
     // passaram do prazo durante downtime. Em prod, um cron externo
     // (pg_cron / supercronic) deve rodar isso a cada hora.
     await expireStaleTrials(strapi);
+    // PoolSettings com defaults da legislação brasileira pra academias
+    // que ainda não tinham (criadas antes do módulo de piscina existir).
+    await backfillPoolSettings(strapi);
 
     if (process.env.SEED_DEMO === 'true') {
       await seedDemoData(strapi);

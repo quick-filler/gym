@@ -16,6 +16,7 @@ import type { Core } from '@strapi/strapi';
 // só conhecem os novos UIDs depois do próximo boot. Runtime é fine.
 const SUBSCRIPTION_UID = 'api::academy-subscription.academy-subscription' as any;
 const PLATFORM_PLAN_UID = 'api::platform-plan.platform-plan';
+const POOL_SETTINGS_UID = 'api::pool-setting.pool-setting' as any;
 
 const TRIAL_DAYS = 14;
 
@@ -30,14 +31,51 @@ export default {
     try {
       await ensureSubscription(strapi, academy);
     } catch (err) {
-      // Não bloqueia a criação da academia — só loga. Backfill no
-      // boot pega o que ficar pendente.
       strapi.log.warn(
         `[academy.afterCreate] subscription bootstrap failed for ${academy.slug}: ${(err as Error).message}`,
       );
     }
+
+    try {
+      await ensurePoolSettings(strapi, academy);
+    } catch (err) {
+      strapi.log.warn(
+        `[academy.afterCreate] pool settings bootstrap failed for ${academy.slug}: ${(err as Error).message}`,
+      );
+    }
   },
 };
+
+/**
+ * Cria PoolSettings default pra cada Academy nova. Mesmo que o módulo
+ * Piscina esteja desligado em enabledModules, deixar a row criada
+ * simplifica o caso de ligar depois (já tem config válida).
+ *
+ * Idempotente — checa se já existe antes de criar.
+ */
+async function ensurePoolSettings(strapi: Core.Strapi, academy: any) {
+  const existing: any[] = await strapi.documents(POOL_SETTINGS_UID).findMany({
+    filters: { academy: { documentId: academy.documentId } } as any,
+    limit: 1,
+  });
+  if (existing.length > 0) return;
+
+  await strapi.documents(POOL_SETTINGS_UID).create({
+    data: {
+      academy: academy.documentId,
+      // Defaults da legislação brasileira de piscinas — admin pode
+      // editar via /admin/settings → aba Módulos.
+      phMin: 7.2,
+      phMax: 7.8,
+      chlorineMin: 1,
+      chlorineMax: 3,
+      temperatureMin: 28,
+      temperatureMax: 31,
+      alertTolerance: 0.2,
+      inspectionTimes: ['08:00', '18:00'],
+    } as any,
+  });
+}
 
 async function ensureSubscription(strapi: Core.Strapi, academy: any) {
   // Skipa se já tem subscription (academia criada via UI de bulk import

@@ -229,7 +229,9 @@ type EntityUID =
   | 'api::payment.payment'
   | 'api::workout-plan.workout-plan'
   | 'api::body-assessment.body-assessment'
-  | 'api::class-booking.class-booking';
+  | 'api::class-booking.class-booking'
+  | 'api::pool-setting.pool-setting'
+  | 'api::pool-inspection.pool-inspection';
 
 /**
  * Walks each entity's relation chain to find the academy it belongs to.
@@ -252,6 +254,18 @@ export async function resolveDocAcademyId(
   // AcademySubscription pertence a uma academia via relação `academy`
   // (1:1). Resolvemos populando essa relação.
   if (uid === 'api::academy-subscription.academy-subscription') {
+    const doc: any = await strapi.documents(uid as any).findOne({
+      documentId,
+      populate: { academy: { fields: ['documentId'] } } as any,
+    });
+    return doc?.academy?.documentId ?? null;
+  }
+  // PoolSettings (1:1) e PoolInspection (manyToOne) ambos têm `academy`
+  // direto. Resolve igual.
+  if (
+    uid === 'api::pool-setting.pool-setting' ||
+    uid === 'api::pool-inspection.pool-inspection'
+  ) {
     const doc: any = await strapi.documents(uid as any).findOne({
       documentId,
       populate: { academy: { fields: ['documentId'] } } as any,

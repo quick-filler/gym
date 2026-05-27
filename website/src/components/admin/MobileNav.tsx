@@ -8,17 +8,35 @@ import { cn } from "@/lib/utils";
 import { logoutAndRedirect } from "@/lib/auth";
 import { useAcademy, useMe } from "@/lib/hooks";
 
-const PRIMARY: { href: string; label: string; icon: IconName }[] = [
+import type { ToggleableModule } from "@/lib/types";
+
+type NavItem = {
+  href: string;
+  label: string;
+  icon: IconName;
+  module?: ToggleableModule;
+};
+
+const PRIMARY: NavItem[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: "chart" },
   { href: "/admin/students", label: "Alunos", icon: "users" },
-  { href: "/admin/dependents", label: "Dependentes", icon: "user" },
+  { href: "/admin/dependents", label: "Dependentes", icon: "user", module: "dependents" },
   { href: "/admin/plans", label: "Planos", icon: "credit" },
   { href: "/admin/finance", label: "Financeiro", icon: "money" },
   { href: "/admin/dre", label: "DRE / Custos", icon: "trending" },
-  { href: "/admin/schedule", label: "Agenda", icon: "calendar" },
-  { href: "/admin/attendance", label: "Presenças", icon: "check" },
-  { href: "/admin/workouts", label: "Treinos", icon: "heart-pulse" },
+  { href: "/admin/schedule", label: "Agenda", icon: "calendar", module: "classes" },
+  { href: "/admin/attendance", label: "Presenças", icon: "check", module: "classes" },
+  { href: "/admin/workouts", label: "Treinos", icon: "heart-pulse", module: "workouts" },
+  { href: "/admin/pool", label: "Piscina", icon: "droplet", module: "pool" },
 ];
+
+function filterByModules(
+  items: NavItem[],
+  enabled: ToggleableModule[] | undefined,
+): NavItem[] {
+  if (!enabled) return items;
+  return items.filter((it) => !it.module || enabled.includes(it.module));
+}
 
 const CONFIG: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/billing", label: "Assinatura", icon: "credit" },
@@ -101,7 +119,7 @@ export function MobileNav() {
         <nav className="flex-1 overflow-y-auto px-3 py-5">
           <NavGroup
             title="Principal"
-            items={PRIMARY}
+            items={filterByModules(PRIMARY, academy?.enabledModules)}
             pathname={pathname}
             onNavigate={close}
           />

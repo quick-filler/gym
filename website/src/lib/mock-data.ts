@@ -602,6 +602,8 @@ export const MOCK_ACADEMY: AcademySettings = {
   primaryColor: "#e8551c",
   secondaryColor: "#0f766e",
   plan: "business",
+  businessType: "gym",
+  enabledModules: ["dependents", "workouts", "classes", "pool"],
 };
 
 export const MOCK_ME: MeProfile = {

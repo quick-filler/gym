@@ -280,3 +280,43 @@ export async function expireStaleTrials(strapi: Core.Strapi) {
     );
   }
 }
+
+const POOL_SETTINGS_UID = 'api::pool-setting.pool-setting' as any;
+
+/**
+ * Pra cada Academy sem PoolSettings, cria uma row com os defaults da
+ * legislação brasileira (pH 7.2–7.8, cloro 1–3 mg/L, temp 28–31°C).
+ * Idempotente — academias novas ganham via Academy.afterCreate
+ * lifecycle; essa função cobre as pré-existentes.
+ */
+export async function backfillPoolSettings(strapi: Core.Strapi) {
+  const academies: any[] = await strapi.documents(ACADEMY_UID).findMany({
+    populate: { poolSettings: { fields: ['documentId'] } } as any,
+    limit: 2000,
+  });
+
+  let created = 0;
+  for (const academy of academies) {
+    if (academy.poolSettings) continue;
+    await strapi.documents(POOL_SETTINGS_UID).create({
+      data: {
+        academy: academy.documentId,
+        phMin: 7.2,
+        phMax: 7.8,
+        chlorineMin: 1,
+        chlorineMax: 3,
+        temperatureMin: 28,
+        temperatureMax: 31,
+        alertTolerance: 0.2,
+        inspectionTimes: ['08:00', '18:00'],
+      } as any,
+    });
+    created++;
+  }
+
+  if (created > 0) {
+    strapi.log.info(
+      `[bootstrap] backfilled PoolSettings for ${created} academy(ies)`,
+    );
+  }
+}

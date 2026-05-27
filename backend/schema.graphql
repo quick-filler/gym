@@ -19,6 +19,11 @@ type Academy {
   name: String!
   phone: String
   plan: String
+
+  """
+  Pool target ranges (pH/cloro/temperatura). Sempre presente: criada via lifecycle no afterCreate ou backfill no boot.
+  """
+  poolSettings: PoolSettings
   primaryColor: String
   secondaryColor: String
   slug: String!
@@ -918,6 +923,14 @@ type MetricDelta {
   value: String!
 }
 
+"""
+Suggested toggleable modules for a given businessType. Frontend shows this as a diff against the current Academy.enabledModules so the admin can accept or ignore.
+"""
+type ModulePresetSuggestion {
+  businessType: String!
+  modules: [String!]!
+}
+
 type Mutation {
   bulkImportStudents(dryRun: Boolean = false, rows: [StudentImportRow!]!): BulkImportResult
 
@@ -948,6 +961,7 @@ type Mutation {
   createPayment(data: PaymentInput!): Payment
   createPlan(data: PlanInput!): Plan
   createPlatformPlan(data: PlatformPlanInput!): PlatformPlan
+  createPoolInspection(data: PoolInspectionInput!): PoolInspection
   createStudent(data: StudentInput!): Student
   createWorkoutPlan(data: WorkoutPlanInput!): WorkoutPlan
   deleteAcademy(documentId: ID!): Academy
@@ -981,9 +995,11 @@ type Mutation {
   Updates billing info on the caller's subscription. Restricted to academy_admin.
   """
   updateMyBilling(data: BillingInfoInput!): AcademySubscription
+  updateMyPoolSettings(data: PoolSettingsInput!): PoolSettings
   updatePayment(data: PaymentUpdateInput!, documentId: ID!): Payment
   updatePlan(data: PlanUpdateInput!, documentId: ID!): Plan
   updatePlatformPlan(data: PlatformPlanUpdateInput!, documentId: ID!): PlatformPlan
+  updatePoolInspection(data: PoolInspectionInput!, documentId: ID!): PoolInspection
   updateStudent(data: StudentUpdateInput!, documentId: ID!): Student
   updateWorkoutPlan(data: WorkoutPlanUpdateInput!, documentId: ID!): WorkoutPlan
 }
@@ -1146,6 +1162,63 @@ input PlatformPlanUpdateInput {
   tagline: String
 }
 
+type PoolInspection {
+  chlorine: Float
+  createdAt: String
+  date: String!
+  documentId: ID!
+  notes: String
+  peopleCount: Int
+  peopleCountSource: String
+  ph: Float
+  scheduledTime: String
+  shift: String!
+
+  """
+  Computed: ok / warning / critical. Derived from the academy's PoolSettings target ranges + alertTolerance.
+  """
+  status: String!
+  temperature: Float
+}
+
+input PoolInspectionInput {
+  chlorine: Float
+  date: String!
+  notes: String
+  peopleCount: Int
+  peopleCountSource: String
+  ph: Float
+  scheduledTime: String
+  shift: String!
+  temperature: Float
+}
+
+"""
+Per-academy pool target ranges (defaults: pH 7.2–7.8, chlorine 1–3, temp 28–31°C — Brazilian legislation).
+"""
+type PoolSettings {
+  alertTolerance: Float
+  chlorineMax: Float
+  chlorineMin: Float
+  documentId: ID!
+  inspectionTimes: [String]
+  phMax: Float
+  phMin: Float
+  temperatureMax: Float
+  temperatureMin: Float
+}
+
+input PoolSettingsInput {
+  alertTolerance: Float
+  chlorineMax: Float
+  chlorineMin: Float
+  inspectionTimes: [String]
+  phMax: Float
+  phMin: Float
+  temperatureMax: Float
+  temperatureMin: Float
+}
+
 """
 URL set returned by mintUploadUrl. Frontend PUTs bytes to uploadUrl, then calls confirmUpload(publicUrl, name) once it succeeds.
 """
@@ -1199,6 +1272,9 @@ type Query {
   myAsaasSettings: AsaasSettingsStatus
   myDependents: [Dependent]
 
+  """Pool settings for the caller's academy."""
+  myPoolSettings: PoolSettings
+
   """
   Returns the active subscription for the caller's academy. Null if no subscription exists yet (shouldn't happen post-backfill).
   """
@@ -1210,6 +1286,11 @@ type Query {
   platformDashboard: PlatformDashboard
   platformPlan(slug: String!): PlatformPlan
   platformPlans: [PlatformPlan]
+
+  """
+  Inspections for the caller's academy. Optional `date` filters to a single day; otherwise returns the most recent 60 ordered by date desc.
+  """
+  poolInspections(date: String): [PoolInspection]
 
   """Bookings for a given class schedule, optionally filtered by date."""
   scheduleBookings(date: String, documentId: ID!): [ClassBooking]
@@ -1226,6 +1307,7 @@ type Query {
   Platform admin only — cross-tenant listing of every academy subscription.
   """
   subscriptions(pagination: PaginationInput): [AcademySubscription]
+  suggestModulesForBusinessType(businessType: String!): ModulePresetSuggestion
   workoutPlan(documentId: ID!): WorkoutPlan
   workoutPlans(pagination: PaginationInput): [WorkoutPlan]
 }

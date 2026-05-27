@@ -449,6 +449,8 @@ export interface RawAcademy {
   primaryColor?: string | null;
   secondaryColor?: string | null;
   plan?: string | null;
+  businessType?: string | null;
+  enabledModules?: Array<string | null> | null;
   email?: string | null;
   phone?: string | null;
   address?: string | null;
@@ -456,7 +458,34 @@ export interface RawAcademy {
   logoSquare?: { documentId?: string | null; url?: string | null } | null;
 }
 
+const VALID_BUSINESS_TYPES = [
+  "gym",
+  "swimming_school",
+  "pilates",
+  "ballet",
+  "studio",
+  "martial_arts",
+  "other",
+] as const;
+const VALID_TOGGLEABLE_MODULES = [
+  "dependents",
+  "workouts",
+  "classes",
+  "pool",
+] as const;
+
 export function mapAcademy(a: RawAcademy): AcademySettings {
+  const businessType = (VALID_BUSINESS_TYPES as readonly string[]).includes(
+    a.businessType ?? "",
+  )
+    ? (a.businessType as AcademySettings["businessType"])
+    : "gym";
+  const enabledModules = Array.isArray(a.enabledModules)
+    ? (a.enabledModules.filter(
+        (m): m is (typeof VALID_TOGGLEABLE_MODULES)[number] =>
+          !!m && (VALID_TOGGLEABLE_MODULES as readonly string[]).includes(m),
+      ) as AcademySettings["enabledModules"])
+    : undefined;
   return {
     documentId: a.documentId,
     name: a.name,
@@ -473,6 +502,8 @@ export function mapAcademy(a: RawAcademy): AcademySettings {
     plan: (["starter", "business", "pro"].includes(a.plan ?? "")
       ? a.plan
       : "starter") as AcademySettings["plan"],
+    businessType,
+    enabledModules,
   };
 }
 

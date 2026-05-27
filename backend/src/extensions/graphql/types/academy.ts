@@ -109,6 +109,19 @@ export function buildAcademy({ nexus, strapi }: { nexus: any; strapi: Core.Strap
           return doc?.subscription ?? null;
         },
       });
+      t.field('poolSettings', {
+        type: 'PoolSettings',
+        description:
+          'Pool target ranges (pH/cloro/temperatura). Sempre presente: criada via lifecycle no afterCreate ou backfill no boot.',
+        resolve: async (parent: any) => {
+          if (parent.poolSettings !== undefined) return parent.poolSettings;
+          const doc: any = await strapi.documents(UID).findOne({
+            documentId: parent.documentId,
+            populate: { poolSettings: true } as any,
+          });
+          return doc?.poolSettings ?? null;
+        },
+      });
     },
   });
 

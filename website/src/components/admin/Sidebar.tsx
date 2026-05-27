@@ -7,24 +7,43 @@ import { cn } from "@/lib/utils";
 import { logoutAndRedirect } from "@/lib/auth";
 import { useAcademy, useMe } from "@/lib/hooks";
 
+import type { ToggleableModule } from "@/lib/types";
+
 type NavItem = {
   href: string;
   label: string;
   icon: IconName;
   badge?: number;
+  /** Quando setado, só aparece se o módulo estiver em academy.enabledModules.
+   *  Itens sem `module` são considerados core (sempre visíveis). */
+  module?: ToggleableModule;
 };
 
 const PRIMARY: NavItem[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: "chart" },
   { href: "/admin/students", label: "Alunos", icon: "users" },
-  { href: "/admin/dependents", label: "Dependentes", icon: "user" },
+  { href: "/admin/dependents", label: "Dependentes", icon: "user", module: "dependents" },
   { href: "/admin/plans", label: "Planos", icon: "credit" },
   { href: "/admin/finance", label: "Financeiro", icon: "money" },
   { href: "/admin/dre", label: "DRE / Custos", icon: "trending" },
-  { href: "/admin/schedule", label: "Agenda", icon: "calendar" },
-  { href: "/admin/attendance", label: "Presenças", icon: "check" },
-  { href: "/admin/workouts", label: "Treinos", icon: "heart-pulse" },
+  { href: "/admin/schedule", label: "Agenda", icon: "calendar", module: "classes" },
+  { href: "/admin/attendance", label: "Presenças", icon: "check", module: "classes" },
+  { href: "/admin/workouts", label: "Treinos", icon: "heart-pulse", module: "workouts" },
+  { href: "/admin/pool", label: "Piscina", icon: "droplet", module: "pool" },
 ];
+
+/**
+ * Filtra os items conforme `academy.enabledModules`. Defaults seguros:
+ * - lista undefined (academia legada sem o campo) → tudo visível
+ * - lista vazia → só core
+ */
+function filterByModules(
+  items: NavItem[],
+  enabled: ToggleableModule[] | undefined,
+): NavItem[] {
+  if (!enabled) return items;
+  return items.filter((it) => !it.module || enabled.includes(it.module));
+}
 
 const CONFIG: NavItem[] = [
   { href: "/admin/billing", label: "Assinatura", icon: "credit" },
@@ -73,7 +92,11 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-6">
-        <NavSection title="Principal" items={PRIMARY} pathname={pathname} />
+        <NavSection
+          title="Principal"
+          items={filterByModules(PRIMARY, academy?.enabledModules)}
+          pathname={pathname}
+        />
         <NavSection
           title="Configurações"
           items={CONFIG}
