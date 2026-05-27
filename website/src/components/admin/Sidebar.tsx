@@ -27,6 +27,7 @@ const PRIMARY: NavItem[] = [
 ];
 
 const CONFIG: NavItem[] = [
+  { href: "/admin/billing", label: "Assinatura", icon: "credit" },
   { href: "/admin/settings", label: "Configurações", icon: "settings" },
 ];
 

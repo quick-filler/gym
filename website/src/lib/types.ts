@@ -24,7 +24,8 @@ export interface DataSourceResult<T> {
    ============================================================ */
 
 export interface PricingPlan {
-  id: string;
+  id: string; // documentId
+  slug: string; // stable key: "starter" | "business" | "pro"
   name: string;
   tag: string;
   priceMonthly: number; // BRL per month
@@ -209,6 +210,27 @@ export interface MeProfile {
   roleLabel: string;
   photoUrl?: string;
   initials: string;
+}
+
+export type SubscriptionStatus =
+  | "trialing"
+  | "active"
+  | "past_due"
+  | "cancelled"
+  | "expired";
+
+export interface MySubscription {
+  documentId: string;
+  status: SubscriptionStatus;
+  recurrency: "monthly" | "annual";
+  trialEndsAt: string | null;
+  trialDaysLeft: number | null;
+  currentPeriodEnd: string | null;
+  planName: string;
+  planSlug: string;
+  /** True quando o backend recusa qualquer mutation CRUD por causa do
+   *  status atual — usado pra ramificar UI (banner + read-only). */
+  blocked: boolean;
 }
 
 /* ============================================================

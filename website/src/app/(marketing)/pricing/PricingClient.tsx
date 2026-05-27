@@ -258,15 +258,15 @@ export default function PricingClient() {
                   <th className="px-6 py-5 font-mono text-[0.72rem] uppercase tracking-[0.1em] text-ink-400 font-medium border-b border-line">
                     Recurso
                   </th>
-                  {["Starter", "Business", "Pro"].map((name, i) => (
+                  {(plans ?? []).map((p) => (
                     <th
-                      key={name}
+                      key={p.id}
                       className={cn(
                         "px-6 py-5 font-display text-[0.95rem] font-semibold text-ink-900 border-b border-line text-center min-w-[140px]",
-                        i === 1 && "bg-flame-50 text-flame",
+                        p.featured && "bg-flame-50 text-flame",
                       )}
                     >
-                      {name}
+                      {p.name}
                     </th>
                   ))}
                 </tr>
@@ -276,7 +276,7 @@ export default function PricingClient() {
                   <Fragment key={group.group}>
                     <tr>
                       <td
-                        colSpan={4}
+                        colSpan={(plans?.length ?? 3) + 1}
                         className="bg-paper-50 font-mono text-[0.7rem] uppercase tracking-[0.1em] text-ink-500 font-medium px-6 py-3 border-b border-line"
                       >
                         {group.group}
@@ -292,7 +292,7 @@ export default function PricingClient() {
                             key={i}
                             className={cn(
                               "px-6 py-4 text-center text-[0.9rem] border-b border-line/60",
-                              i === 1 && "bg-flame-50/40",
+                              plans?.[i]?.featured && "bg-flame-50/40",
                             )}
                           >
                             {typeof v === "boolean" ? (

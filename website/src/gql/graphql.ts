@@ -46,6 +46,8 @@ export type Academy = {
   primaryColor?: Maybe<Scalars['String']['output']>;
   secondaryColor?: Maybe<Scalars['String']['output']>;
   slug: Scalars['String']['output'];
+  /** Active SaaS subscription. Holds the tier (via platformPlan), trial/cycle state, and billing data. Null only on legacy rows that the backfill could not link. */
+  subscription?: Maybe<AcademySubscription>;
 };
 
 export type AcademyInput = {
@@ -63,6 +65,38 @@ export type AcademyInput = {
   primaryColor?: InputMaybe<Scalars['String']['input']>;
   secondaryColor?: InputMaybe<Scalars['String']['input']>;
   slug?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Active SaaS subscription for an Academy. Links the academy to a PlatformPlan with cycle + trial + billing state. */
+export type AcademySubscription = {
+  __typename?: 'AcademySubscription';
+  academy?: Maybe<Academy>;
+  billingAddressLine1?: Maybe<Scalars['String']['output']>;
+  billingAddressLine2?: Maybe<Scalars['String']['output']>;
+  billingCity?: Maybe<Scalars['String']['output']>;
+  billingDocumentNumber?: Maybe<Scalars['String']['output']>;
+  billingDocumentType?: Maybe<Scalars['String']['output']>;
+  billingEmail?: Maybe<Scalars['String']['output']>;
+  billingName?: Maybe<Scalars['String']['output']>;
+  billingNumber?: Maybe<Scalars['String']['output']>;
+  billingState?: Maybe<Scalars['String']['output']>;
+  billingZipcode?: Maybe<Scalars['String']['output']>;
+  cancelAt?: Maybe<Scalars['String']['output']>;
+  cancelledAt?: Maybe<Scalars['String']['output']>;
+  currentPeriodEnd?: Maybe<Scalars['String']['output']>;
+  currentPeriodStart?: Maybe<Scalars['String']['output']>;
+  documentId: Scalars['ID']['output'];
+  featuresSnapshot?: Maybe<Scalars['JSON']['output']>;
+  limitsSnapshot?: Maybe<Scalars['JSON']['output']>;
+  notes?: Maybe<Scalars['String']['output']>;
+  platformPlan?: Maybe<PlatformPlan>;
+  priceAnnualSnapshot?: Maybe<Scalars['Float']['output']>;
+  priceMonthlySnapshot?: Maybe<Scalars['Float']['output']>;
+  recurrency: Scalars['String']['output'];
+  startedAt?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  trialDaysLeft?: Maybe<Scalars['Int']['output']>;
+  trialEndsAt?: Maybe<Scalars['String']['output']>;
 };
 
 export type AcademyUpdateInput = {
@@ -128,6 +162,20 @@ export type AsaasSettingsStatus = {
   environment: Scalars['String']['output'];
   webhookTokenConfigured: Scalars['Boolean']['output'];
   webhookUrl: Scalars['String']['output'];
+};
+
+/** Billing fields that the academy admin can edit on their own subscription. Empty strings preserve existing values (use null to clear). */
+export type BillingInfoInput = {
+  billingAddressLine1?: InputMaybe<Scalars['String']['input']>;
+  billingAddressLine2?: InputMaybe<Scalars['String']['input']>;
+  billingCity?: InputMaybe<Scalars['String']['input']>;
+  billingDocumentNumber?: InputMaybe<Scalars['String']['input']>;
+  billingDocumentType?: InputMaybe<Scalars['String']['input']>;
+  billingEmail?: InputMaybe<Scalars['String']['input']>;
+  billingName?: InputMaybe<Scalars['String']['input']>;
+  billingNumber?: InputMaybe<Scalars['String']['input']>;
+  billingState?: InputMaybe<Scalars['String']['input']>;
+  billingZipcode?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type BodyAssessment = {
@@ -897,6 +945,8 @@ export type MetricDelta = {
 export type Mutation = {
   __typename?: 'Mutation';
   bulkImportStudents?: Maybe<BulkImportResult>;
+  /** Platform admin only — moves an academy to a different PlatformPlan. Re-snapshots price/features/limits. */
+  changeSubscriptionPlan?: Maybe<AcademySubscription>;
   /** Mark a booking as attended and stamp checkedInAt. */
   checkInBooking?: Maybe<ClassBooking>;
   /** Registers a previously-uploaded S3 object as a Strapi Media file. Run after a successful PUT to the URL returned by mintUploadUrl. */
@@ -912,6 +962,7 @@ export type Mutation = {
   createExpense?: Maybe<Expense>;
   createPayment?: Maybe<Payment>;
   createPlan?: Maybe<Plan>;
+  createPlatformPlan?: Maybe<PlatformPlan>;
   createStudent?: Maybe<Student>;
   createWorkoutPlan?: Maybe<WorkoutPlan>;
   deleteAcademy?: Maybe<Academy>;
@@ -922,6 +973,7 @@ export type Mutation = {
   deleteEnrollment?: Maybe<Enrollment>;
   deleteExpense?: Maybe<Expense>;
   deletePlan?: Maybe<Plan>;
+  deletePlatformPlan?: Maybe<PlatformPlan>;
   deleteStudent?: Maybe<Student>;
   deleteWorkoutPlan?: Maybe<WorkoutPlan>;
   mintUploadUrl?: Maybe<PresignedUpload>;
@@ -936,8 +988,11 @@ export type Mutation = {
   updateLead?: Maybe<Lead>;
   /** Updates Asaas credentials for the caller's academy. Empty fields preserve the existing values — pass apiKey only when rotating. */
   updateMyAsaasSettings?: Maybe<AsaasSettingsStatus>;
+  /** Updates billing info on the caller's subscription. Restricted to academy_admin. */
+  updateMyBilling?: Maybe<AcademySubscription>;
   updatePayment?: Maybe<Payment>;
   updatePlan?: Maybe<Plan>;
+  updatePlatformPlan?: Maybe<PlatformPlan>;
   updateStudent?: Maybe<Student>;
   updateWorkoutPlan?: Maybe<WorkoutPlan>;
 };
@@ -946,6 +1001,13 @@ export type Mutation = {
 export type MutationBulkImportStudentsArgs = {
   dryRun?: InputMaybe<Scalars['Boolean']['input']>;
   rows: Array<StudentImportRow>;
+};
+
+
+export type MutationChangeSubscriptionPlanArgs = {
+  documentId: Scalars['ID']['input'];
+  platformPlanSlug: Scalars['String']['input'];
+  recurrency?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1011,6 +1073,11 @@ export type MutationCreatePlanArgs = {
 };
 
 
+export type MutationCreatePlatformPlanArgs = {
+  data: PlatformPlanInput;
+};
+
+
 export type MutationCreateStudentArgs = {
   data: StudentInput;
 };
@@ -1057,6 +1124,11 @@ export type MutationDeleteExpenseArgs = {
 
 
 export type MutationDeletePlanArgs = {
+  documentId: Scalars['ID']['input'];
+};
+
+
+export type MutationDeletePlatformPlanArgs = {
   documentId: Scalars['ID']['input'];
 };
 
@@ -1136,6 +1208,11 @@ export type MutationUpdateMyAsaasSettingsArgs = {
 };
 
 
+export type MutationUpdateMyBillingArgs = {
+  data: BillingInfoInput;
+};
+
+
 export type MutationUpdatePaymentArgs = {
   data: PaymentUpdateInput;
   documentId: Scalars['ID']['input'];
@@ -1144,6 +1221,12 @@ export type MutationUpdatePaymentArgs = {
 
 export type MutationUpdatePlanArgs = {
   data: PlanUpdateInput;
+  documentId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdatePlatformPlanArgs = {
+  data: PlatformPlanUpdateInput;
   documentId: Scalars['ID']['input'];
 };
 
@@ -1268,6 +1351,60 @@ export type PlatformDashboard = {
   totalStudents: Scalars['Int']['output'];
 };
 
+/** GYM SaaS tier (Starter/Business/Pro). Source of truth for /pricing and Academy.platformPlan. */
+export type PlatformPlan = {
+  __typename?: 'PlatformPlan';
+  ctaLabel?: Maybe<Scalars['String']['output']>;
+  currency?: Maybe<Scalars['String']['output']>;
+  documentId: Scalars['ID']['output'];
+  featured?: Maybe<Scalars['Boolean']['output']>;
+  features?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
+  isActive?: Maybe<Scalars['Boolean']['output']>;
+  limits?: Maybe<Scalars['JSON']['output']>;
+  modules?: Maybe<Scalars['JSON']['output']>;
+  name: Scalars['String']['output'];
+  priceAnnual?: Maybe<Scalars['Float']['output']>;
+  priceMonthly: Scalars['Float']['output'];
+  slug: Scalars['String']['output'];
+  sortOrder?: Maybe<Scalars['Int']['output']>;
+  tag?: Maybe<Scalars['String']['output']>;
+  tagline?: Maybe<Scalars['String']['output']>;
+};
+
+export type PlatformPlanInput = {
+  ctaLabel?: InputMaybe<Scalars['String']['input']>;
+  currency?: InputMaybe<Scalars['String']['input']>;
+  featured?: InputMaybe<Scalars['Boolean']['input']>;
+  features?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  limits?: InputMaybe<Scalars['JSON']['input']>;
+  modules?: InputMaybe<Scalars['JSON']['input']>;
+  name: Scalars['String']['input'];
+  priceAnnual?: InputMaybe<Scalars['Float']['input']>;
+  priceMonthly: Scalars['Float']['input'];
+  slug: Scalars['String']['input'];
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+  tag?: InputMaybe<Scalars['String']['input']>;
+  tagline?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PlatformPlanUpdateInput = {
+  ctaLabel?: InputMaybe<Scalars['String']['input']>;
+  currency?: InputMaybe<Scalars['String']['input']>;
+  featured?: InputMaybe<Scalars['Boolean']['input']>;
+  features?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  limits?: InputMaybe<Scalars['JSON']['input']>;
+  modules?: InputMaybe<Scalars['JSON']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  priceAnnual?: InputMaybe<Scalars['Float']['input']>;
+  priceMonthly?: InputMaybe<Scalars['Float']['input']>;
+  slug?: InputMaybe<Scalars['String']['input']>;
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+  tag?: InputMaybe<Scalars['String']['input']>;
+  tagline?: InputMaybe<Scalars['String']['input']>;
+};
+
 /** URL set returned by mintUploadUrl. Frontend PUTs bytes to uploadUrl, then calls confirmUpload(publicUrl, name) once it succeeds. */
 export type PresignedUpload = {
   __typename?: 'PresignedUpload';
@@ -1312,11 +1449,15 @@ export type Query = {
   /** Returns the Asaas configuration status for the caller's academy. Never reveals the actual credentials. */
   myAsaasSettings?: Maybe<AsaasSettingsStatus>;
   myDependents?: Maybe<Array<Maybe<Dependent>>>;
+  /** Returns the active subscription for the caller's academy. Null if no subscription exists yet (shouldn't happen post-backfill). */
+  mySubscription?: Maybe<AcademySubscription>;
   payment?: Maybe<Payment>;
   payments?: Maybe<Array<Maybe<Payment>>>;
   plan?: Maybe<Plan>;
   plans?: Maybe<Array<Maybe<Plan>>>;
   platformDashboard?: Maybe<PlatformDashboard>;
+  platformPlan?: Maybe<PlatformPlan>;
+  platformPlans?: Maybe<Array<Maybe<PlatformPlan>>>;
   /** Bookings for a given class schedule, optionally filtered by date. */
   scheduleBookings?: Maybe<Array<Maybe<ClassBooking>>>;
   /** Returns existing schedules that would clash with the input on instructor or room. Empty list = no conflict. Tenant-scoped to the caller's academy. */
@@ -1324,6 +1465,8 @@ export type Query = {
   scheduleWeek?: Maybe<ScheduleWeek>;
   student?: Maybe<Student>;
   students?: Maybe<Array<Maybe<Student>>>;
+  /** Platform admin only — cross-tenant listing of every academy subscription. */
+  subscriptions?: Maybe<Array<Maybe<AcademySubscription>>>;
   workoutPlan?: Maybe<WorkoutPlan>;
   workoutPlans?: Maybe<Array<Maybe<WorkoutPlan>>>;
 };
@@ -1456,6 +1599,11 @@ export type QueryPlansArgs = {
 };
 
 
+export type QueryPlatformPlanArgs = {
+  slug: Scalars['String']['input'];
+};
+
+
 export type QueryScheduleBookingsArgs = {
   date?: InputMaybe<Scalars['String']['input']>;
   documentId: Scalars['ID']['input'];
@@ -1478,6 +1626,11 @@ export type QueryStudentArgs = {
 
 
 export type QueryStudentsArgs = {
+  pagination?: InputMaybe<PaginationInput>;
+};
+
+
+export type QuerySubscriptionsArgs = {
   pagination?: InputMaybe<PaginationInput>;
 };
 
@@ -2149,15 +2302,20 @@ export type AdminUpdateAcademyMutationVariables = Exact<{
 
 export type AdminUpdateAcademyMutation = { __typename?: 'Mutation', updateAcademy?: { __typename?: 'Academy', documentId: string, name: string, slug: string, primaryColor?: string | null, secondaryColor?: string | null, email?: string | null, phone?: string | null, address?: string | null, logo?: { __typename?: 'Media', documentId: string, url?: string | null, alternativeText?: string | null } | null, logoSquare?: { __typename?: 'Media', documentId: string, url?: string | null, alternativeText?: string | null } | null } | null };
 
-export type PricingPlansPublicQueryVariables = Exact<{ [key: string]: never; }>;
+export type PlatformPlansPublicQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type PricingPlansPublicQuery = { __typename?: 'Query', plans?: Array<{ __typename?: 'Plan', documentId: string, name: string, description?: string | null, price: number, billingCycle: string, maxStudents?: number | null, features?: Array<string | null> | null, isActive?: boolean | null } | null> | null };
+export type PlatformPlansPublicQuery = { __typename?: 'Query', platformPlans?: Array<{ __typename?: 'PlatformPlan', documentId: string, slug: string, name: string, tagline?: string | null, tag?: string | null, priceMonthly: number, priceAnnual?: number | null, currency?: string | null, features?: Array<string | null> | null, ctaLabel?: string | null, featured?: boolean | null, sortOrder?: number | null, isActive?: boolean | null } | null> | null };
 
 export type AdminPlansQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type AdminPlansQuery = { __typename?: 'Query', plans?: Array<{ __typename?: 'Plan', documentId: string, name: string, description?: string | null, price: number, billingCycle: string, maxStudents?: number | null, features?: Array<string | null> | null, isActive?: boolean | null } | null> | null };
+
+export type MySubscriptionQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MySubscriptionQuery = { __typename?: 'Query', mySubscription?: { __typename?: 'AcademySubscription', documentId: string, status: string, recurrency: string, trialEndsAt?: string | null, trialDaysLeft?: number | null, currentPeriodEnd?: string | null, platformPlan?: { __typename?: 'PlatformPlan', documentId: string, slug: string, name: string } | null } | null };
 
 export type MintUploadUrlMutationVariables = Exact<{
   filename: Scalars['String']['input'];
@@ -2240,7 +2398,8 @@ export const StudentsDocument = {"kind":"Document","definitions":[{"kind":"Opera
 export const MyAcademyDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyAcademy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"photo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}},{"kind":"Field","name":{"kind":"Name","value":"academy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"secondaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"plan"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"address"}},{"kind":"Field","name":{"kind":"Name","value":"logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}},{"kind":"Field","name":{"kind":"Name","value":"logoSquare"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}}]}}]}}]}}]} as unknown as DocumentNode<MyAcademyQuery, MyAcademyQueryVariables>;
 export const AcademyBySlugForLoginDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AcademyBySlugForLogin"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"academyBySlug"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"secondaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}},{"kind":"Field","name":{"kind":"Name","value":"logoSquare"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}}]}}]}}]} as unknown as DocumentNode<AcademyBySlugForLoginQuery, AcademyBySlugForLoginQueryVariables>;
 export const AdminUpdateAcademyDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdateAcademy"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"AcademyUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateAcademy"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"secondaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"address"}},{"kind":"Field","name":{"kind":"Name","value":"logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}},{"kind":"Field","name":{"kind":"Name","value":"logoSquare"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}}]}}]}}]} as unknown as DocumentNode<AdminUpdateAcademyMutation, AdminUpdateAcademyMutationVariables>;
-export const PricingPlansPublicDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PricingPlansPublic"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"plans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}},{"kind":"Field","name":{"kind":"Name","value":"maxStudents"}},{"kind":"Field","name":{"kind":"Name","value":"features"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<PricingPlansPublicQuery, PricingPlansPublicQueryVariables>;
+export const PlatformPlansPublicDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PlatformPlansPublic"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"platformPlans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"tagline"}},{"kind":"Field","name":{"kind":"Name","value":"tag"}},{"kind":"Field","name":{"kind":"Name","value":"priceMonthly"}},{"kind":"Field","name":{"kind":"Name","value":"priceAnnual"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"features"}},{"kind":"Field","name":{"kind":"Name","value":"ctaLabel"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"sortOrder"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<PlatformPlansPublicQuery, PlatformPlansPublicQueryVariables>;
 export const AdminPlansDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminPlans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"plans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}},{"kind":"Field","name":{"kind":"Name","value":"maxStudents"}},{"kind":"Field","name":{"kind":"Name","value":"features"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<AdminPlansQuery, AdminPlansQueryVariables>;
+export const MySubscriptionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MySubscription"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mySubscription"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"recurrency"}},{"kind":"Field","name":{"kind":"Name","value":"trialEndsAt"}},{"kind":"Field","name":{"kind":"Name","value":"trialDaysLeft"}},{"kind":"Field","name":{"kind":"Name","value":"currentPeriodEnd"}},{"kind":"Field","name":{"kind":"Name","value":"platformPlan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<MySubscriptionQuery, MySubscriptionQueryVariables>;
 export const MintUploadUrlDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"MintUploadUrl"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"filename"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"contentType"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"size"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mintUploadUrl"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filename"},"value":{"kind":"Variable","name":{"kind":"Name","value":"filename"}}},{"kind":"Argument","name":{"kind":"Name","value":"contentType"},"value":{"kind":"Variable","name":{"kind":"Name","value":"contentType"}}},{"kind":"Argument","name":{"kind":"Name","value":"size"},"value":{"kind":"Variable","name":{"kind":"Name","value":"size"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"uploadUrl"}},{"kind":"Field","name":{"kind":"Name","value":"publicUrl"}},{"kind":"Field","name":{"kind":"Name","value":"key"}}]}}]}}]} as unknown as DocumentNode<MintUploadUrlMutation, MintUploadUrlMutationVariables>;
 export const ConfirmUploadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ConfirmUpload"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"url"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"name"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"confirmUpload"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"url"},"value":{"kind":"Variable","name":{"kind":"Name","value":"url"}}},{"kind":"Argument","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"name"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"mime"}}]}}]}}]} as unknown as DocumentNode<ConfirmUploadMutation, ConfirmUploadMutationVariables>;

@@ -440,6 +440,71 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAcademySubscriptionAcademySubscription
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'academy_subscriptions';
+  info: {
+    description: 'Active SaaS subscription per Academy \u2014 links Academy to PlatformPlan with cycle/trial/billing state. Mirrors the SubscriptionPlan \u2194 UserSubscriptionPlan split from quickfiller-strapi-api.';
+    displayName: 'Academy Subscription';
+    pluralName: 'academy-subscriptions';
+    singularName: 'academy-subscription';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academy: Schema.Attribute.Relation<'oneToOne', 'api::academy.academy'>;
+    asaasCustomerId: Schema.Attribute.String & Schema.Attribute.Private;
+    asaasSubscriptionId: Schema.Attribute.String & Schema.Attribute.Private;
+    billingAddressLine1: Schema.Attribute.String;
+    billingAddressLine2: Schema.Attribute.String;
+    billingCity: Schema.Attribute.String;
+    billingDocumentNumber: Schema.Attribute.String;
+    billingDocumentType: Schema.Attribute.Enumeration<['CPF', 'CNPJ']>;
+    billingEmail: Schema.Attribute.Email;
+    billingName: Schema.Attribute.String;
+    billingNumber: Schema.Attribute.String;
+    billingState: Schema.Attribute.String;
+    billingZipcode: Schema.Attribute.String;
+    cancelAt: Schema.Attribute.DateTime;
+    cancelledAt: Schema.Attribute.DateTime;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    currentPeriodEnd: Schema.Attribute.DateTime;
+    currentPeriodStart: Schema.Attribute.DateTime;
+    featuresSnapshot: Schema.Attribute.JSON;
+    limitsSnapshot: Schema.Attribute.JSON;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::academy-subscription.academy-subscription'
+    > &
+      Schema.Attribute.Private;
+    notes: Schema.Attribute.Text;
+    platformPlan: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::platform-plan.platform-plan'
+    >;
+    priceAnnualSnapshot: Schema.Attribute.Decimal;
+    priceMonthlySnapshot: Schema.Attribute.Decimal;
+    publishedAt: Schema.Attribute.DateTime;
+    recurrency: Schema.Attribute.Enumeration<['monthly', 'annual']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'monthly'>;
+    startedAt: Schema.Attribute.DateTime;
+    status: Schema.Attribute.Enumeration<
+      ['trialing', 'active', 'past_due', 'cancelled', 'expired']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'trialing'>;
+    trialEndsAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiAcademyAcademy extends Struct.CollectionTypeSchema {
   collectionName: 'academies';
   info: {
@@ -503,6 +568,10 @@ export interface ApiAcademyAcademy extends Struct.CollectionTypeSchema {
       Schema.Attribute.DefaultTo<'#8b5cf6'>;
     slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
     students: Schema.Attribute.Relation<'oneToMany', 'api::student.student'>;
+    subscription: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::academy-subscription.academy-subscription'
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -980,6 +1049,50 @@ export interface ApiPlatformAdminPlatformAdmin
       'oneToOne',
       'plugin::users-permissions.user'
     >;
+  };
+}
+
+export interface ApiPlatformPlanPlatformPlan
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'platform_plans';
+  info: {
+    description: 'GYM SaaS tier (Starter/Business/Pro) \u2014 feeds the public /pricing page and the Academy.platformPlan relation. Source of truth for tier price/features/limits.';
+    displayName: 'Platform Plan';
+    pluralName: 'platform-plans';
+    singularName: 'platform-plan';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    ctaLabel: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'Come\u00E7ar gr\u00E1tis'>;
+    currency: Schema.Attribute.String & Schema.Attribute.DefaultTo<'BRL'>;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    features: Schema.Attribute.JSON;
+    isActive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    limits: Schema.Attribute.JSON;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::platform-plan.platform-plan'
+    > &
+      Schema.Attribute.Private;
+    modules: Schema.Attribute.JSON;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    priceAnnual: Schema.Attribute.Decimal;
+    priceMonthly: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    sortOrder: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    tag: Schema.Attribute.String;
+    tagline: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -1604,6 +1717,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::academy-subscription.academy-subscription': ApiAcademySubscriptionAcademySubscription;
       'api::academy.academy': ApiAcademyAcademy;
       'api::body-assessment.body-assessment': ApiBodyAssessmentBodyAssessment;
       'api::class-booking.class-booking': ApiClassBookingClassBooking;
@@ -1615,6 +1729,7 @@ declare module '@strapi/strapi' {
       'api::payment.payment': ApiPaymentPayment;
       'api::plan.plan': ApiPlanPlan;
       'api::platform-admin.platform-admin': ApiPlatformAdminPlatformAdmin;
+      'api::platform-plan.platform-plan': ApiPlatformPlanPlatformPlan;
       'api::student.student': ApiStudentStudent;
       'api::workout-plan.workout-plan': ApiWorkoutPlanWorkoutPlan;
       'plugin::content-releases.release': PluginContentReleasesRelease;

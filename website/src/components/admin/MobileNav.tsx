@@ -21,6 +21,7 @@ const PRIMARY: { href: string; label: string; icon: IconName }[] = [
 ];
 
 const CONFIG: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/billing", label: "Assinatura", icon: "credit" },
   { href: "/admin/settings", label: "Configurações", icon: "settings" },
 ];
 

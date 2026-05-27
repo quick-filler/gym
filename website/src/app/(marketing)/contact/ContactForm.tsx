@@ -63,16 +63,16 @@ export function ContactForm() {
           <Icon name="check" size="xl" />
         </div>
         <h3 className="font-display text-[1.5rem] font-semibold leading-[1.2]">
-          Cadastro recebido!
+          Sua conta está pronta!
         </h3>
         <p className="text-ink-500 mt-3 max-w-[28rem] mx-auto text-[0.95rem] leading-[1.55]">
-          A gente acabou de receber seus dados. Em poucos minutos você recebe
-          um e-mail com o link de acesso à sua conta — já liberada por 14
-          dias, sem cartão.
+          Acabamos de criar sua academia e enviamos um e-mail com o link pra
+          você definir a senha. Acesso já liberado por <strong>14 dias</strong>,
+          sem cartão.
         </p>
         <div className="mt-6 p-4 rounded-xl bg-paper-2 text-left max-w-[28rem] mx-auto text-[0.82rem] text-ink-600">
           <strong className="block font-semibold text-ink-900 mb-1">
-            Não recebeu em 5 minutos?
+            Não recebeu em alguns minutos?
           </strong>
           Confere a caixa de spam ou fala com a gente em{" "}
           <a

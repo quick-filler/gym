@@ -11,6 +11,16 @@
       "locale": null
     },
     {
+      "documentId": "sk6u1kvzbo80jyez2q4jfoad",
+      "action": "api::platform-plan.platform-plan.find",
+      "locale": null
+    },
+    {
+      "documentId": "m0lgwdiidr1oj25cm9vnh8sq",
+      "action": "api::platform-plan.platform-plan.findOne",
+      "locale": null
+    },
+    {
       "documentId": "v20ynlxx3hbi6v3e7m1cqd3t",
       "action": "plugin::users-permissions.auth.callback",
       "locale": null

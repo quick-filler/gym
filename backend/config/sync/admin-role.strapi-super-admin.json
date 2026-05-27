@@ -6,7 +6,142 @@
   "locale": null,
   "permissions": [
     {
-      "documentId": "h2xsbar8yqf64kjiz6x57yrk",
+      "documentId": "iedoovtzxskc7ub0itaor7s8",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::academy-subscription.academy-subscription",
+      "properties": {
+        "fields": [
+          "academy",
+          "platformPlan",
+          "status",
+          "recurrency",
+          "startedAt",
+          "trialEndsAt",
+          "currentPeriodStart",
+          "currentPeriodEnd",
+          "cancelAt",
+          "cancelledAt",
+          "asaasCustomerId",
+          "asaasSubscriptionId",
+          "priceMonthlySnapshot",
+          "priceAnnualSnapshot",
+          "featuresSnapshot",
+          "limitsSnapshot",
+          "billingEmail",
+          "billingName",
+          "billingDocumentType",
+          "billingDocumentNumber",
+          "billingZipcode",
+          "billingState",
+          "billingCity",
+          "billingAddressLine1",
+          "billingAddressLine2",
+          "billingNumber",
+          "notes"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "t488y2iwmdvdubbud8j1o4gb",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::academy-subscription.academy-subscription",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "jo49jfsrkdvtgig6vnzq9fr4",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::academy-subscription.academy-subscription",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "p5b2nztkoyqa5mcg09aopnls",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::academy-subscription.academy-subscription",
+      "properties": {
+        "fields": [
+          "academy",
+          "platformPlan",
+          "status",
+          "recurrency",
+          "startedAt",
+          "trialEndsAt",
+          "currentPeriodStart",
+          "currentPeriodEnd",
+          "cancelAt",
+          "cancelledAt",
+          "asaasCustomerId",
+          "asaasSubscriptionId",
+          "priceMonthlySnapshot",
+          "priceAnnualSnapshot",
+          "featuresSnapshot",
+          "limitsSnapshot",
+          "billingEmail",
+          "billingName",
+          "billingDocumentType",
+          "billingDocumentNumber",
+          "billingZipcode",
+          "billingState",
+          "billingCity",
+          "billingAddressLine1",
+          "billingAddressLine2",
+          "billingNumber",
+          "notes"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "tslwwnrl73sef14zr75ox7cs",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::academy-subscription.academy-subscription",
+      "properties": {
+        "fields": [
+          "academy",
+          "platformPlan",
+          "status",
+          "recurrency",
+          "startedAt",
+          "trialEndsAt",
+          "currentPeriodStart",
+          "currentPeriodEnd",
+          "cancelAt",
+          "cancelledAt",
+          "asaasCustomerId",
+          "asaasSubscriptionId",
+          "priceMonthlySnapshot",
+          "priceAnnualSnapshot",
+          "featuresSnapshot",
+          "limitsSnapshot",
+          "billingEmail",
+          "billingName",
+          "billingDocumentType",
+          "billingDocumentNumber",
+          "billingZipcode",
+          "billingState",
+          "billingCity",
+          "billingAddressLine1",
+          "billingAddressLine2",
+          "billingNumber",
+          "notes"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "cd4zt94bdsj6pp94tryyjzcj",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::academy.academy",
@@ -19,6 +154,7 @@
           "primaryColor",
           "secondaryColor",
           "plan",
+          "subscription",
           "isActive",
           "email",
           "phone",
@@ -57,7 +193,7 @@
       "locale": null
     },
     {
-      "documentId": "sw4382hkwphu4hg0kmsald9l",
+      "documentId": "x5pp950ubcj2hm8idx62fw7z",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::academy.academy",
@@ -70,6 +206,7 @@
           "primaryColor",
           "secondaryColor",
           "plan",
+          "subscription",
           "isActive",
           "email",
           "phone",
@@ -90,7 +227,7 @@
       "locale": null
     },
     {
-      "documentId": "koid54i0ca5swfn2omcnf1xw",
+      "documentId": "hvfqlt3gooqk6cnbfocc9ucx",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::academy.academy",
@@ -103,6 +240,7 @@
           "primaryColor",
           "secondaryColor",
           "plan",
+          "subscription",
           "isActive",
           "email",
           "phone",
@@ -363,7 +501,7 @@
       "locale": null
     },
     {
-      "documentId": "r4vq4e0hj0wzbfix4igh57yx",
+      "documentId": "h87beutj0wz22q9xx4b8rl48",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::dependent.dependent",
@@ -371,6 +509,8 @@
         "fields": [
           "name",
           "birthdate",
+          "cpf",
+          "address",
           "photo",
           "gender",
           "relationship",
@@ -411,7 +551,7 @@
       "locale": null
     },
     {
-      "documentId": "a5ld0ok6mova4xwgokc7ce78",
+      "documentId": "ab7myxmrp1lg21vdpdhpgnk8",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::dependent.dependent",
@@ -419,6 +559,8 @@
         "fields": [
           "name",
           "birthdate",
+          "cpf",
+          "address",
           "photo",
           "gender",
           "relationship",
@@ -441,7 +583,7 @@
       "locale": null
     },
     {
-      "documentId": "xalb5xho92q1ww3h3bc4toqj",
+      "documentId": "vd4szz6k4zabv717z9gie55x",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::dependent.dependent",
@@ -449,6 +591,8 @@
         "fields": [
           "name",
           "birthdate",
+          "cpf",
+          "address",
           "photo",
           "gender",
           "relationship",
@@ -732,13 +876,16 @@
       "locale": null
     },
     {
-      "documentId": "ikbvc8u67h8cokx60fq7zkpo",
+      "documentId": "zaevwrb4o1r23v886uydgxkn",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::payment.payment",
       "properties": {
         "fields": [
           "enrollment",
+          "student",
+          "dependent",
+          "description",
           "amount",
           "dueDate",
           "paidAt",
@@ -770,13 +917,16 @@
       "locale": null
     },
     {
-      "documentId": "s181i4mzgjovnrk9xmkcmv90",
+      "documentId": "q7s5l9btiha0skz8crhm8ev5",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::payment.payment",
       "properties": {
         "fields": [
           "enrollment",
+          "student",
+          "dependent",
+          "description",
           "amount",
           "dueDate",
           "paidAt",
@@ -790,13 +940,16 @@
       "locale": null
     },
     {
-      "documentId": "wvkw44d9p2p8k2wab4ynl7l5",
+      "documentId": "qjg7v8vfuh969cx7gywcde5b",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::payment.payment",
       "properties": {
         "fields": [
           "enrollment",
+          "student",
+          "dependent",
+          "description",
           "amount",
           "dueDate",
           "paidAt",
@@ -948,7 +1101,103 @@
       "locale": null
     },
     {
-      "documentId": "ryd6xq86zzf8n09n7575870l",
+      "documentId": "e69djwewvhkxy96wpkfrk0ua",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::platform-plan.platform-plan",
+      "properties": {
+        "fields": [
+          "slug",
+          "name",
+          "tagline",
+          "tag",
+          "priceMonthly",
+          "priceAnnual",
+          "currency",
+          "features",
+          "limits",
+          "modules",
+          "ctaLabel",
+          "featured",
+          "sortOrder",
+          "isActive"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "u7q0lya5bbae42bvfdsjb5he",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::platform-plan.platform-plan",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "ka3p1r1u925mb8roiza6qb8s",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::platform-plan.platform-plan",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "quk726ddxnouav6elf9uq4sy",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::platform-plan.platform-plan",
+      "properties": {
+        "fields": [
+          "slug",
+          "name",
+          "tagline",
+          "tag",
+          "priceMonthly",
+          "priceAnnual",
+          "currency",
+          "features",
+          "limits",
+          "modules",
+          "ctaLabel",
+          "featured",
+          "sortOrder",
+          "isActive"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "tsk9s41vd3wx6wit1az4bf2l",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::platform-plan.platform-plan",
+      "properties": {
+        "fields": [
+          "slug",
+          "name",
+          "tagline",
+          "tag",
+          "priceMonthly",
+          "priceAnnual",
+          "currency",
+          "features",
+          "limits",
+          "modules",
+          "ctaLabel",
+          "featured",
+          "sortOrder",
+          "isActive"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "ulwjsh4jrf6pi0dn7d5efbkg",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -959,6 +1208,9 @@
           "phone",
           "photo",
           "birthdate",
+          "cpf",
+          "gender",
+          "address",
           "status",
           "role",
           "isGuardian",
@@ -994,7 +1246,7 @@
       "locale": null
     },
     {
-      "documentId": "ilf0m0gnkk4y6lq7subugq79",
+      "documentId": "a354hpeuj900n6ix695k1cxr",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -1005,6 +1257,9 @@
           "phone",
           "photo",
           "birthdate",
+          "cpf",
+          "gender",
+          "address",
           "status",
           "role",
           "isGuardian",
@@ -1022,7 +1277,7 @@
       "locale": null
     },
     {
-      "documentId": "fuzayxxsbfmeyqn5d19xgs4j",
+      "documentId": "tfef8gs6egxexjdm16geg7rl",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -1033,6 +1288,9 @@
           "phone",
           "photo",
           "birthdate",
+          "cpf",
+          "gender",
+          "address",
           "status",
           "role",
           "isGuardian",

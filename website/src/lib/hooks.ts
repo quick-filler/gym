@@ -59,6 +59,7 @@ import type {
   FinanceData,
   GuardianFamily,
   MeProfile,
+  MySubscription,
   PlansData,
   PricingPlan,
   ScheduleBooking,
@@ -548,16 +549,24 @@ const UPDATE_ACADEMY = graphql(`
   }
 `);
 
-const PRICING_PLANS_PUBLIC = graphql(`
-  query PricingPlansPublic {
-    plans {
+// Renomeada de PRICING_PLANS_PUBLIC: a query antiga apontava errado pro
+// resolver de planos de matrícula (auth-required, academy-scoped). Agora
+// chamamos `platformPlans` que é o resolver público dos tiers SaaS.
+const PLATFORM_PLANS_PUBLIC = graphql(`
+  query PlatformPlansPublic {
+    platformPlans {
       documentId
+      slug
       name
-      description
-      price
-      billingCycle
-      maxStudents
+      tagline
+      tag
+      priceMonthly
+      priceAnnual
+      currency
       features
+      ctaLabel
+      featured
+      sortOrder
       isActive
     }
   }
@@ -601,12 +610,12 @@ function errorResult<T>(error: unknown): DataSourceResult<T> {
 
 export function usePricingPlans(): DataSourceResult<PricingPlan[]> {
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  const q = useQuery(PRICING_PLANS_PUBLIC, { skip: USE_MOCKS });
+  const q = useQuery(PLATFORM_PLANS_PUBLIC, { skip: USE_MOCKS });
   if (USE_MOCKS) return useMockedValue(MOCK_PRICING_PLANS);
   if (q.loading) return loadingResult();
   if (q.error) return errorResult(q.error);
   return {
-    data: mapPricingPlans(q.data?.plans ?? null),
+    data: mapPricingPlans(q.data?.platformPlans ?? null),
     loading: false,
     error: null,
   };
@@ -850,6 +859,84 @@ export function useUpdateAcademy() {
   }
 
   return { update, loading: state.loading, error: state.error ?? null };
+}
+
+/* ============================================================
+   Subscription
+   ============================================================ */
+
+const MY_SUBSCRIPTION = graphql(`
+  query MySubscription {
+    mySubscription {
+      documentId
+      status
+      recurrency
+      trialEndsAt
+      trialDaysLeft
+      currentPeriodEnd
+      platformPlan {
+        documentId
+        slug
+        name
+      }
+    }
+  }
+`);
+
+/**
+ * Estado da subscription da academia do caller. Usado pelo banner do
+ * AdminLayout + pelo `<SubscriptionGate>` que envolve páginas críticas.
+ *
+ * Em mock mode devolve uma sub fictícia `active` pra UI continuar
+ * funcionando offline. Em live mode lê via GraphQL com
+ * `cache-and-network` pra refletir mudanças (upgrade/cancelamento)
+ * sem reload.
+ */
+export function useMySubscription(): DataSourceResult<MySubscription> {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const q = useQuery(MY_SUBSCRIPTION, {
+    skip: USE_MOCKS,
+    fetchPolicy: "cache-and-network",
+  });
+
+  if (USE_MOCKS) {
+    return useMockedValue<MySubscription>({
+      documentId: "mock-sub",
+      status: "active",
+      recurrency: "monthly",
+      trialEndsAt: null,
+      trialDaysLeft: null,
+      currentPeriodEnd: null,
+      planName: "Business",
+      planSlug: "business",
+      blocked: false,
+    });
+  }
+  if (q.loading && !q.data) return loadingResult();
+  if (q.error) return errorResult(q.error);
+  const s = q.data?.mySubscription;
+  if (!s) return { data: null, loading: false, error: null };
+
+  const status = s.status as MySubscription["status"];
+  // Espelha o `WRITE_ALLOWED_STATUSES` do backend (`trialing`/`active`).
+  // Qualquer outro estado bloqueia a UI de escrita.
+  const blocked = !(status === "trialing" || status === "active");
+
+  return {
+    data: {
+      documentId: s.documentId,
+      status,
+      recurrency: s.recurrency as "monthly" | "annual",
+      trialEndsAt: s.trialEndsAt ?? null,
+      trialDaysLeft: s.trialDaysLeft ?? null,
+      currentPeriodEnd: s.currentPeriodEnd ?? null,
+      planName: s.platformPlan?.name ?? "—",
+      planSlug: s.platformPlan?.slug ?? "starter",
+      blocked,
+    },
+    loading: false,
+    error: null,
+  };
 }
 
 export function useDRE(): DataSourceResult<DREData> {

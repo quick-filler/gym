@@ -31,6 +31,7 @@ import type {
 export const MOCK_PRICING_PLANS: PricingPlan[] = [
   {
     id: "starter",
+    slug: "starter",
     name: "Starter",
     tag: "Para começar",
     priceMonthly: 99,
@@ -47,6 +48,7 @@ export const MOCK_PRICING_PLANS: PricingPlan[] = [
   },
   {
     id: "business",
+    slug: "business",
     name: "Business",
     tag: "Mais escolhido",
     priceMonthly: 199,
@@ -65,6 +67,7 @@ export const MOCK_PRICING_PLANS: PricingPlan[] = [
   },
   {
     id: "pro",
+    slug: "pro",
     name: "Pro",
     tag: "Multi-unidade",
     priceMonthly: 399,

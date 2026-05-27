@@ -15,6 +15,7 @@ import {
   isPlatformAdmin,
   requireAcademyId,
   requireRole,
+  requireActiveSubscription,
   resolveDocAcademyId,
   resolveUserAcademyId,
   withPaymentScope,
@@ -143,6 +144,7 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
         args: { data: nexus.nonNull(nexus.arg({ type: 'PaymentInput' })) },
         resolve: async (_root: any, args: any, ctx: any) => {
           await requireRole(strapi, ctx, ['academy_admin']);
+          await requireActiveSubscription(strapi, ctx);
           const academyId = await requireAcademyId(strapi, ctx);
 
           const { enrollment, student, dependent } = args.data;
@@ -205,6 +207,7 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
         resolve: async (_root: any, args: any, ctx: any) => {
           await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           await requireRole(strapi, ctx, ['academy_admin']);
+          await requireActiveSubscription(strapi, ctx);
           return await strapi.documents(UID).update({
             documentId: args.documentId,
             data: args.data,

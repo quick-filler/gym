@@ -45,6 +45,12 @@
       "default": "starter",
       "required": true
     },
+    "subscription": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::academy-subscription.academy-subscription",
+      "mappedBy": "academy"
+    },
     "isActive": {
       "type": "boolean",
       "default": true

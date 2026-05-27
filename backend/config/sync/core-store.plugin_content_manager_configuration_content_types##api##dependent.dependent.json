@@ -48,6 +48,34 @@
           "sortable": true
         }
       },
+      "cpf": {
+        "edit": {
+          "label": "cpf",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "cpf",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "address": {
+        "edit": {
+          "label": "address",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "address",
+          "searchable": false,
+          "sortable": false
+        }
+      },
       "photo": {
         "edit": {
           "label": "photo",
@@ -441,6 +469,18 @@
           {
             "name": "assessments",
             "size": 6
+          }
+        ],
+        [
+          {
+            "name": "cpf",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "address",
+            "size": 12
           }
         ]
       ]

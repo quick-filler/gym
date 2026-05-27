@@ -93,47 +93,62 @@ describe('mapDelta', () => {
 describe('mapPricingPlans', () => {
   it('filters out isActive:false entries', () => {
     const input = [
-      { documentId: '1', name: 'Mensal', price: 99, billingCycle: 'monthly', isActive: true },
-      { documentId: '2', name: 'Anual', price: 890, billingCycle: 'annual', isActive: false },
+      {
+        documentId: '1', slug: 'starter', name: 'Starter',
+        priceMonthly: 99, priceAnnual: 79, tag: 'Para começar',
+        isActive: true,
+      },
+      {
+        documentId: '2', slug: 'business', name: 'Business',
+        priceMonthly: 199, priceAnnual: 159, tag: 'Mais escolhido',
+        isActive: false,
+      },
       null,
     ];
     const plans = mapPricingPlans(input);
     expect(plans).toHaveLength(1);
-    expect(plans[0]!.name).toBe('Mensal');
+    expect(plans[0]!.slug).toBe('starter');
   });
 
-  it('divides annual price by 12 for priceMonthly', () => {
+  it('orders by sortOrder ascending', () => {
     const plans = mapPricingPlans([
-      { documentId: '1', name: 'Anual', price: 1200, billingCycle: 'annual', isActive: true },
+      { documentId: '3', slug: 'c', name: 'C', priceMonthly: 399, priceAnnual: 319, sortOrder: 30 },
+      { documentId: '1', slug: 'a', name: 'A', priceMonthly: 99,  priceAnnual: 79,  sortOrder: 10 },
+      { documentId: '2', slug: 'b', name: 'B', priceMonthly: 199, priceAnnual: 159, sortOrder: 20 },
     ]);
-    expect(plans[0]!.priceMonthly).toBe(100);
-    expect(plans[0]!.tag).toBe('Anual');
+    expect(plans.map((p) => p.slug)).toEqual(['a', 'b', 'c']);
   });
 
-  it('keeps monthly price as-is', () => {
+  it('respects server-side featured flag (no heuristic)', () => {
     const plans = mapPricingPlans([
-      { documentId: '1', name: 'Mensal', price: 199, billingCycle: 'monthly', isActive: true },
-    ]);
-    expect(plans[0]!.priceMonthly).toBe(199);
-    expect(plans[0]!.tag).toBe('Mensal');
-  });
-
-  it('marks the 2nd plan as featured', () => {
-    const plans = mapPricingPlans([
-      { documentId: '1', name: 'A', price: 99, billingCycle: 'monthly' },
-      { documentId: '2', name: 'B', price: 199, billingCycle: 'monthly' },
-      { documentId: '3', name: 'C', price: 399, billingCycle: 'monthly' },
+      { documentId: '1', slug: 'a', name: 'A', priceMonthly: 99,  priceAnnual: 79  },
+      { documentId: '2', slug: 'b', name: 'B', priceMonthly: 199, priceAnnual: 159, featured: true },
+      { documentId: '3', slug: 'c', name: 'C', priceMonthly: 399, priceAnnual: 319 },
     ]);
     expect(plans.map((p) => p.featured)).toEqual([false, true, false]);
+  });
+
+  it('falls back priceAnnual → priceMonthly when null', () => {
+    const plans = mapPricingPlans([
+      { documentId: '1', slug: 'a', name: 'A', priceMonthly: 199, priceAnnual: null },
+    ]);
+    expect(plans[0]!.priceAnnual).toBe(199);
+  });
+
+  it('uses server ctaLabel, default when missing', () => {
+    const plans = mapPricingPlans([
+      { documentId: '1', slug: 'a', name: 'A', priceMonthly: 99, priceAnnual: 79, ctaLabel: 'Falar com vendas' },
+      { documentId: '2', slug: 'b', name: 'B', priceMonthly: 199, priceAnnual: 159 },
+    ]);
+    expect(plans[0]!.ctaLabel).toBe('Falar com vendas');
+    expect(plans[1]!.ctaLabel).toBe('Começar grátis');
   });
 
   it('filters null entries out of features[]', () => {
     const plans = mapPricingPlans([
       {
-        documentId: '1',
-        name: 'X',
-        price: 10,
-        billingCycle: 'monthly',
+        documentId: '1', slug: 'a', name: 'X',
+        priceMonthly: 10, priceAnnual: 8,
         features: ['a', null, 'b', null],
       },
     ]);

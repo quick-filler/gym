@@ -596,6 +596,120 @@ right below. We want the history, not a clean slate.
   the mutation arg from a boolean `dryRun` to an enum
   `mode: SKIP | UPDATE | OVERWRITE`.
 
+### 4.11 SaaS tiers (Starter/Business/Pro) as `PlatformPlan` content type
+
+- **Decision** — The marketing tiers shown on `/pricing` and stamped
+  on `Academy` are modelled as a real `PlatformPlan` content type
+  (collection, public read, platform_admin write), seeded idempotently
+  on every boot. `Academy.platformPlan` is the canonical relation;
+  the legacy `Academy.plan` enum is kept temporarily as a backfill
+  key but slated for removal.
+- **Context** — Before this PR, "Starter / Business / Pro" lived in
+  three places: (a) an enum `Academy.plan` with no price/features,
+  (b) `MOCK_PRICING_PLANS` hardcoded in `mock-data.ts`,
+  (c) `COMPARE`/`FAQ` constants in `PricingClient.tsx`. The `/pricing`
+  query also pointed at the wrong resolver — the academy-scoped
+  `plans` (membership plans), `auth: true` — which meant the page
+  silently failed for anonymous visitors in live mode.
+- **Rationale**:
+  - **Single source of truth.** Editing tier price/features/limits
+    becomes a content-manager action, not a code+deploy. Backend +
+    frontend + admin panel all read the same row.
+  - **Public read, gated write.** `Query.platformPlans` is
+    `auth: false` so `/pricing` works for anonymous visitors;
+    mutations are gated by `isPlatformAdmin` so academy admins can't
+    edit their own tier.
+  - **Sortable + featured from data.** Removes the `idx === 1` heuristic
+    from the mapper — `sortOrder` and `featured` come from the row.
+  - **Limits stored, not enforced (yet).** `limits` JSON keeps
+    `maxStudents/maxInstructors/maxAdmins` so a future PR can wire a
+    `Student.beforeCreate` lifecycle to enforce them, without another
+    schema change. The FAQ already admits "the system doesn't block —
+    we talk first"; this just removes the data gap.
+  - **Backfill via slug, not migration.** `Academy.platformPlan` is
+    populated on every boot by `backfillAcademyPlatformPlan`, which
+    matches the existing `Academy.plan` enum string to the
+    `PlatformPlan.slug`. The function is idempotent and degrades to
+    a no-op once every row is linked.
+- **Consequences** — One new content type
+  (`api::platform-plan.platform-plan`), a new GraphQL module
+  (`types/platform-plan.ts`), a new public REST permission
+  (`Public.find/findOne`), and a bootstrap helper
+  (`src/bootstrap/platform-plans.ts`). The frontend mapper drops the
+  `priceAnnual = monthly * 0.8` calculation. The Strapi admin form for
+  Academy temporarily shows both `plan` (enum) and `platformPlan`
+  (relation) side-by-side during the transition.
+- **Revisit when** — (a) every academy in prod has `platformPlan`
+  populated — at that point delete the `Academy.plan` enum + the
+  backfill helper; (b) we need per-tier enforcement of limits — wire
+  `Student.beforeCreate` against `academy.platformPlan.limits`;
+  (c) we need per-tier module gating in the website — read
+  `platformPlan.modules` instead of `Academy.enabledModules`.
+
+### 4.12 SaaS subscription as a dedicated `AcademySubscription` content type (not a direct Academy → PlatformPlan FK)
+
+- **Decision** — Insert an `AcademySubscription` collection between
+  Academy and PlatformPlan. It owns the subscription's cycle (trial /
+  active / past_due / cancelled / expired), the billing cadence
+  (monthly/annual), date markers (started, trialEndsAt, period
+  start/end, cancelAt), Asaas customer/subscription IDs, billing
+  address, and **snapshots** of price/features/limits at the moment
+  of subscription. `Academy.platformPlan` (a direct FK that existed
+  for one PR) was removed — readers go through
+  `academy.subscription.platformPlan`.
+- **Context** — Right after §4.11 introduced `PlatformPlan`, the
+  product needed validity dates, billing data, and the ability to
+  change tiers without rewriting historical pricing. A direct
+  `Academy.platformPlan` FK could only answer "what tier are you on
+  *right now*"; it couldn't answer "when does the trial end", "what
+  was the price when you signed", "are you canceling at period end",
+  or "where do we send the invoice".
+- **Rationale**:
+  - **Mirror a battle-tested split.** The sibling
+    `quickfiller-strapi-api` project already separates `SubscriptionPlan`
+    (catalog) from `UserSubscriptionPlan` (instance). Same split here:
+    `PlatformPlan` = catalog, `AcademySubscription` = instance. Reuses
+    a pattern the team already understands.
+  - **Snapshots over live joins.** `priceMonthlySnapshot`,
+    `featuresSnapshot`, `limitsSnapshot` are copied from PlatformPlan
+    when the sub is created or upgraded. If the catalog raises Pro's
+    price tomorrow, today's Pro subscribers continue billing at the
+    snapshot — no surprise renewal hikes, no migration script.
+  - **Trial as first-class state.** `status='trialing'` + a real
+    `trialEndsAt` date beats "no subscription means trial implicit".
+    The Academy lifecycle (`afterCreate`) creates the trialing row
+    so every new tenant has an answerable "where am I in the funnel"
+    from minute zero.
+  - **One subscription per academy (oneToOne).** Avoids multi-sub
+    bookkeeping the product doesn't need yet (no plan stacking,
+    no add-ons). Upgrade/downgrade mutates the same row +
+    re-snapshots — clean audit history via `updatedAt`.
+  - **Asaas IDs on the subscription, not on Academy.** The GYM cobra
+    a academia via Asaas central. `Academy.asaasApiKey/Token` continua
+    sendo a credencial da academia pra cobrar OS PRÓPRIOS ALUNOS dela —
+    conceitos completamente diferentes que estavam prestes a colidir.
+  - **Removed the `Academy.platformPlan` shortcut.** Even though one
+    extra populate level (`academy.subscription.platformPlan`) is
+    less ergonomic, keeping two writeable references in sync via
+    lifecycle was strictly worse: every upgrade would need to update
+    both, and stale-cache bugs would be silent.
+- **Consequences** — One new content type, one new GraphQL module
+  (`Query.mySubscription`, `Query.subscriptions`, `Mutation.updateMyBilling`,
+  `Mutation.changeSubscriptionPlan`), an Academy `afterCreate`
+  lifecycle, and a backfill function for pre-existing academies.
+  Pre-existing academies are backfilled with `status='active'` (no
+  trial — assumed to have already converted). The
+  `Academy.platformPlan` relation added in §4.11 was removed; readers
+  switch to the subscription path.
+- **Revisit when** — (a) we add multi-tier line items (e.g. base
+  plan + per-instructor add-on) — at that point either model add-ons
+  as additional subscription rows or as a JSON `addons` array; (b)
+  we need a subscription history (audit log of upgrades/downgrades
+  with dates) — add an `AcademySubscriptionEvent` collection writing
+  on every lifecycle change; (c) trial expiration enforcement
+  hardens beyond a banner — read `academy.subscription.status` in a
+  Next.js middleware and gate routes.
+
 ---
 
 ## 5. Student app (Expo)

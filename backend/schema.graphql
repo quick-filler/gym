@@ -22,6 +22,11 @@ type Academy {
   primaryColor: String
   secondaryColor: String
   slug: String!
+
+  """
+  Active SaaS subscription. Holds the tier (via platformPlan), trial/cycle state, and billing data. Null only on legacy rows that the backfill could not link.
+  """
+  subscription: AcademySubscription
 }
 
 input AcademyInput {
@@ -39,6 +44,39 @@ input AcademyInput {
   primaryColor: String
   secondaryColor: String
   slug: String
+}
+
+"""
+Active SaaS subscription for an Academy. Links the academy to a PlatformPlan with cycle + trial + billing state.
+"""
+type AcademySubscription {
+  academy: Academy
+  billingAddressLine1: String
+  billingAddressLine2: String
+  billingCity: String
+  billingDocumentNumber: String
+  billingDocumentType: String
+  billingEmail: String
+  billingName: String
+  billingNumber: String
+  billingState: String
+  billingZipcode: String
+  cancelAt: String
+  cancelledAt: String
+  currentPeriodEnd: String
+  currentPeriodStart: String
+  documentId: ID!
+  featuresSnapshot: JSON
+  limitsSnapshot: JSON
+  notes: String
+  platformPlan: PlatformPlan
+  priceAnnualSnapshot: Float
+  priceMonthlySnapshot: Float
+  recurrency: String!
+  startedAt: String
+  status: String!
+  trialDaysLeft: Int
+  trialEndsAt: String
 }
 
 input AcademyUpdateInput {
@@ -105,6 +143,22 @@ type AsaasSettingsStatus {
   environment: String!
   webhookTokenConfigured: Boolean!
   webhookUrl: String!
+}
+
+"""
+Billing fields that the academy admin can edit on their own subscription. Empty strings preserve existing values (use null to clear).
+"""
+input BillingInfoInput {
+  billingAddressLine1: String
+  billingAddressLine2: String
+  billingCity: String
+  billingDocumentNumber: String
+  billingDocumentType: String
+  billingEmail: String
+  billingName: String
+  billingNumber: String
+  billingState: String
+  billingZipcode: String
 }
 
 type BodyAssessment {
@@ -867,6 +921,11 @@ type MetricDelta {
 type Mutation {
   bulkImportStudents(dryRun: Boolean = false, rows: [StudentImportRow!]!): BulkImportResult
 
+  """
+  Platform admin only — moves an academy to a different PlatformPlan. Re-snapshots price/features/limits.
+  """
+  changeSubscriptionPlan(documentId: ID!, platformPlanSlug: String!, recurrency: String): AcademySubscription
+
   """Mark a booking as attended and stamp checkedInAt."""
   checkInBooking(documentId: ID!): ClassBooking
 
@@ -876,7 +935,7 @@ type Mutation {
   confirmUpload(name: String!, url: String!): Media
 
   """
-  Provisions a new Academy + academy_admin user from a converted lead, marks the lead as converted, and sends a password-reset email so the new admin can log in.
+  Manual escape hatch: provisiona um lead específico com slug/plan custom (útil pra leads antigos ou casos onde o auto-provision falhou). Self-serve via submitContactForm cobre 99% dos casos.
   """
   convertLead(data: ConvertLeadInput!, documentId: ID!): ConvertLeadResult
   createAcademy(data: AcademyInput!): Academy
@@ -888,6 +947,7 @@ type Mutation {
   createExpense(data: ExpenseInput!): Expense
   createPayment(data: PaymentInput!): Payment
   createPlan(data: PlanInput!): Plan
+  createPlatformPlan(data: PlatformPlanInput!): PlatformPlan
   createStudent(data: StudentInput!): Student
   createWorkoutPlan(data: WorkoutPlanInput!): WorkoutPlan
   deleteAcademy(documentId: ID!): Academy
@@ -898,6 +958,7 @@ type Mutation {
   deleteEnrollment(documentId: ID!): Enrollment
   deleteExpense(documentId: ID!): Expense
   deletePlan(documentId: ID!): Plan
+  deletePlatformPlan(documentId: ID!): PlatformPlan
   deleteStudent(documentId: ID!): Student
   deleteWorkoutPlan(documentId: ID!): WorkoutPlan
   mintUploadUrl(contentType: String!, filename: String!, size: Int!): PresignedUpload
@@ -915,8 +976,14 @@ type Mutation {
   Updates Asaas credentials for the caller's academy. Empty fields preserve the existing values — pass apiKey only when rotating.
   """
   updateMyAsaasSettings(data: AsaasSettingsInput!): AsaasSettingsStatus
+
+  """
+  Updates billing info on the caller's subscription. Restricted to academy_admin.
+  """
+  updateMyBilling(data: BillingInfoInput!): AcademySubscription
   updatePayment(data: PaymentUpdateInput!, documentId: ID!): Payment
   updatePlan(data: PlanUpdateInput!, documentId: ID!): Plan
+  updatePlatformPlan(data: PlatformPlanUpdateInput!, documentId: ID!): PlatformPlan
   updateStudent(data: StudentUpdateInput!, documentId: ID!): Student
   updateWorkoutPlan(data: WorkoutPlanUpdateInput!, documentId: ID!): WorkoutPlan
 }
@@ -1025,6 +1092,61 @@ type PlatformDashboard {
 }
 
 """
+GYM SaaS tier (Starter/Business/Pro). Source of truth for /pricing and Academy.platformPlan.
+"""
+type PlatformPlan {
+  ctaLabel: String
+  currency: String
+  documentId: ID!
+  featured: Boolean
+  features: [String]
+  isActive: Boolean
+  limits: JSON
+  modules: JSON
+  name: String!
+  priceAnnual: Float
+  priceMonthly: Float!
+  slug: String!
+  sortOrder: Int
+  tag: String
+  tagline: String
+}
+
+input PlatformPlanInput {
+  ctaLabel: String
+  currency: String
+  featured: Boolean
+  features: [String]
+  isActive: Boolean
+  limits: JSON
+  modules: JSON
+  name: String!
+  priceAnnual: Float
+  priceMonthly: Float!
+  slug: String!
+  sortOrder: Int
+  tag: String
+  tagline: String
+}
+
+input PlatformPlanUpdateInput {
+  ctaLabel: String
+  currency: String
+  featured: Boolean
+  features: [String]
+  isActive: Boolean
+  limits: JSON
+  modules: JSON
+  name: String
+  priceAnnual: Float
+  priceMonthly: Float
+  slug: String
+  sortOrder: Int
+  tag: String
+  tagline: String
+}
+
+"""
 URL set returned by mintUploadUrl. Frontend PUTs bytes to uploadUrl, then calls confirmUpload(publicUrl, name) once it succeeds.
 """
 type PresignedUpload {
@@ -1076,11 +1198,18 @@ type Query {
   """
   myAsaasSettings: AsaasSettingsStatus
   myDependents: [Dependent]
+
+  """
+  Returns the active subscription for the caller's academy. Null if no subscription exists yet (shouldn't happen post-backfill).
+  """
+  mySubscription: AcademySubscription
   payment(documentId: ID!): Payment
   payments(pagination: PaginationInput): [Payment]
   plan(documentId: ID!): Plan
   plans(pagination: PaginationInput): [Plan]
   platformDashboard: PlatformDashboard
+  platformPlan(slug: String!): PlatformPlan
+  platformPlans: [PlatformPlan]
 
   """Bookings for a given class schedule, optionally filtered by date."""
   scheduleBookings(date: String, documentId: ID!): [ClassBooking]
@@ -1092,6 +1221,11 @@ type Query {
   scheduleWeek(weekStart: String): ScheduleWeek
   student(documentId: ID!): Student
   students(pagination: PaginationInput): [Student]
+
+  """
+  Platform admin only — cross-tenant listing of every academy subscription.
+  """
+  subscriptions(pagination: PaginationInput): [AcademySubscription]
   workoutPlan(documentId: ID!): WorkoutPlan
   workoutPlans(pagination: PaginationInput): [WorkoutPlan]
 }

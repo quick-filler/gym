@@ -76,17 +76,26 @@ export function mapDelta(
 }
 
 /* ------------------------------------------------------------------
- * Marketing
+ * Marketing — Platform plans (Starter/Business/Pro)
  * ------------------------------------------------------------------ */
 
+/**
+ * Shape devolvida pela query pública `platformPlans`. Espelha os
+ * campos do content type PlatformPlan no backend. Tudo já vem pronto
+ * (preços, featured, tag, ctaLabel) — sem heurística no mapper.
+ */
 export interface RawPricingPlan {
   documentId: string;
+  slug: string;
   name: string;
-  description?: string | null;
-  price: number;
-  billingCycle: string;
-  maxStudents?: number | null;
+  tagline?: string | null;
+  tag?: string | null;
+  priceMonthly: number;
+  priceAnnual?: number | null;
   features?: Array<string | null> | null;
+  ctaLabel?: string | null;
+  featured?: boolean | null;
+  sortOrder?: number | null;
   isActive?: boolean | null;
 }
 
@@ -95,23 +104,21 @@ export function mapPricingPlans(
 ): PricingPlan[] {
   return (plans ?? [])
     .filter((p): p is RawPricingPlan => !!p && p.isActive !== false)
-    .map((p, idx) => {
-      const monthly =
-        p.billingCycle === "annual"
-          ? Math.round(p.price / 12)
-          : Math.round(p.price);
-      return {
-        id: p.documentId,
-        name: p.name,
-        tag: p.billingCycle === "annual" ? "Anual" : "Mensal",
-        priceMonthly: monthly,
-        priceAnnual: Math.round(monthly * 0.8),
-        tagline: p.description ?? "",
-        features: (p.features ?? []).filter((f): f is string => !!f),
-        featured: idx === 1,
-        ctaLabel: "Quero uma demonstração",
-      };
-    });
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+    .map((p) => ({
+      id: p.documentId,
+      slug: p.slug,
+      name: p.name,
+      tag: p.tag ?? "",
+      priceMonthly: Math.round(p.priceMonthly),
+      // Fallback: se priceAnnual não vier do servidor, repete o mensal
+      // pra não quebrar a UI (o componente exibe '/mês' nos dois modos).
+      priceAnnual: Math.round(p.priceAnnual ?? p.priceMonthly),
+      tagline: p.tagline ?? "",
+      features: (p.features ?? []).filter((f): f is string => !!f),
+      featured: !!p.featured,
+      ctaLabel: p.ctaLabel ?? "Começar grátis",
+    }));
 }
 
 /* ------------------------------------------------------------------

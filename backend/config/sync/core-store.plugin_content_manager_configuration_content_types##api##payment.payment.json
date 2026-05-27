@@ -35,6 +35,50 @@
           "sortable": true
         }
       },
+      "student": {
+        "edit": {
+          "label": "student",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "student",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "dependent": {
+        "edit": {
+          "label": "dependent",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "dependent",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "description": {
+        "edit": {
+          "label": "description",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "description",
+          "searchable": true,
+          "sortable": true
+        }
+      },
       "amount": {
         "edit": {
           "label": "amount",
@@ -245,6 +289,22 @@
           },
           {
             "name": "receiptUrl",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "student",
+            "size": 6
+          },
+          {
+            "name": "dependent",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "description",
             "size": 6
           }
         ]
