@@ -1,5 +1,12 @@
 import { describe, expect, it, beforeAll, afterAll, vi } from 'vitest';
-import { ageFrom, fmtDateBR, monthlyBRL } from './format';
+import {
+  ageFrom,
+  brDateToISO,
+  fmtDateBR,
+  hhmm,
+  monthlyBRL,
+  nextClassTimeLabel,
+} from './format';
 
 describe('monthlyBRL', () => {
   it('formats integer with R$ and no decimals', () => {
@@ -73,5 +80,66 @@ describe('ageFrom', () => {
     expect(ageFrom('2020-04-20')).toBe(6);
     // Born same month, one day later — not yet
     expect(ageFrom('2020-04-21')).toBe(5);
+  });
+});
+
+describe('hhmm', () => {
+  it('trims a Strapi Time scalar to HH:mm', () => {
+    expect(hhmm('18:00:00.000')).toBe('18:00');
+    expect(hhmm('07:30:00.000')).toBe('07:30');
+  });
+
+  it('returns "" for empty / invalid input', () => {
+    expect(hhmm('')).toBe('');
+    expect(hhmm(null)).toBe('');
+    expect(hhmm(undefined)).toBe('');
+  });
+});
+
+describe('nextClassTimeLabel', () => {
+  const NOW = new Date(2026, 3, 20, 10, 0, 0); // 2026-04-20 local
+
+  it('labels a class today as "Hoje"', () => {
+    expect(
+      nextClassTimeLabel('2026-04-20', '18:00:00.000', '19:00:00.000', NOW),
+    ).toBe('Hoje · 18:00 → 19:00');
+  });
+
+  it('labels a class tomorrow as "Amanhã"', () => {
+    expect(
+      nextClassTimeLabel('2026-04-21', '07:00:00.000', '08:00:00.000', NOW),
+    ).toBe('Amanhã · 07:00 → 08:00');
+  });
+
+  it('labels a future class as DD/MM', () => {
+    expect(
+      nextClassTimeLabel('2026-06-12', '19:00:00.000', null, NOW),
+    ).toBe('12/06 · 19:00');
+  });
+
+  it('returns "" when date is missing', () => {
+    expect(nextClassTimeLabel(null, '18:00', '19:00', NOW)).toBe('');
+  });
+
+  it('drops the time when start is missing', () => {
+    expect(nextClassTimeLabel('2026-04-20', null, null, NOW)).toBe('Hoje');
+  });
+});
+
+describe('brDateToISO', () => {
+  it('converts DD/MM/YYYY to ISO', () => {
+    expect(brDateToISO('12/03/2018')).toBe('2018-03-12');
+  });
+
+  it('passes through an ISO date', () => {
+    expect(brDateToISO('2018-03-12')).toBe('2018-03-12');
+    expect(brDateToISO('2018-03-12T00:00:00.000Z')).toBe('2018-03-12');
+  });
+
+  it('returns "" for empty / invalid input', () => {
+    expect(brDateToISO('')).toBe('');
+    expect(brDateToISO(null)).toBe('');
+    expect(brDateToISO('notadate')).toBe('');
+    expect(brDateToISO('3/3/18')).toBe('');
   });
 });

@@ -1368,7 +1368,7 @@
       "locale": null
     },
     {
-      "documentId": "ulwjsh4jrf6pi0dn7d5efbkg",
+      "documentId": "dyv6qe8a60xootrrgqb82gxo",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -1385,6 +1385,7 @@
           "status",
           "role",
           "isGuardian",
+          "activated",
           "notes",
           "academy",
           "user",
@@ -1417,7 +1418,7 @@
       "locale": null
     },
     {
-      "documentId": "a354hpeuj900n6ix695k1cxr",
+      "documentId": "soeu5bh65giw99wpva4skeda",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -1434,6 +1435,7 @@
           "status",
           "role",
           "isGuardian",
+          "activated",
           "notes",
           "academy",
           "user",
@@ -1448,7 +1450,7 @@
       "locale": null
     },
     {
-      "documentId": "tfef8gs6egxexjdm16geg7rl",
+      "documentId": "x8g2d4l4s7zsrmz2ekdier0h",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -1465,6 +1467,7 @@
           "status",
           "role",
           "isGuardian",
+          "activated",
           "notes",
           "academy",
           "user",

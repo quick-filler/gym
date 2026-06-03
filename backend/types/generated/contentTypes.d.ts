@@ -1195,6 +1195,7 @@ export interface ApiStudentStudent extends Struct.CollectionTypeSchema {
   };
   attributes: {
     academy: Schema.Attribute.Relation<'manyToOne', 'api::academy.academy'>;
+    activated: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     address: Schema.Attribute.JSON;
     assessments: Schema.Attribute.Relation<
       'oneToMany',

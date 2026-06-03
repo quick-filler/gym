@@ -44,6 +44,8 @@ import { buildLead } from './types/lead';
 import { buildPlatform } from './types/platform';
 import { buildUpload } from './types/upload';
 import { buildBulkImport } from './types/bulk-import';
+import { buildNotification } from './types/notification';
+import { buildAccount } from './types/account';
 
 export function registerGraphQL(strapi: Core.Strapi) {
   const extensionService = strapi.plugin('graphql').service('extension');
@@ -72,6 +74,8 @@ export function registerGraphQL(strapi: Core.Strapi) {
       buildPlatform(ctx),
       buildUpload(ctx),
       buildBulkImport(ctx),
+      buildNotification(ctx),
+      buildAccount(ctx),
     ];
 
     const types: any[] = [...buildCommonTypes(ctx)];

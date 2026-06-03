@@ -118,6 +118,20 @@ export type AcademyUpdateInput = {
   slug?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type ActivateAccountInput = {
+  academySlug: Scalars['String']['input'];
+  birthdate?: InputMaybe<Scalars['String']['input']>;
+  email: Scalars['String']['input'];
+  password: Scalars['String']['input'];
+  phone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ActivateAccountResult = {
+  __typename?: 'ActivateAccountResult';
+  jwt: Scalars['String']['output'];
+  student?: Maybe<Student>;
+};
+
 export type Address = {
   __typename?: 'Address';
   cep?: Maybe<Scalars['String']['output']>;
@@ -595,6 +609,8 @@ export type DependentUpdateInput = {
 
 export type Enrollment = {
   __typename?: 'Enrollment';
+  /** Payment health derived from this enrollment's payments: em_dia / pendente / atrasado. On-demand — only resolved when selected. */
+  computedStatus?: Maybe<Scalars['String']['output']>;
   documentId: Scalars['ID']['output'];
   endDate?: Maybe<Scalars['String']['output']>;
   paymentMethod?: Maybe<Scalars['String']['output']>;
@@ -953,6 +969,8 @@ export type ModulePresetSuggestion = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** Self-service first-access: an imported student proves identity (email + birthdate/phone) and sets a password. Returns a JWT. */
+  activateAccount?: Maybe<ActivateAccountResult>;
   bulkImportStudents?: Maybe<BulkImportResult>;
   /** Platform admin only — moves an academy to a different PlatformPlan. Re-snapshots price/features/limits. */
   changeSubscriptionPlan?: Maybe<AcademySubscription>;
@@ -1007,6 +1025,11 @@ export type Mutation = {
   updatePoolInspection?: Maybe<PoolInspection>;
   updateStudent?: Maybe<Student>;
   updateWorkoutPlan?: Maybe<WorkoutPlan>;
+};
+
+
+export type MutationActivateAccountArgs = {
+  data: ActivateAccountInput;
 };
 
 
@@ -1536,6 +1559,10 @@ export type Query = {
   myPoolSettings?: Maybe<PoolSettings>;
   /** Returns the active subscription for the caller's academy. Null if no subscription exists yet (shouldn't happen post-backfill). */
   mySubscription?: Maybe<AcademySubscription>;
+  /** Count of the caller's unread in-app notifications. Stub returning 0 until Fase 7 ships the Notification content type. */
+  myUnreadNotificationCount?: Maybe<Scalars['Int']['output']>;
+  /** The caller's upcoming confirmed bookings, soonest first. Powers the app dashboard + schedule preview. */
+  myUpcomingBookings?: Maybe<Array<Maybe<ClassBooking>>>;
   payment?: Maybe<Payment>;
   payments?: Maybe<Array<Maybe<Payment>>>;
   plan?: Maybe<Plan>;
@@ -1664,6 +1691,11 @@ export type QueryLeadsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   pageSize?: InputMaybe<Scalars['Int']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryMyUpcomingBookingsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -1831,6 +1863,7 @@ export type StringFilterInput = {
 export type Student = {
   __typename?: 'Student';
   academy?: Maybe<Academy>;
+  activated?: Maybe<Scalars['Boolean']['output']>;
   address?: Maybe<Address>;
   birthdate?: Maybe<Scalars['String']['output']>;
   cpf?: Maybe<Scalars['String']['output']>;
@@ -1841,9 +1874,13 @@ export type Student = {
   gender?: Maybe<Scalars['String']['output']>;
   isGuardian?: Maybe<Scalars['Boolean']['output']>;
   name: Scalars['String']['output'];
+  /** The student's next upcoming confirmed booking (soonest first), or null when none is scheduled. On-demand — only resolved when selected (e.g. the app dashboard). */
+  nextClass?: Maybe<ClassBooking>;
   notes?: Maybe<Scalars['String']['output']>;
   phone?: Maybe<Scalars['String']['output']>;
   photo?: Maybe<Media>;
+  /** False when a required profile field (phone, birthdate) is missing — the app redirects to "completar cadastro" after login when this is false. */
+  profileComplete?: Maybe<Scalars['Boolean']['output']>;
   role: Scalars['String']['output'];
   status?: Maybe<Scalars['String']['output']>;
   workoutPlans?: Maybe<Array<Maybe<WorkoutPlan>>>;

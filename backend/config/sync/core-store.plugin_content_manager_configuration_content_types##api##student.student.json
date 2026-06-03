@@ -174,6 +174,20 @@
           "sortable": true
         }
       },
+      "activated": {
+        "edit": {
+          "label": "activated",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "activated",
+          "searchable": true,
+          "sortable": true
+        }
+      },
       "notes": {
         "edit": {
           "label": "notes",
@@ -462,6 +476,12 @@
           {
             "name": "address",
             "size": 12
+          }
+        ],
+        [
+          {
+            "name": "activated",
+            "size": 4
           }
         ]
       ]

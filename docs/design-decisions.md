@@ -270,6 +270,51 @@ right below. We want the history, not a clean slate.
   - We add private uploads (medical PDFs) — replace ACL public-read
     with presigned GET URLs at read time.
 
+### 2.7 Student login provisioning + self-service activation
+
+- **Decision** — Every student that needs app access gets a
+  `users-permissions` user, provisioned through one shared helper
+  (`src/lib/provisioning.ts`):
+  - `createStudent` (single, admin) → `ensureAuthUser` creates/links a
+    user and emails a "set your password" invite (`sendStudentWelcomeEmail`).
+  - `bulkImportStudents` → `ensureAuthUser` creates the user but sends
+    **no** email (a 200-row import must not fire 200 emails).
+  - First access → `Mutation.activateAccount` (public): the student
+    proves identity and sets their own password via
+    `setOrCreateAuthUserPassword`.
+  - `lead.ts` (academy owner) reuses `createAuthUser` from the same
+    helper.
+- **Context** — Bulk-imported rosters have no passwords and often no
+  email server is configured. The real import data (Cademia 1: 41 members)
+  had **0% CPF**, **32% birthdate**, **100% email + phone** — so CPF was
+  unusable as a second factor and email-link delivery couldn't be assumed.
+- **Rationale (activation identity)** — `activateAccount` verifies the
+  student against academy-vouched data: **email + (birthdate OR phone)**.
+  Birthdate is preferred; phone (digits-only, normalized) is the fallback
+  when the record has no birthdate. Email alone never activates.
+  Scoped to one academy (by slug) so there's no cross-tenant claim.
+- **Consequences** —
+  - A new `Student.activated: Boolean` flag is the one-shot guard:
+    `activateAccount` refuses an already-`activated` account (must use
+    login / forgot-password). It flips `true` on successful activation.
+  - email+phone is not a strong secret — mitigated by academy scope,
+    the one-shot guard, and the data being academy-owned. Acceptable for
+    a gym MVP; not for high-value accounts.
+  - The activation screen exists on **both** surfaces (app `/activate`,
+    website `/ativar`) hitting the same mutation; both go over a raw
+    `fetch` (pre-auth, like login) rather than Apollo.
+  - `Student.profileComplete` (computed: name+phone+birthdate) lets the
+    client redirect to "completar cadastro" after login when data is
+    missing.
+- **Revisit when** —
+  - Email delivery becomes reliable everywhere → make the token/email
+    invite the primary path and downgrade self-claim to a fallback.
+  - The email-invite door (website `/reset-password`) should also flip
+    `activated=true` on completion — today only `activateAccount` does,
+    so a student who set their password via the email link still reads as
+    `activated=false`. Low impact (identity check still gates the
+    re-claim) but worth closing.
+
 ---
 
 ## 3. GraphQL API

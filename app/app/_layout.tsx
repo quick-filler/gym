@@ -22,6 +22,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="login" />
+          <Stack.Screen name="activate" />
           <Stack.Screen name="dependents" />
           <Stack.Screen name="workout/[id]" />
           <Stack.Screen name="booking/[id]" />

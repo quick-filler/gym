@@ -26,6 +26,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import {
   Bell,
   Calendar,
@@ -87,9 +88,15 @@ function DashboardHome({ data }: { data: DashboardData }) {
             <TouchableOpacity
               style={styles.iconBtn}
               activeOpacity={0.7}
-              accessibilityLabel="Notificações"
+              accessibilityLabel={
+                data.unreadCount > 0
+                  ? `Notificações (${data.unreadCount} não lidas)`
+                  : 'Notificações'
+              }
             >
-              <View style={[styles.notifDot, { borderColor: accent }]} />
+              {data.unreadCount > 0 ? (
+                <View style={[styles.notifDot, { borderColor: accent }]} />
+              ) : null}
               <Bell size={18} color="#fff" strokeWidth={2.2} />
             </TouchableOpacity>
           </View>
@@ -128,11 +135,14 @@ function DashboardHome({ data }: { data: DashboardData }) {
 
           {/* QUICK ACTIONS */}
           <View style={styles.actionsRow}>
-            {QUICK_ACTIONS.map(({ label, Icon }) => (
+            {QUICK_ACTIONS.map(({ label, Icon, href }) => (
               <TouchableOpacity
                 key={label}
                 style={styles.actionBtn}
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={label}
+                onPress={() => router.navigate(href as never)}
               >
                 <View
                   style={[
@@ -198,21 +208,17 @@ function DashboardHome({ data }: { data: DashboardData }) {
             </View>
           ) : null}
 
-          <View
-            style={[
-              styles.modeBanner,
-              { borderColor: USE_MOCKS ? theme.line : '#a7f3d0' },
-            ]}
-          >
-            <Text style={styles.modeBannerTitle}>
-              {USE_MOCKS ? 'Modo demonstração' : 'Conectado ao backend'}
-            </Text>
-            <Text style={styles.modeBannerBody}>
-              {USE_MOCKS
-                ? 'Dados estáticos locais. Defina EXPO_PUBLIC_USE_MOCKS=false no .env para rodar contra o GraphQL de verdade.'
-                : 'Lendo do backend via Apollo Client + GraphQL codegen. Nunca cai pros mocks automaticamente.'}
-            </Text>
-          </View>
+          {/* Demo banner — only in mock mode. In live mode the dashboard
+              shows real data and needs no disclaimer. */}
+          {USE_MOCKS ? (
+            <View style={[styles.modeBanner, { borderColor: theme.line }]}>
+              <Text style={styles.modeBannerTitle}>Modo demonstração</Text>
+              <Text style={styles.modeBannerBody}>
+                Dados estáticos locais. Defina EXPO_PUBLIC_USE_MOCKS=false no
+                .env para rodar contra o GraphQL de verdade.
+              </Text>
+            </View>
+          ) : null}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -364,10 +370,10 @@ function EmptyHome() {
  * SUB-COMPONENTS
  * ================================================================ */
 
-const QUICK_ACTIONS: Array<{ label: string; Icon: LucideIcon }> = [
-  { label: 'Agenda',   Icon: Calendar },
-  { label: 'Treino',   Icon: Dumbbell },
-  { label: 'Finanças', Icon: CreditCard },
+const QUICK_ACTIONS: Array<{ label: string; Icon: LucideIcon; href: string }> = [
+  { label: 'Agenda',   Icon: Calendar,   href: '/schedule' },
+  { label: 'Treino',   Icon: Dumbbell,   href: '/workouts' },
+  { label: 'Finanças', Icon: CreditCard, href: '/payments' },
 ];
 
 function StatusPill({

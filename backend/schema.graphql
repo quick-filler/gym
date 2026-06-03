@@ -101,6 +101,19 @@ input AcademyUpdateInput {
   slug: String
 }
 
+input ActivateAccountInput {
+  academySlug: String!
+  birthdate: String
+  email: String!
+  password: String!
+  phone: String
+}
+
+type ActivateAccountResult {
+  jwt: String!
+  student: Student
+}
+
 type Address {
   cep: String
   city: String
@@ -576,6 +589,10 @@ input DependentUpdateInput {
 }
 
 type Enrollment {
+  """
+  Payment health derived from this enrollment's payments: em_dia / pendente / atrasado. On-demand — only resolved when selected.
+  """
+  computedStatus: String
   documentId: ID!
   endDate: String
   paymentMethod: String
@@ -932,6 +949,10 @@ type ModulePresetSuggestion {
 }
 
 type Mutation {
+  """
+  Self-service first-access: an imported student proves identity (email + birthdate/phone) and sets a password. Returns a JWT.
+  """
+  activateAccount(data: ActivateAccountInput!): ActivateAccountResult
   bulkImportStudents(dryRun: Boolean = false, rows: [StudentImportRow!]!): BulkImportResult
 
   """
@@ -1279,6 +1300,16 @@ type Query {
   Returns the active subscription for the caller's academy. Null if no subscription exists yet (shouldn't happen post-backfill).
   """
   mySubscription: AcademySubscription
+
+  """
+  Count of the caller's unread in-app notifications. Stub returning 0 until Fase 7 ships the Notification content type.
+  """
+  myUnreadNotificationCount: Int
+
+  """
+  The caller's upcoming confirmed bookings, soonest first. Powers the app dashboard + schedule preview.
+  """
+  myUpcomingBookings(limit: Int): [ClassBooking]
   payment(documentId: ID!): Payment
   payments(pagination: PaginationInput): [Payment]
   plan(documentId: ID!): Plan
@@ -1396,6 +1427,7 @@ input StringFilterInput {
 
 type Student {
   academy: Academy
+  activated: Boolean
   address: Address
   birthdate: String
   cpf: String
@@ -1406,9 +1438,19 @@ type Student {
   gender: String
   isGuardian: Boolean
   name: String!
+
+  """
+  The student's next upcoming confirmed booking (soonest first), or null when none is scheduled. On-demand — only resolved when selected (e.g. the app dashboard).
+  """
+  nextClass: ClassBooking
   notes: String
   phone: String
   photo: Media
+
+  """
+  False when a required profile field (phone, birthdate) is missing — the app redirects to "completar cadastro" after login when this is false.
+  """
+  profileComplete: Boolean
   role: String!
   status: String
   workoutPlans: [WorkoutPlan]

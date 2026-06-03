@@ -118,6 +118,20 @@ export type AcademyUpdateInput = {
   slug?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type ActivateAccountInput = {
+  academySlug: Scalars['String']['input'];
+  birthdate?: InputMaybe<Scalars['String']['input']>;
+  email: Scalars['String']['input'];
+  password: Scalars['String']['input'];
+  phone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ActivateAccountResult = {
+  __typename?: 'ActivateAccountResult';
+  jwt: Scalars['String']['output'];
+  student?: Maybe<Student>;
+};
+
 export type Address = {
   __typename?: 'Address';
   cep?: Maybe<Scalars['String']['output']>;
@@ -595,6 +609,8 @@ export type DependentUpdateInput = {
 
 export type Enrollment = {
   __typename?: 'Enrollment';
+  /** Payment health derived from this enrollment's payments: em_dia / pendente / atrasado. On-demand — only resolved when selected. */
+  computedStatus?: Maybe<Scalars['String']['output']>;
   documentId: Scalars['ID']['output'];
   endDate?: Maybe<Scalars['String']['output']>;
   paymentMethod?: Maybe<Scalars['String']['output']>;
@@ -953,6 +969,8 @@ export type ModulePresetSuggestion = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** Self-service first-access: an imported student proves identity (email + birthdate/phone) and sets a password. Returns a JWT. */
+  activateAccount?: Maybe<ActivateAccountResult>;
   bulkImportStudents?: Maybe<BulkImportResult>;
   /** Platform admin only — moves an academy to a different PlatformPlan. Re-snapshots price/features/limits. */
   changeSubscriptionPlan?: Maybe<AcademySubscription>;
@@ -1007,6 +1025,11 @@ export type Mutation = {
   updatePoolInspection?: Maybe<PoolInspection>;
   updateStudent?: Maybe<Student>;
   updateWorkoutPlan?: Maybe<WorkoutPlan>;
+};
+
+
+export type MutationActivateAccountArgs = {
+  data: ActivateAccountInput;
 };
 
 
@@ -1536,6 +1559,10 @@ export type Query = {
   myPoolSettings?: Maybe<PoolSettings>;
   /** Returns the active subscription for the caller's academy. Null if no subscription exists yet (shouldn't happen post-backfill). */
   mySubscription?: Maybe<AcademySubscription>;
+  /** Count of the caller's unread in-app notifications. Stub returning 0 until Fase 7 ships the Notification content type. */
+  myUnreadNotificationCount?: Maybe<Scalars['Int']['output']>;
+  /** The caller's upcoming confirmed bookings, soonest first. Powers the app dashboard + schedule preview. */
+  myUpcomingBookings?: Maybe<Array<Maybe<ClassBooking>>>;
   payment?: Maybe<Payment>;
   payments?: Maybe<Array<Maybe<Payment>>>;
   plan?: Maybe<Plan>;
@@ -1664,6 +1691,11 @@ export type QueryLeadsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   pageSize?: InputMaybe<Scalars['Int']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryMyUpcomingBookingsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -1831,6 +1863,7 @@ export type StringFilterInput = {
 export type Student = {
   __typename?: 'Student';
   academy?: Maybe<Academy>;
+  activated?: Maybe<Scalars['Boolean']['output']>;
   address?: Maybe<Address>;
   birthdate?: Maybe<Scalars['String']['output']>;
   cpf?: Maybe<Scalars['String']['output']>;
@@ -1841,9 +1874,13 @@ export type Student = {
   gender?: Maybe<Scalars['String']['output']>;
   isGuardian?: Maybe<Scalars['Boolean']['output']>;
   name: Scalars['String']['output'];
+  /** The student's next upcoming confirmed booking (soonest first), or null when none is scheduled. On-demand — only resolved when selected (e.g. the app dashboard). */
+  nextClass?: Maybe<ClassBooking>;
   notes?: Maybe<Scalars['String']['output']>;
   phone?: Maybe<Scalars['String']['output']>;
   photo?: Maybe<Media>;
+  /** False when a required profile field (phone, birthdate) is missing — the app redirects to "completar cadastro" after login when this is false. */
+  profileComplete?: Maybe<Scalars['Boolean']['output']>;
   role: Scalars['String']['output'];
   status?: Maybe<Scalars['String']['output']>;
   workoutPlans?: Maybe<Array<Maybe<WorkoutPlan>>>;
@@ -1972,7 +2009,7 @@ export type AcademyBySlugQuery = { __typename?: 'Query', academyBySlug?: { __typ
 export type MyDashboardQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MyDashboardQuery = { __typename?: 'Query', me?: { __typename?: 'Student', documentId: string, name: string, email: string, phone?: string | null, status?: string | null, photo?: { __typename?: 'Media', url?: string | null } | null, academy?: { __typename?: 'Academy', documentId: string, name: string, slug: string, primaryColor?: string | null, secondaryColor?: string | null, logo?: { __typename?: 'Media', url?: string | null } | null } | null, enrollments?: Array<{ __typename?: 'Enrollment', documentId: string, status: string, startDate: string, endDate?: string | null, paymentMethod?: string | null, plan?: { __typename?: 'Plan', documentId: string, name: string, price: number, billingCycle: string } | null } | null> | null, workoutPlans?: Array<{ __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null, isActive?: boolean | null, validFrom?: string | null, exercises?: Array<{ __typename?: 'Exercise', name: string, sets?: number | null, reps?: number | null, load?: string | null, notes?: string | null } | null> | null } | null> | null } | null };
+export type MyDashboardQuery = { __typename?: 'Query', myUnreadNotificationCount?: number | null, me?: { __typename?: 'Student', documentId: string, name: string, email: string, phone?: string | null, status?: string | null, photo?: { __typename?: 'Media', url?: string | null } | null, academy?: { __typename?: 'Academy', documentId: string, name: string, slug: string, primaryColor?: string | null, secondaryColor?: string | null, logo?: { __typename?: 'Media', url?: string | null } | null } | null, nextClass?: { __typename?: 'ClassBooking', documentId: string, date: string, status: string, classSchedule?: { __typename?: 'ClassSchedule', documentId: string, name: string, startTime?: string | null, endTime?: string | null, room?: string | null, modality?: string | null } | null } | null, enrollments?: Array<{ __typename?: 'Enrollment', documentId: string, status: string, computedStatus?: string | null, startDate: string, endDate?: string | null, paymentMethod?: string | null, plan?: { __typename?: 'Plan', documentId: string, name: string, price: number, billingCycle: string } | null } | null> | null, workoutPlans?: Array<{ __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null, isActive?: boolean | null, validFrom?: string | null, exercises?: Array<{ __typename?: 'Exercise', name: string, sets?: number | null, reps?: number | null, load?: string | null, notes?: string | null } | null> | null } | null> | null } | null };
 
 export type CheckInBookingMutationVariables = Exact<{
   documentId: Scalars['ID']['input'];
@@ -1995,7 +2032,7 @@ export type AppMyDependentsQuery = { __typename?: 'Query', me?: { __typename?: '
 
 
 export const AcademyBySlugDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AcademyBySlug"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"academyBySlug"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"secondaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"alternativeText"}}]}}]}}]}}]} as unknown as DocumentNode<AcademyBySlugQuery, AcademyBySlugQueryVariables>;
-export const MyDashboardDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyDashboard"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"photo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}},{"kind":"Field","name":{"kind":"Name","value":"academy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"secondaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"enrollments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"endDate"}},{"kind":"Field","name":{"kind":"Name","value":"paymentMethod"}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"workoutPlans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"validFrom"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"sets"}},{"kind":"Field","name":{"kind":"Name","value":"reps"}},{"kind":"Field","name":{"kind":"Name","value":"load"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}}]}}]}}]}}]}}]} as unknown as DocumentNode<MyDashboardQuery, MyDashboardQueryVariables>;
+export const MyDashboardDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyDashboard"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"photo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}},{"kind":"Field","name":{"kind":"Name","value":"academy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"secondaryColor"}},{"kind":"Field","name":{"kind":"Name","value":"logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"nextClass"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"classSchedule"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"startTime"}},{"kind":"Field","name":{"kind":"Name","value":"endTime"}},{"kind":"Field","name":{"kind":"Name","value":"room"}},{"kind":"Field","name":{"kind":"Name","value":"modality"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"enrollments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"computedStatus"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"endDate"}},{"kind":"Field","name":{"kind":"Name","value":"paymentMethod"}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"workoutPlans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"validFrom"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"sets"}},{"kind":"Field","name":{"kind":"Name","value":"reps"}},{"kind":"Field","name":{"kind":"Name","value":"load"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"myUnreadNotificationCount"}}]}}]} as unknown as DocumentNode<MyDashboardQuery, MyDashboardQueryVariables>;
 export const CheckInBookingDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CheckInBooking"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"checkInBooking"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"checkedInAt"}}]}}]}}]} as unknown as DocumentNode<CheckInBookingMutation, CheckInBookingMutationVariables>;
 export const AcademyBySlugBrandingDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AcademyBySlugBranding"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"academyBySlug"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}}]}}]}}]} as unknown as DocumentNode<AcademyBySlugBrandingQuery, AcademyBySlugBrandingQueryVariables>;
 export const AppMyDependentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AppMyDependents"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"academy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"myDependents"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"birthdate"}},{"kind":"Field","name":{"kind":"Name","value":"gender"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"medicalAlert"}},{"kind":"Field","name":{"kind":"Name","value":"bloodType"}},{"kind":"Field","name":{"kind":"Name","value":"emergencyContactName"}},{"kind":"Field","name":{"kind":"Name","value":"emergencyContactPhone"}},{"kind":"Field","name":{"kind":"Name","value":"enrollments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"endDate"}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}}]}}]}}]}}]}}]} as unknown as DocumentNode<AppMyDependentsQuery, AppMyDependentsQueryVariables>;

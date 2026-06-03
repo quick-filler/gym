@@ -22,6 +22,60 @@ import {
 const UID = 'api::class-booking.class-booking';
 const STUDENT = 'api::student.student';
 
+/**
+ * Today's date as `yyyy-mm-dd` in the academy timezone (pt-BR). Using the
+ * tenant TZ (not UTC) so a 22:00 BRT class still counts as "today" instead
+ * of rolling into tomorrow at 21:00 BRT (00:00 UTC).
+ */
+function todayBR(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+  }).format(new Date());
+}
+
+/** Minutes from midnight for a "HH:MM[:SS]" string; 0 on bad input. */
+function startMinutes(schedule: any): number {
+  const t = schedule?.startTime;
+  if (typeof t !== 'string') return 0;
+  const [h, m] = t.split(':').map((s: string) => Number.parseInt(s, 10));
+  return (Number.isFinite(h) ? h : 0) * 60 + (Number.isFinite(m) ? m : 0);
+}
+
+/**
+ * Upcoming confirmed bookings for a given Student, soonest first.
+ *
+ * "Upcoming" = status `confirmed` AND date >= today (academy TZ). Ordered
+ * by (date asc, class start time asc) so the chronologically-next class is
+ * first — Strapi can't sort by the related schedule's startTime, so we
+ * order in JS after populating `classSchedule`.
+ *
+ * Shared by `Student.nextClass` (takes [0]) and the `myUpcomingBookings`
+ * query (takes the first `limit`). Tenant-safe: scoped to one student's
+ * own bookings.
+ */
+export async function findUpcomingBookingsForStudent(
+  strapi: Core.Strapi,
+  studentDocumentId: string,
+  limit: number,
+): Promise<any[]> {
+  if (!studentDocumentId) return [];
+  const rows: any[] = await strapi.documents(UID).findMany({
+    filters: {
+      student: { documentId: studentDocumentId },
+      status: 'confirmed',
+      date: { $gte: todayBR() },
+    } as any,
+    populate: { classSchedule: true },
+    sort: { date: 'asc' },
+    limit: 100,
+  });
+  rows.sort((a, b) => {
+    if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+    return startMinutes(a.classSchedule) - startMinutes(b.classSchedule);
+  });
+  return rows.slice(0, Math.max(0, limit));
+}
+
 export function buildClassBooking({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }) {
   const ClassBooking = nexus.objectType({
     name: 'ClassBooking',
@@ -101,6 +155,27 @@ export function buildClassBooking({ nexus, strapi }: { nexus: any; strapi: Core.
         resolve: async (_root: any, args: any, ctx: any) => {
           await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
+        },
+      });
+
+      t.list.field('myUpcomingBookings', {
+        type: 'ClassBooking',
+        description:
+          "The caller's upcoming confirmed bookings, soonest first. Powers the app dashboard + schedule preview.",
+        args: { limit: nexus.intArg() },
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const userId = ctx?.state?.user?.id;
+          if (!userId) return [];
+          const me: any = (
+            await strapi.documents(STUDENT).findMany({
+              filters: { user: { id: userId } },
+              fields: ['documentId'],
+              limit: 1,
+            })
+          )[0];
+          if (!me?.documentId) return [];
+          const limit = Math.min(50, Math.max(1, args.limit ?? 5));
+          return await findUpcomingBookingsForStudent(strapi, me.documentId, limit);
         },
       });
     },
@@ -225,6 +300,7 @@ export function buildClassBooking({ nexus, strapi }: { nexus: any; strapi: Core.
     resolversConfig: {
       'Query.classBookings': { auth: true },
       'Query.classBooking': { auth: true },
+      'Query.myUpcomingBookings': { auth: true },
       'Mutation.createClassBooking': { auth: true },
       'Mutation.updateClassBooking': { auth: true },
       'Mutation.deleteClassBooking': { auth: true },

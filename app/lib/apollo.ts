@@ -27,10 +27,26 @@ const httpLink = new HttpLink({
  * Uses the same Observable + subscribe pattern as authLink to stay
  * compatible with Apollo's internal Observable (not RxJS).
  */
+function bounceToLogin() {
+  // Drop the bad token so the next launch starts clean, then send the
+  // user to login. Wrapped in try/catch because the navigator may not be
+  // mounted yet during startup.
+  SecureStore.deleteItemAsync('jwt').catch(() => {});
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { router } = require('expo-router');
+    router.replace('/login');
+  } catch {
+    // Navigator not mounted yet — safe to ignore.
+  }
+}
+
 const errorLink = new ApolloLink((operation, forward) => {
   return new Observable((observer) => {
     const sub = forward(operation).subscribe({
       next: (response) => {
+        // GraphQL-level auth errors (HTTP 200 with an errors array) — e.g.
+        // calling an auth:true resolver with no token → FORBIDDEN.
         const isAuthError = (response.errors ?? []).some((err: { extensions?: Record<string, unknown>; message?: string }) => {
           const code = String(err.extensions?.code ?? '').toUpperCase();
           const msg = (err.message ?? '').toLowerCase();
@@ -43,20 +59,28 @@ const errorLink = new ApolloLink((operation, forward) => {
           );
         });
 
-        if (isAuthError) {
-          SecureStore.deleteItemAsync('jwt').catch(() => {});
-          try {
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const { router } = require('expo-router');
-            router.replace('/login');
-          } catch {
-            // Navigator not mounted yet — safe to ignore during startup
-          }
-        }
-
+        if (isAuthError) bounceToLogin();
         observer.next(response);
       },
-      error: observer.error.bind(observer),
+      // Transport-level errors (no GraphQL body) — e.g. an expired or
+      // invalid/stale JWT makes Strapi reply HTTP 401 before GraphQL runs.
+      // Apollo surfaces these here, NOT in `next`, so we must handle them
+      // too or the user gets stranded on an error screen.
+      error: (err: any) => {
+        const status =
+          err?.statusCode ?? err?.networkError?.statusCode ?? err?.response?.status;
+        const msg = String(err?.message ?? '').toLowerCase();
+        if (
+          status === 401 ||
+          status === 403 ||
+          msg.includes('invalid credentials') ||
+          msg.includes('status code 401') ||
+          msg.includes('status code 403')
+        ) {
+          bounceToLogin();
+        }
+        observer.error(err);
+      },
       complete: observer.complete.bind(observer),
     });
     return () => sub.unsubscribe();

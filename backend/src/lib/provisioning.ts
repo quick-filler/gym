@@ -114,6 +114,54 @@ export async function createAuthUser(
 }
 
 /**
+ * Sets a known password for the account behind an email — creating the
+ * account if none exists, or *claiming* an existing one (the throwaway
+ * account that bulk-import created). Marks it confirmed and clears any
+ * pending reset token. Returns the user id.
+ *
+ * Used by the self-service activation flow, where the student chooses
+ * their own password instead of receiving a reset link.
+ *
+ * Password hashing is handled by the user-password lifecycle
+ * (`bootstrap/user-password-lifecycle.ts`), which skips already-bcrypt
+ * values — so calling the users-permissions service here is safe even if
+ * it also hashes internally.
+ */
+export async function setOrCreateAuthUserPassword(
+  strapi: Core.Strapi,
+  params: { email: string; password: string },
+): Promise<number> {
+  const email = params.email.trim().toLowerCase();
+  const existing = await findUserByEmail(strapi, email);
+  if (existing) {
+    await strapi
+      .plugin('users-permissions')
+      .service('user')
+      .edit(existing.id, {
+        password: params.password,
+        confirmed: true,
+        blocked: false,
+        resetPasswordToken: null,
+      });
+    return existing.id;
+  }
+  const roleId = await getAuthenticatedRoleId(strapi);
+  const user: any = await strapi
+    .plugin('users-permissions')
+    .service('user')
+    .add({
+      username: email,
+      email,
+      password: params.password,
+      provider: 'local',
+      role: roleId,
+      confirmed: true,
+      blocked: false,
+    });
+  return user.id;
+}
+
+/**
  * Ensures an account exists for the given email and returns its id.
  *
  *   - If an account already exists → links to it (`created: false`,

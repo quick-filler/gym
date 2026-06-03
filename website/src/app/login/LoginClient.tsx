@@ -285,6 +285,16 @@ export function LoginClient() {
           </div>
         </div>
 
+        <p className="text-center text-[0.84rem] text-ink-500 mt-6">
+          Primeiro acesso?{" "}
+          <Link
+            href={slug ? `/ativar?slug=${slug}` : "/ativar"}
+            className="text-flame font-medium hover:underline"
+          >
+            Ative sua conta
+          </Link>
+        </p>
+
         <footer className="flex items-center justify-between text-[0.82rem] text-ink-400 mt-8">
           <span>
             Ainda não tem conta?{" "}

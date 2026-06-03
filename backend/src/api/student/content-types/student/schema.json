@@ -58,6 +58,10 @@
       "type": "boolean",
       "default": false
     },
+    "activated": {
+      "type": "boolean",
+      "default": false
+    },
     "notes": {
       "type": "text"
     },

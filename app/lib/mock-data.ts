@@ -52,6 +52,7 @@ export const MOCK_DASHBOARD: DashboardData = {
       { num: 4, name: 'Mergulho assistido',  detail: '3×10', load: '—'    },
     ],
   },
+  unreadCount: 2,
 };
 
 /* ==================================================================

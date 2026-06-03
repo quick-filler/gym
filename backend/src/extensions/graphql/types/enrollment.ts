@@ -23,6 +23,37 @@ import {
 } from '../helpers';
 
 const UID = 'api::enrollment.enrollment';
+const PAYMENT = 'api::payment.payment';
+
+/** Today as `yyyy-mm-dd` in the academy timezone (pt-BR). */
+function todayBR(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+  }).format(new Date());
+}
+
+/**
+ * Derives a human payment health for an enrollment from its payments,
+ * mapping to the app's EnrollmentStatus vocabulary. Precedence:
+ *   atrasado  — any payment overdue, or pending past its due date
+ *   pendente  — any payment pending (due today/future)
+ *   em_dia    — all paid/cancelled, or no payments yet
+ */
+export function computeEnrollmentStatus(
+  payments: Array<{ status?: string; dueDate?: string }>,
+): 'em_dia' | 'pendente' | 'atrasado' {
+  if (!payments?.length) return 'em_dia';
+  const today = todayBR();
+  let hasPending = false;
+  for (const p of payments) {
+    if (p.status === 'overdue') return 'atrasado';
+    if (p.status === 'pending') {
+      if (p.dueDate && p.dueDate < today) return 'atrasado';
+      hasPending = true;
+    }
+  }
+  return hasPending ? 'pendente' : 'em_dia';
+}
 
 export function buildEnrollment({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }) {
   const Enrollment = nexus.objectType({
@@ -64,6 +95,22 @@ export function buildEnrollment({ nexus, strapi }: { nexus: any; strapi: Core.St
             populate: { payments: true },
           });
           return doc?.payments ?? [];
+        },
+      });
+      t.field('computedStatus', {
+        type: 'String',
+        description:
+          "Payment health derived from this enrollment's payments: em_dia / pendente / atrasado. On-demand — only resolved when selected.",
+        resolve: async (parent: any) => {
+          let payments = parent.payments;
+          if (payments === undefined) {
+            payments = await strapi.documents(PAYMENT).findMany({
+              filters: { enrollment: { documentId: parent.documentId } } as any,
+              fields: ['status', 'dueDate'],
+              limit: 200,
+            });
+          }
+          return computeEnrollmentStatus(payments ?? []);
         },
       });
     },

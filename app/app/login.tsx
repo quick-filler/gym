@@ -170,6 +170,19 @@ export default function LoginScreen() {
               <Text style={styles.biometricText}>Entrar com Face ID</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity
+              style={styles.activateBtn}
+              activeOpacity={0.7}
+              onPress={() => router.push('/activate')}
+            >
+              <Text style={styles.activateText}>
+                Primeiro acesso?{' '}
+                <Text style={[styles.activateStrong, { color: accent }]}>
+                  Ative sua conta
+                </Text>
+              </Text>
+            </TouchableOpacity>
+
             <View style={styles.footer}>
               <Text style={styles.footerText}>
                 Não é aluno ainda?{' '}
@@ -332,6 +345,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: theme.ink700,
+  },
+  activateBtn: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  activateText: {
+    fontSize: 13.5,
+    color: theme.ink500,
+  },
+  activateStrong: {
+    fontWeight: '600',
   },
   footer: {
     marginTop: 'auto',

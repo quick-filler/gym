@@ -21,6 +21,7 @@ import {
 } from '../helpers';
 import { buildResetUrl, ensureAuthUser } from '../../../lib/provisioning';
 import { getAcademyBranding, sendStudentWelcomeEmail } from '../../../lib/email';
+import { findUpcomingBookingsForStudent } from './class-booking';
 
 const UID = 'api::student.student';
 
@@ -39,7 +40,15 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.string('status');
       t.nonNull.string('role');
       t.boolean('isGuardian');
+      t.boolean('activated');
       t.string('notes');
+      t.field('profileComplete', {
+        type: 'Boolean',
+        description:
+          'False when a required profile field (phone, birthdate) is missing — the app redirects to "completar cadastro" after login when this is false.',
+        resolve: (parent: any) =>
+          Boolean(parent?.name && parent?.phone && parent?.birthdate),
+      });
       t.field('photo', {
         type: 'Media',
         resolve: async (parent: any) => {
@@ -95,6 +104,20 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
             },
           });
           return doc?.dependents ?? [];
+        },
+      });
+      t.field('nextClass', {
+        type: 'ClassBooking',
+        description:
+          "The student's next upcoming confirmed booking (soonest first), or null when none is scheduled. On-demand — only resolved when selected (e.g. the app dashboard).",
+        resolve: async (parent: any) => {
+          if (!parent?.documentId) return null;
+          const [next] = await findUpcomingBookingsForStudent(
+            strapi,
+            parent.documentId,
+            1,
+          );
+          return next ?? null;
         },
       });
     },

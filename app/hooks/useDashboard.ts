@@ -20,6 +20,7 @@ import { useQuery } from '@apollo/client/react';
 import { USE_MOCKS } from '../lib/config';
 import { MOCK_DASHBOARD } from '../lib/mock-data';
 import { MyDashboardDocument } from '../gql/graphql';
+import { nextClassTimeLabel } from '../lib/format';
 import type { DashboardData, DataSourceResult, EnrollmentStatus } from '../lib/types';
 
 // Canonical query lives in `app/graphql/academy.graphql → MyDashboard`;
@@ -62,6 +63,10 @@ function useApiDashboard(): DataSourceResult {
       (w: any) => w?.isActive
     );
 
+    // Next confirmed booking (resolved server-side as Student.nextClass).
+    const nc: any = me.nextClass;
+    const sched = nc?.classSchedule;
+
     return {
       student: {
         name: firstName(me.name),
@@ -73,16 +78,26 @@ function useApiDashboard(): DataSourceResult {
         primaryColor: academy?.primaryColor ?? '#0c0a09',
         primaryDark: shade(academy?.primaryColor ?? '#0c0a09', -0.15),
       },
-      // No "next class" query yet — leave null until we add it. The
-      // UI hides the section rather than inventing data.
-      nextClass: null,
+      nextClass: nc
+        ? {
+            name: sched?.name ?? 'Aula',
+            timeLabel: nextClassTimeLabel(
+              nc.date,
+              sched?.startTime,
+              sched?.endTime,
+            ),
+            room: sched?.room ?? '',
+            booked: true, // it's a confirmed booking
+          }
+        : null,
       enrollment: activeEnrollment
         ? {
             planName: activeEnrollment.plan?.name ?? '',
             amount: formatBRL(activeEnrollment.plan?.price ?? 0),
             dueDate: formatDate(activeEnrollment.endDate),
             method: mapMethod(activeEnrollment.paymentMethod),
-            status: 'em_dia' as EnrollmentStatus,
+            // Derived server-side from the enrollment's payments.
+            status: (activeEnrollment.computedStatus ?? 'em_dia') as EnrollmentStatus,
           }
         : null,
       workout: activeWorkout
@@ -100,6 +115,7 @@ function useApiDashboard(): DataSourceResult {
             ),
           }
         : null,
+      unreadCount: (data as any).myUnreadNotificationCount ?? 0,
     };
   }, [data]);
 

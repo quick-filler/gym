@@ -47,6 +47,7 @@ export interface DashboardData {
     updatedLabel: string; // "RAFAEL · ATUALIZADO 03/04"
     exercises: Exercise[];
   } | null;
+  unreadCount: number; // header bell badge — 0 hides the dot
 }
 
 /* ------------------------------------------------------------------

@@ -31,3 +31,50 @@ export async function login(email: string, password: string): Promise<void> {
 export async function logout(): Promise<void> {
   await clearAuthToken();
 }
+
+/**
+ * Self-service first access: an imported student proves identity
+ * (email + birthdate/phone) and sets a password. On success the backend
+ * returns a JWT and we store it — the student lands logged in.
+ *
+ * Like `login`, this is a pre-auth bootstrap call so it goes over a plain
+ * fetch against the GraphQL endpoint (no Apollo context needed yet).
+ */
+export async function activateAccount(params: {
+  academySlug: string;
+  email: string;
+  birthdate?: string;
+  phone?: string;
+  password: string;
+}): Promise<void> {
+  if (USE_MOCKS) {
+    await setAuthToken('mock-demo-token');
+    return;
+  }
+
+  const res = await fetch(GRAPHQL_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query:
+        'mutation Activate($data: ActivateAccountInput!) {\n' +
+        '  activateAccount(data: $data) { jwt }\n' +
+        '}',
+      variables: { data: params },
+    }),
+  });
+
+  const json = (await res.json()) as {
+    data?: { activateAccount?: { jwt?: string } };
+    errors?: Array<{ message?: string }>;
+  };
+
+  if (json.errors?.length) {
+    throw new Error(json.errors[0]?.message ?? 'Não foi possível ativar a conta.');
+  }
+  const jwt = json.data?.activateAccount?.jwt;
+  if (!jwt) {
+    throw new Error('Não foi possível ativar a conta.');
+  }
+  await setAuthToken(jwt);
+}

@@ -16,6 +16,7 @@ query AcademyBySlug($slug: String!) {
 
 # The authenticated student's full dashboard payload. Wraps Query.me
 # with deep population so the dashboard tab renders in one round-trip.
+# Also pulls the unread-notification count for the header bell badge.
 query MyDashboard {
   me {
     documentId
@@ -36,9 +37,23 @@ query MyDashboard {
         url
       }
     }
+    nextClass {
+      documentId
+      date
+      status
+      classSchedule {
+        documentId
+        name
+        startTime
+        endTime
+        room
+        modality
+      }
+    }
     enrollments {
       documentId
       status
+      computedStatus
       startDate
       endDate
       paymentMethod
@@ -64,6 +79,7 @@ query MyDashboard {
       }
     }
   }
+  myUnreadNotificationCount
 }
 
 # Mark a booking as attended. Fires when the student taps the "Estou aqui"
