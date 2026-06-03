@@ -161,6 +161,21 @@
           "sortable": true
         }
       },
+      "recordedBy": {
+        "edit": {
+          "label": "recordedBy",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "username"
+        },
+        "list": {
+          "label": "recordedBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
       "createdAt": {
         "edit": {
           "label": "createdAt",
@@ -283,6 +298,10 @@
         [
           {
             "name": "academy",
+            "size": 6
+          },
+          {
+            "name": "recordedBy",
             "size": 6
           }
         ]

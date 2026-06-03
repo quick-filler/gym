@@ -1200,7 +1200,7 @@
       "locale": null
     },
     {
-      "documentId": "n6vap3tmub01k3g7xc3nw4o7",
+      "documentId": "gzarkusxs23yujxov0xqm4gz",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::pool-inspection.pool-inspection",
@@ -1215,7 +1215,8 @@
           "peopleCount",
           "peopleCountSource",
           "notes",
-          "academy"
+          "academy",
+          "recordedBy"
         ]
       },
       "conditions": [],
@@ -1240,7 +1241,7 @@
       "locale": null
     },
     {
-      "documentId": "d9rso6fhuzwedilj3jel33wq",
+      "documentId": "vkoxen6tecmce7pa4odt3i54",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::pool-inspection.pool-inspection",
@@ -1255,14 +1256,15 @@
           "peopleCount",
           "peopleCountSource",
           "notes",
-          "academy"
+          "academy",
+          "recordedBy"
         ]
       },
       "conditions": [],
       "locale": null
     },
     {
-      "documentId": "lii0rtqnbxubfjly0mnm2cme",
+      "documentId": "aodop04acvt94wt0qdn0q4dk",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::pool-inspection.pool-inspection",
@@ -1277,7 +1279,8 @@
           "peopleCount",
           "peopleCountSource",
           "notes",
-          "academy"
+          "academy",
+          "recordedBy"
         ]
       },
       "conditions": [],

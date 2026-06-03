@@ -1097,6 +1097,7 @@ export type MutationCreatePoolInspectionArgs = {
 
 export type MutationCreateStudentArgs = {
   data: StudentInput;
+  sendInvite?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 

@@ -962,7 +962,7 @@ type Mutation {
   createPlan(data: PlanInput!): Plan
   createPlatformPlan(data: PlatformPlanInput!): PlatformPlan
   createPoolInspection(data: PoolInspectionInput!): PoolInspection
-  createStudent(data: StudentInput!): Student
+  createStudent(data: StudentInput!, sendInvite: Boolean = true): Student
   createWorkoutPlan(data: WorkoutPlanInput!): WorkoutPlan
   deleteAcademy(documentId: ID!): Academy
   deleteBodyAssessment(documentId: ID!): BodyAssessment

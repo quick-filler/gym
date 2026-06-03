@@ -13,6 +13,7 @@ import {
   requireActiveSubscription,
   requireRole,
 } from '../helpers';
+import { ensureAuthUser } from '../../../lib/provisioning';
 
 const STUDENT_UID = 'api::student.student';
 const DEPENDENT_UID = 'api::dependent.dependent';
@@ -201,6 +202,11 @@ async function findOrCreateStudent({
   if (dryRun) {
     return { documentId: 'dry-run', status: 'created' };
   }
+  // Provision (or link) a login account so imported adults can sign in to
+  // the app. No welcome email here — a batch of 200 rows should not fire
+  // 200 emails; invites are sent later from the UI (or the student uses
+  // "esqueci a senha"). Dependents never get a login (managed by guardian).
+  const { userId } = await ensureAuthUser(strapi, { email: row.email });
   const data: any = {
     name: row.name,
     email: row.email,
@@ -213,6 +219,7 @@ async function findOrCreateStudent({
     status: 'active',
     isGuardian: isGuardian || undefined,
     academy: academyId,
+    user: userId,
   };
   const doc = await strapi.documents(STUDENT_UID).create({ data });
   return { documentId: (doc as any).documentId, status: 'created' };

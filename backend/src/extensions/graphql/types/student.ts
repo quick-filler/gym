@@ -19,6 +19,8 @@ import {
   resolveUserAcademyId,
   withAcademyScope,
 } from '../helpers';
+import { buildResetUrl, ensureAuthUser } from '../../../lib/provisioning';
+import { getAcademyBranding, sendStudentWelcomeEmail } from '../../../lib/email';
 
 const UID = 'api::student.student';
 
@@ -197,16 +199,69 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
     definition(t: any) {
       t.field('createStudent', {
         type: 'Student',
-        args: { data: nexus.nonNull(nexus.arg({ type: 'StudentInput' })) },
+        args: {
+          data: nexus.nonNull(nexus.arg({ type: 'StudentInput' })),
+          // When true (default), brand-new accounts receive a "set your
+          // password" invite so the student can sign in to the app. Pass
+          // false for silent creation (e.g. seeding, or sending the invite
+          // later from the UI).
+          sendInvite: nexus.booleanArg({ default: true }),
+        },
         resolve: async (_root: any, args: any, ctx: any) => {
           await requireRole(strapi, ctx, ['academy_admin']);
           await requireActiveSubscription(strapi, ctx);
           const academyId = await requireAcademyId(strapi, ctx);
+
+          // Provision (or link) the login account FIRST so the student row
+          // is always created with a `user` relation — without it the
+          // member could never sign in to the app. If the caller already
+          // passed an explicit user id (rare; seed path), respect it and
+          // skip auto-provision — the `...args.data` spread carries it.
+          let userId: number | null = null;
+          let isNewAccount = false;
+          let resetToken: string | null = null;
+          if (!args.data.user && args.data.email) {
+            const provisioned = await ensureAuthUser(strapi, {
+              email: args.data.email,
+            });
+            userId = provisioned.userId;
+            isNewAccount = provisioned.created;
+            resetToken = provisioned.resetPasswordToken;
+          }
+
           // Always pin the new student to the caller's tenant — never trust
           // an academy id sent from the client (would be a tenant-jump).
-          return await strapi.documents(UID).create({
-            data: { ...args.data, academy: academyId },
+          const created = await strapi.documents(UID).create({
+            data: {
+              ...args.data,
+              academy: academyId,
+              ...(userId ? { user: userId } : {}),
+            },
           });
+
+          // Best-effort invite: only for freshly-created accounts (never
+          // reset a stranger's password) and only when requested. A mail
+          // failure must not roll back the student.
+          if (isNewAccount && resetToken && args.sendInvite !== false) {
+            try {
+              const branding = await getAcademyBranding(strapi, academyId);
+              await sendStudentWelcomeEmail(strapi, {
+                name: args.data.name,
+                email: args.data.email,
+                academyName: branding?.name ?? 'sua academia',
+                resetUrl: buildResetUrl(resetToken),
+                branding,
+              });
+            } catch (err) {
+              strapi.log.warn(
+                `[createStudent] welcome email failed for ${args.data.email}: ${
+                  err instanceof Error ? err.message : String(err)
+                }`,
+              );
+            }
+          }
+
+          return created;
         },
       });
 

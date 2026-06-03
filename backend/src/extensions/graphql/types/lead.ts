@@ -17,12 +17,16 @@
  *     ou casos onde o platform admin quer customizar slug/plan/etc.
  */
 
-import crypto from 'node:crypto';
 import { isPlatformAdmin } from '../helpers';
 import {
   getAcademyBranding,
   sendAcademyWelcomeEmail,
 } from '../../../lib/email';
+import {
+  buildResetUrl,
+  createAuthUser,
+  findUserByEmail,
+} from '../../../lib/provisioning';
 
 const ACADEMY_UID = 'api::academy.academy';
 const STUDENT_UID = 'api::student.student';
@@ -99,9 +103,10 @@ async function provisionAcademyAndAdmin(
   } = params;
 
   // ── email uniqueness ──────────────────────────────────────────────
-  const existingUser: any = await strapi.db
-    .query('plugin::users-permissions.user')
-    .findOne({ where: { email: adminEmail } });
+  // Academy provisioning needs a *fresh* account: the owner becomes the
+  // academy_admin, so a pre-existing login is a real conflict (unlike the
+  // student path, which links to existing accounts).
+  const existingUser = await findUserByEmail(strapi, adminEmail);
   if (existingUser) {
     throw new Error(
       `Já existe uma conta com o e-mail ${adminEmail}. Faça login ou use a recuperação de senha.`,
@@ -123,41 +128,12 @@ async function provisionAcademyAndAdmin(
     } as any,
   });
 
-  // ── 2. users-permissions user (Authenticated role) ────────────────
-  const roles = await strapi
-    .plugin('users-permissions')
-    .service('role')
-    .find();
-  const authRole = roles.find(
-    (r: any) => r.type === 'authenticated' || r.name === 'Authenticated',
-  );
-  if (!authRole) throw new Error('Role Authenticated não encontrada.');
+  // ── 2. users-permissions user + reset token (shared helper) ───────
+  const { userId, resetPasswordToken } = await createAuthUser(strapi, {
+    email: adminEmail,
+  });
 
-  // Senha throwaway — o admin define a real via o link de reset.
-  const tempPassword = crypto.randomBytes(16).toString('base64url');
-  const user: any = await strapi
-    .plugin('users-permissions')
-    .service('user')
-    .add({
-      username: adminEmail,
-      email: adminEmail,
-      password: tempPassword,
-      provider: 'local',
-      role: authRole.id,
-      confirmed: true,
-      blocked: false,
-    });
-
-  // ── 3. Reset token pro link de boas-vindas ────────────────────────
-  const resetPasswordToken = crypto.randomBytes(64).toString('hex');
-  await strapi.db
-    .query('plugin::users-permissions.user')
-    .update({
-      where: { id: user.id },
-      data: { resetPasswordToken },
-    });
-
-  // ── 4. Student academy_admin vinculado ao user ────────────────────
+  // ── 3. Student academy_admin vinculado ao user ────────────────────
   await strapi.documents(STUDENT_UID).create({
     data: {
       name: adminName,
@@ -165,15 +141,14 @@ async function provisionAcademyAndAdmin(
       phone: adminPhone ?? null,
       status: 'active',
       role: 'academy_admin',
-      user: user.id,
+      user: userId,
       academy: academy.documentId,
       isGuardian: false,
     } as any,
   });
 
-  // ── 5. Welcome email (best-effort; não bloqueia provisionamento) ──
-  const websiteOrigin = process.env.WEBSITE_ORIGIN ?? 'http://localhost:9999';
-  const passwordResetUrl = `${websiteOrigin.replace(/\/$/, '')}/reset-password?code=${encodeURIComponent(resetPasswordToken)}`;
+  // ── 4. Welcome email (best-effort; não bloqueia provisionamento) ──
+  const passwordResetUrl = buildResetUrl(resetPasswordToken);
   let emailSent = false;
   try {
     const branding = await getAcademyBranding(strapi, academy.documentId);

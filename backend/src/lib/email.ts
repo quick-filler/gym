@@ -433,3 +433,100 @@ Time Gym`;
     replyTo: process.env.CONTACT_NOTIFICATION_EMAIL,
   });
 }
+
+// ---------------------------------------------------------------------------
+// Student welcome (academy admin added a member)
+// ---------------------------------------------------------------------------
+
+interface StudentWelcomeParams {
+  name: string;
+  email: string;
+  academyName: string;
+  resetUrl: string;
+  /**
+   * Optional academy branding. When passed, the email header shows the
+   * academy logo and the CTA button uses the academy's primary color.
+   * Falls back to the master Gym design when null/undefined.
+   */
+  branding?: EmailBranding | null;
+}
+
+/**
+ * Sent when an academy admin adds a student. Invites the member to set
+ * their password so they can sign in to the academy's app. Distinct from
+ * `sendAcademyWelcomeEmail` (which onboards the academy *owner* into the
+ * admin panel) — this one is the member-facing app invite.
+ */
+export async function sendStudentWelcomeEmail(
+  strapi: Core.Strapi,
+  params: StudentWelcomeParams,
+): Promise<void> {
+  const firstName = params.name.split(' ')[0];
+
+  const html = wrap(
+    `
+    <h2 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#111827;">
+      Boas-vindas, ${escapeHtml(firstName)}!
+    </h2>
+    <p style="margin:0 0 20px 0;font-size:15px;color:#374151;line-height:1.7;">
+      A <strong>${escapeHtml(params.academyName)}</strong> criou seu acesso de
+      aluno. Por aqui você acompanha sua agenda de aulas, seus treinos,
+      pagamentos e avaliações — tudo num só lugar. Para começar, defina sua
+      senha clicando no botão abaixo.
+    </p>
+
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:28px;">
+      <tr>
+        <td>
+          <a href="${params.resetUrl}"
+             style="display:inline-block;background-color:__ACCENT__;color:#ffffff;text-decoration:none;padding:14px 30px;border-radius:8px;font-weight:600;font-size:15px;">
+            Definir minha senha
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <div style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+      <p style="margin:0 0 6px 0;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+        Seu e-mail de acesso
+      </p>
+      <p style="margin:0;font-size:15px;color:#111827;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;">
+        ${escapeHtml(params.email)}
+      </p>
+    </div>
+
+    <p style="margin:0 0 12px 0;font-size:14px;color:#6b7280;line-height:1.6;">
+      Se o botão não funcionar, copie e cole este endereço no navegador:
+    </p>
+    <p style="margin:0 0 24px 0;font-size:13px;color:#374151;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;">
+      ${params.resetUrl}
+    </p>
+
+    <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.6;">
+      Qualquer dúvida, fale com a recepção da ${escapeHtml(params.academyName)}.
+    </p>
+  `,
+    params.branding,
+  );
+
+  const text = `Boas-vindas, ${firstName}!
+
+A ${params.academyName} criou seu acesso de aluno. Por aqui você acompanha
+sua agenda de aulas, treinos, pagamentos e avaliações.
+
+Para começar, defina sua senha pelo link:
+
+${params.resetUrl}
+
+Seu e-mail de acesso: ${params.email}
+
+Qualquer dúvida, fale com a recepção da ${params.academyName}.`;
+
+  await sendEmail(strapi, {
+    to: params.email,
+    subject: `Seu acesso à ${params.academyName} está pronto`,
+    html,
+    text,
+    replyTo: process.env.CONTACT_NOTIFICATION_EMAIL,
+  });
+}

@@ -16,58 +16,18 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { gql } from '@apollo/client';
 
 import { USE_MOCKS } from '../lib/config';
 import { MOCK_DASHBOARD } from '../lib/mock-data';
+import { MyDashboardDocument } from '../gql/graphql';
 import type { DashboardData, DataSourceResult, EnrollmentStatus } from '../lib/types';
 
-// Inline GraphQL document — would normally come from the generated
-// `gql/` helper, but we need this file to work without codegen being
-// run first. The query shape matches `app/graphql/academy.graphql →
-// MyDashboard`.
-const MY_DASHBOARD = gql`
-  query MyDashboard {
-    me {
-      documentId
-      name
-      academy {
-        documentId
-        name
-        slug
-        primaryColor
-        secondaryColor
-      }
-      enrollments {
-        documentId
-        status
-        startDate
-        endDate
-        paymentMethod
-        plan {
-          documentId
-          name
-          price
-          billingCycle
-        }
-      }
-      workoutPlans {
-        documentId
-        name
-        instructor
-        isActive
-        validFrom
-        exercises {
-          name
-          sets
-          reps
-          load
-          notes
-        }
-      }
-    }
-  }
-`;
+// Canonical query lives in `app/graphql/academy.graphql → MyDashboard`;
+// the typed document is generated into `gql/` by `npm run codegen`.
+// Importing it here (instead of re-inlining a `gql` tag) keeps a single
+// source of truth and avoids the duplicate-operation-name collision that
+// breaks codegen.
+const MY_DASHBOARD = MyDashboardDocument;
 
 /* ------------------------------------------------------------------
  * Mock branch — runs when USE_MOCKS is true. No network, no Apollo.
