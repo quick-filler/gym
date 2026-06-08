@@ -17,7 +17,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 
-import { USE_MOCKS } from '../lib/config';
+import { USE_MOCKS, GRAPHQL_ENDPOINT } from '../lib/config';
 import { MOCK_DASHBOARD } from '../lib/mock-data';
 import { MyDashboardDocument } from '../gql/graphql';
 import { nextClassTimeLabel } from '../lib/format';
@@ -119,10 +119,12 @@ function useApiDashboard(): DataSourceResult {
     };
   }, [data]);
 
-  // Tick the error into an Error instance (Apollo's is opaque).
+  // Flatten Apollo's opaque error into a copy-pasteable diagnostic so the
+  // on-screen "DETALHE TÉCNICO" box (and its Copiar button) carry enough
+  // to debug from a screenshot: the endpoint, GraphQL codes, HTTP status.
   const normalizedError: Error | null = useMemo(() => {
     if (!error) return null;
-    return new Error(error.message || 'Falha ao carregar os dados');
+    return new Error(describeApolloError(error));
   }, [error]);
 
   const refetchFn = useCallback(() => {
@@ -160,6 +162,53 @@ export function useDashboard(): DataSourceResult {
 /* ------------------------------------------------------------------
  * Small helpers — only used by the API branch.
  * ------------------------------------------------------------------ */
+
+/**
+ * Flattens an Apollo error into a multi-line, copy-pasteable string for
+ * the on-screen "DETALHE TÉCNICO" box. Covers the shapes Apollo Client 4
+ * can surface: a plain network failure, a CombinedGraphQLErrors
+ * (`.errors`), and a transport error carrying an HTTP status.
+ */
+function describeApolloError(err: any): string {
+  const lines: string[] = [];
+  lines.push(`endpoint: ${GRAPHQL_ENDPOINT}`);
+  if (err?.name) lines.push(`name: ${err.name}`);
+  lines.push(`message: ${err?.message ?? 'erro desconhecido'}`);
+
+  // GraphQL-level errors: AC4 puts them on `.errors`; older shape on `.graphQLErrors`.
+  const gqlErrors = err?.errors ?? err?.graphQLErrors;
+  if (Array.isArray(gqlErrors) && gqlErrors.length) {
+    gqlErrors.forEach((e: any, i: number) => {
+      const code = e?.extensions?.code ? ` [${e.extensions.code}]` : '';
+      const path = e?.path
+        ? ` @${Array.isArray(e.path) ? e.path.join('.') : e.path}`
+        : '';
+      lines.push(`gql[${i}]${code}${path}: ${e?.message ?? String(e)}`);
+    });
+  }
+
+  // Transport / network failure: pull the HTTP status and any Strapi body.
+  const net = err?.networkError ?? err?.cause;
+  if (net) {
+    const status = net?.statusCode ?? net?.status ?? net?.response?.status;
+    lines.push(
+      `network: ${net?.message ?? String(net)}${status ? ` (status ${status})` : ''}`,
+    );
+    const body = net?.result ?? net?.bodyText;
+    if (body) {
+      try {
+        lines.push(
+          `body: ${typeof body === 'string' ? body : JSON.stringify(body)}`,
+        );
+      } catch {
+        /* unserializable body — skip */
+      }
+    }
+  }
+
+  return lines.join('\n');
+}
+
 function firstName(full: string): string {
   if (!full) return '';
   return full.split(' ')[0];

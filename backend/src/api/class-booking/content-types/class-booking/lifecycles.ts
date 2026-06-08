@@ -2,13 +2,16 @@
  * ClassBooking lifecycle hooks.
  *
  * Enforces two business rules at write time:
- *   1. Capacity — total non-cancelled bookings for (classSchedule, date)
- *      cannot exceed the schedule's maxCapacity.
+ *   1. Capacity — total *occupying* bookings (confirmed/attended) for
+ *      (classSchedule, date) cannot exceed the schedule's maxCapacity.
  *   2. Dedup — the same student / dependent cannot have two active bookings
  *      for the same (classSchedule, date).
  *
  * Both fire from the admin UI as well as the GraphQL mutation. Cancelled
  * bookings are excluded from the counts so a user can rebook after a no-show.
+ * `waitlist` bookings are also excluded from the capacity count — they exist
+ * precisely because the class is full and don't occupy a seat until promoted
+ * to `confirmed` (see student-schedule.ts → bookClass / cancelMyBooking).
  */
 
 import { pickRelationId, resolveNumericId } from '../../../../utils/relation';
@@ -22,12 +25,17 @@ async function rel(uid: string, raw: any): Promise<number | null> {
   return await resolveNumericId(uid, pickRelationId(raw));
 }
 
+/**
+ * Seats actually occupied for (schedule, date): everything except cancelled
+ * AND waitlist. Waitlisters are queued, not seated, so they never count
+ * toward capacity.
+ */
 async function activeBookingCount(scheduleId: number, date: string): Promise<number> {
   return await strapi.db.query(UID).count({
     where: {
       classSchedule: { id: scheduleId },
       date,
-      status: { $ne: 'cancelled' },
+      status: { $notIn: ['cancelled', 'waitlist'] },
     },
   });
 }
@@ -78,7 +86,8 @@ export default {
     // Cancelled bookings are inert — skip dedup/capacity to allow re-creates.
     if (status === 'cancelled') return;
 
-    // Dedup: same person can't have two open bookings for the same slot.
+    // Dedup applies to confirmed AND waitlist: the same person can't hold two
+    // open spots (seated or queued) for the same slot.
     if (
       await findExistingBooking({
         scheduleId,
@@ -90,16 +99,19 @@ export default {
       throw new Error('Já existe uma reserva ativa para este horário.');
     }
 
-    // Capacity: don't exceed the schedule's maxCapacity.
-    const schedule: any = await strapi.db
-      .query(SCHEDULE_UID)
-      .findOne({ where: { id: scheduleId }, select: ['maxCapacity', 'name'] });
-    if (schedule?.maxCapacity) {
-      const current = await activeBookingCount(scheduleId, date);
-      if (current >= schedule.maxCapacity) {
-        throw new Error(
-          `Aula "${schedule.name}" sem vagas para esta data (${schedule.maxCapacity} ocupadas).`,
-        );
+    // Capacity: confirmed bookings can't exceed maxCapacity. Waitlist entries
+    // intentionally bypass this — they only exist *because* the class is full.
+    if (status !== 'waitlist') {
+      const schedule: any = await strapi.db
+        .query(SCHEDULE_UID)
+        .findOne({ where: { id: scheduleId }, select: ['maxCapacity', 'name'] });
+      if (schedule?.maxCapacity) {
+        const current = await activeBookingCount(scheduleId, date);
+        if (current >= schedule.maxCapacity) {
+          throw new Error(
+            `Aula "${schedule.name}" sem vagas para esta data (${schedule.maxCapacity} ocupadas).`,
+          );
+        }
       }
     }
   },

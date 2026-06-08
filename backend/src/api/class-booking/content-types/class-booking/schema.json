@@ -36,7 +36,7 @@
     },
     "status": {
       "type": "enumeration",
-      "enum": ["confirmed", "cancelled", "attended", "missed"],
+      "enum": ["confirmed", "waitlist", "cancelled", "attended", "missed"],
       "default": "confirmed",
       "required": true
     },

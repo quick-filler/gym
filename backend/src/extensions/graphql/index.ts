@@ -34,6 +34,7 @@ import { buildModulePresets } from './types/module-presets';
 import { buildEnrollment } from './types/enrollment';
 import { buildClassSchedule } from './types/class-schedule';
 import { buildClassBooking } from './types/class-booking';
+import { buildStudentSchedule } from './types/student-schedule';
 import { buildPayment } from './types/payment';
 import { buildWorkoutPlan } from './types/workout-plan';
 import { buildBodyAssessment } from './types/body-assessment';
@@ -64,6 +65,7 @@ export function registerGraphQL(strapi: Core.Strapi) {
       buildEnrollment(ctx),
       buildClassSchedule(ctx),
       buildClassBooking(ctx),
+      buildStudentSchedule(ctx),
       buildPayment(ctx),
       buildWorkoutPlan(ctx),
       buildBodyAssessment(ctx),

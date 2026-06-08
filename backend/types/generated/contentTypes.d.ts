@@ -657,7 +657,7 @@ export interface ApiClassBookingClassBooking
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
     status: Schema.Attribute.Enumeration<
-      ['confirmed', 'cancelled', 'attended', 'missed']
+      ['confirmed', 'waitlist', 'cancelled', 'attended', 'missed']
     > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'confirmed'>;

@@ -1,0 +1,59 @@
+# Agenda do aluno (Fase 2). A grade vem como lista plana de ocorrências
+# (uma turma × data); o app agrupa por dia. As mutations reservam/cancelam.
+
+query MyScheduleWeek($weekStart: String) {
+  myScheduleWeek(weekStart: $weekStart) {
+    scheduleDocumentId
+    date
+    weekday
+    name
+    instructor
+    modality
+    room
+    startTime
+    endTime
+    maxCapacity
+    bookedCount
+    spotsLeft
+    isFull
+    bookable
+    waitlistCount
+    bookedByMe
+    myBookingDocumentId
+    myBookingStatus
+  }
+}
+
+mutation BookClass($scheduleDocumentId: ID!, $date: String!) {
+  bookClass(scheduleDocumentId: $scheduleDocumentId, date: $date) {
+    documentId
+    status
+    date
+  }
+}
+
+mutation CancelMyBooking($documentId: ID!) {
+  cancelMyBooking(documentId: $documentId) {
+    documentId
+    status
+  }
+}
+
+# Detalhe de uma reserva — tela /booking/[id].
+query BookingDetail($documentId: ID!) {
+  classBooking(documentId: $documentId) {
+    documentId
+    date
+    status
+    checkedInAt
+    classSchedule {
+      documentId
+      name
+      instructor
+      room
+      startTime
+      endTime
+      modality
+    }
+  }
+}

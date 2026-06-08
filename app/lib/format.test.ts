@@ -1,11 +1,15 @@
 import { describe, expect, it, beforeAll, afterAll, vi } from 'vitest';
 import {
+  addDaysISO,
   ageFrom,
   brDateToISO,
+  buildWeekDays,
   fmtDateBR,
   hhmm,
+  mondayOfWeekISO,
   monthlyBRL,
   nextClassTimeLabel,
+  weekdayIndexISO,
 } from './format';
 
 describe('monthlyBRL', () => {
@@ -141,5 +145,46 @@ describe('brDateToISO', () => {
     expect(brDateToISO(null)).toBe('');
     expect(brDateToISO('notadate')).toBe('');
     expect(brDateToISO('3/3/18')).toBe('');
+  });
+});
+
+describe('weekdayIndexISO', () => {
+  it('maps dates to weekday (0=Sun..6=Sat), TZ-safe', () => {
+    expect(weekdayIndexISO('2026-06-08')).toBe(1); // Monday
+    expect(weekdayIndexISO('2026-06-07')).toBe(0); // Sunday
+    expect(weekdayIndexISO('2026-06-13')).toBe(6); // Saturday
+  });
+});
+
+describe('addDaysISO', () => {
+  it('adds and subtracts across boundaries', () => {
+    expect(addDaysISO('2026-06-30', 1)).toBe('2026-07-01');
+    expect(addDaysISO('2026-03-01', -1)).toBe('2026-02-28');
+  });
+});
+
+describe('mondayOfWeekISO', () => {
+  it('snaps any day to its ISO-week Monday', () => {
+    expect(mondayOfWeekISO('2026-06-10')).toBe('2026-06-08'); // Wed → Mon
+    expect(mondayOfWeekISO('2026-06-14')).toBe('2026-06-08'); // Sun → Mon
+    expect(mondayOfWeekISO('2026-06-08')).toBe('2026-06-08'); // Mon → itself
+  });
+});
+
+describe('buildWeekDays', () => {
+  it('builds 7 labelled days from a Monday, flagging today', () => {
+    const days = buildWeekDays('2026-06-08', '2026-06-10');
+    expect(days).toHaveLength(7);
+    expect(days[0]).toMatchObject({
+      id: '2026-06-08',
+      weekdayShort: 'SEG',
+      dayNumber: '08',
+      fullTitle: 'Segunda-feira',
+      fullSubtitle: '8 de junho, 2026',
+      isToday: false,
+    });
+    expect(days[2]).toMatchObject({ id: '2026-06-10', isToday: true }); // Wed
+    expect(days[6].id).toBe('2026-06-14'); // Sunday
+    expect(days[6].weekdayShort).toBe('DOM');
   });
 });

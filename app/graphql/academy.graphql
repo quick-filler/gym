@@ -8,6 +8,7 @@ query AcademyBySlug($slug: String!) {
     primaryColor
     secondaryColor
     logo {
+      documentId
       url
       alternativeText
     }
@@ -25,6 +26,7 @@ query MyDashboard {
     phone
     status
     photo {
+      documentId
       url
     }
     academy {
@@ -34,6 +36,7 @@ query MyDashboard {
       primaryColor
       secondaryColor
       logo {
+        documentId
         url
       }
     }

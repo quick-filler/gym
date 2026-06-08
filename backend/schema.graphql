@@ -953,7 +953,17 @@ type Mutation {
   Self-service first-access: an imported student proves identity (email + birthdate/phone) and sets a password. Returns a JWT.
   """
   activateAccount(data: ActivateAccountInput!): ActivateAccountResult
+
+  """
+  Books the caller into a class on a date. Confirms while seats remain; queues onto the waitlist once full. Requires an active enrollment; closes 1h before start.
+  """
+  bookClass(date: String!, scheduleDocumentId: ID!): ClassBooking
   bulkImportStudents(dryRun: Boolean = false, rows: [StudentImportRow!]!): BulkImportResult
+
+  """
+  Cancels the caller’s own booking. Confirmed seats: until 24h before start; waitlist spots: any time. Frees a seat → auto-promotes the first waitlister.
+  """
+  cancelMyBooking(documentId: ID!): ClassBooking
 
   """
   Platform admin only — moves an academy to a different PlatformPlan. Re-snapshots price/features/limits.
@@ -1297,6 +1307,11 @@ type Query {
   myPoolSettings: PoolSettings
 
   """
+  The caller's academy weekly grid starting at `weekStart` (yyyy-mm-dd, snapped to Monday; defaults to the current week). Sorted by date then start time.
+  """
+  myScheduleWeek(weekStart: String): [ScheduleOccurrence]
+
+  """
   Returns the active subscription for the caller's academy. Null if no subscription exists yet (shouldn't happen post-backfill).
   """
   mySubscription: AcademySubscription
@@ -1377,6 +1392,30 @@ input ScheduleConflictInput {
   room: String
   startTime: String!
   weekdays: [Int!]!
+}
+
+"""
+One concrete class instance (a schedule on a specific date) for the student Agenda, with occupancy and the caller’s own booking state.
+"""
+type ScheduleOccurrence {
+  bookable: Boolean!
+  bookedByMe: Boolean!
+  bookedCount: Int!
+  date: String!
+  endTime: String
+  instructor: String
+  isFull: Boolean!
+  maxCapacity: Int
+  modality: String
+  myBookingDocumentId: ID
+  myBookingStatus: String
+  name: String!
+  room: String
+  scheduleDocumentId: ID!
+  spotsLeft: Int
+  startTime: String
+  waitlistCount: Int!
+  weekday: Int!
 }
 
 type ScheduleStats {

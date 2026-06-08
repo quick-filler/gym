@@ -62,6 +62,91 @@ export function hhmm(time: string | null | undefined): string {
   return time.slice(0, 5);
 }
 
+/* ------------------------------------------------------------------
+ * Calendar helpers for the weekly Agenda (TZ-safe via UTC midnight, so a
+ * yyyy-mm-dd calendar date keeps its weekday regardless of device TZ).
+ * ------------------------------------------------------------------ */
+
+export const WEEKDAY_SHORT_PT = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+export const WEEKDAY_LONG_PT = [
+  'Domingo',
+  'Segunda-feira',
+  'Terça-feira',
+  'Quarta-feira',
+  'Quinta-feira',
+  'Sexta-feira',
+  'Sábado',
+];
+export const MONTH_PT = [
+  'janeiro',
+  'fevereiro',
+  'março',
+  'abril',
+  'maio',
+  'junho',
+  'julho',
+  'agosto',
+  'setembro',
+  'outubro',
+  'novembro',
+  'dezembro',
+];
+
+/** Weekday (0=Sun .. 6=Sat) for a `yyyy-mm-dd` date. */
+export function weekdayIndexISO(dateStr: string): number {
+  return new Date(`${dateStr}T00:00:00Z`).getUTCDay();
+}
+
+/** Adds `n` days to a `yyyy-mm-dd` date, returns `yyyy-mm-dd`. */
+export function addDaysISO(dateStr: string, n: number): string {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Monday (ISO week start) of the week containing `dateStr`. */
+export function mondayOfWeekISO(dateStr: string): string {
+  const offset = (weekdayIndexISO(dateStr) + 6) % 7; // Mon→0, Sun→6
+  return addDaysISO(dateStr, -offset);
+}
+
+/** Device-local today as `yyyy-mm-dd`. */
+export function todayISO(now: Date = new Date()): string {
+  return localISODate(now);
+}
+
+export interface WeekDayDescriptor {
+  id: string; // yyyy-mm-dd
+  weekdayShort: string; // "SEG"
+  dayNumber: string; // "08"
+  fullTitle: string; // "Segunda-feira"
+  fullSubtitle: string; // "8 de junho, 2026"
+  isToday: boolean;
+}
+
+/**
+ * Builds the 7 day descriptors of a week starting at `mondayISO`,
+ * flagging `todayISO` as today. Pure — the hook supplies both dates.
+ */
+export function buildWeekDays(
+  mondayISO: string,
+  today: string,
+): WeekDayDescriptor[] {
+  return Array.from({ length: 7 }, (_, i) => {
+    const id = addDaysISO(mondayISO, i);
+    const [y, m, d] = id.split('-').map(Number);
+    const wd = weekdayIndexISO(id);
+    return {
+      id,
+      weekdayShort: WEEKDAY_SHORT_PT[wd],
+      dayNumber: String(d).padStart(2, '0'),
+      fullTitle: WEEKDAY_LONG_PT[wd],
+      fullSubtitle: `${d} de ${MONTH_PT[m - 1]}, ${y}`,
+      isToday: id === today,
+    };
+  });
+}
+
 /** Local `YYYY-MM-DD` for a Date (device timezone). */
 function localISODate(d: Date): string {
   const y = d.getFullYear();

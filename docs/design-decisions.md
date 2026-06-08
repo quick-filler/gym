@@ -315,6 +315,49 @@ right below. We want the history, not a clean slate.
     `activated=false`. Low impact (identity check still gates the
     re-claim) but worth closing.
 
+### 2.8 Student class booking rules (Fase 2)
+
+- **Decision** — The app booking flow lives in
+  `src/extensions/graphql/types/student-schedule.ts`
+  (`myScheduleWeek`, `bookClass`, `cancelMyBooking`) with these business
+  rules, confirmed with the product owner:
+  - **Eligibility:** a caller may only book with an `active` enrollment.
+    No active enrollment → blocked with a "fale com a recepção" message.
+  - **Booking window:** open until **1h before** the class start.
+  - **Cancellation window:** a confirmed seat can be dropped until
+    **24h before** start. A *waitlist* spot can be dropped any time
+    (it isn't holding a seat).
+  - **Full class → waitlist + automatic FIFO promotion:** when a class
+    is full, `bookClass` creates a `waitlist` booking instead of failing.
+    When a confirmed seat frees (`cancelMyBooking`), the earliest
+    waitlister (by `createdAt`) is auto-promoted to `confirmed`.
+- **Context** — These four are the only product knobs that change the
+  resolver shape, so they were locked before coding. Defaults benchmarked
+  against Smart Fit / Bodytech UX (auto-promotion) but the windows were
+  set stricter per the owner (24h cancel / 1h book).
+- **Consequences** —
+  - `ClassBooking.status` gained a **`waitlist`** value (enum in
+    `schema.json`). The capacity lifecycle
+    (`api/class-booking/.../lifecycles.ts`) counts only **occupying**
+    statuses (`confirmed` + `attended`) — `waitlist` and `cancelled`
+    never consume a seat — and `beforeCreate` skips the capacity throw
+    for `waitlist` rows (they exist *because* the class is full).
+  - The booking decision (confirmed vs waitlist) is made in the resolver
+    (the lifecycle can't "downgrade" a full booking), so `bookClass`
+    computes occupancy first and passes the chosen status to `create`.
+  - Push on promotion is **deferred to Fase 7** — promotion is silent
+    today (a `TODO(Fase 7)` marks the spot in `promoteNextWaitlister`).
+  - Date/time math is TZ-anchored to **BRT (-03:00, fixed since Brazil
+    dropped DST in 2019)**; weekday/window helpers are pure and unit-tested
+    (`student-schedule.test.ts`).
+- **Revisit when** —
+  - DST returns to Brazil (would break the fixed -03:00 instant math).
+  - A class needs per-class window overrides (some studios want 12h /
+    same-day) → move the windows onto `ClassSchedule`.
+  - Dependent booking (Fase 6) needs the same flow for a guardian's
+    children — `cancelMyBooking` already accepts guardian-owned
+    dependent bookings; `bookClass` is student-only for now.
+
 ---
 
 ## 3. GraphQL API

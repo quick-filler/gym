@@ -53,7 +53,14 @@ export interface DashboardData {
 /* ------------------------------------------------------------------
  * Agenda tab — weekly schedule with per-day class list
  * ------------------------------------------------------------------ */
-export type ClassBookingStatus = 'available' | 'booked' | 'waitlist' | 'full';
+// 'available' livre · 'booked' minha reserva confirmada · 'waitlisted' eu na
+// fila · 'waitlist'/'full' turma cheia (posso entrar na fila).
+export type ClassBookingStatus =
+  | 'available'
+  | 'booked'
+  | 'waitlisted'
+  | 'waitlist'
+  | 'full';
 
 export interface ClassSlot {
   id: string;
@@ -65,6 +72,12 @@ export interface ClassSlot {
   capacity: number;
   taken: number;
   status: ClassBookingStatus;
+  // Fase 2 — presentes no modo API (Apollo), ausentes no mock:
+  scheduleDocumentId?: string;
+  date?: string; // "2026-06-08"
+  bookable?: boolean; // janela de reserva ainda aberta
+  bookingDocumentId?: string | null; // minha reserva (p/ cancelar)
+  unlimited?: boolean; // sem maxCapacity definido
 }
 
 export interface ScheduleDay {
@@ -75,6 +88,27 @@ export interface ScheduleDay {
   fullSubtitle: string; // "9 de abril, 2026"
   isToday: boolean;
   classes: ClassSlot[];
+}
+
+/** Result of a book/cancel action — drives the toast/alert feedback. */
+export interface BookingActionResult {
+  ok: boolean;
+  status?: string; // 'confirmed' | 'waitlist' | 'cancelled'
+  message: string; // user-facing PT-BR feedback
+}
+
+/**
+ * Shape returned by `useScheduleWeek()` — same contract in mock and API
+ * mode so the Agenda screen is a drop-in swap between the two.
+ */
+export interface ScheduleWeekResult {
+  days: ScheduleDay[];
+  loading: boolean;
+  error: Error | null;
+  acting: boolean; // a book/cancel mutation is in flight
+  refetch: () => void;
+  book: (slot: ClassSlot) => Promise<BookingActionResult>;
+  cancel: (slot: ClassSlot) => Promise<BookingActionResult>;
 }
 
 /* ------------------------------------------------------------------

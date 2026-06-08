@@ -16,7 +16,7 @@
  * only renders the screen content — no `<View style={styles.bottomNav}>`.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ScrollView,
   StatusBar,
@@ -27,9 +27,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import * as Clipboard from 'expo-clipboard';
 import {
   Bell,
   Calendar,
+  Check,
+  Copy,
   CreditCard,
   Dumbbell,
   type LucideIcon,
@@ -313,6 +316,18 @@ function SkeletonHome() {
  * ERROR — no fallback, just a retry card
  * ================================================================ */
 function ErrorHome({ error, onRetry }: { error: Error; onRetry: () => void }) {
+  const [copied, setCopied] = useState(false);
+
+  const onCopy = async () => {
+    try {
+      await Clipboard.setStringAsync(error.message);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable — nothing else we can do */
+    }
+  };
+
   return (
     <SafeAreaView
       edges={['top']}
@@ -329,8 +344,29 @@ function ErrorHome({ error, onRetry }: { error: Error; onRetry: () => void }) {
           Nenhum dado de exemplo é exibido — a gente só mostra dados reais.
         </Text>
         <View style={styles.errorDetailBox}>
-          <Text style={styles.errorDetailLabel}>DETALHE TÉCNICO</Text>
-          <Text style={styles.errorDetailText} numberOfLines={4}>
+          <View style={styles.errorDetailHeader}>
+            <Text style={styles.errorDetailLabel}>DETALHE TÉCNICO</Text>
+            <TouchableOpacity
+              onPress={onCopy}
+              style={styles.copyBtn}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Copiar detalhe do erro"
+              hitSlop={8}
+            >
+              {copied ? (
+                <Check size={13} color={theme.emerald} strokeWidth={2.4} />
+              ) : (
+                <Copy size={13} color={theme.ink500} strokeWidth={2.2} />
+              )}
+              <Text
+                style={[styles.copyBtnText, copied && { color: theme.emerald }]}
+              >
+                {copied ? 'Copiado' : 'Copiar'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.errorDetailText} selectable>
             {error.message}
           </Text>
         </View>
@@ -733,12 +769,34 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.line,
   },
+  errorDetailHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   errorDetailLabel: {
     fontSize: 10,
     fontWeight: '700',
     color: theme.ink400,
     letterSpacing: 0.8,
-    marginBottom: 6,
+  },
+  copyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: theme.paper,
+    borderWidth: 1,
+    borderColor: theme.line,
+  },
+  copyBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.ink500,
+    letterSpacing: 0.3,
   },
   errorDetailText: {
     fontSize: 12,

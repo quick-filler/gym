@@ -1,23 +1,23 @@
 /**
- * Agenda tab — weekly schedule, per-day class list.
+ * Agenda tab — weekly schedule, per-day class list (Fase 2 — wired).
  *
  * Mirrors `mockups/app-schedule.html`. The day picker at the top is a
- * horizontal scroll of pill-cards; tapping a day swaps the list of
- * classes below. Each class card shows the time range, instructor,
- * room, a capacity bar and a booking button whose state changes
- * depending on the class: available → "Reservar", booked → "✓ Reservada",
- * waitlist (full) → "Lista de espera".
+ * horizontal scroll of pill-cards; tapping a day swaps the list of classes
+ * below. Each class card shows the time range, instructor, room, a capacity
+ * bar and a booking button whose state reflects the caller's own booking:
+ * available → "Reservar", confirmed → "✓ Reservada" (tap to cancel),
+ * full → "Lista de espera", queued → "Na fila".
  *
  * Data:
- *   - Academy branding (header color, logo) comes from `useDashboard()`
- *     so it stays in sync with white-labeling and the Apollo cache.
- *   - The class list itself is read from `MOCK_SCHEDULE` directly.
- *     When the GraphQL schema gains a `scheduleForWeek` query we'll
- *     swap this import for a `useSchedule()` hook with the same shape.
+ *   - Academy branding (header color, logo) comes from `useDashboard()`.
+ *   - The week grid + book/cancel actions come from `useScheduleWeek()`
+ *     (mock or real Apollo, same contract).
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -26,10 +26,11 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { Filter } from 'lucide-react-native';
 
 import { useDashboard } from '../../hooks/useDashboard';
-import { MOCK_SCHEDULE } from '../../lib/mock-data';
+import { useScheduleWeek } from '../../hooks/useScheduleWeek';
 import { theme, withAlpha } from '../../lib/theme';
 import type { ClassSlot, ScheduleDay } from '../../lib/types';
 
@@ -39,14 +40,41 @@ export default function ScheduleScreen() {
   const academyName = data?.academy.name ?? 'Gym';
   const initials = data?.academy.initials ?? 'G';
 
-  const days = MOCK_SCHEDULE;
+  const { days, loading, error, acting, refetch, book, cancel } = useScheduleWeek();
+
   const todayId = useMemo(
     () => days.find((d) => d.isToday)?.id ?? days[0]?.id,
     [days],
   );
-  const [selectedId, setSelectedId] = useState<string | undefined>(todayId);
+  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  // Default the selection to today once the week is known.
+  useEffect(() => {
+    if (selectedId === undefined && todayId) setSelectedId(todayId);
+  }, [selectedId, todayId]);
   const selected: ScheduleDay | undefined =
-    days.find((d) => d.id === selectedId) ?? days[0];
+    days.find((d) => d.id === (selectedId ?? todayId)) ?? days[0];
+
+  const hasAnyClass = days.some((d) => d.classes.length > 0);
+  const showLoading = loading && !hasAnyClass && !error;
+
+  /* ---- actions ---------------------------------------------------- */
+  const onBook = async (slot: ClassSlot) => {
+    const r = await book(slot);
+    Alert.alert(r.ok ? 'Tudo certo' : 'Não foi possível', r.message);
+  };
+  const onCancel = (slot: ClassSlot) => {
+    Alert.alert('Cancelar reserva', 'Deseja cancelar esta reserva?', [
+      { text: 'Voltar', style: 'cancel' },
+      {
+        text: 'Cancelar reserva',
+        style: 'destructive',
+        onPress: async () => {
+          const r = await cancel(slot);
+          Alert.alert(r.ok ? 'Pronto' : 'Não foi possível', r.message);
+        },
+      },
+    ]);
+  };
 
   return (
     <SafeAreaView
@@ -95,10 +123,7 @@ export default function ScheduleScreen() {
                   activeOpacity={0.8}
                   style={[
                     styles.day,
-                    active && {
-                      backgroundColor: '#fff',
-                      borderColor: '#fff',
-                    },
+                    active && { backgroundColor: '#fff', borderColor: '#fff' },
                   ]}
                 >
                   <Text
@@ -110,12 +135,7 @@ export default function ScheduleScreen() {
                   >
                     {day.weekdayShort}
                   </Text>
-                  <Text
-                    style={[
-                      styles.dayNum,
-                      active && { color: accent },
-                    ]}
-                  >
+                  <Text style={[styles.dayNum, active && { color: accent }]}>
                     {day.dayNumber}
                   </Text>
                 </TouchableOpacity>
@@ -126,7 +146,24 @@ export default function ScheduleScreen() {
 
         {/* CONTENT */}
         <View style={styles.content}>
-          {selected ? (
+          {showLoading ? (
+            <View style={styles.centerBox}>
+              <ActivityIndicator color={accent} />
+              <Text style={styles.centerText}>Carregando agenda…</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.errorCard}>
+              <Text style={styles.errorTitle}>Não conseguimos carregar</Text>
+              <Text style={styles.errorBody}>{error.message}</Text>
+              <TouchableOpacity
+                onPress={refetch}
+                style={[styles.retryBtn, { backgroundColor: accent }]}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.retryBtnText}>Tentar novamente</Text>
+              </TouchableOpacity>
+            </View>
+          ) : selected ? (
             <>
               <View style={styles.dayHeader}>
                 <View>
@@ -148,14 +185,21 @@ export default function ScheduleScreen() {
 
               {selected.classes.length === 0 ? (
                 <View style={styles.emptyDay}>
-                  <Text style={styles.emptyDayTitle}>Sem aulas hoje</Text>
+                  <Text style={styles.emptyDayTitle}>Sem aulas neste dia</Text>
                   <Text style={styles.emptyDayBody}>
                     A academia não tem turmas programadas para este dia.
                   </Text>
                 </View>
               ) : (
                 selected.classes.map((c) => (
-                  <ClassCard key={c.id} slot={c} accent={accent} />
+                  <ClassCard
+                    key={c.id}
+                    slot={c}
+                    accent={accent}
+                    acting={acting}
+                    onBook={onBook}
+                    onCancel={onCancel}
+                  />
                 ))
               )}
             </>
@@ -169,14 +213,35 @@ export default function ScheduleScreen() {
 /* ==================================================================
  * CLASS CARD
  * ================================================================ */
-function ClassCard({ slot, accent }: { slot: ClassSlot; accent: string }) {
-  const pct = Math.min(100, Math.round((slot.taken / slot.capacity) * 100));
-  const isBooked = slot.status === 'booked';
-  const isWait = slot.status === 'waitlist';
+function ClassCard({
+  slot,
+  accent,
+  acting,
+  onBook,
+  onCancel,
+}: {
+  slot: ClassSlot;
+  accent: string;
+  acting: boolean;
+  onBook: (s: ClassSlot) => void;
+  onCancel: (s: ClassSlot) => void;
+}) {
+  const unlimited = slot.unlimited || slot.capacity <= 0;
+  const pct = unlimited
+    ? 0
+    : Math.min(100, Math.round((slot.taken / slot.capacity) * 100));
+  const isWait = slot.status === 'waitlist' || slot.status === 'waitlisted';
   const nearFull = pct >= 90;
+  const hasBooking = !!slot.bookingDocumentId;
 
   return (
-    <View
+    <TouchableOpacity
+      activeOpacity={hasBooking ? 0.7 : 1}
+      onPress={
+        hasBooking
+          ? () => router.push(`/booking/${slot.bookingDocumentId}`)
+          : undefined
+      }
       style={[
         styles.classCard,
         isWait && {
@@ -193,7 +258,7 @@ function ClassCard({ slot, accent }: { slot: ClassSlot; accent: string }) {
         <View style={{ flex: 1 }}>
           <Text style={styles.className}>{slot.name}</Text>
           <Text style={styles.classMeta}>
-            {slot.instructor} · {slot.room}
+            {[slot.instructor, slot.room].filter(Boolean).join(' · ')}
           </Text>
         </View>
       </View>
@@ -202,7 +267,7 @@ function ClassCard({ slot, accent }: { slot: ClassSlot; accent: string }) {
           <View style={styles.capLabel}>
             <Text style={styles.capLabelText}>Vagas</Text>
             <Text style={styles.capLabelStrong}>
-              {slot.taken}/{slot.capacity}
+              {unlimited ? 'Livre' : `${slot.taken}/${slot.capacity}`}
             </Text>
           </View>
           <View style={styles.capTrack}>
@@ -210,57 +275,87 @@ function ClassCard({ slot, accent }: { slot: ClassSlot; accent: string }) {
               style={[
                 styles.capFill,
                 {
-                  width: `${pct}%`,
+                  width: `${unlimited ? 0 : pct}%`,
                   backgroundColor: nearFull ? accent : theme.ink900,
                 },
               ]}
             />
           </View>
         </View>
-        <BookingButton status={slot.status} accent={accent} />
+        <BookingButton
+          slot={slot}
+          accent={accent}
+          acting={acting}
+          onBook={onBook}
+          onCancel={onCancel}
+        />
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
 function BookingButton({
-  status,
+  slot,
   accent,
+  acting,
+  onBook,
+  onCancel,
 }: {
-  status: ClassSlot['status'];
+  slot: ClassSlot;
   accent: string;
+  acting: boolean;
+  onBook: (s: ClassSlot) => void;
+  onCancel: (s: ClassSlot) => void;
 }) {
-  if (status === 'booked') {
-    return (
-      <TouchableOpacity
-        activeOpacity={0.85}
-        style={[styles.bookBtn, { backgroundColor: theme.emerald }]}
-      >
-        <Text style={styles.bookBtnText}>✓ Reservada</Text>
-      </TouchableOpacity>
-    );
+  // `bookable === false` only in API mode (closed window); mock leaves it
+  // undefined and stays interactive.
+  const closed = slot.bookable === false;
+  const mine = slot.status === 'booked' || slot.status === 'waitlisted';
+
+  // Visual + behaviour per state.
+  let label: string;
+  let bg: string;
+  let fg = '#fff';
+  let onPress: (() => void) | undefined;
+
+  if (slot.status === 'booked') {
+    label = '✓ Reservada';
+    bg = theme.emerald;
+    onPress = () => onCancel(slot);
+  } else if (slot.status === 'waitlisted') {
+    label = 'Na fila';
+    bg = withAlpha(accent, 0.15);
+    fg = accent;
+    onPress = () => onCancel(slot);
+  } else if (slot.status === 'waitlist' || slot.status === 'full') {
+    label = closed ? 'Lotada' : 'Lista de espera';
+    bg = withAlpha(accent, 0.15);
+    fg = accent;
+    onPress = closed ? undefined : () => onBook(slot);
+  } else {
+    label = closed ? 'Encerrada' : 'Reservar';
+    bg = theme.ink900;
+    onPress = closed ? undefined : () => onBook(slot);
   }
-  if (status === 'waitlist' || status === 'full') {
-    return (
-      <TouchableOpacity
-        activeOpacity={0.85}
-        style={[
-          styles.bookBtn,
-          { backgroundColor: withAlpha(accent, 0.15) },
-        ]}
-      >
-        <Text style={[styles.bookBtnText, { color: accent }]}>
-          Lista de espera
-        </Text>
-      </TouchableOpacity>
-    );
-  }
+
+  const disabled = (!onPress || acting) && !mine;
+
   return (
     <TouchableOpacity
       activeOpacity={0.85}
-      style={[styles.bookBtn, { backgroundColor: theme.ink900 }]}
+      disabled={!onPress || acting}
+      onPress={onPress}
+      style={[
+        styles.bookBtn,
+        { backgroundColor: bg },
+        disabled && styles.bookBtnDisabled,
+      ]}
     >
-      <Text style={styles.bookBtnText}>Reservar</Text>
+      {acting ? (
+        <ActivityIndicator size="small" color={fg} />
+      ) : (
+        <Text style={[styles.bookBtnText, { color: fg }]}>{label}</Text>
+      )}
     </TouchableOpacity>
   );
 }
@@ -319,10 +414,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  dayPicker: {
-    paddingHorizontal: 20,
-    gap: 10,
-  },
+  dayPicker: { paddingHorizontal: 20, gap: 10 },
   day: {
     minWidth: 58,
     paddingVertical: 12,
@@ -355,7 +447,35 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     paddingHorizontal: 16,
     paddingTop: 24,
+    minHeight: 320,
   },
+
+  centerBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 56, gap: 12 },
+  centerText: { fontSize: 13, color: theme.ink500 },
+
+  errorCard: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.line,
+  },
+  errorTitle: { fontSize: 16, fontWeight: '800', color: theme.ink900 },
+  errorBody: {
+    fontSize: 13,
+    color: theme.ink500,
+    marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 19,
+  },
+  retryBtn: {
+    marginTop: 18,
+    paddingHorizontal: 22,
+    paddingVertical: 11,
+    borderRadius: 999,
+  },
+  retryBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
 
   dayHeader: {
     flexDirection: 'row',
@@ -364,28 +484,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 4,
   },
-  dayTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: theme.ink900,
-    letterSpacing: -0.5,
-  },
-  daySub: {
-    fontSize: 12,
-    color: theme.ink400,
-    marginTop: 3,
-    fontWeight: '500',
-  },
-  dayCount: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 999,
-  },
-  dayCountText: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
+  dayTitle: { fontSize: 22, fontWeight: '700', color: theme.ink900, letterSpacing: -0.5 },
+  daySub: { fontSize: 12, color: theme.ink400, marginTop: 3, fontWeight: '500' },
+  dayCount: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
+  dayCountText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
 
   emptyDay: {
     backgroundColor: '#fff',
@@ -396,17 +498,8 @@ const styles = StyleSheet.create({
     borderColor: theme.line,
     borderStyle: 'dashed',
   },
-  emptyDayTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: theme.ink700,
-  },
-  emptyDayBody: {
-    fontSize: 12,
-    color: theme.ink400,
-    marginTop: 6,
-    textAlign: 'center',
-  },
+  emptyDayTitle: { fontSize: 15, fontWeight: '700', color: theme.ink700 },
+  emptyDayBody: { fontSize: 12, color: theme.ink400, marginTop: 6, textAlign: 'center' },
 
   classCard: {
     backgroundColor: '#fff',
@@ -421,11 +514,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  classTop: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 14,
-  },
+  classTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
   classTimeBox: { minWidth: 56 },
   classTime: {
     fontSize: 22,
@@ -434,18 +523,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     lineHeight: 24,
   },
-  classTimeEnd: {
-    fontSize: 11,
-    color: theme.ink400,
-    fontWeight: '500',
-    marginTop: 2,
-  },
-  className: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: theme.ink900,
-    letterSpacing: -0.2,
-  },
+  classTimeEnd: { fontSize: 11, color: theme.ink400, fontWeight: '500', marginTop: 2 },
+  className: { fontSize: 15, fontWeight: '700', color: theme.ink900, letterSpacing: -0.2 },
   classMeta: {
     fontSize: 11,
     color: theme.ink400,
@@ -465,40 +544,25 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   capBar: { flex: 1 },
-  capLabel: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 5,
-  },
-  capLabelText: {
-    fontSize: 11,
-    color: theme.ink400,
-    fontWeight: '500',
-  },
-  capLabelStrong: {
-    fontSize: 11,
-    color: theme.ink700,
-    fontWeight: '700',
-  },
+  capLabel: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
+  capLabelText: { fontSize: 11, color: theme.ink400, fontWeight: '500' },
+  capLabelStrong: { fontSize: 11, color: theme.ink700, fontWeight: '700' },
   capTrack: {
     height: 6,
     backgroundColor: theme.paper2,
     borderRadius: 999,
     overflow: 'hidden',
   },
-  capFill: {
-    height: '100%',
-    borderRadius: 999,
-  },
+  capFill: { height: '100%', borderRadius: 999 },
 
   bookBtn: {
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderRadius: 999,
+    minWidth: 96,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  bookBtnText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700',
-  },
+  bookBtnDisabled: { opacity: 0.45 },
+  bookBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 });

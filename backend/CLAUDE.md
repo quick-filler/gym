@@ -215,8 +215,16 @@ include them at all).
 | student | Relation | manyToOne Student |
 | classSchedule | Relation | manyToOne ClassSchedule |
 | date | Date (req) | Specific occurrence date |
-| status | Enum | `confirmed` / `cancelled` / `attended` / `missed` |
+| status | Enum | `confirmed` / `waitlist` / `cancelled` / `attended` / `missed` |
 | checkedInAt | DateTime | Timestamp of check-in |
+
+`waitlist` is a queued spot that doesn't occupy a seat — created by
+`bookClass` when a class is full and auto-promoted to `confirmed` by
+`cancelMyBooking` when a seat frees (FIFO). The capacity lifecycle counts
+only `confirmed` + `attended` as occupying. Student booking flow lives in
+`src/extensions/graphql/types/student-schedule.ts` (`myScheduleWeek`,
+`bookClass`, `cancelMyBooking`); rules in
+[design-decisions §2.8](../docs/design-decisions.md).
 
 ### Payment (Pagamento)
 
