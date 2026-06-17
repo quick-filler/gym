@@ -1,0 +1,66 @@
+# Student Finanças tab — charges, next bill & checkout flows (Fase 4).
+# Checkout is provider-agnostic: the backend routes PIX/boleto/card through
+# a PaymentGateway interface, mocked until a real provider is chosen.
+
+query MyPayments($limit: Int, $offset: Int) {
+  myPayments(limit: $limit, offset: $offset) {
+    documentId
+    description
+    amount
+    dueDate
+    paidAt
+    status
+    method
+    receiptUrl
+  }
+}
+
+query MyNextPayment {
+  myNextPayment {
+    documentId
+    description
+    amount
+    dueDate
+    status
+    method
+  }
+}
+
+mutation PayChargePix($paymentId: ID!) {
+  payChargePix(paymentId: $paymentId) {
+    paymentId
+    externalId
+    qrCode
+    copyPaste
+    expiresAt
+  }
+}
+
+mutation PayChargeBoleto($paymentId: ID!) {
+  payChargeBoleto(paymentId: $paymentId) {
+    paymentId
+    externalId
+    boletoUrl
+    barCode
+    dueDate
+  }
+}
+
+mutation PayChargeCard($paymentId: ID!, $card: CardInput!) {
+  payChargeCard(paymentId: $paymentId, card: $card) {
+    documentId
+    status
+    method
+    paidAt
+  }
+}
+
+# Dev/mock affordance: stands in for the gateway webhook so PIX/boleto can be
+# confirmed without a real provider. Backend refuses this against a real gateway.
+mutation ConfirmMockCharge($paymentId: ID!) {
+  confirmMockCharge(paymentId: $paymentId) {
+    documentId
+    status
+    paidAt
+  }
+}

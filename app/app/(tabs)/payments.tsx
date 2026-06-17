@@ -8,12 +8,13 @@
  *
  * Data:
  *   - Academy branding from `useDashboard()`.
- *   - Payments content from `MOCK_PAYMENTS`. Swap the import for a
- *     `usePayments()` hook when the backend ships the query.
+ *   - Payments content from `usePayments()` (mock-vs-API, Fase 4).
  */
 
 import React from 'react';
 import {
+  ActivityIndicator,
+  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -22,12 +23,12 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import {
   Check,
   CreditCard,
   Download,
   FileText,
-  Plus,
   Receipt,
   Wallet,
   Zap,
@@ -35,12 +36,12 @@ import {
 } from 'lucide-react-native';
 
 import { useDashboard } from '../../hooks/useDashboard';
-import { MOCK_PAYMENTS } from '../../lib/mock-data';
+import { usePayments } from '../../hooks/usePayments';
 import { theme, withAlpha } from '../../lib/theme';
 import type {
   PaymentMethodType,
-  PaymentRecord,
-  PaymentsData,
+  PaymentView,
+  PaymentsResult,
 } from '../../lib/types';
 
 export default function PaymentsScreen() {
@@ -49,7 +50,12 @@ export default function PaymentsScreen() {
   const academyName = data?.academy.name ?? 'Gym';
   const initials = data?.academy.initials ?? 'G';
 
-  const payments = MOCK_PAYMENTS;
+  const payments = usePayments();
+  const { nextBill, history, loading, error, refetch } = payments;
+
+  const openNext = () => {
+    if (nextBill.documentId) router.push(`/payment/${nextBill.documentId}`);
+  };
 
   return (
     <SafeAreaView
@@ -61,6 +67,9 @@ export default function PaymentsScreen() {
         style={{ backgroundColor: theme.paper }}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={refetch} tintColor="#fff" />
+        }
       >
         {/* HEADER */}
         <View style={[styles.header, { backgroundColor: accent }]}>
@@ -82,70 +91,68 @@ export default function PaymentsScreen() {
           <Text style={styles.eyebrow}>FINANÇAS</Text>
           <Text style={styles.title}>Pagamentos</Text>
 
-          {/* Balance card */}
-          <View style={styles.balanceCard}>
+          {/* Balance card — tap to pay the next open charge */}
+          <TouchableOpacity
+            style={styles.balanceCard}
+            activeOpacity={nextBill.documentId ? 0.85 : 1}
+            disabled={!nextBill.documentId}
+            onPress={openNext}
+          >
             <Text style={styles.balanceLabel}>Próxima cobrança</Text>
             <View style={styles.balanceAmountRow}>
-              <Text style={styles.balanceCurrency}>
-                {payments.nextBill.currency}
-              </Text>
-              <Text style={styles.balanceAmount}>
-                {payments.nextBill.amount}
-              </Text>
+              <Text style={styles.balanceCurrency}>{nextBill.currency}</Text>
+              <Text style={styles.balanceAmount}>{nextBill.amount}</Text>
             </View>
             <View style={styles.balanceMeta}>
               <View>
                 <Text style={styles.balanceMetaLabel}>VENCIMENTO</Text>
-                <Text style={styles.balanceMetaStrong}>
-                  {payments.nextBill.dueDate}
-                </Text>
+                <Text style={styles.balanceMetaStrong}>{nextBill.dueDate}</Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
-                <Text style={styles.balanceMetaLabel}>MÉTODO</Text>
+                <Text style={styles.balanceMetaLabel}>
+                  {nextBill.documentId ? 'TOQUE PARA PAGAR' : 'STATUS'}
+                </Text>
                 <Text style={styles.balanceMetaStrong}>
-                  {payments.nextBill.method}
+                  {nextBill.documentId ? nextBill.method : 'EM DIA'}
                 </Text>
               </View>
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* CONTENT */}
         <View style={styles.content}>
           <StatusBanner banner={payments.statusBanner} />
 
-          <Text style={styles.sectionLabel}>HISTÓRICO · ÚLTIMOS 6 MESES</Text>
-          {payments.history.map((record) => (
-            <PaymentRow key={record.id} record={record} accent={accent} />
-          ))}
-
-          <Text style={styles.sectionLabel}>FORMA DE PAGAMENTO</Text>
-          <View style={styles.payRow}>
-            <View
-              style={[
-                styles.payIcon,
-                { backgroundColor: withAlpha(accent, 0.1) },
-              ]}
-            >
-              <Zap size={18} color={accent} strokeWidth={2.2} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.payName}>{payments.savedMethod.label}</Text>
-              <Text style={styles.payMeta}>
-                {payments.savedMethod.detail}
+          {error ? (
+            <View style={styles.stateBox}>
+              <Text style={styles.stateText}>
+                Não foi possível carregar seus pagamentos.
               </Text>
+              <TouchableOpacity
+                onPress={refetch}
+                style={[styles.retryBtn, { backgroundColor: accent }]}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.retryText}>Tentar novamente</Text>
+              </TouchableOpacity>
             </View>
-            <View style={styles.payStatusOk}>
-              <Text style={styles.payStatusOkText}>ATIVO</Text>
+          ) : loading && history.length === 0 ? (
+            <View style={styles.stateBox}>
+              <ActivityIndicator color={accent} />
             </View>
-          </View>
-
-          <TouchableOpacity activeOpacity={0.8} style={styles.addMethod}>
-            <Plus size={16} color={theme.ink500} strokeWidth={2} />
-            <Text style={styles.addMethodText}>
-              Adicionar cartão de crédito
-            </Text>
-          </TouchableOpacity>
+          ) : history.length === 0 ? (
+            <View style={styles.stateBox}>
+              <Text style={styles.stateText}>Nenhuma cobrança por aqui ainda.</Text>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.sectionLabel}>HISTÓRICO</Text>
+              {history.map((record) => (
+                <PaymentRow key={record.documentId} record={record} accent={accent} />
+              ))}
+            </>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -158,7 +165,7 @@ export default function PaymentsScreen() {
 function StatusBanner({
   banner,
 }: {
-  banner: PaymentsData['statusBanner'];
+  banner: PaymentsResult['statusBanner'];
 }) {
   const palette = {
     ok:     { bg: '#ecfdf5', border: '#a7f3d0', icon: '#059669' },
@@ -191,12 +198,17 @@ function PaymentRow({
   record,
   accent,
 }: {
-  record: PaymentRecord;
+  record: PaymentView;
   accent: string;
 }) {
   const Icon = iconFor(record.method);
   return (
-    <View style={styles.payRow}>
+    <TouchableOpacity
+      style={styles.payRow}
+      activeOpacity={record.payable ? 0.85 : 1}
+      disabled={!record.payable}
+      onPress={() => router.push(`/payment/${record.documentId}`)}
+    >
       <View
         style={[
           styles.payIcon,
@@ -215,11 +227,11 @@ function PaymentRow({
         <Text style={styles.payAmount}>{record.amount}</Text>
         <PayStatusPill status={record.status} />
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
-function PayStatusPill({ status }: { status: PaymentRecord['status'] }) {
+function PayStatusPill({ status }: { status: PaymentView['status'] }) {
   const map = {
     paid:    { label: 'PAGO',     bg: '#ecfdf5', color: '#059669' },
     pending: { label: 'PENDENTE', bg: '#fffbeb', color: '#d97706' },
@@ -490,5 +502,27 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: theme.ink500,
+  },
+
+  stateBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    gap: 14,
+  },
+  stateText: {
+    fontSize: 14,
+    color: theme.ink500,
+    textAlign: 'center',
+  },
+  retryBtn: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  retryText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
   },
 });

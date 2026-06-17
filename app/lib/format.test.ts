@@ -3,6 +3,8 @@ import {
   addDaysISO,
   ageFrom,
   brDateToISO,
+  brl,
+  brlAmount,
   buildWeekDays,
   fmtDateBR,
   hhmm,
@@ -25,6 +27,24 @@ describe('monthlyBRL', () => {
 
   it('handles zero', () => {
     expect(monthlyBRL(0)).toBe('R$ 0');
+  });
+});
+
+describe('brl / brlAmount', () => {
+  it('formats with two decimals and the symbol', () => {
+    expect(brl(99)).toBe('R$ 99,00');
+    expect(brl(99.9)).toBe('R$ 99,90');
+    expect(brl(1499.5)).toBe('R$ 1.499,50');
+  });
+
+  it('brlAmount drops the symbol', () => {
+    expect(brlAmount(99)).toBe('99,00');
+    expect(brlAmount(1499.5)).toBe('1.499,50');
+  });
+
+  it('treats null/undefined as zero', () => {
+    expect(brl(null)).toBe('R$ 0,00');
+    expect(brlAmount(undefined)).toBe('0,00');
   });
 });
 

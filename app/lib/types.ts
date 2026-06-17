@@ -219,6 +219,44 @@ export interface PaymentsData {
 }
 
 /* ------------------------------------------------------------------
+ * Fase 4 — usePayments() view model (backed by GraphQL or mocks)
+ * ------------------------------------------------------------------ */
+
+/** One charge as the Finanças screen renders it. */
+export interface PaymentView {
+  documentId: string;
+  name: string; // "Mensalidade · Julho" (from description)
+  meta: string; // "PIX · 15/07/2026"
+  amount: string; // "R$ 99,00"
+  method: PaymentMethodType;
+  status: PaymentStatus;
+  /** pending | overdue → the row/detail offers a "pagar" action. */
+  payable: boolean;
+}
+
+export interface NextBillView {
+  documentId: string | null; // null when nothing is open
+  amount: string; // "99,00"
+  currency: string; // "R$"
+  dueDate: string; // "15/07/2026"
+  method: string; // "PIX"
+  overdue: boolean;
+}
+
+export interface PaymentsResult {
+  nextBill: NextBillView;
+  statusBanner: {
+    tone: 'ok' | 'warn' | 'danger';
+    title: string;
+    body: string;
+  };
+  history: PaymentView[];
+  loading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
+
+/* ------------------------------------------------------------------
  * Perfil tab — personal info, body assessments, settings links
  * ------------------------------------------------------------------ */
 export interface BodyAssessment {

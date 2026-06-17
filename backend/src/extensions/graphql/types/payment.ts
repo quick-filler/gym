@@ -20,8 +20,100 @@ import {
   resolveUserAcademyId,
   withPaymentScope,
 } from '../helpers';
+import { resolveGateway, type ChargeRequest } from '../../../services/payment-gateway';
 
 const UID = 'api::payment.payment';
+const STUDENT_UID = 'api::student.student';
+
+/* ------------------------------------------------------------------
+ * Pure helpers (exported for unit tests)
+ * ------------------------------------------------------------------ */
+
+/** A Payment "belongs to" the caller when it points at them directly or
+ *  via its enrollment. Dependents are handled in a later phase. */
+export function paymentOwnedByStudent(
+  payment: any,
+  studentDocId: string,
+): boolean {
+  if (!payment || !studentDocId) return false;
+  return (
+    payment.student?.documentId === studentDocId ||
+    payment.enrollment?.student?.documentId === studentDocId
+  );
+}
+
+/** The next charge the caller should pay: the earliest unpaid (pending or
+ *  overdue) instalment by dueDate. Returns null when nothing is open. */
+export function selectNextPayment(payments: any[], _todayISO?: string): any | null {
+  const open = (payments ?? []).filter(
+    (p) => p?.status === 'pending' || p?.status === 'overdue',
+  );
+  if (open.length === 0) return null;
+  return open.reduce((earliest, p) =>
+    String(p.dueDate) < String(earliest.dueDate) ? p : earliest,
+  );
+}
+
+interface CallerStudent {
+  documentId: string;
+  academyId: string | null;
+  name: string | null;
+  email: string | null;
+}
+
+async function resolveCallerStudent(
+  strapi: Core.Strapi,
+  ctx: any,
+): Promise<CallerStudent | null> {
+  const userId = ctx?.state?.user?.id;
+  if (!userId) return null;
+  const rows: any[] = await strapi.documents(STUDENT_UID).findMany({
+    filters: { user: { id: userId } },
+    fields: ['documentId', 'name'] as any,
+    populate: {
+      academy: { fields: ['documentId'] },
+      user: { fields: ['email'] },
+    } as any,
+    limit: 1,
+  });
+  const me = rows[0];
+  if (!me?.documentId) return null;
+  return {
+    documentId: me.documentId,
+    academyId: me.academy?.documentId ?? null,
+    name: me.name ?? null,
+    email: me.user?.email ?? null,
+  };
+}
+
+/** Loads a Payment the caller owns, or throws a uniform not-found. */
+async function loadOwnedPayment(
+  strapi: Core.Strapi,
+  studentDocId: string,
+  paymentId: string,
+): Promise<any> {
+  const payment: any = await strapi.documents(UID).findOne({
+    documentId: paymentId,
+    populate: {
+      student: { fields: ['documentId'] },
+      enrollment: { populate: { student: { fields: ['documentId'] } } },
+    } as any,
+  });
+  if (!payment || !paymentOwnedByStudent(payment, studentDocId)) {
+    throw new Error('Cobrança não encontrada.');
+  }
+  return payment;
+}
+
+function chargeRequestFor(me: CallerStudent, payment: any): ChargeRequest {
+  return {
+    paymentId: payment.documentId,
+    amount: Number(payment.amount),
+    dueDate: String(payment.dueDate),
+    description: payment.description ?? undefined,
+    customer: { documentId: me.documentId, name: me.name ?? 'Aluno', email: me.email },
+  };
+}
 
 export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }) {
   const Payment = nexus.objectType({
@@ -74,6 +166,38 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
           return doc?.dependent ?? null;
         },
       });
+    },
+  });
+
+  const PixCheckout = nexus.objectType({
+    name: 'PixCheckout',
+    definition(t: any) {
+      t.nonNull.id('paymentId');
+      t.nonNull.string('externalId');
+      t.nonNull.string('qrCode');
+      t.nonNull.string('copyPaste');
+      t.nonNull.string('expiresAt');
+    },
+  });
+
+  const BoletoCheckout = nexus.objectType({
+    name: 'BoletoCheckout',
+    definition(t: any) {
+      t.nonNull.id('paymentId');
+      t.nonNull.string('externalId');
+      t.nonNull.string('boletoUrl');
+      t.nonNull.string('barCode');
+      t.nonNull.string('dueDate');
+    },
+  });
+
+  const CardInput = nexus.inputObjectType({
+    name: 'CardInput',
+    definition(t: any) {
+      t.nonNull.string('number');
+      t.nonNull.string('holderName');
+      t.nonNull.string('expiry');
+      t.nonNull.string('cvv');
     },
   });
 
@@ -131,6 +255,47 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
         resolve: async (_root: any, args: any, ctx: any) => {
           await assertCanAccessDoc(strapi, ctx, UID, args.documentId);
           return await strapi.documents(UID).findOne({ documentId: args.documentId });
+        },
+      });
+
+      // Student-facing: the caller's own charges (Finanças tab).
+      t.list.field('myPayments', {
+        type: 'Payment',
+        args: { limit: 'Int', offset: 'Int' },
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const me = await resolveCallerStudent(strapi, ctx);
+          if (!me?.documentId) return [];
+          return await strapi.documents(UID).findMany({
+            filters: {
+              $or: [
+                { student: { documentId: me.documentId } },
+                { enrollment: { student: { documentId: me.documentId } } },
+              ],
+            } as any,
+            start: args.offset ?? 0,
+            limit: Math.min(100, args.limit ?? 24),
+            sort: { dueDate: 'desc' },
+          });
+        },
+      });
+
+      t.field('myNextPayment', {
+        type: 'Payment',
+        resolve: async (_root: any, _args: any, ctx: any) => {
+          const me = await resolveCallerStudent(strapi, ctx);
+          if (!me?.documentId) return null;
+          const open: any[] = await strapi.documents(UID).findMany({
+            filters: {
+              status: { $in: ['pending', 'overdue'] },
+              $or: [
+                { student: { documentId: me.documentId } },
+                { enrollment: { student: { documentId: me.documentId } } },
+              ],
+            } as any,
+            sort: { dueDate: 'asc' },
+            limit: 50,
+          });
+          return selectNextPayment(open);
         },
       });
     },
@@ -214,16 +379,122 @@ export function buildPayment({ nexus, strapi }: { nexus: any; strapi: Core.Strap
           });
         },
       });
+
+      // --- Student checkout flows (provider-agnostic gateway) ---------
+
+      t.field('payChargePix', {
+        type: 'PixCheckout',
+        args: { paymentId: nexus.nonNull(nexus.idArg()) },
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const me = await resolveCallerStudent(strapi, ctx);
+          if (!me?.documentId) throw new Error('Aluno não encontrado.');
+          const payment = await loadOwnedPayment(strapi, me.documentId, args.paymentId);
+          if (payment.status === 'paid') throw new Error('Esta cobrança já foi paga.');
+
+          const gateway = resolveGateway(me.academyId);
+          const checkout = await gateway.createPixCharge(chargeRequestFor(me, payment));
+          await strapi.documents(UID).update({
+            documentId: payment.documentId,
+            data: { method: 'pix', externalId: checkout.externalId },
+          });
+          return { paymentId: payment.documentId, ...checkout };
+        },
+      });
+
+      t.field('payChargeBoleto', {
+        type: 'BoletoCheckout',
+        args: { paymentId: nexus.nonNull(nexus.idArg()) },
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const me = await resolveCallerStudent(strapi, ctx);
+          if (!me?.documentId) throw new Error('Aluno não encontrado.');
+          const payment = await loadOwnedPayment(strapi, me.documentId, args.paymentId);
+          if (payment.status === 'paid') throw new Error('Esta cobrança já foi paga.');
+
+          const gateway = resolveGateway(me.academyId);
+          const checkout = await gateway.createBoletoCharge(chargeRequestFor(me, payment));
+          await strapi.documents(UID).update({
+            documentId: payment.documentId,
+            data: { method: 'boleto', externalId: checkout.externalId },
+          });
+          return { paymentId: payment.documentId, ...checkout };
+        },
+      });
+
+      t.field('payChargeCard', {
+        type: 'Payment',
+        args: {
+          paymentId: nexus.nonNull(nexus.idArg()),
+          card: nexus.nonNull(nexus.arg({ type: 'CardInput' })),
+        },
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const me = await resolveCallerStudent(strapi, ctx);
+          if (!me?.documentId) throw new Error('Aluno não encontrado.');
+          const payment = await loadOwnedPayment(strapi, me.documentId, args.paymentId);
+          if (payment.status === 'paid') throw new Error('Esta cobrança já foi paga.');
+
+          const gateway = resolveGateway(me.academyId);
+          const result = await gateway.chargeCard(chargeRequestFor(me, payment), args.card);
+          if (result.status !== 'approved') {
+            throw new Error(result.declineReason ?? 'Cartão recusado.');
+          }
+          return await strapi.documents(UID).update({
+            documentId: payment.documentId,
+            data: {
+              status: 'paid',
+              method: 'credit_card',
+              externalId: result.externalId,
+              paidAt: new Date().toISOString(),
+            },
+          });
+        },
+      });
+
+      // Dev/mock affordance: stand in for the gateway webhook so the PIX /
+      // boleto cycle can be completed without a real provider. Refuses to
+      // run against a real gateway — those confirm via webhook only.
+      t.field('confirmMockCharge', {
+        type: 'Payment',
+        args: { paymentId: nexus.nonNull(nexus.idArg()) },
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const me = await resolveCallerStudent(strapi, ctx);
+          if (!me?.documentId) throw new Error('Aluno não encontrado.');
+          const gateway = resolveGateway(me.academyId);
+          if (!gateway.isMock) {
+            throw new Error('Confirmação manual só está disponível no modo mock.');
+          }
+          const payment = await loadOwnedPayment(strapi, me.documentId, args.paymentId);
+          if (payment.status === 'paid') return payment;
+          return await strapi.documents(UID).update({
+            documentId: payment.documentId,
+            data: { status: 'paid', paidAt: new Date().toISOString() },
+          });
+        },
+      });
     },
   });
 
   return {
-    types: [Payment, PaymentInput, PaymentUpdateInput, queries, mutations],
+    types: [
+      Payment,
+      PixCheckout,
+      BoletoCheckout,
+      CardInput,
+      PaymentInput,
+      PaymentUpdateInput,
+      queries,
+      mutations,
+    ],
     resolversConfig: {
       'Query.payments': { auth: true },
       'Query.payment': { auth: true },
+      'Query.myPayments': { auth: true },
+      'Query.myNextPayment': { auth: true },
       'Mutation.createPayment': { auth: true },
       'Mutation.updatePayment': { auth: true },
+      'Mutation.payChargePix': { auth: true },
+      'Mutation.payChargeBoleto': { auth: true },
+      'Mutation.payChargeCard': { auth: true },
+      'Mutation.confirmMockCharge': { auth: true },
     },
   };
 }

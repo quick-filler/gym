@@ -12,6 +12,24 @@ export function monthlyBRL(price: number): string {
   })}`;
 }
 
+/** "R$ 99,00" with two decimals, pt-BR locale. For payment amounts. */
+export function brl(value: number | null | undefined): string {
+  const n = Number(value ?? 0);
+  return `R$ ${n.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+/** Just the "99,00" part (no symbol), for the big balance card. */
+export function brlAmount(value: number | null | undefined): string {
+  const n = Number(value ?? 0);
+  return n.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 /**
  * Returns age in years from a `YYYY-MM-DD` birthdate, accounting for
  * whether the birthday has already occurred this year.

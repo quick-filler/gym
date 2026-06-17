@@ -81,6 +81,7 @@ app/
 │   ├── useDashboard.ts           # Single data entrypoint — mock or Apollo
 │   ├── useScheduleWeek.ts        # Agenda — weekly grid + book/cancel
 │   ├── useWorkouts.ts            # Treinos — active/upcoming/history/stats
+│   ├── usePayments.ts            # Finanças — charges + next bill + banner
 │   └── useDependents.ts          # Guardian's children roster
 ├── lib/
 │   ├── apollo.ts                 # Apollo Client (httpLink + authLink)
@@ -100,7 +101,6 @@ app/
 ### Still to scaffold
 
 - `(academy)` group (white-label subdomain picker)
-- `workout/[id]`, `booking/[id]`, `payment/[id]` detail routes
 - `lib/auth.ts` (SecureStore wrappers), `lib/notifications.ts`,
   `lib/format.ts` (currency + date helpers)
 
@@ -200,7 +200,7 @@ export function DashboardScreen() {
 | `/workout/[id]` | Workout plan detail (exercises) + "Iniciar treino" | ✅ |
 | `/workout/session/[id]` | Live execution: timer, checklist, finish/cancel | ✅ |
 | `/booking/[id]` | Class booking detail (room, instructor, capacity) | ✅ |
-| `/payment/[id]` | Payment receipt detail | — future |
+| `/payment/[id]` | Checkout — PIX / boleto / cartão tabs (mocked gateway) | ✅ |
 
 ## Push notifications
 

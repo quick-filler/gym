@@ -280,6 +280,25 @@ Student GraphQL surface (all `auth: true`, tenant-safe): `myWorkouts`
 mutations. Starting a session requires an `active` enrollment (mirrors
 booking §2.8); only *open* sessions can be finished/cancelled.
 
+### Student payments + checkout (Fase 4)
+
+Student-facing GraphQL on `extensions/graphql/types/payment.ts` (all
+`auth: true`, scoped to the caller's own charges):
+
+- **Queries** — `myPayments(limit, offset)`, `myNextPayment` (earliest
+  open instalment).
+- **Checkout mutations** (provider-agnostic, gated on ownership only):
+  `payChargePix` / `payChargeBoleto` (return artifacts, leave the charge
+  `pending`), `payChargeCard(card)` (approve/decline → `paid`), and
+  `confirmMockCharge` (mock-only webhook stand-in).
+
+Checkout routes through the **`PaymentGateway`** interface in
+`src/services/payment-gateway/` — `resolveGateway()` selects by
+`PAYMENT_PROVIDER` (default `mock`; the mock invents deterministic
+artifacts, card ending `0002` is declined). No real provider is wired
+yet — see design-decisions §2.10. The existing `asaas.ts` (subscriptions)
+and the Asaas webhook are unchanged; this is the per-charge surface.
+
 ### PoolSettings (Configuração da piscina)
 
 Configuração 1:1 com Academy pra alimentar o módulo Piscina. Defaults

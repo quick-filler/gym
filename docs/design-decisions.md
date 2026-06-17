@@ -403,6 +403,53 @@ right below. We want the history, not a clean slate.
 
 ---
 
+### 2.10 Provider-agnostic payment gateway, mocked by default (Fase 4)
+
+- **Decision** — student checkout (PIX / boleto / cartão) goes through a
+  **`PaymentGateway` interface** (`src/services/payment-gateway/`), not a
+  concrete SDK. `resolveGateway()` picks the implementation from the
+  `PAYMENT_PROVIDER` env var; the only implementation today is
+  **`mock-gateway.ts`** and the default is `mock`.
+  - GraphQL (in `extensions/graphql/types/payment.ts`): student reads
+    `myPayments` / `myNextPayment`; checkout mutations `payChargePix`,
+    `payChargeBoleto` (return artifacts, charge stays `pending`),
+    `payChargeCard` (approves/declines synchronously → `paid`), and
+    `confirmMockCharge` (dev/mock-only — stands in for the gateway webhook
+    so PIX/boleto can be completed without a real provider; refuses to run
+    when `gateway.isMock` is false).
+  - The mock is **deterministic** (artifacts hashed from `paymentId`) so
+    tests/smoke runs reproduce; a card number ending **`0002` is declined**
+    (mirrors sandbox test-card conventions), everything else approved.
+- **Context** — the product hasn't committed to a gateway yet (Asaas vs
+  Pagar.me vs Stripe). The pre-existing `asaas.ts` (subscriptions) and the
+  Asaas webhook stay as-is; this is the **per-charge checkout** surface,
+  which is the part that would differ most between providers.
+- **Why an interface + mock, not "wire Asaas now":** picking a provider is
+  a business decision still open. Coding the app + resolvers against an
+  interface means swapping in a real provider later is: implement
+  `PaymentGateway` once, add a `case` in `resolveGateway`, flip
+  `PAYMENT_PROVIDER` — **zero app or resolver changes**. `academyId` is
+  already threaded through `resolveGateway` for the eventual multi-tenant
+  per-academy credentials (same shape as `asaasForAcademy`).
+- **Consequences / gotchas** —
+  - Student payment queries are scoped to the caller's **own** charges
+    (`student` or `enrollment.student` = me). `Query.payment(documentId)`
+    stays admin-only (academy-wide) — the app's detail screen reads from
+    `myPayments` so a deep-link can't surface another student's charge.
+  - Checkout mutations gate on **ownership only**, *not*
+    `requireActiveSubscription` — paying a charge is exactly how a lapsed
+    member reactivates; gating it would be a chicken-and-egg lock-out.
+  - No new content type / role / permission was added, so **no
+    `config:export`** was needed this phase.
+  - `confirmMockCharge` must be removed (or hard-gated) the moment a real
+    provider ships — it's a deliberate test seam.
+- **Revisit when** — a provider is chosen: implement its gateway, decide
+  saved-cards/tokenization (deferred — provider-specific), and make the
+  real webhook drive `Payment.status` + push (the webhook handler already
+  exists for Asaas; generalise it alongside the gateway).
+
+---
+
 ## 3. GraphQL API
 
 ### 3.1 GraphQL is the only data API; REST is reserved for auth + webhooks

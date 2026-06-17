@@ -213,6 +213,14 @@ input BodyAssessmentUpdateInput {
   weight: Float
 }
 
+type BoletoCheckout {
+  barCode: String!
+  boletoUrl: String!
+  dueDate: String!
+  externalId: String!
+  paymentId: ID!
+}
+
 input BooleanFilterInput {
   and: [Boolean]
   between: [Boolean]
@@ -251,6 +259,13 @@ type BulkImportResult {
   errors: Int!
   items: [BulkImportItem!]!
   skipped: Int!
+}
+
+input CardInput {
+  cvv: String!
+  expiry: String!
+  holderName: String!
+  number: String!
 }
 
 type ClassBooking {
@@ -975,6 +990,7 @@ type Mutation {
 
   """Mark a booking as attended and stamp checkedInAt."""
   checkInBooking(documentId: ID!): ClassBooking
+  confirmMockCharge(paymentId: ID!): Payment
 
   """
   Registers a previously-uploaded S3 object as a Strapi Media file. Run after a successful PUT to the URL returned by mintUploadUrl.
@@ -1015,6 +1031,9 @@ type Mutation {
   """
   finishWorkoutSession(exercisesCompleted: JSON, notes: String, sessionId: ID!): WorkoutSession
   mintUploadUrl(contentType: String!, filename: String!, size: Int!): PresignedUpload
+  payChargeBoleto(paymentId: ID!): BoletoCheckout
+  payChargeCard(card: CardInput!, paymentId: ID!): Payment
+  payChargePix(paymentId: ID!): PixCheckout
 
   """
   Opens a training session against one of the caller’s active fichas. Requires an active enrollment. Seeds the per-exercise checklist from the plan.
@@ -1098,6 +1117,14 @@ input PaymentUpdateInput {
   paidAt: String
   receiptUrl: String
   status: String
+}
+
+type PixCheckout {
+  copyPaste: String!
+  expiresAt: String!
+  externalId: String!
+  paymentId: ID!
+  qrCode: String!
 }
 
 type Plan {
@@ -1321,6 +1348,8 @@ type Query {
   """
   myAsaasSettings: AsaasSettingsStatus
   myDependents: [Dependent]
+  myNextPayment: Payment
+  myPayments(limit: Int, offset: Int): [Payment]
 
   """Pool settings for the caller's academy."""
   myPoolSettings: PoolSettings

@@ -228,6 +228,11 @@ DATABASE_USERNAME=gym
 DATABASE_PASSWORD=secret
 DATABASE_SSL=false
 
+# Payment provider — selects the student-checkout gateway
+# (backend/src/services/payment-gateway). Defaults to "mock" until a real
+# provider is chosen (Asaas / Pagar.me / Stripe). See design-decisions §2.10.
+PAYMENT_PROVIDER=mock
+
 # Asaas Payment Gateway — fallback only.
 # In multi-tenant SaaS each Academy carries its own asaasApiKey /
 # asaasWebhookToken / asaasEnvironment (see backend/CLAUDE.md). These
