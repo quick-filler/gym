@@ -78,7 +78,10 @@ app/
 │   ├── Skeleton.tsx              # Animated skeleton placeholder
 │   └── PlaceholderScreen.tsx     # Shared "em breve" layout for unwired tabs
 ├── hooks/
-│   └── useDashboard.ts           # Single data entrypoint — mock or Apollo
+│   ├── useDashboard.ts           # Single data entrypoint — mock or Apollo
+│   ├── useScheduleWeek.ts        # Agenda — weekly grid + book/cancel
+│   ├── useWorkouts.ts            # Treinos — active/upcoming/history/stats
+│   └── useDependents.ts          # Guardian's children roster
 ├── lib/
 │   ├── apollo.ts                 # Apollo Client (httpLink + authLink)
 │   ├── apollo-provider.tsx       # Mock-aware provider (pass-through in demo mode)
@@ -194,8 +197,9 @@ export function DashboardScreen() {
 | `/(tabs)/payments` | Payment history, pending charges, receipts | ✅ |
 | `/(tabs)/profile` | Personal info, body assessments, settings | ✅ |
 | `/dependents` | Guardian's dependents roster (responsável) | ✅ |
-| `/workout/[id]` | Single workout detail (exercises, sets, reps, video?) | — future |
-| `/booking/[id]` | Class booking detail (room, instructor, capacity) | — future |
+| `/workout/[id]` | Workout plan detail (exercises) + "Iniciar treino" | ✅ |
+| `/workout/session/[id]` | Live execution: timer, checklist, finish/cancel | ✅ |
+| `/booking/[id]` | Class booking detail (room, instructor, capacity) | ✅ |
 | `/payment/[id]` | Payment receipt detail | — future |
 
 ## Push notifications

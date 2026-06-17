@@ -965,6 +965,9 @@ type Mutation {
   """
   cancelMyBooking(documentId: ID!): ClassBooking
 
+  """Drops an open (not-yet-finished) session."""
+  cancelWorkoutSession(sessionId: ID!): WorkoutSession
+
   """
   Platform admin only — moves an academy to a different PlatformPlan. Re-snapshots price/features/limits.
   """
@@ -1006,7 +1009,17 @@ type Mutation {
   deletePlatformPlan(documentId: ID!): PlatformPlan
   deleteStudent(documentId: ID!): Student
   deleteWorkoutPlan(documentId: ID!): WorkoutPlan
+
+  """
+  Closes an open session: records duration, the per-exercise checklist and optional notes.
+  """
+  finishWorkoutSession(exercisesCompleted: JSON, notes: String, sessionId: ID!): WorkoutSession
   mintUploadUrl(contentType: String!, filename: String!, size: Int!): PresignedUpload
+
+  """
+  Opens a training session against one of the caller’s active fichas. Requires an active enrollment. Seeds the per-exercise checklist from the plan.
+  """
+  startWorkoutSession(workoutPlanId: ID!): WorkoutSession
   submitContactForm(input: ContactFormInput!): ContactFormResult
   updateAcademy(data: AcademyUpdateInput!, documentId: ID!): Academy
   updateBodyAssessment(data: BodyAssessmentUpdateInput!, documentId: ID!): BodyAssessment
@@ -1033,6 +1046,12 @@ type Mutation {
   updatePoolInspection(data: PoolInspectionInput!, documentId: ID!): PoolInspection
   updateStudent(data: StudentUpdateInput!, documentId: ID!): Student
   updateWorkoutPlan(data: WorkoutPlanUpdateInput!, documentId: ID!): WorkoutPlan
+}
+
+"""The caller's active ficha plus the remaining (upcoming) ones."""
+type MyWorkouts {
+  active: WorkoutPlan
+  upcoming: [WorkoutPlan]
 }
 
 type Pagination {
@@ -1325,6 +1344,15 @@ type Query {
   The caller's upcoming confirmed bookings, soonest first. Powers the app dashboard + schedule preview.
   """
   myUpcomingBookings(limit: Int): [ClassBooking]
+
+  """The caller's finished training sessions, newest first."""
+  myWorkoutHistory(limit: Int): [WorkoutSession]
+
+  """Derived training stats (this week / 30 days / streak)."""
+  myWorkoutStats: WorkoutStats
+
+  """The caller's active workout plan and the remaining ones."""
+  myWorkouts: MyWorkouts
   payment(documentId: ID!): Payment
   payments(pagination: PaginationInput): [Payment]
   plan(documentId: ID!): Plan
@@ -1356,6 +1384,9 @@ type Query {
   suggestModulesForBusinessType(businessType: String!): ModulePresetSuggestion
   workoutPlan(documentId: ID!): WorkoutPlan
   workoutPlans(pagination: PaginationInput): [WorkoutPlan]
+
+  """A single session the caller owns (the execution screen)."""
+  workoutSession(documentId: ID!): WorkoutSession
 }
 
 type ResponseCollectionMeta {
@@ -1608,4 +1639,22 @@ input WorkoutPlanUpdateInput {
   name: String
   validFrom: String
   validTo: String
+}
+
+"""A single executed training session logged against a workout plan."""
+type WorkoutSession {
+  documentId: ID!
+  durationMinutes: Int
+  exercisesCompleted: JSON
+  finishedAt: String
+  notes: String
+  startedAt: String
+  workoutPlan: WorkoutPlan
+}
+
+"""Derived training stats for the Treinos header."""
+type WorkoutStats {
+  streakDays: Int!
+  thirtyDaysCount: Int!
+  thisWeekCount: Int!
 }

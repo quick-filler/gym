@@ -1,21 +1,17 @@
 /**
- * Treinos tab — active workout plan + upcoming fichas + history.
+ * Treinos tab — active workout plan + upcoming fichas + session history.
  *
- * Mirrors `mockups/app-workouts.html`. The header carries three
- * progress stats (this week / 30 days / streak). The content area is
- * three sections: "FICHA ATUAL" (active plan with exercise list and a
- * start-workout CTA), "PRÓXIMAS FICHAS" (collapsed cards with just the
- * plan header), and "HISTÓRICO" (past sessions as single rows).
- *
- * Data:
- *   - Academy branding comes from `useDashboard()`.
- *   - Workouts content is read from `MOCK_WORKOUTS` directly. When
- *     the backend gains a `myWorkouts` query we swap this import for
- *     a `useWorkouts()` hook with the same shape.
+ * Wired in Fase 3: data comes from `useWorkouts()` (mock or Apollo). The
+ * header carries three progress stats (this week / 30 days / streak). The
+ * content area is three sections: "FICHA ATUAL" (active plan + exercise
+ * list + start CTA → /workout/[id]), "PRÓXIMAS FICHAS" (collapsed cards),
+ * and "HISTÓRICO" (finished sessions → /workout/session/[id]).
  */
 
 import React from 'react';
 import {
+  ActivityIndicator,
+  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -24,17 +20,16 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  ArrowRight,
-  Clock,
-  Dumbbell,
-  Play,
-} from 'lucide-react-native';
+import { router } from 'expo-router';
+import { ArrowRight, Clock, Dumbbell, Play } from 'lucide-react-native';
 
 import { useDashboard } from '../../hooks/useDashboard';
-import { MOCK_WORKOUTS } from '../../lib/mock-data';
+import { useWorkouts } from '../../hooks/useWorkouts';
 import { theme, withAlpha } from '../../lib/theme';
-import type { WorkoutPlanCard } from '../../lib/types';
+import type {
+  ActiveWorkoutPlan,
+  UpcomingWorkoutPlan,
+} from '../../lib/types';
 
 export default function WorkoutsScreen() {
   const { data } = useDashboard();
@@ -42,18 +37,19 @@ export default function WorkoutsScreen() {
   const academyName = data?.academy.name ?? 'Gym';
   const initials = data?.academy.initials ?? 'G';
 
-  const workouts = MOCK_WORKOUTS;
+  const { active, upcoming, history, stats, loading, error, refetch } = useWorkouts();
+  const firstLoad = loading && !active && history.length === 0;
 
   return (
-    <SafeAreaView
-      edges={['top']}
-      style={[styles.safe, { backgroundColor: accent }]}
-    >
+    <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: accent }]}>
       <StatusBar barStyle="light-content" backgroundColor={accent} />
       <ScrollView
         style={{ backgroundColor: theme.paper }}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={refetch} tintColor={accent} />
+        }
       >
         {/* HEADER */}
         <View style={[styles.header, { backgroundColor: accent }]}>
@@ -64,61 +60,81 @@ export default function WorkoutsScreen() {
               </View>
               <Text style={styles.academyName}>{academyName}</Text>
             </View>
-            <TouchableOpacity
-              style={styles.iconBtn}
-              activeOpacity={0.7}
-              accessibilityLabel="Histórico"
-            >
+            <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7} accessibilityLabel="Histórico">
               <Clock size={18} color="#fff" strokeWidth={2.2} />
             </TouchableOpacity>
           </View>
           <Text style={styles.eyebrow}>TREINOS</Text>
           <Text style={styles.title}>Minhas fichas</Text>
 
-          {/* Progress stats */}
           <View style={styles.statsRow}>
-            <StatCell
-              label="Esta semana"
-              value={workouts.stats.thisWeek}
-              delta={workouts.stats.thisWeekDelta}
-            />
-            <StatCell
-              label="Total · 30d"
-              value={workouts.stats.thirtyDays}
-              delta={workouts.stats.thirtyDaysDelta}
-            />
-            <StatCell
-              label="Sequência"
-              value={workouts.stats.streak}
-              delta={workouts.stats.streakDelta}
-            />
+            <StatCell label="Esta semana" value={stats.thisWeek} sub="treinos" />
+            <StatCell label="Total · 30d" value={stats.thirtyDays} sub="treinos" />
+            <StatCell label="Sequência" value={stats.streak} sub="seguidos" />
           </View>
         </View>
 
         {/* CONTENT */}
         <View style={styles.content}>
-          <Text style={styles.sectionLabel}>FICHA ATUAL</Text>
-          <ActiveWorkoutCard plan={workouts.active} accent={accent} />
+          {firstLoad ? (
+            <View style={styles.centerBox}>
+              <ActivityIndicator color={accent} />
+            </View>
+          ) : error ? (
+            <View style={styles.centerBox}>
+              <Text style={styles.errTitle}>Não conseguimos carregar</Text>
+              <Text style={styles.errBody}>{error.message}</Text>
+              <TouchableOpacity onPress={refetch} style={[styles.retry, { borderColor: accent }]}>
+                <Text style={[styles.retryText, { color: accent }]}>Tentar de novo</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.sectionLabel}>FICHA ATUAL</Text>
+              {active ? (
+                <ActiveWorkoutCard plan={active} accent={accent} />
+              ) : (
+                <View style={styles.emptyCard}>
+                  <View style={[styles.wIcon, { backgroundColor: withAlpha(accent, 0.1) }]}>
+                    <Dumbbell size={20} color={accent} strokeWidth={2.2} />
+                  </View>
+                  <Text style={styles.emptyTitle}>Sem ficha ativa</Text>
+                  <Text style={styles.emptyBody}>
+                    Você ainda não tem uma ficha de treino. Fale com a recepção da sua academia.
+                  </Text>
+                </View>
+              )}
 
-          <Text style={styles.sectionLabel}>PRÓXIMAS FICHAS</Text>
-          {workouts.upcoming.map((plan) => (
-            <UpcomingWorkoutCard key={plan.id} plan={plan} accent={accent} />
-          ))}
+              {upcoming.length > 0 ? (
+                <>
+                  <Text style={styles.sectionLabel}>PRÓXIMAS FICHAS</Text>
+                  {upcoming.map((plan) => (
+                    <UpcomingWorkoutCard key={plan.documentId} plan={plan} accent={accent} />
+                  ))}
+                </>
+              ) : null}
 
-          <Text style={styles.sectionLabel}>HISTÓRICO</Text>
-          {workouts.history.map((entry) => (
-            <TouchableOpacity
-              key={entry.id}
-              activeOpacity={0.8}
-              style={styles.historyRow}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={styles.historyName}>{entry.name}</Text>
-                <Text style={styles.historyMeta}>{entry.meta}</Text>
-              </View>
-              <ArrowRight size={16} color={theme.ink300} strokeWidth={2} />
-            </TouchableOpacity>
-          ))}
+              {history.length > 0 ? (
+                <>
+                  <Text style={styles.sectionLabel}>HISTÓRICO</Text>
+                  {history.map((entry) => (
+                    <TouchableOpacity
+                      key={entry.documentId}
+                      activeOpacity={0.8}
+                      style={styles.historyRow}
+                      onPress={() => router.push(`/workout/session/${entry.documentId}`)}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.historyName}>{entry.name}</Text>
+                        <Text style={styles.historyMeta}>{entry.meta}</Text>
+                      </View>
+                      <ArrowRight size={16} color={theme.ink300} strokeWidth={2} />
+                    </TouchableOpacity>
+                  ))}
+                </>
+              ) : null}
+            </>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -126,24 +142,13 @@ export default function WorkoutsScreen() {
 }
 
 /* ==================================================================
- * ACTIVE WORKOUT — full card with exercise list + CTA
+ * ACTIVE WORKOUT — full card with exercise list + CTA → detail
  * ================================================================ */
-function ActiveWorkoutCard({
-  plan,
-  accent,
-}: {
-  plan: WorkoutPlanCard;
-  accent: string;
-}) {
+function ActiveWorkoutCard({ plan, accent }: { plan: ActiveWorkoutPlan; accent: string }) {
   return (
     <View style={[styles.workoutCard, { borderColor: accent, borderWidth: 1.5 }]}>
       <View style={styles.wHead}>
-        <View
-          style={[
-            styles.wIcon,
-            { backgroundColor: withAlpha(accent, 0.1) },
-          ]}
-        >
+        <View style={[styles.wIcon, { backgroundColor: withAlpha(accent, 0.1) }]}>
           <Dumbbell size={20} color={accent} strokeWidth={2.2} />
         </View>
         <View style={{ flex: 1 }}>
@@ -151,7 +156,7 @@ function ActiveWorkoutCard({
           <Text style={styles.wMeta}>{plan.meta}</Text>
         </View>
         <View style={[styles.wTag, { backgroundColor: accent }]}>
-          <Text style={styles.wTagText}>EM ANDAMENTO</Text>
+          <Text style={styles.wTagText}>ATIVA</Text>
         </View>
       </View>
 
@@ -159,20 +164,10 @@ function ActiveWorkoutCard({
         {plan.exercises.map((ex, i, arr) => (
           <View
             key={`${ex.num}-${ex.name}`}
-            style={[
-              styles.exRow,
-              i === arr.length - 1 && styles.exRowLast,
-            ]}
+            style={[styles.exRow, i === arr.length - 1 && styles.exRowLast]}
           >
-            <View
-              style={[
-                styles.exNum,
-                { backgroundColor: withAlpha(accent, 0.1) },
-              ]}
-            >
-              <Text style={[styles.exNumText, { color: accent }]}>
-                {ex.num}
-              </Text>
+            <View style={[styles.exNum, { backgroundColor: withAlpha(accent, 0.1) }]}>
+              <Text style={[styles.exNumText, { color: accent }]}>{ex.num}</Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.exName}>{ex.name}</Text>
@@ -186,6 +181,7 @@ function ActiveWorkoutCard({
       <TouchableOpacity
         activeOpacity={0.85}
         style={[styles.cta, { backgroundColor: accent }]}
+        onPress={() => router.push(`/workout/${plan.documentId}`)}
       >
         <Play size={16} color="#fff" strokeWidth={2.5} />
         <Text style={styles.ctaText}>Iniciar treino</Text>
@@ -197,28 +193,22 @@ function ActiveWorkoutCard({
 /* ==================================================================
  * UPCOMING WORKOUT — collapsed card with just the plan header
  * ================================================================ */
-function UpcomingWorkoutCard({
-  plan,
-  accent,
-}: {
-  plan: { id: string; name: string; meta: string };
-  accent: string;
-}) {
+function UpcomingWorkoutCard({ plan, accent }: { plan: UpcomingWorkoutPlan; accent: string }) {
   return (
-    <TouchableOpacity activeOpacity={0.85} style={styles.workoutCard}>
+    <TouchableOpacity
+      activeOpacity={0.85}
+      style={styles.workoutCard}
+      onPress={() => router.push(`/workout/${plan.documentId}`)}
+    >
       <View style={[styles.wHead, { borderBottomWidth: 0, paddingBottom: 0 }]}>
-        <View
-          style={[
-            styles.wIcon,
-            { backgroundColor: withAlpha(accent, 0.1) },
-          ]}
-        >
+        <View style={[styles.wIcon, { backgroundColor: withAlpha(accent, 0.1) }]}>
           <Dumbbell size={20} color={accent} strokeWidth={2.2} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.wName}>{plan.name}</Text>
           <Text style={styles.wMeta}>{plan.meta}</Text>
         </View>
+        <ArrowRight size={16} color={theme.ink300} strokeWidth={2} />
       </View>
     </TouchableOpacity>
   );
@@ -227,20 +217,12 @@ function UpcomingWorkoutCard({
 /* ==================================================================
  * STAT CELL — one of the three progress stats in the header
  * ================================================================ */
-function StatCell({
-  label,
-  value,
-  delta,
-}: {
-  label: string;
-  value: string;
-  delta: string;
-}) {
+function StatCell({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
     <View style={styles.statCell}>
       <Text style={styles.statLabel}>{label}</Text>
       <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statDelta}>{delta}</Text>
+      <Text style={styles.statDelta}>{sub}</Text>
     </View>
   );
 }
@@ -252,11 +234,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   scroll: { paddingBottom: 32 },
 
-  header: {
-    paddingTop: 16,
-    paddingHorizontal: 20,
-    paddingBottom: 28,
-  },
+  header: { paddingTop: 16, paddingHorizontal: 20, paddingBottom: 28 },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -291,19 +269,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
-  title: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: '700',
-    letterSpacing: -0.8,
-    marginTop: 4,
-  },
+  title: { color: '#fff', fontSize: 28, fontWeight: '700', letterSpacing: -0.8, marginTop: 4 },
 
-  statsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 18,
-  },
+  statsRow: { flexDirection: 'row', gap: 10, marginTop: 18 },
   statCell: {
     flex: 1,
     padding: 12,
@@ -319,19 +287,8 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
-  statValue: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '700',
-    marginTop: 6,
-    letterSpacing: -0.5,
-  },
-  statDelta: {
-    color: 'rgba(255,255,255,0.78)',
-    fontSize: 10,
-    marginTop: 3,
-    fontWeight: '500',
-  },
+  statValue: { color: '#fff', fontSize: 22, fontWeight: '700', marginTop: 6, letterSpacing: -0.5 },
+  statDelta: { color: 'rgba(255,255,255,0.78)', fontSize: 10, marginTop: 3, fontWeight: '500' },
 
   content: {
     marginTop: -20,
@@ -340,7 +297,14 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     paddingHorizontal: 16,
     paddingTop: 24,
+    minHeight: 280,
   },
+
+  centerBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 56, gap: 10 },
+  errTitle: { fontSize: 16, fontWeight: '800', color: theme.ink900 },
+  errBody: { fontSize: 13, color: theme.ink500, textAlign: 'center' },
+  retry: { marginTop: 8, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 12, borderWidth: 1.5 },
+  retryText: { fontWeight: '700', fontSize: 13 },
 
   sectionLabel: {
     fontSize: 10,
@@ -366,6 +330,19 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
+  emptyCard: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: theme.line,
+    alignItems: 'center',
+    gap: 8,
+  },
+  emptyTitle: { fontSize: 15, fontWeight: '700', color: theme.ink900, marginTop: 4 },
+  emptyBody: { fontSize: 13, color: theme.ink500, textAlign: 'center', lineHeight: 19 },
+
   wHead: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -374,19 +351,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.line,
   },
-  wIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  wName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: theme.ink900,
-    letterSpacing: -0.2,
-  },
+  wIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  wName: { fontSize: 15, fontWeight: '700', color: theme.ink900, letterSpacing: -0.2 },
   wMeta: {
     fontSize: 10,
     color: theme.ink400,
@@ -395,17 +361,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textTransform: 'uppercase',
   },
-  wTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  wTagText: {
-    color: '#fff',
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-  },
+  wTag: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
+  wTagText: { color: '#fff', fontSize: 9, fontWeight: '800', letterSpacing: 0.6 },
 
   exList: { marginTop: 10 },
   exRow: {
@@ -417,13 +374,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.paper2,
   },
   exRowLast: { borderBottomWidth: 0 },
-  exNum: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  exNum: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   exNumText: { fontWeight: '800', fontSize: 11 },
   exName: { fontSize: 14, fontWeight: '600', color: theme.ink900 },
   exDetail: { fontSize: 11, color: theme.ink400, marginTop: 1 },
@@ -438,12 +389,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     borderRadius: 14,
   },
-  ctaText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: -0.2,
-  },
+  ctaText: { color: '#fff', fontSize: 14, fontWeight: '700', letterSpacing: -0.2 },
 
   historyRow: {
     flexDirection: 'row',
@@ -457,11 +403,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     marginBottom: 10,
   },
-  historyName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: theme.ink700,
-  },
+  historyName: { fontSize: 14, fontWeight: '700', color: theme.ink700 },
   historyMeta: {
     fontSize: 10,
     color: theme.ink400,

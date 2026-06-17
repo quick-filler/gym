@@ -358,6 +358,49 @@ right below. We want the history, not a clean slate.
     children — `cancelMyBooking` already accepts guardian-owned
     dependent bookings; `bookClass` is student-only for now.
 
+### 2.9 Student workout sessions (Fase 3)
+
+- **Decision** — Treinos gain an execution layer. A new content type
+  **`WorkoutSession`** (`api::workout-session.workout-session`) records a
+  single executed training, and the student flow lives in
+  `src/extensions/graphql/types/workout-session.ts`
+  (`myWorkouts`, `myWorkoutHistory`, `myWorkoutStats`, `workoutSession`,
+  `startWorkoutSession`, `finishWorkoutSession`, `cancelWorkoutSession`).
+  - **WorkoutSession shape:** `student` / `dependent` / `academy` /
+    `workoutPlan` relations + `startedAt`, `finishedAt`,
+    `durationMinutes`, `exercisesCompleted` (JSON checklist), `notes`.
+  - **Eligibility to *start*** mirrors booking (§2.8): an `active`
+    enrollment is required. Reading fichas / history / stats only needs a
+    linked student (tenant gate) so a lapsed member still sees their past.
+  - **Lifecycle:** a session is *open* until `finishedAt` is set; only
+    open sessions can be finished or cancelled. `durationMinutes` is
+    computed **once, on finish** (`finishedAt - startedAt`, floored).
+  - **Checklist seeding:** `startWorkoutSession` seeds
+    `exercisesCompleted` from the plan's `exercises` (all `completed:false`)
+    so the execution screen just hydrates local state.
+  - **`active` vs `upcoming` fichas:** `partitionWorkoutPlans` picks the
+    most-recently-started plan whose `validFrom/validTo` window covers
+    today (and `isActive !== false`) as the single active ficha; the rest
+    are `upcoming`. Pure + unit-tested.
+- **Why a separate content type (not a status on WorkoutPlan):** a plan is
+  a template reused across many sessions; sessions are the per-day log that
+  drives history + stats. Conflating them would lose the streak/volume
+  signal.
+- **Consequences / gotchas** —
+  - Stats (`thisWeekCount`, `thirtyDaysCount`, `streakDays`) are **derived
+    in the resolver** from finished sessions, São-Paulo-calendar anchored
+    (reuses the BRT helpers from §2.8). No counters are stored.
+  - `WorkoutPlan` has **no direct `academy` relation** — its tenancy is via
+    `student`/`dependent` → academy. A resolver must never populate
+    `academy` on a workout-plan `findOne` (Strapi throws *“Invalid key
+    academy”*); match ownership through `plan.student` instead. Caught by
+    the Fase 3 live smoke test.
+  - All pure helpers live in `workout-session.test.ts` (17 tests).
+- **Revisit when** — dependent workout sessions (Fase 6) need the same flow
+  for a guardian's children (the content type already carries a `dependent`
+  relation; the resolvers are student-only today); or when an instructor
+  wants to see/annotate a student's completed sessions.
+
 ---
 
 ## 3. GraphQL API

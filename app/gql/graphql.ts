@@ -976,6 +976,8 @@ export type Mutation = {
   bulkImportStudents?: Maybe<BulkImportResult>;
   /** Cancels the caller’s own booking. Confirmed seats: until 24h before start; waitlist spots: any time. Frees a seat → auto-promotes the first waitlister. */
   cancelMyBooking?: Maybe<ClassBooking>;
+  /** Drops an open (not-yet-finished) session. */
+  cancelWorkoutSession?: Maybe<WorkoutSession>;
   /** Platform admin only — moves an academy to a different PlatformPlan. Re-snapshots price/features/limits. */
   changeSubscriptionPlan?: Maybe<AcademySubscription>;
   /** Mark a booking as attended and stamp checkedInAt. */
@@ -1008,7 +1010,11 @@ export type Mutation = {
   deletePlatformPlan?: Maybe<PlatformPlan>;
   deleteStudent?: Maybe<Student>;
   deleteWorkoutPlan?: Maybe<WorkoutPlan>;
+  /** Closes an open session: records duration, the per-exercise checklist and optional notes. */
+  finishWorkoutSession?: Maybe<WorkoutSession>;
   mintUploadUrl?: Maybe<PresignedUpload>;
+  /** Opens a training session against one of the caller’s active fichas. Requires an active enrollment. Seeds the per-exercise checklist from the plan. */
+  startWorkoutSession?: Maybe<WorkoutSession>;
   submitContactForm?: Maybe<ContactFormResult>;
   updateAcademy?: Maybe<Academy>;
   updateBodyAssessment?: Maybe<BodyAssessment>;
@@ -1051,6 +1057,11 @@ export type MutationBulkImportStudentsArgs = {
 
 export type MutationCancelMyBookingArgs = {
   documentId: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelWorkoutSessionArgs = {
+  sessionId: Scalars['ID']['input'];
 };
 
 
@@ -1199,10 +1210,22 @@ export type MutationDeleteWorkoutPlanArgs = {
 };
 
 
+export type MutationFinishWorkoutSessionArgs = {
+  exercisesCompleted?: InputMaybe<Scalars['JSON']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  sessionId: Scalars['ID']['input'];
+};
+
+
 export type MutationMintUploadUrlArgs = {
   contentType: Scalars['String']['input'];
   filename: Scalars['String']['input'];
   size: Scalars['Int']['input'];
+};
+
+
+export type MutationStartWorkoutSessionArgs = {
+  workoutPlanId: Scalars['ID']['input'];
 };
 
 
@@ -1307,6 +1330,13 @@ export type MutationUpdateStudentArgs = {
 export type MutationUpdateWorkoutPlanArgs = {
   data: WorkoutPlanUpdateInput;
   documentId: Scalars['ID']['input'];
+};
+
+/** The caller's active ficha plus the remaining (upcoming) ones. */
+export type MyWorkouts = {
+  __typename?: 'MyWorkouts';
+  active?: Maybe<WorkoutPlan>;
+  upcoming?: Maybe<Array<Maybe<WorkoutPlan>>>;
 };
 
 export type Pagination = {
@@ -1580,6 +1610,12 @@ export type Query = {
   myUnreadNotificationCount?: Maybe<Scalars['Int']['output']>;
   /** The caller's upcoming confirmed bookings, soonest first. Powers the app dashboard + schedule preview. */
   myUpcomingBookings?: Maybe<Array<Maybe<ClassBooking>>>;
+  /** The caller's finished training sessions, newest first. */
+  myWorkoutHistory?: Maybe<Array<Maybe<WorkoutSession>>>;
+  /** Derived training stats (this week / 30 days / streak). */
+  myWorkoutStats?: Maybe<WorkoutStats>;
+  /** The caller's active workout plan and the remaining ones. */
+  myWorkouts?: Maybe<MyWorkouts>;
   payment?: Maybe<Payment>;
   payments?: Maybe<Array<Maybe<Payment>>>;
   plan?: Maybe<Plan>;
@@ -1601,6 +1637,8 @@ export type Query = {
   suggestModulesForBusinessType?: Maybe<ModulePresetSuggestion>;
   workoutPlan?: Maybe<WorkoutPlan>;
   workoutPlans?: Maybe<Array<Maybe<WorkoutPlan>>>;
+  /** A single session the caller owns (the execution screen). */
+  workoutSession?: Maybe<WorkoutSession>;
 };
 
 
@@ -1721,6 +1759,11 @@ export type QueryMyUpcomingBookingsArgs = {
 };
 
 
+export type QueryMyWorkoutHistoryArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryPaymentArgs = {
   documentId: Scalars['ID']['input'];
 };
@@ -1794,6 +1837,11 @@ export type QueryWorkoutPlanArgs = {
 
 export type QueryWorkoutPlansArgs = {
   pagination?: InputMaybe<PaginationInput>;
+};
+
+
+export type QueryWorkoutSessionArgs = {
+  documentId: Scalars['ID']['input'];
 };
 
 export type ResponseCollectionMeta = {
@@ -2044,6 +2092,26 @@ export type WorkoutPlanUpdateInput = {
   validTo?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** A single executed training session logged against a workout plan. */
+export type WorkoutSession = {
+  __typename?: 'WorkoutSession';
+  documentId: Scalars['ID']['output'];
+  durationMinutes?: Maybe<Scalars['Int']['output']>;
+  exercisesCompleted?: Maybe<Scalars['JSON']['output']>;
+  finishedAt?: Maybe<Scalars['String']['output']>;
+  notes?: Maybe<Scalars['String']['output']>;
+  startedAt?: Maybe<Scalars['String']['output']>;
+  workoutPlan?: Maybe<WorkoutPlan>;
+};
+
+/** Derived training stats for the Treinos header. */
+export type WorkoutStats = {
+  __typename?: 'WorkoutStats';
+  streakDays: Scalars['Int']['output'];
+  thirtyDaysCount: Scalars['Int']['output'];
+  thisWeekCount: Scalars['Int']['output'];
+};
+
 export type AcademyBySlugQueryVariables = Exact<{
   slug: Scalars['String']['input'];
 }>;
@@ -2092,6 +2160,60 @@ export type BookingDetailQueryVariables = Exact<{
 
 export type BookingDetailQuery = { __typename?: 'Query', classBooking?: { __typename?: 'ClassBooking', documentId: string, date: string, status: string, checkedInAt?: string | null, classSchedule?: { __typename?: 'ClassSchedule', documentId: string, name: string, instructor?: string | null, room?: string | null, startTime?: string | null, endTime?: string | null, modality?: string | null } | null } | null };
 
+export type MyWorkoutsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MyWorkoutsQuery = { __typename?: 'Query', myWorkouts?: { __typename?: 'MyWorkouts', active?: { __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null, validFrom?: string | null, validTo?: string | null, isActive?: boolean | null, exercises?: Array<{ __typename?: 'Exercise', name: string, sets?: number | null, reps?: number | null, load?: string | null, notes?: string | null } | null> | null } | null, upcoming?: Array<{ __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null, exercises?: Array<{ __typename?: 'Exercise', name: string } | null> | null } | null> | null } | null };
+
+export type WorkoutPlanDetailQueryVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+}>;
+
+
+export type WorkoutPlanDetailQuery = { __typename?: 'Query', workoutPlan?: { __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null, validFrom?: string | null, validTo?: string | null, isActive?: boolean | null, exercises?: Array<{ __typename?: 'Exercise', name: string, sets?: number | null, reps?: number | null, load?: string | null, notes?: string | null } | null> | null } | null };
+
+export type MyWorkoutHistoryQueryVariables = Exact<{
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type MyWorkoutHistoryQuery = { __typename?: 'Query', myWorkoutHistory?: Array<{ __typename?: 'WorkoutSession', documentId: string, startedAt?: string | null, finishedAt?: string | null, durationMinutes?: number | null, notes?: string | null, exercisesCompleted?: unknown | null, workoutPlan?: { __typename?: 'WorkoutPlan', documentId: string, name: string } | null } | null> | null };
+
+export type MyWorkoutStatsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MyWorkoutStatsQuery = { __typename?: 'Query', myWorkoutStats?: { __typename?: 'WorkoutStats', thisWeekCount: number, thirtyDaysCount: number, streakDays: number } | null };
+
+export type StartWorkoutSessionMutationVariables = Exact<{
+  workoutPlanId: Scalars['ID']['input'];
+}>;
+
+
+export type StartWorkoutSessionMutation = { __typename?: 'Mutation', startWorkoutSession?: { __typename?: 'WorkoutSession', documentId: string, startedAt?: string | null, finishedAt?: string | null, exercisesCompleted?: unknown | null, workoutPlan?: { __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null } | null } | null };
+
+export type WorkoutSessionDetailQueryVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+}>;
+
+
+export type WorkoutSessionDetailQuery = { __typename?: 'Query', workoutSession?: { __typename?: 'WorkoutSession', documentId: string, startedAt?: string | null, finishedAt?: string | null, durationMinutes?: number | null, notes?: string | null, exercisesCompleted?: unknown | null, workoutPlan?: { __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null } | null } | null };
+
+export type FinishWorkoutSessionMutationVariables = Exact<{
+  sessionId: Scalars['ID']['input'];
+  exercisesCompleted?: InputMaybe<Scalars['JSON']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type FinishWorkoutSessionMutation = { __typename?: 'Mutation', finishWorkoutSession?: { __typename?: 'WorkoutSession', documentId: string, finishedAt?: string | null, durationMinutes?: number | null, notes?: string | null } | null };
+
+export type CancelWorkoutSessionMutationVariables = Exact<{
+  sessionId: Scalars['ID']['input'];
+}>;
+
+
+export type CancelWorkoutSessionMutation = { __typename?: 'Mutation', cancelWorkoutSession?: { __typename?: 'WorkoutSession', documentId: string } | null };
+
 export type AcademyBySlugBrandingQueryVariables = Exact<{
   slug: Scalars['String']['input'];
 }>;
@@ -2112,5 +2234,13 @@ export const MyScheduleWeekDocument = {"kind":"Document","definitions":[{"kind":
 export const BookClassDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"BookClass"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"scheduleDocumentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"date"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"bookClass"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"scheduleDocumentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"scheduleDocumentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"date"},"value":{"kind":"Variable","name":{"kind":"Name","value":"date"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"date"}}]}}]}}]} as unknown as DocumentNode<BookClassMutation, BookClassMutationVariables>;
 export const CancelMyBookingDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CancelMyBooking"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"cancelMyBooking"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<CancelMyBookingMutation, CancelMyBookingMutationVariables>;
 export const BookingDetailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"BookingDetail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"classBooking"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"checkedInAt"}},{"kind":"Field","name":{"kind":"Name","value":"classSchedule"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"room"}},{"kind":"Field","name":{"kind":"Name","value":"startTime"}},{"kind":"Field","name":{"kind":"Name","value":"endTime"}},{"kind":"Field","name":{"kind":"Name","value":"modality"}}]}}]}}]}}]} as unknown as DocumentNode<BookingDetailQuery, BookingDetailQueryVariables>;
+export const MyWorkoutsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyWorkouts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myWorkouts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"active"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"validFrom"}},{"kind":"Field","name":{"kind":"Name","value":"validTo"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"sets"}},{"kind":"Field","name":{"kind":"Name","value":"reps"}},{"kind":"Field","name":{"kind":"Name","value":"load"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"upcoming"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]}}]} as unknown as DocumentNode<MyWorkoutsQuery, MyWorkoutsQueryVariables>;
+export const WorkoutPlanDetailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"WorkoutPlanDetail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workoutPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"validFrom"}},{"kind":"Field","name":{"kind":"Name","value":"validTo"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"sets"}},{"kind":"Field","name":{"kind":"Name","value":"reps"}},{"kind":"Field","name":{"kind":"Name","value":"load"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}}]}}]}}]}}]} as unknown as DocumentNode<WorkoutPlanDetailQuery, WorkoutPlanDetailQueryVariables>;
+export const MyWorkoutHistoryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyWorkoutHistory"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myWorkoutHistory"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"startedAt"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"durationMinutes"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"exercisesCompleted"}},{"kind":"Field","name":{"kind":"Name","value":"workoutPlan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<MyWorkoutHistoryQuery, MyWorkoutHistoryQueryVariables>;
+export const MyWorkoutStatsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyWorkoutStats"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myWorkoutStats"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"thisWeekCount"}},{"kind":"Field","name":{"kind":"Name","value":"thirtyDaysCount"}},{"kind":"Field","name":{"kind":"Name","value":"streakDays"}}]}}]}}]} as unknown as DocumentNode<MyWorkoutStatsQuery, MyWorkoutStatsQueryVariables>;
+export const StartWorkoutSessionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"StartWorkoutSession"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"workoutPlanId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"startWorkoutSession"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"workoutPlanId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"workoutPlanId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"startedAt"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"exercisesCompleted"}},{"kind":"Field","name":{"kind":"Name","value":"workoutPlan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}}]}}]}}]}}]} as unknown as DocumentNode<StartWorkoutSessionMutation, StartWorkoutSessionMutationVariables>;
+export const WorkoutSessionDetailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"WorkoutSessionDetail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workoutSession"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"startedAt"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"durationMinutes"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"exercisesCompleted"}},{"kind":"Field","name":{"kind":"Name","value":"workoutPlan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}}]}}]}}]}}]} as unknown as DocumentNode<WorkoutSessionDetailQuery, WorkoutSessionDetailQueryVariables>;
+export const FinishWorkoutSessionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"FinishWorkoutSession"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"exercisesCompleted"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"JSON"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"notes"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"finishWorkoutSession"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"sessionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}}},{"kind":"Argument","name":{"kind":"Name","value":"exercisesCompleted"},"value":{"kind":"Variable","name":{"kind":"Name","value":"exercisesCompleted"}}},{"kind":"Argument","name":{"kind":"Name","value":"notes"},"value":{"kind":"Variable","name":{"kind":"Name","value":"notes"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"durationMinutes"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}}]}}]}}]} as unknown as DocumentNode<FinishWorkoutSessionMutation, FinishWorkoutSessionMutationVariables>;
+export const CancelWorkoutSessionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CancelWorkoutSession"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"cancelWorkoutSession"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"sessionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}}]}}]}}]} as unknown as DocumentNode<CancelWorkoutSessionMutation, CancelWorkoutSessionMutationVariables>;
 export const AcademyBySlugBrandingDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AcademyBySlugBranding"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"academyBySlug"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"primaryColor"}}]}}]}}]} as unknown as DocumentNode<AcademyBySlugBrandingQuery, AcademyBySlugBrandingQueryVariables>;
 export const AppMyDependentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AppMyDependents"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"academy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"myDependents"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"birthdate"}},{"kind":"Field","name":{"kind":"Name","value":"gender"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"medicalAlert"}},{"kind":"Field","name":{"kind":"Name","value":"bloodType"}},{"kind":"Field","name":{"kind":"Name","value":"emergencyContactName"}},{"kind":"Field","name":{"kind":"Name","value":"emergencyContactPhone"}},{"kind":"Field","name":{"kind":"Name","value":"enrollments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"endDate"}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}}]}}]}}]}}]}}]} as unknown as DocumentNode<AppMyDependentsQuery, AppMyDependentsQueryVariables>;

@@ -1,0 +1,119 @@
+# Student Treinos tab — fichas, execution sessions, history & stats (Fase 3).
+
+query MyWorkouts {
+  myWorkouts {
+    active {
+      documentId
+      name
+      instructor
+      validFrom
+      validTo
+      isActive
+      exercises {
+        name
+        sets
+        reps
+        load
+        notes
+      }
+    }
+    upcoming {
+      documentId
+      name
+      instructor
+      exercises {
+        name
+      }
+    }
+  }
+}
+
+query WorkoutPlanDetail($documentId: ID!) {
+  workoutPlan(documentId: $documentId) {
+    documentId
+    name
+    instructor
+    validFrom
+    validTo
+    isActive
+    exercises {
+      name
+      sets
+      reps
+      load
+      notes
+    }
+  }
+}
+
+query MyWorkoutHistory($limit: Int) {
+  myWorkoutHistory(limit: $limit) {
+    documentId
+    startedAt
+    finishedAt
+    durationMinutes
+    notes
+    exercisesCompleted
+    workoutPlan {
+      documentId
+      name
+    }
+  }
+}
+
+query MyWorkoutStats {
+  myWorkoutStats {
+    thisWeekCount
+    thirtyDaysCount
+    streakDays
+  }
+}
+
+mutation StartWorkoutSession($workoutPlanId: ID!) {
+  startWorkoutSession(workoutPlanId: $workoutPlanId) {
+    documentId
+    startedAt
+    finishedAt
+    exercisesCompleted
+    workoutPlan {
+      documentId
+      name
+      instructor
+    }
+  }
+}
+
+query WorkoutSessionDetail($documentId: ID!) {
+  workoutSession(documentId: $documentId) {
+    documentId
+    startedAt
+    finishedAt
+    durationMinutes
+    notes
+    exercisesCompleted
+    workoutPlan {
+      documentId
+      name
+      instructor
+    }
+  }
+}
+
+mutation FinishWorkoutSession($sessionId: ID!, $exercisesCompleted: JSON, $notes: String) {
+  finishWorkoutSession(
+    sessionId: $sessionId
+    exercisesCompleted: $exercisesCompleted
+    notes: $notes
+  ) {
+    documentId
+    finishedAt
+    durationMinutes
+    notes
+  }
+}
+
+mutation CancelWorkoutSession($sessionId: ID!) {
+  cancelWorkoutSession(sessionId: $sessionId) {
+    documentId
+  }
+}

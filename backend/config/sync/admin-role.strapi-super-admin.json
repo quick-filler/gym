@@ -1560,6 +1560,87 @@
       "locale": null
     },
     {
+      "documentId": "qko2s3z9ebsxwmii6nf7scqp",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::workout-session.workout-session",
+      "properties": {
+        "fields": [
+          "student",
+          "dependent",
+          "academy",
+          "workoutPlan",
+          "startedAt",
+          "finishedAt",
+          "durationMinutes",
+          "exercisesCompleted",
+          "notes"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "bvlcnsftpjhtz4jj4djdjebl",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::workout-session.workout-session",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "whrjjwlj0oyoccr9r3ejgid9",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::workout-session.workout-session",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "h6k5jo993sl0u0c9y5o3qlha",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::workout-session.workout-session",
+      "properties": {
+        "fields": [
+          "student",
+          "dependent",
+          "academy",
+          "workoutPlan",
+          "startedAt",
+          "finishedAt",
+          "durationMinutes",
+          "exercisesCompleted",
+          "notes"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "wo6owqoevmqwdcsqdud4vbvu",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::workout-session.workout-session",
+      "properties": {
+        "fields": [
+          "student",
+          "dependent",
+          "academy",
+          "workoutPlan",
+          "startedAt",
+          "finishedAt",
+          "durationMinutes",
+          "exercisesCompleted",
+          "notes"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
       "documentId": "z0v7rslmtpqclf6fpwxcualc",
       "action": "admin::admin-tokens.access",
       "actionParameters": {},

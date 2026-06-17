@@ -1,0 +1,283 @@
+{
+  "key": "plugin_content_manager_configuration_content_types::api::workout-session.workout-session",
+  "value": {
+    "settings": {
+      "bulkable": true,
+      "filterable": true,
+      "searchable": true,
+      "pageSize": 10,
+      "relationOpenMode": "modal",
+      "mainField": "documentId",
+      "defaultSortBy": "documentId",
+      "defaultSortOrder": "ASC"
+    },
+    "metadatas": {
+      "id": {
+        "edit": {},
+        "list": {
+          "label": "id",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "student": {
+        "edit": {
+          "label": "student",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "student",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "dependent": {
+        "edit": {
+          "label": "dependent",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "dependent",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "academy": {
+        "edit": {
+          "label": "academy",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "academy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "workoutPlan": {
+        "edit": {
+          "label": "workoutPlan",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "workoutPlan",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "startedAt": {
+        "edit": {
+          "label": "startedAt",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "startedAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "finishedAt": {
+        "edit": {
+          "label": "finishedAt",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "finishedAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "durationMinutes": {
+        "edit": {
+          "label": "durationMinutes",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "durationMinutes",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "exercisesCompleted": {
+        "edit": {
+          "label": "exercisesCompleted",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "exercisesCompleted",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "notes": {
+        "edit": {
+          "label": "notes",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "notes",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdAt": {
+        "edit": {
+          "label": "createdAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "createdAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedAt": {
+        "edit": {
+          "label": "updatedAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "updatedAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdBy": {
+        "edit": {
+          "label": "createdBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "createdBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedBy": {
+        "edit": {
+          "label": "updatedBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "updatedBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "documentId": {
+        "edit": {},
+        "list": {
+          "label": "documentId",
+          "searchable": true,
+          "sortable": true
+        }
+      }
+    },
+    "layouts": {
+      "list": [
+        "id",
+        "student",
+        "dependent",
+        "academy"
+      ],
+      "edit": [
+        [
+          {
+            "name": "student",
+            "size": 6
+          },
+          {
+            "name": "dependent",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "academy",
+            "size": 6
+          },
+          {
+            "name": "workoutPlan",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "startedAt",
+            "size": 6
+          },
+          {
+            "name": "finishedAt",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "durationMinutes",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "exercisesCompleted",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "notes",
+            "size": 6
+          }
+        ]
+      ]
+    },
+    "uid": "api::workout-session.workout-session"
+  },
+  "type": "object",
+  "environment": null,
+  "tag": null
+}

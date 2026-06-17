@@ -1293,6 +1293,50 @@ export interface ApiWorkoutPlanWorkoutPlan extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiWorkoutSessionWorkoutSession
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'workout_sessions';
+  info: {
+    description: 'A single executed training session (sess\u00E3o de treino) logged by a student against a workout plan.';
+    displayName: 'Workout Session';
+    pluralName: 'workout-sessions';
+    singularName: 'workout-session';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academy: Schema.Attribute.Relation<'manyToOne', 'api::academy.academy'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    dependent: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::dependent.dependent'
+    >;
+    durationMinutes: Schema.Attribute.Integer;
+    exercisesCompleted: Schema.Attribute.JSON;
+    finishedAt: Schema.Attribute.DateTime;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::workout-session.workout-session'
+    > &
+      Schema.Attribute.Private;
+    notes: Schema.Attribute.Text;
+    publishedAt: Schema.Attribute.DateTime;
+    startedAt: Schema.Attribute.DateTime;
+    student: Schema.Attribute.Relation<'manyToOne', 'api::student.student'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    workoutPlan: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::workout-plan.workout-plan'
+    >;
+  };
+}
+
 export interface PluginContentReleasesRelease
   extends Struct.CollectionTypeSchema {
   collectionName: 'strapi_releases';
@@ -1821,6 +1865,7 @@ declare module '@strapi/strapi' {
       'api::pool-setting.pool-setting': ApiPoolSettingPoolSetting;
       'api::student.student': ApiStudentStudent;
       'api::workout-plan.workout-plan': ApiWorkoutPlanWorkoutPlan;
+      'api::workout-session.workout-session': ApiWorkoutSessionWorkoutSession;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

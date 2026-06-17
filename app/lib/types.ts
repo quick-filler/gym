@@ -146,6 +146,44 @@ export interface WorkoutsData {
 }
 
 /* ------------------------------------------------------------------
+ * Treinos tab — wired result (Fase 3, real data via useWorkouts)
+ * ------------------------------------------------------------------ */
+export interface ActiveWorkoutPlan {
+  documentId: string;
+  name: string; // "Treino A — Peito e Tríceps"
+  meta: string; // "RAFAEL · 5 EXERCÍCIOS"
+  exercises: Exercise[];
+}
+
+export interface UpcomingWorkoutPlan {
+  documentId: string;
+  name: string;
+  meta: string; // "RAFAEL · 6 EXERCÍCIOS"
+}
+
+export interface WorkoutHistorySession {
+  documentId: string;
+  name: string; // plan name (or "Treino" when the plan is gone)
+  meta: string; // "QUA, 03/04 · 52 MIN"
+}
+
+export interface WorkoutStatsView {
+  thisWeek: string; // count, e.g. "3"
+  thirtyDays: string; // count, e.g. "12"
+  streak: string; // "7d"
+}
+
+export interface WorkoutsResult {
+  active: ActiveWorkoutPlan | null;
+  upcoming: UpcomingWorkoutPlan[];
+  history: WorkoutHistorySession[];
+  stats: WorkoutStatsView;
+  loading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
+
+/* ------------------------------------------------------------------
  * Finanças tab — next bill, history, payment methods
  * ------------------------------------------------------------------ */
 export type PaymentStatus = 'paid' | 'pending' | 'overdue';

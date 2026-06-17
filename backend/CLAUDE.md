@@ -251,6 +251,35 @@ only `confirmed` + `attended` as occupying. Student booking flow lives in
 | validTo | Date | |
 | isActive | Boolean | |
 
+> **No `academy` relation.** A plan's tenancy is derived through
+> `student`/`dependent` → academy (see `withStudentScope`). Never populate
+> `academy` on a workout-plan query — Strapi throws *"Invalid key academy"*.
+
+### WorkoutSession (Sessão de Treino)
+
+A single executed training, logged by the student against a `WorkoutPlan`.
+Drives the Treinos history + derived stats (Fase 3). Resolvers in
+`src/extensions/graphql/types/workout-session.ts`.
+
+| Field | Type | Notes |
+|---|---|---|
+| student | Relation | manyToOne Student (one-directional) |
+| dependent | Relation | manyToOne Dependent (Fase 6) |
+| academy | Relation | manyToOne Academy (tenant scope) |
+| workoutPlan | Relation | manyToOne WorkoutPlan |
+| startedAt | DateTime | set on `startWorkoutSession` |
+| finishedAt | DateTime | null = open session |
+| durationMinutes | Integer | computed once on finish |
+| exercisesCompleted | JSON | `Array<{ name, sets, reps, load, completed }>` |
+| notes | Text | |
+
+Student GraphQL surface (all `auth: true`, tenant-safe): `myWorkouts`
+(`{ active, upcoming }`), `myWorkoutHistory(limit)`, `myWorkoutStats`
+(`{ thisWeekCount, thirtyDaysCount, streakDays }` — derived, BRT calendar),
+`workoutSession(documentId)`, and the `start` / `finish` / `cancel`
+mutations. Starting a session requires an `active` enrollment (mirrors
+booking §2.8); only *open* sessions can be finished/cancelled.
+
 ### PoolSettings (Configuração da piscina)
 
 Configuração 1:1 com Academy pra alimentar o módulo Piscina. Defaults

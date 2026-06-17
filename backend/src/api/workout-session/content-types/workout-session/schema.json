@@ -1,0 +1,51 @@
+{
+  "kind": "collectionType",
+  "collectionName": "workout_sessions",
+  "info": {
+    "singularName": "workout-session",
+    "pluralName": "workout-sessions",
+    "displayName": "Workout Session",
+    "description": "A single executed training session (sessão de treino) logged by a student against a workout plan."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "student": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::student.student"
+    },
+    "dependent": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::dependent.dependent"
+    },
+    "academy": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::academy.academy"
+    },
+    "workoutPlan": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::workout-plan.workout-plan"
+    },
+    "startedAt": {
+      "type": "datetime"
+    },
+    "finishedAt": {
+      "type": "datetime"
+    },
+    "durationMinutes": {
+      "type": "integer"
+    },
+    "exercisesCompleted": {
+      "type": "json"
+    },
+    "notes": {
+      "type": "text"
+    }
+  }
+}
