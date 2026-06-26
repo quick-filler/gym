@@ -25,6 +25,23 @@ import { findUpcomingBookingsForStudent } from './class-booking';
 
 const UID = 'api::student.student';
 
+/**
+ * Whitelist of fields a student may edit on their **own** profile. Anything
+ * else (email, cpf, academy, role, status, name, user) is academy-owned and
+ * silently dropped — this is the security boundary for `updateMyProfile`,
+ * so it's pure + unit-tested. Keys with `undefined` are dropped so partial
+ * updates don't clobber existing values.
+ */
+export const MY_PROFILE_FIELDS = ['phone', 'birthdate', 'gender', 'address', 'photo'] as const;
+
+export function pickProfileFields(input: Record<string, any>): Record<string, any> {
+  const out: Record<string, any> = {};
+  for (const key of MY_PROFILE_FIELDS) {
+    if (input?.[key] !== undefined) out[key] = input[key];
+  }
+  return out;
+}
+
 export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }) {
   const Student = nexus.objectType({
     name: 'Student',
@@ -160,6 +177,19 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       t.id('photo');
       // academy intentionally NOT updatable: we don't move students between
       // tenants via the API.
+    },
+  });
+
+  const MyProfileInput = nexus.inputObjectType({
+    name: 'MyProfileInput',
+    definition(t: any) {
+      // Only the fields a student may change about themselves. Email, cpf,
+      // name, academy, role and status are deliberately absent.
+      t.string('phone');
+      t.string('birthdate');
+      t.string('gender');
+      t.field('address', { type: 'AddressInput' });
+      t.id('photo');
     },
   });
 
@@ -317,11 +347,40 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
           return doc;
         },
       });
+
+      // Student self-service: edit only your own whitelisted fields. No
+      // role/subscription gate (a lapsed member can still fix their phone),
+      // and the academy/role/status fields are unreachable by construction.
+      t.field('updateMyProfile', {
+        type: 'Student',
+        args: { input: nexus.nonNull(nexus.arg({ type: 'MyProfileInput' })) },
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const userId = ctx?.state?.user?.id;
+          if (!userId) throw new Error('Não autenticado.');
+          const me: any = (
+            await strapi.documents(UID).findMany({
+              filters: { user: { id: userId } },
+              fields: ['documentId'],
+              limit: 1,
+            })
+          )[0];
+          if (!me?.documentId) throw new Error('Perfil não encontrado.');
+
+          const data = pickProfileFields(args.input);
+          if (data.birthdate) data.birthdate = String(data.birthdate).slice(0, 10);
+
+          return await strapi.documents(UID).update({
+            documentId: me.documentId,
+            data,
+            populate: { photo: true, academy: { populate: { logo: true } } } as any,
+          });
+        },
+      });
     },
   });
 
   return {
-    types: [Student, StudentInput, StudentUpdateInput, queries, mutations],
+    types: [Student, StudentInput, StudentUpdateInput, MyProfileInput, queries, mutations],
     resolversConfig: {
       'Query.students': { auth: true },
       'Query.student': { auth: true },
@@ -329,6 +388,7 @@ export function buildStudent({ nexus, strapi }: { nexus: any; strapi: Core.Strap
       'Mutation.createStudent': { auth: true },
       'Mutation.updateStudent': { auth: true },
       'Mutation.deleteStudent': { auth: true },
+      'Mutation.updateMyProfile': { auth: true },
     },
   };
 }

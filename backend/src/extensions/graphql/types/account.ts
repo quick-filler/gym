@@ -49,6 +49,26 @@ export function verifyActivationIdentity(
   return birthMatch || phoneMatch;
 }
 
+/**
+ * Pre-validates a password change (before touching the DB). Returns an
+ * error message, or null when the inputs are acceptable. Pure + tested.
+ */
+export function validatePasswordChange(
+  oldPassword?: string | null,
+  newPassword?: string | null,
+): string | null {
+  if (!oldPassword || !newPassword) {
+    return 'Informe a senha atual e a nova senha.';
+  }
+  if (newPassword.length < 6) {
+    return 'A nova senha precisa ter pelo menos 6 caracteres.';
+  }
+  if (newPassword === oldPassword) {
+    return 'A nova senha precisa ser diferente da atual.';
+  }
+  return null;
+}
+
 export function buildAccount({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }) {
   const ActivateAccountInput = nexus.inputObjectType({
     name: 'ActivateAccountInput',
@@ -166,6 +186,41 @@ export function buildAccount({ nexus, strapi }: { nexus: any; strapi: Core.Strap
           return { jwt, student: updated };
         },
       });
+
+      t.field('updateMyPassword', {
+        type: 'Boolean',
+        description:
+          "Authenticated student changes their own password: verifies the current one, then sets the new one.",
+        args: {
+          oldPassword: nexus.nonNull(nexus.stringArg()),
+          newPassword: nexus.nonNull(nexus.stringArg()),
+        },
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const userId = ctx?.state?.user?.id;
+          if (!userId) throw new Error('Não autenticado.');
+
+          const problem = validatePasswordChange(args.oldPassword, args.newPassword);
+          if (problem) throw new Error(problem);
+
+          const user: any = await strapi.db
+            .query('plugin::users-permissions.user')
+            .findOne({ where: { id: userId } });
+          if (!user) throw new Error('Usuário não encontrado.');
+
+          const valid = await strapi
+            .plugin('users-permissions')
+            .service('user')
+            .validatePassword(args.oldPassword, user.password);
+          if (!valid) throw new Error('Senha atual incorreta.');
+
+          await strapi
+            .plugin('users-permissions')
+            .service('user')
+            .edit(userId, { password: args.newPassword });
+
+          return true;
+        },
+      });
     },
   });
 
@@ -173,6 +228,7 @@ export function buildAccount({ nexus, strapi }: { nexus: any; strapi: Core.Strap
     types: [ActivateAccountInput, ActivateAccountResult, mutations],
     resolversConfig: {
       'Mutation.activateAccount': { auth: false },
+      'Mutation.updateMyPassword': { auth: true },
     },
   };
 }

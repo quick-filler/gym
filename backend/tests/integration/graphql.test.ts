@@ -127,9 +127,49 @@ describe('schema introspection', () => {
       'expenses',
       'dependents',
       'myDependents',
+      // Student app — Fase 3 (treinos)
+      'myWorkouts',
+      'myWorkoutHistory',
+      'myWorkoutStats',
+      // Student app — Fase 4 (pagamentos)
+      'myPayments',
+      'myNextPayment',
+      // Student app — Fase 5 (perfil + avaliações)
+      'myBodyAssessments',
+      'myLatestAssessment',
     ];
     for (const name of required) {
       expect(names.has(name), `missing Query.${name}`).toBe(true);
+    }
+  });
+
+  it('exposes every student-app mutation the frontend relies on', async ({ skip }) => {
+    if (!live) return skip();
+    const r = await gql<{
+      __schema: { mutationType: { fields: Array<{ name: string }> } };
+    }>(`{ __schema { mutationType { fields { name } } } }`);
+    const names = new Set(
+      (r.data?.__schema.mutationType.fields ?? []).map((f) => f.name),
+    );
+    const required = [
+      // Fase 3
+      'startWorkoutSession',
+      'finishWorkoutSession',
+      'cancelWorkoutSession',
+      // Fase 4 — checkout (provider-agnostic gateway)
+      'payChargePix',
+      'payChargeBoleto',
+      'payChargeCard',
+      'confirmMockCharge',
+      // Fase 5 — perfil
+      'updateMyProfile',
+      'updateMyPassword',
+      // shared infra
+      'mintUploadUrl',
+      'confirmUpload',
+    ];
+    for (const name of required) {
+      expect(names.has(name), `missing Mutation.${name}`).toBe(true);
     }
   });
 

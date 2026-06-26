@@ -19,6 +19,9 @@
 
 import React from 'react';
 import {
+  ActivityIndicator,
+  Image,
+  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -29,14 +32,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
-  Bell,
   ChevronRight,
-  Globe,
+  KeyRound,
   LogOut,
   Mail,
   Phone,
   Settings,
-  Shield,
   TrendingDown,
   TrendingUp,
   User,
@@ -44,8 +45,8 @@ import {
 } from 'lucide-react-native';
 
 import { useDashboard } from '../../hooks/useDashboard';
+import { useProfile } from '../../hooks/useProfile';
 import { logout } from '../../lib/auth';
-import { MOCK_PROFILE } from '../../lib/mock-data';
 import { theme, withAlpha } from '../../lib/theme';
 import type { BodyAssessment } from '../../lib/types';
 
@@ -55,7 +56,7 @@ export default function ProfileScreen() {
   const academyName = data?.academy.name ?? 'Gym';
   const initials = data?.academy.initials ?? 'G';
 
-  const profile = MOCK_PROFILE;
+  const { profile, photoUrl, loading, error, refetch } = useProfile();
   const avatarInitials = profile.name
     .split(' ')
     .slice(0, 2)
@@ -72,6 +73,9 @@ export default function ProfileScreen() {
         style={{ backgroundColor: theme.paper }}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={refetch} tintColor="#fff" />
+        }
       >
         {/* HEADER */}
         <View style={[styles.header, { backgroundColor: accent }]}>
@@ -98,19 +102,26 @@ export default function ProfileScreen() {
         <View style={styles.content}>
           {/* Hero card — avatar + name */}
           <View style={styles.heroCard}>
-            <View
-              style={[
-                styles.avatar,
-                {
-                  backgroundColor: withAlpha(accent, 0.12),
-                  borderColor: withAlpha(accent, 0.25),
-                },
-              ]}
-            >
-              <Text style={[styles.avatarText, { color: accent }]}>
-                {avatarInitials}
-              </Text>
-            </View>
+            {photoUrl ? (
+              <Image
+                source={{ uri: photoUrl }}
+                style={[styles.avatar, { borderColor: withAlpha(accent, 0.25) }]}
+              />
+            ) : (
+              <View
+                style={[
+                  styles.avatar,
+                  {
+                    backgroundColor: withAlpha(accent, 0.12),
+                    borderColor: withAlpha(accent, 0.25),
+                  },
+                ]}
+              >
+                <Text style={[styles.avatarText, { color: accent }]}>
+                  {avatarInitials}
+                </Text>
+              </View>
+            )}
             <Text style={styles.heroName}>{profile.name}</Text>
             <View style={styles.heroPills}>
               <View
@@ -145,23 +156,40 @@ export default function ProfileScreen() {
           {/* Assessments */}
           <Text style={styles.sectionLabel}>AVALIAÇÕES FÍSICAS</Text>
           <View style={styles.card}>
-            {profile.assessments.map((a, i, arr) => (
-              <AssessmentRow
-                key={a.id}
-                assessment={a}
-                accent={accent}
-                last={i === arr.length - 1}
-              />
-            ))}
+            {loading && profile.assessments.length === 0 ? (
+              <ActivityIndicator color={accent} style={{ paddingVertical: 24 }} />
+            ) : profile.assessments.length === 0 ? (
+              <Text style={styles.emptyText}>
+                {error
+                  ? 'Não foi possível carregar suas avaliações.'
+                  : 'Nenhuma avaliação física registrada ainda.'}
+              </Text>
+            ) : (
+              profile.assessments.map((a, i, arr) => (
+                <AssessmentRow
+                  key={a.id}
+                  assessment={a}
+                  accent={accent}
+                  last={i === arr.length - 1}
+                />
+              ))
+            )}
           </View>
 
           {/* Settings */}
           <Text style={styles.sectionLabel}>CONFIGURAÇÕES</Text>
           <View style={styles.card}>
-            <SettingsRow Icon={User} label="Editar dados pessoais" />
-            <SettingsRow Icon={Bell} label="Notificações" />
-            <SettingsRow Icon={Globe} label="Idioma e região" />
-            <SettingsRow Icon={Shield} label="Privacidade e segurança" last />
+            <SettingsRow
+              Icon={User}
+              label="Editar dados pessoais"
+              onPress={() => router.push('/profile/edit')}
+            />
+            <SettingsRow
+              Icon={KeyRound}
+              label="Alterar senha"
+              onPress={() => router.push('/profile/password')}
+              last
+            />
           </View>
 
           {/* Logout */}
@@ -265,15 +293,18 @@ function AssessmentRow({
 function SettingsRow({
   Icon,
   label,
+  onPress,
   last = false,
 }: {
   Icon: LucideIcon;
   label: string;
+  onPress?: () => void;
   last?: boolean;
 }) {
   return (
     <TouchableOpacity
       activeOpacity={0.7}
+      onPress={onPress}
       style={[styles.settingsRow, last && { borderBottomWidth: 0 }]}
     >
       <View style={styles.settingsIcon}>
@@ -375,6 +406,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '800',
     letterSpacing: -0.5,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: theme.ink500,
+    textAlign: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 12,
   },
   heroName: {
     fontSize: 20,

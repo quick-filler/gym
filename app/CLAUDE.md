@@ -24,6 +24,7 @@ by the GraphQL API.
 - **lucide-react-native** + `react-native-svg` for icons
 - **react-native-safe-area-context** for notch-aware layouts
 - **expo-secure-store** for the JWT (NOT AsyncStorage — secrets belong in the keychain)
+- **expo-clipboard** (PIX copia-e-cola / boleto), **expo-image-picker** (profile photo, Fase 5)
 - **@graphql-codegen/cli** (client preset) for type-safe queries
 
 Planned on-demand:
@@ -82,6 +83,7 @@ app/
 │   ├── useScheduleWeek.ts        # Agenda — weekly grid + book/cancel
 │   ├── useWorkouts.ts            # Treinos — active/upcoming/history/stats
 │   ├── usePayments.ts            # Finanças — charges + next bill + banner
+│   ├── useProfile.ts             # Perfil — me + avaliações + editable form
 │   └── useDependents.ts          # Guardian's children roster
 ├── lib/
 │   ├── apollo.ts                 # Apollo Client (httpLink + authLink)
@@ -201,6 +203,8 @@ export function DashboardScreen() {
 | `/workout/session/[id]` | Live execution: timer, checklist, finish/cancel | ✅ |
 | `/booking/[id]` | Class booking detail (room, instructor, capacity) | ✅ |
 | `/payment/[id]` | Checkout — PIX / boleto / cartão tabs (mocked gateway) | ✅ |
+| `/profile/edit` | Edit profile — phone/address/gender/birthdate + photo upload | ✅ |
+| `/profile/password` | Change password (atual + nova) | ✅ |
 
 ## Push notifications
 

@@ -450,6 +450,46 @@ right below. We want the history, not a clean slate.
 
 ---
 
+### 2.11 Student self-service profile + avaliações (Fase 5)
+
+- **Decision** — students edit their own profile and read their own
+  avaliações físicas through dedicated, caller-scoped resolvers (no reuse of
+  the admin CRUD):
+  - `student.ts`: **`updateMyProfile(input: MyProfileInput)`** — edits only
+    `phone`, `birthdate`, `gender`, `address`, `photo`.
+  - `body-assessment.ts`: **`myBodyAssessments(limit, offset)`** +
+    **`myLatestAssessment`**, both filtered to the caller's Student;
+    `BodyAssessment.bmi` is a derived field (`computeBMI`, height in m or
+    cm).
+  - `account.ts`: **`updateMyPassword(oldPassword, newPassword)`** — verifies
+    the current password via users-permissions `validatePassword`, then
+    `user.edit`.
+- **The whitelist is the security boundary.** `MyProfileInput` simply has no
+  `email`/`cpf`/`name`/`academy`/`role`/`status` fields, and the resolver
+  funnels everything through `pickProfileFields` (pure, unit-tested) which
+  drops anything outside `MY_PROFILE_FIELDS`. Two layers (schema shape +
+  whitelist) so a future schema edit can't silently widen what a student can
+  change.
+- **No role/subscription gate on the self-service writes.** A lapsed member
+  must still be able to fix their phone or change their password —
+  `updateMyProfile`/`updateMyPassword` require only a valid JWT linked to a
+  Student. (Contrast with admin `updateStudent`, which keeps
+  `requireRole` + `requireActiveSubscription`.)
+- **Photo upload reuses `mintUploadUrl`/`confirmUpload`, now allowing
+  `member`.** Those mutations were admin/instructor-only; Fase 5 adds
+  `member` so a student can upload their own photo. Still tenant-scoped
+  (key prefix derived from the caller's academy slug, never the client) and
+  MIME/size-limited, so widening the role doesn't widen the blast radius.
+- **Consequences** — no new content type/role/permission, so **no
+  `config:export`** this phase. The app's `/profile/edit` runs the full
+  direct-to-S3 flow (expo-image-picker → mintUploadUrl → PUT → confirmUpload
+  → `updateMyProfile(photo)`).
+- **Revisit when** — dependents need editable profiles (Fase 6), or
+  `requestBodyAssessment` (deferred Fase 5b) lets a student ask the academy
+  for a new avaliação.
+
+---
+
 ## 3. GraphQL API
 
 ### 3.1 GraphQL is the only data API; REST is reserved for auth + webhooks

@@ -180,6 +180,10 @@ input BillingInfoInput {
 }
 
 type BodyAssessment {
+  """
+  Derived from weight + height (height in m or cm). Null when either is missing.
+  """
+  bmi: Float
   bodyFat: Float
   date: String!
   documentId: ID!
@@ -1058,13 +1062,27 @@ type Mutation {
   Updates billing info on the caller's subscription. Restricted to academy_admin.
   """
   updateMyBilling(data: BillingInfoInput!): AcademySubscription
+
+  """
+  Authenticated student changes their own password: verifies the current one, then sets the new one.
+  """
+  updateMyPassword(newPassword: String!, oldPassword: String!): Boolean
   updateMyPoolSettings(data: PoolSettingsInput!): PoolSettings
+  updateMyProfile(input: MyProfileInput!): Student
   updatePayment(data: PaymentUpdateInput!, documentId: ID!): Payment
   updatePlan(data: PlanUpdateInput!, documentId: ID!): Plan
   updatePlatformPlan(data: PlatformPlanUpdateInput!, documentId: ID!): PlatformPlan
   updatePoolInspection(data: PoolInspectionInput!, documentId: ID!): PoolInspection
   updateStudent(data: StudentUpdateInput!, documentId: ID!): Student
   updateWorkoutPlan(data: WorkoutPlanUpdateInput!, documentId: ID!): WorkoutPlan
+}
+
+input MyProfileInput {
+  address: AddressInput
+  birthdate: String
+  gender: String
+  phone: String
+  photo: ID
 }
 
 """The caller's active ficha plus the remaining (upcoming) ones."""
@@ -1347,7 +1365,11 @@ type Query {
   Returns the Asaas configuration status for the caller's academy. Never reveals the actual credentials.
   """
   myAsaasSettings: AsaasSettingsStatus
+  myBodyAssessments(limit: Int, offset: Int): [BodyAssessment]
   myDependents: [Dependent]
+
+  """The caller's most recent avaliação física, or null."""
+  myLatestAssessment: BodyAssessment
   myNextPayment: Payment
   myPayments(limit: Int, offset: Int): [Payment]
 

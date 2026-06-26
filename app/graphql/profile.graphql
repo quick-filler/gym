@@ -1,0 +1,100 @@
+# Student Perfil tab — personal info, avaliações físicas & self-service edits (Fase 5).
+
+query MyProfile {
+  me {
+    documentId
+    name
+    email
+    phone
+    birthdate
+    gender
+    status
+    address {
+      cep
+      street
+      number
+      complement
+      neighborhood
+      city
+      state
+    }
+    photo {
+      documentId
+      url
+    }
+    enrollments {
+      documentId
+      status
+      startDate
+      plan {
+        documentId
+        name
+        billingCycle
+      }
+    }
+  }
+}
+
+query MyBodyAssessments($limit: Int, $offset: Int) {
+  myBodyAssessments(limit: $limit, offset: $offset) {
+    documentId
+    date
+    weight
+    height
+    bodyFat
+    bmi
+    instructor
+    notes
+    measurements {
+      chest
+      waist
+      hips
+      arms
+      thighs
+      calves
+      shoulders
+    }
+  }
+}
+
+mutation UpdateMyProfile($input: MyProfileInput!) {
+  updateMyProfile(input: $input) {
+    documentId
+    phone
+    birthdate
+    gender
+    address {
+      cep
+      street
+      number
+      complement
+      neighborhood
+      city
+      state
+    }
+    photo {
+      documentId
+      url
+    }
+  }
+}
+
+mutation UpdateMyPassword($oldPassword: String!, $newPassword: String!) {
+  updateMyPassword(oldPassword: $oldPassword, newPassword: $newPassword)
+}
+
+# Direct-to-S3 upload for the profile photo (members allowed since Fase 5).
+mutation MintUploadUrl($filename: String!, $contentType: String!, $size: Int!) {
+  mintUploadUrl(filename: $filename, contentType: $contentType, size: $size) {
+    uploadUrl
+    publicUrl
+    key
+  }
+}
+
+mutation ConfirmUpload($url: String!, $name: String!) {
+  confirmUpload(url: $url, name: $name) {
+    documentId
+    url
+  }
+}

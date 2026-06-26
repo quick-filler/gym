@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { verifyActivationIdentity } from './account';
+import { validatePasswordChange, verifyActivationIdentity } from './account';
 
 describe('verifyActivationIdentity', () => {
   it('matches on birthdate', () => {
@@ -69,5 +69,24 @@ describe('verifyActivationIdentity', () => {
         { birthdate: '2000-01-01' },
       ),
     ).toBe(false);
+  });
+});
+
+describe('validatePasswordChange', () => {
+  it('accepts a valid change', () => {
+    expect(validatePasswordChange('oldpass', 'newpass123')).toBeNull();
+  });
+
+  it('requires both passwords', () => {
+    expect(validatePasswordChange('', 'newpass')).toMatch(/atual e a nova/);
+    expect(validatePasswordChange('old', '')).toMatch(/atual e a nova/);
+  });
+
+  it('enforces a minimum length on the new password', () => {
+    expect(validatePasswordChange('oldpass', '123')).toMatch(/pelo menos 6/);
+  });
+
+  it('rejects reusing the same password', () => {
+    expect(validatePasswordChange('samepass', 'samepass')).toMatch(/diferente da atual/);
   });
 });

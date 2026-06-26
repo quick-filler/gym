@@ -282,6 +282,35 @@ export interface ProfileData {
   assessments: BodyAssessment[];
 }
 
+/* ------------------------------------------------------------------
+ * Fase 5 — useProfile() view model (backed by GraphQL or mocks)
+ * ------------------------------------------------------------------ */
+
+/** Raw editable values the /profile/edit form binds to. */
+export interface EditableProfile {
+  phone: string;
+  birthdate: string; // ISO yyyy-mm-dd ("" when unset)
+  gender: string; // "", "male", "female", "other"
+  address: {
+    cep: string;
+    street: string;
+    number: string;
+    complement: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+  };
+}
+
+export interface ProfileResult {
+  profile: ProfileData;
+  editable: EditableProfile;
+  photoUrl: string | null;
+  loading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
+
 /**
  * The shape every data source (mock OR Apollo) returns. Mirrors the
  * Apollo `QueryResult` subset the UI actually uses, so the hook is a

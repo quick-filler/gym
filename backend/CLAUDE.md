@@ -299,6 +299,25 @@ artifacts, card ending `0002` is declined). No real provider is wired
 yet — see design-decisions §2.10. The existing `asaas.ts` (subscriptions)
 and the Asaas webhook are unchanged; this is the per-charge surface.
 
+### Student self-service profile + avaliações (Fase 5)
+
+Caller-scoped resolvers (all `auth: true`, no role/subscription gate —
+a lapsed member can still edit themselves):
+
+- `student.ts`: **`updateMyProfile(input: MyProfileInput)`** — edits only
+  `phone`/`birthdate`/`gender`/`address`/`photo` (whitelist enforced by the
+  pure `pickProfileFields`; email/cpf/name/academy/role/status are
+  unreachable).
+- `body-assessment.ts`: **`myBodyAssessments(limit, offset)`** +
+  **`myLatestAssessment`** (caller's Student only); `BodyAssessment.bmi`
+  is derived (`computeBMI`).
+- `account.ts`: **`updateMyPassword(oldPassword, newPassword)`** — verifies
+  the current password, then sets the new one.
+
+Profile-photo upload reuses `mintUploadUrl`/`confirmUpload`, now allowing
+the **`member`** role (still academy-scoped + MIME/size-limited). See
+design-decisions §2.11.
+
 ### PoolSettings (Configuração da piscina)
 
 Configuração 1:1 com Academy pra alimentar o módulo Piscina. Defaults

@@ -84,7 +84,10 @@ export function buildUpload({
           size: nexus.nonNull(nexus.intArg()),
         },
         resolve: async (_root: any, args: any, ctx: any) => {
-          await requireRole(strapi, ctx, ['academy_admin', 'instructor']);
+          // Members may upload their own profile photo (Fase 5); admins and
+          // instructors upload student/academy assets. Every path is scoped
+          // to the caller's academy bucket prefix below.
+          await requireRole(strapi, ctx, ['academy_admin', 'instructor', 'member']);
 
           if (!ALLOWED_MIME.has(args.contentType)) {
             throw new Error(
@@ -121,7 +124,10 @@ export function buildUpload({
           name: nexus.nonNull(nexus.stringArg()),
         },
         resolve: async (_root: any, args: any, ctx: any) => {
-          await requireRole(strapi, ctx, ['academy_admin', 'instructor']);
+          // Members may upload their own profile photo (Fase 5); admins and
+          // instructors upload student/academy assets. Every path is scoped
+          // to the caller's academy bucket prefix below.
+          await requireRole(strapi, ctx, ['academy_admin', 'instructor', 'member']);
 
           // HEAD the URL to recover mime/size — never trust the client.
           const head = await fetch(args.url, { method: 'HEAD' });
