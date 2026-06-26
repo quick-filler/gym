@@ -90,9 +90,9 @@
     },
     "workoutPlans": {
       "type": "relation",
-      "relation": "oneToMany",
+      "relation": "manyToMany",
       "target": "api::workout-plan.workout-plan",
-      "mappedBy": "student"
+      "mappedBy": "students"
     },
     "assessments": {
       "type": "relation",

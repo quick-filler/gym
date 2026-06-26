@@ -9,10 +9,12 @@
 
 import { describe, expect, it } from 'vitest';
 import {
+  isModuleEnabled,
   withAcademyScope,
   withBookingScope,
   withPaymentScope,
   withStudentScope,
+  withWorkoutPlanScope,
 } from './helpers';
 
 const ACADEMY = 'abc-123';
@@ -104,5 +106,54 @@ describe('withBookingScope', () => {
         { classSchedule: { academy: { documentId: NO_ACADEMY } } },
       ],
     });
+  });
+});
+
+describe('withWorkoutPlanScope', () => {
+  it('emits $or matching the manyToMany students roster or the dependent', () => {
+    expect(withWorkoutPlanScope({ isActive: true }, ACADEMY)).toEqual({
+      isActive: true,
+      $or: [
+        { students: { academy: { documentId: ACADEMY } } },
+        { dependent: { academy: { documentId: ACADEMY } } },
+      ],
+    });
+  });
+
+  it('uses the sentinel when academyId is null', () => {
+    expect(withWorkoutPlanScope({}, null)).toMatchObject({
+      $or: [
+        { students: { academy: { documentId: NO_ACADEMY } } },
+        { dependent: { academy: { documentId: NO_ACADEMY } } },
+      ],
+    });
+  });
+});
+
+describe('isModuleEnabled', () => {
+  it('treats null/undefined enabledModules as "all on" (never configured)', () => {
+    expect(isModuleEnabled(null, 'workouts')).toBe(true);
+    expect(isModuleEnabled(undefined, 'classes')).toBe(true);
+    expect(isModuleEnabled(null, 'pool')).toBe(true);
+  });
+
+  it('enables only the listed modules once configured', () => {
+    expect(isModuleEnabled(['pool'], 'pool')).toBe(true);
+    expect(isModuleEnabled(['pool'], 'workouts')).toBe(false);
+    expect(isModuleEnabled(['pool'], 'classes')).toBe(false);
+    expect(isModuleEnabled(['pool'], 'dependents')).toBe(false);
+  });
+
+  it('an empty array disables everything (explicitly nothing enabled)', () => {
+    expect(isModuleEnabled([], 'workouts')).toBe(false);
+    expect(isModuleEnabled([], 'pool')).toBe(false);
+  });
+
+  it('handles multiple enabled modules', () => {
+    const mods = ['workouts', 'classes'];
+    expect(isModuleEnabled(mods, 'workouts')).toBe(true);
+    expect(isModuleEnabled(mods, 'classes')).toBe(true);
+    expect(isModuleEnabled(mods, 'pool')).toBe(false);
+    expect(isModuleEnabled(mods, 'dependents')).toBe(false);
   });
 });

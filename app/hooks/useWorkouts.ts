@@ -68,7 +68,7 @@ function useMockWorkouts(): WorkoutsResult {
 /* ------------------------------------------------------------------
  * API branch — mappers
  * ------------------------------------------------------------------ */
-function mapExercises(exs: any): Exercise[] {
+export function mapExercises(exs: any): Exercise[] {
   if (!Array.isArray(exs)) return [];
   return exs.map((e: any, i: number) => {
     const sets = e?.sets ?? null;
@@ -88,7 +88,7 @@ function mapExercises(exs: any): Exercise[] {
   });
 }
 
-function planMeta(instructor: string | null | undefined, count: number): string {
+export function planMeta(instructor: string | null | undefined, count: number): string {
   const who = (instructor ?? '').toUpperCase().trim();
   const ex = `${count} ${count === 1 ? 'EXERCÍCIO' : 'EXERCÍCIOS'}`;
   return who ? `${who} · ${ex}` : ex;

@@ -67,7 +67,9 @@ export function EditWorkoutDialog({
   const plan = data?.workoutPlan ?? null;
 
   const [name, setName] = useState("");
-  const [studentId, setStudentId] = useState("");
+  const [students, setStudents] = useState<Array<{ id: string; name: string }>>(
+    [],
+  );
   const [instructor, setInstructor] = useState("");
   const [validFrom, setValidFrom] = useState("");
   const [exercises, setExercises] = useState<ExerciseDraft[]>([]);
@@ -78,7 +80,11 @@ export function EditWorkoutDialog({
   useEffect(() => {
     if (!plan) return;
     setName(plan.name ?? "");
-    setStudentId(plan.student?.documentId ?? "");
+    setStudents(
+      (plan.students ?? [])
+        .filter((s): s is NonNullable<typeof s> => !!s)
+        .map((s) => ({ id: s.documentId, name: s.name ?? "" })),
+    );
     setInstructor(plan.instructor ?? "");
     setValidFrom(plan.validFrom ?? "");
     const drafts = rawToDrafts(plan.exercises);
@@ -101,9 +107,13 @@ export function EditWorkoutDialog({
       setError("Adicione ao menos um exercício com nome.");
       return;
     }
+    if (students.length === 0) {
+      setError("A turma precisa de ao menos um aluno.");
+      return;
+    }
     try {
-      // updateWorkoutPlan does NOT accept `student` (intentional — the
-      // workout stays bound to the same person). We don't reassign here.
+      // The student roster is editable (manyToMany) — sending `students`
+      // replaces the whole set, so members can join or leave the activity.
       await updateWorkout({
         variables: {
           documentId,
@@ -111,6 +121,7 @@ export function EditWorkoutDialog({
             name,
             instructor: instructor || null,
             validFrom: validFrom || null,
+            students: students.map((s) => s.id),
             exercises: valid.map((ex) => ({
               name: ex.name.trim(),
               sets: ex.sets,
@@ -131,14 +142,14 @@ export function EditWorkoutDialog({
   const studentOptions =
     studentsData?.students
       ?.filter((s): s is NonNullable<typeof s> => !!s)
-      .map((s) => ({ id: s.documentId, label: s.name })) ?? [];
+      .map((s) => ({ id: s.documentId, name: s.name })) ?? [];
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
       title="Editar ficha"
-      subtitle="O aluno vinculado não pode ser trocado — duplique a ficha para outro aluno se necessário."
+      subtitle="Edite a turma (alunos entram/saem), os exercícios e a validade."
       wide
     >
       {fetching && <LoadingState />}
@@ -153,15 +164,23 @@ export function EditWorkoutDialog({
             />
           </Field>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Aluno" help="Vínculo é fixo após a criação.">
+            <Field label="Turma" help="Adicione ou remova alunos a qualquer momento.">
               <Combobox
-                disabled
-                value={studentId}
-                onChange={setStudentId}
-                placeholder="—"
+                value=""
+                onChange={(id) => {
+                  const opt = studentOptions.find((s) => s.id === id);
+                  if (opt && !students.some((s) => s.id === id)) {
+                    setStudents((prev) => [...prev, { id: opt.id, name: opt.name }]);
+                  }
+                }}
+                placeholder={
+                  students.length ? "Adicionar aluno…" : "Selecione os alunos…"
+                }
                 searchPlaceholder="Buscar aluno"
                 emptyMessage="Nenhum aluno"
-                options={studentOptions}
+                options={studentOptions
+                  .filter((s) => !students.some((sel) => sel.id === s.id))
+                  .map((s) => ({ id: s.id, label: s.name }))}
               />
             </Field>
             <Field label="Instrutor">
@@ -171,6 +190,29 @@ export function EditWorkoutDialog({
               />
             </Field>
           </div>
+
+          {students.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4 -mt-1">
+              {students.map((s) => (
+                <span
+                  key={s.id}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-ink-900 text-paper text-[0.78rem] font-medium pl-3 pr-2 py-1"
+                >
+                  {s.name}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setStudents((prev) => prev.filter((x) => x.id !== s.id))
+                    }
+                    aria-label={`Remover ${s.name}`}
+                    className="inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-paper/20 transition-colors"
+                  >
+                    <Icon name="x" size="sm" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
           <Field label="Válido a partir de">
             <Input
               type="date"

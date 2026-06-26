@@ -706,6 +706,7 @@ export interface RawWorkoutPlan {
   name?: string | null;
   instructor?: string | null;
   isActive?: boolean | null;
+  category?: string | null;
   validFrom?: string | null;
   exercises?: Array<{
     name?: string | null;
@@ -713,7 +714,7 @@ export interface RawWorkoutPlan {
     reps?: number | null;
     load?: string | null;
   } | null> | null;
-  student?: { documentId?: string | null; name?: string | null } | null;
+  students?: Array<{ documentId?: string | null; name?: string | null } | null> | null;
 }
 
 const WORKOUT_ICONS = ["dumbbell", "zap", "droplet", "flame"] as const;
@@ -726,6 +727,9 @@ export function mapWorkouts(
     .filter((w): w is RawWorkoutPlan => !!w)
     .map((w, idx) => {
       const color = pickColor(w.documentId ?? `${idx}`);
+      const roster = (w.students ?? []).filter(
+        (s): s is NonNullable<typeof s> => !!s,
+      );
       return {
         id: w.documentId ?? `${idx}`,
         name: w.name ?? "",
@@ -734,8 +738,9 @@ export function mapWorkouts(
         instructorName: w.instructor ?? "",
         icon: WORKOUT_ICONS[idx % WORKOUT_ICONS.length]!,
         iconBg: "#eff6ff",
+        studentCount: roster.length,
         student: {
-          initials: initialsFromName(w.student?.name ?? ""),
+          initials: initialsFromName(roster[0]?.name ?? ""),
           gradient: `linear-gradient(135deg, ${color}, ${color})`,
         },
         exercises: (w.exercises ?? [])
@@ -746,6 +751,7 @@ export function mapWorkouts(
             load: e.load ?? "—",
           })),
         status: (w.isActive ? "active" : "archived") as "active" | "archived",
+        category: (w.category === "pool" ? "pool" : "gym") as "gym" | "pool",
       };
     });
   return {

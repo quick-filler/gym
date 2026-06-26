@@ -3,6 +3,7 @@ import {
   addDaysISO,
   classStartInstant,
   decideBookingStatus,
+  hasActiveEnrollment,
   isISODate,
   isWithinBookingWindow,
   isWithinCancelWindow,
@@ -133,5 +134,19 @@ describe('timeToMinutes', () => {
     expect(timeToMinutes(null)).toBe(0);
     expect(timeToMinutes(undefined)).toBe(0);
     expect(timeToMinutes('abc')).toBe(0);
+  });
+});
+
+describe('hasActiveEnrollment', () => {
+  it('is true when any enrollment is active', () => {
+    expect(hasActiveEnrollment([{ status: 'expired' }, { status: 'active' }])).toBe(true);
+  });
+  it('is false when none is active', () => {
+    expect(hasActiveEnrollment([{ status: 'expired' }, { status: 'pending' }])).toBe(false);
+  });
+  it('is false for empty / non-array input', () => {
+    expect(hasActiveEnrollment([])).toBe(false);
+    expect(hasActiveEnrollment(null)).toBe(false);
+    expect(hasActiveEnrollment(undefined)).toBe(false);
   });
 });

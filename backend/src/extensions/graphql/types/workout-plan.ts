@@ -15,7 +15,7 @@ import {
   requireActiveSubscription,
   resolveDocAcademyId,
   resolveUserAcademyId,
-  withStudentScope,
+  withWorkoutPlanScope,
 } from '../helpers';
 
 const UID = 'api::workout-plan.workout-plan';
@@ -49,19 +49,21 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
       t.nonNull.id('documentId');
       t.nonNull.string('name');
       t.string('instructor');
+      t.string('category'); // 'gym' (default) | 'pool' (Piscina)
       t.list.field('exercises', { type: 'Exercise' });
       t.string('validFrom');
       t.string('validTo');
       t.boolean('isActive');
-      t.field('student', {
+      t.list.field('students', {
         type: 'Student',
+        description: 'The roster of students assigned to this ficha/activity.',
         resolve: async (parent: any) => {
-          if (parent.student !== undefined) return parent.student;
+          if (parent.students !== undefined) return parent.students;
           const doc: any = await strapi.documents(UID).findOne({
             documentId: parent.documentId,
-            populate: { student: true },
+            populate: { students: true },
           });
-          return doc?.student ?? null;
+          return doc?.students ?? [];
         },
       });
     },
@@ -71,9 +73,10 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
     name: 'WorkoutPlanInput',
     definition(t: any) {
       t.nonNull.string('name');
-      t.id('student');
+      t.list.id('students'); // roster (manyToMany)
       t.id('dependent');
       t.string('instructor');
+      t.string('category');
       t.list.field('exercises', { type: 'ExerciseInput' });
       t.string('validFrom');
       t.string('validTo');
@@ -86,6 +89,8 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
     definition(t: any) {
       t.string('name');
       t.string('instructor');
+      t.string('category');
+      t.list.id('students'); // editable roster — replaces the set when sent
       t.list.field('exercises', { type: 'ExerciseInput' });
       t.string('validFrom');
       t.string('validTo');
@@ -103,7 +108,7 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
           const academyId = await resolveUserAcademyId(strapi, ctx);
           const filters = (await isPlatformAdmin(strapi, ctx))
             ? {}
-            : withStudentScope({}, academyId);
+            : withWorkoutPlanScope({}, academyId);
           return await strapi.documents(UID).findMany({
             filters,
             start: args.pagination?.start ?? 0,
@@ -134,14 +139,18 @@ export function buildWorkoutPlan({ nexus, strapi }: { nexus: any; strapi: Core.S
           await requireRole(strapi, ctx, ['academy_admin', 'instructor']);
           await requireActiveSubscription(strapi, ctx);
           const academyId = await requireAcademyId(strapi, ctx);
-          if (!args.data.student && !args.data.dependent) {
-            throw new Error('Informe o aluno ou o dependente.');
+          const students: string[] = Array.isArray(args.data.students)
+            ? args.data.students.filter(Boolean)
+            : [];
+          if (students.length === 0 && !args.data.dependent) {
+            throw new Error('Informe ao menos um aluno ou o dependente.');
           }
-          if (args.data.student) {
+          // Every rostered student must belong to the caller's academy.
+          for (const studentId of students) {
             const a = await resolveDocAcademyId(
               strapi,
               'api::student.student',
-              args.data.student,
+              studentId,
             );
             if (a !== academyId) throw new Error('Aluno de outra academia.');
           }

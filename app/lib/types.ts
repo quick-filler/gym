@@ -27,6 +27,9 @@ export interface DashboardData {
     initials: string; // derived, used by the logo placeholder
     primaryColor: string;
     primaryDark: string;
+    // Toggleable modules the academy enabled. null = never configured =
+    // all on (backward-compatible default). Drives tab/feature gating.
+    enabledModules: string[] | null;
   };
   nextClass: {
     name: string;
@@ -178,6 +181,18 @@ export interface WorkoutsResult {
   upcoming: UpcomingWorkoutPlan[];
   history: WorkoutHistorySession[];
   stats: WorkoutStatsView;
+  loading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
+
+/**
+ * Piscina tab — pool fichas (category 'pool'), reusing the workout model.
+ * Subset of WorkoutsResult: active + upcoming, no history/stats in v1.
+ */
+export interface PoolActivitiesResult {
+  active: ActiveWorkoutPlan | null;
+  upcoming: UpcomingWorkoutPlan[];
   loading: boolean;
   error: Error | null;
   refetch: () => void;
@@ -353,4 +368,53 @@ export interface DependentsData {
   guardianName: string;
   guardianAcademy: string;
   dependents: DependentRecord[];
+}
+
+/* ------------------------------------------------------------------
+ * Fase 6 — guardian self-service (add / edit dependents)
+ * ------------------------------------------------------------------ */
+
+/** Raw editable values the dependent form (new/edit) binds to. */
+export interface DependentEditable {
+  id: string; // "" for a brand-new dependent
+  name: string;
+  birthdate: string; // ISO yyyy-mm-dd ("" when unset)
+  cpf: string;
+  gender: string; // "", "female", "male", "other"
+  relationship: string;
+  bloodType: string;
+  allergies: string;
+  medicalNotes: string;
+  medicalAlert: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  address: {
+    cep: string;
+    street: string;
+    number: string;
+    complement: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+  };
+  photoUrl: string | null;
+}
+
+/** Result of an add/update dependent action — drives the form feedback. */
+export interface DependentActionResult {
+  ok: boolean;
+  message: string;
+  id?: string;
+}
+
+/** Shape returned by `useDependents()` — same contract in mock and API mode. */
+export interface DependentsResult {
+  data: DependentsData | null;
+  records: DependentEditable[]; // raw editable rows (empty in mock mode)
+  loading: boolean;
+  error: Error | null;
+  refetch: () => void;
+  add: (input: Record<string, unknown>) => Promise<DependentActionResult>;
+  update: (id: string, input: Record<string, unknown>) => Promise<DependentActionResult>;
+  saving: boolean;
 }

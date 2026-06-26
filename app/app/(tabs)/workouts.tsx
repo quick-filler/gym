@@ -24,6 +24,7 @@ import { router } from 'expo-router';
 import { ArrowRight, Clock, Dumbbell, Play } from 'lucide-react-native';
 
 import { useDashboard } from '../../hooks/useDashboard';
+import { useModuleGuard } from '../../hooks/useModuleGuard';
 import { useWorkouts } from '../../hooks/useWorkouts';
 import { theme, withAlpha } from '../../lib/theme';
 import type {
@@ -37,8 +38,11 @@ export default function WorkoutsScreen() {
   const academyName = data?.academy.name ?? 'Gym';
   const initials = data?.academy.initials ?? 'G';
 
+  const allowed = useModuleGuard('workouts');
   const { active, upcoming, history, stats, loading, error, refetch } = useWorkouts();
   const firstLoad = loading && !active && history.length === 0;
+
+  if (!allowed) return null;
 
   return (
     <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: accent }]}>

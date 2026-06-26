@@ -27,6 +27,7 @@ export const MOCK_DASHBOARD: DashboardData = {
     initials: 'CFS',
     primaryColor: '#ef4444',
     primaryDark: '#dc2626',
+    enabledModules: null, // demo: all modules on
   },
   nextClass: {
     name: 'Musculação Turma B',

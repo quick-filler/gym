@@ -318,6 +318,57 @@ Profile-photo upload reuses `mintUploadUrl`/`confirmUpload`, now allowing
 the **`member`** role (still academy-scoped + MIME/size-limited). See
 design-decisions §2.11.
 
+### Dependentes self-service + reserva pelo responsável (Fase 6)
+
+Guardian-scoped resolvers (all `auth: true`, no role/subscription gate on
+the writes — managing family data isn't a paid action):
+
+- `dependent.ts`: **`addMyDependent(input: MyDependentInput)`** +
+  **`updateMyDependent(documentId, input: MyDependentUpdateInput)`** —
+  force `guardian` = caller and `academy` = caller's academy; whitelist via
+  pure `pickDependentFields` (`guardian`/`academy`/`status`/`enrollments`
+  unreachable).
+- `student-schedule.ts`: **`dependentScheduleWeek(dependentId, weekStart)`**
+  + **`bookClassForDependent(dependentId, scheduleDocumentId, date)`**. The
+  week grid reuses the shared `buildWeekOccurrences(academyId, weekStart,
+  isMine)` (also powering `myScheduleWeek`); `bookClassForDependent` mirrors
+  `bookClass` but eligibility reads the **dependent's** active enrollment
+  (`hasActiveEnrollment`).
+- **Cancel reuses `cancelMyBooking`** — it already resolves ownership via
+  `dependent.guardian`; no separate `cancelDependentBooking`.
+
+Dependent `gender` enum is `girl|boy|other`; `relationship` is
+`son|daughter|grandchild|nibling|ward|other`. See design-decisions §2.12.
+
+### Module gating (`requireModule`)
+
+`Academy.enabledModules` (toggled in the admin) gates the 4 optional modules
+`dependents | workouts | classes | pool`. `helpers.ts` exposes:
+
+- `isModuleEnabled(enabledModules, module)` — pure; **null/unset = all on**
+  (never configured → backward-compatible default). Unit-tested.
+- `requireModule(strapi, ctx, module)` — throws PT-BR when the caller's
+  academy hasn't enabled it. Applied to the student-app resolvers (classes:
+  myScheduleWeek/bookClass/cancelMyBooking; workouts: myWorkouts/history/stats
+  + session mutations; dependents: myDependents/add/update +
+  dependentScheduleWeek/bookClassForDependent). The `me{}` dashboard
+  sub-fields are intentionally **not** gated (the app hides them). See
+  design-decisions §2.13.
+
+### Piscina = WorkoutPlan com `category`
+
+Atividade de piscina é uma `WorkoutPlan` com `category` enum `gym` (default) |
+`pool` — não um content type novo. `myWorkouts` retorna `category != pool`
+(gym + legado null); **`myPoolActivities`** retorna `category == pool` (gated
+`pool`). `isPoolPlan` (puro, testado) é o classificador. As sessões
+(`startWorkoutSession`/finish/cancel) servem os dois → gateadas por
+`requireAnyModule(['workouts','pool'])`.
+
+`WorkoutPlan.student` virou **`students` (manyToMany)** — turma editável
+(alunos entram/saem). Tenancy via `withWorkoutPlanScope` + `resolveDocAcademyId`
+(`students[0].academy`); filtros do app usam `students: { documentId }`;
+`startWorkoutSession` checa o caller no roster. Ver design-decisions §2.14.
+
 ### PoolSettings (Configuração da piscina)
 
 Configuração 1:1 com Academy pra alimentar o módulo Piscina. Defaults

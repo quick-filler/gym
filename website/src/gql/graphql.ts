@@ -196,6 +196,8 @@ export type BillingInfoInput = {
 
 export type BodyAssessment = {
   __typename?: 'BodyAssessment';
+  /** Derived from weight + height (height in m or cm). Null when either is missing. */
+  bmi?: Maybe<Scalars['Float']['output']>;
   bodyFat?: Maybe<Scalars['Float']['output']>;
   date: Scalars['String']['output'];
   documentId: Scalars['ID']['output'];
@@ -227,6 +229,15 @@ export type BodyAssessmentUpdateInput = {
   measurements?: InputMaybe<MeasurementsInput>;
   notes?: InputMaybe<Scalars['String']['input']>;
   weight?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type BoletoCheckout = {
+  __typename?: 'BoletoCheckout';
+  barCode: Scalars['String']['output'];
+  boletoUrl: Scalars['String']['output'];
+  dueDate: Scalars['String']['output'];
+  externalId: Scalars['String']['output'];
+  paymentId: Scalars['ID']['output'];
 };
 
 export type BooleanFilterInput = {
@@ -269,6 +280,13 @@ export type BulkImportResult = {
   errors: Scalars['Int']['output'];
   items: Array<BulkImportItem>;
   skipped: Scalars['Int']['output'];
+};
+
+export type CardInput = {
+  cvv: Scalars['String']['input'];
+  expiry: Scalars['String']['input'];
+  holderName: Scalars['String']['input'];
+  number: Scalars['String']['input'];
 };
 
 export type ClassBooking = {
@@ -971,11 +989,22 @@ export type Mutation = {
   __typename?: 'Mutation';
   /** Self-service first-access: an imported student proves identity (email + birthdate/phone) and sets a password. Returns a JWT. */
   activateAccount?: Maybe<ActivateAccountResult>;
+  /** Guardian self-service: registers a new dependent owned by the caller, in the caller’s academy. Auth only — managing family data is not a paid action, so no admin role or active subscription is required (booking still gates on the dependent’s enrollment). */
+  addMyDependent?: Maybe<Dependent>;
+  /** Books the caller into a class on a date. Confirms while seats remain; queues onto the waitlist once full. Requires an active enrollment; closes 1h before start. */
+  bookClass?: Maybe<ClassBooking>;
+  /** Books a dependent (child) into a class on the guardian’s behalf. Same windows, capacity and waitlist rules as bookClass, but eligibility reads the dependent’s own active enrollment. Requires the caller to be the dependent’s guardian. */
+  bookClassForDependent?: Maybe<ClassBooking>;
   bulkImportStudents?: Maybe<BulkImportResult>;
+  /** Cancels the caller’s own booking — self or a dependent’s (guardian-owned). Confirmed seats: until 24h before start; waitlist spots: any time. Frees a seat → auto-promotes the first waitlister. */
+  cancelMyBooking?: Maybe<ClassBooking>;
+  /** Drops an open (not-yet-finished) session. */
+  cancelWorkoutSession?: Maybe<WorkoutSession>;
   /** Platform admin only — moves an academy to a different PlatformPlan. Re-snapshots price/features/limits. */
   changeSubscriptionPlan?: Maybe<AcademySubscription>;
   /** Mark a booking as attended and stamp checkedInAt. */
   checkInBooking?: Maybe<ClassBooking>;
+  confirmMockCharge?: Maybe<Payment>;
   /** Registers a previously-uploaded S3 object as a Strapi Media file. Run after a successful PUT to the URL returned by mintUploadUrl. */
   confirmUpload?: Maybe<Media>;
   /** Manual escape hatch: provisiona um lead específico com slug/plan custom (útil pra leads antigos ou casos onde o auto-provision falhou). Self-serve via submitContactForm cobre 99% dos casos. */
@@ -1004,7 +1033,14 @@ export type Mutation = {
   deletePlatformPlan?: Maybe<PlatformPlan>;
   deleteStudent?: Maybe<Student>;
   deleteWorkoutPlan?: Maybe<WorkoutPlan>;
+  /** Closes an open session: records duration, the per-exercise checklist and optional notes. */
+  finishWorkoutSession?: Maybe<WorkoutSession>;
   mintUploadUrl?: Maybe<PresignedUpload>;
+  payChargeBoleto?: Maybe<BoletoCheckout>;
+  payChargeCard?: Maybe<Payment>;
+  payChargePix?: Maybe<PixCheckout>;
+  /** Opens a training session against one of the caller’s active fichas. Requires an active enrollment. Seeds the per-exercise checklist from the plan. */
+  startWorkoutSession?: Maybe<WorkoutSession>;
   submitContactForm?: Maybe<ContactFormResult>;
   updateAcademy?: Maybe<Academy>;
   updateBodyAssessment?: Maybe<BodyAssessment>;
@@ -1018,7 +1054,12 @@ export type Mutation = {
   updateMyAsaasSettings?: Maybe<AsaasSettingsStatus>;
   /** Updates billing info on the caller's subscription. Restricted to academy_admin. */
   updateMyBilling?: Maybe<AcademySubscription>;
+  /** Guardian self-service: edits a dependent the caller owns. Whitelisted fields only; guardian / academy / status are immutable here. */
+  updateMyDependent?: Maybe<Dependent>;
+  /** Authenticated student changes their own password: verifies the current one, then sets the new one. */
+  updateMyPassword?: Maybe<Scalars['Boolean']['output']>;
   updateMyPoolSettings?: Maybe<PoolSettings>;
+  updateMyProfile?: Maybe<Student>;
   updatePayment?: Maybe<Payment>;
   updatePlan?: Maybe<Plan>;
   updatePlatformPlan?: Maybe<PlatformPlan>;
@@ -1033,9 +1074,37 @@ export type MutationActivateAccountArgs = {
 };
 
 
+export type MutationAddMyDependentArgs = {
+  input: MyDependentInput;
+};
+
+
+export type MutationBookClassArgs = {
+  date: Scalars['String']['input'];
+  scheduleDocumentId: Scalars['ID']['input'];
+};
+
+
+export type MutationBookClassForDependentArgs = {
+  date: Scalars['String']['input'];
+  dependentId: Scalars['ID']['input'];
+  scheduleDocumentId: Scalars['ID']['input'];
+};
+
+
 export type MutationBulkImportStudentsArgs = {
   dryRun?: InputMaybe<Scalars['Boolean']['input']>;
   rows: Array<StudentImportRow>;
+};
+
+
+export type MutationCancelMyBookingArgs = {
+  documentId: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelWorkoutSessionArgs = {
+  sessionId: Scalars['ID']['input'];
 };
 
 
@@ -1048,6 +1117,11 @@ export type MutationChangeSubscriptionPlanArgs = {
 
 export type MutationCheckInBookingArgs = {
   documentId: Scalars['ID']['input'];
+};
+
+
+export type MutationConfirmMockChargeArgs = {
+  paymentId: Scalars['ID']['input'];
 };
 
 
@@ -1184,10 +1258,38 @@ export type MutationDeleteWorkoutPlanArgs = {
 };
 
 
+export type MutationFinishWorkoutSessionArgs = {
+  exercisesCompleted?: InputMaybe<Scalars['JSON']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  sessionId: Scalars['ID']['input'];
+};
+
+
 export type MutationMintUploadUrlArgs = {
   contentType: Scalars['String']['input'];
   filename: Scalars['String']['input'];
   size: Scalars['Int']['input'];
+};
+
+
+export type MutationPayChargeBoletoArgs = {
+  paymentId: Scalars['ID']['input'];
+};
+
+
+export type MutationPayChargeCardArgs = {
+  card: CardInput;
+  paymentId: Scalars['ID']['input'];
+};
+
+
+export type MutationPayChargePixArgs = {
+  paymentId: Scalars['ID']['input'];
+};
+
+
+export type MutationStartWorkoutSessionArgs = {
+  workoutPlanId: Scalars['ID']['input'];
 };
 
 
@@ -1254,8 +1356,25 @@ export type MutationUpdateMyBillingArgs = {
 };
 
 
+export type MutationUpdateMyDependentArgs = {
+  documentId: Scalars['ID']['input'];
+  input: MyDependentUpdateInput;
+};
+
+
+export type MutationUpdateMyPasswordArgs = {
+  newPassword: Scalars['String']['input'];
+  oldPassword: Scalars['String']['input'];
+};
+
+
 export type MutationUpdateMyPoolSettingsArgs = {
   data: PoolSettingsInput;
+};
+
+
+export type MutationUpdateMyProfileArgs = {
+  input: MyProfileInput;
 };
 
 
@@ -1292,6 +1411,53 @@ export type MutationUpdateStudentArgs = {
 export type MutationUpdateWorkoutPlanArgs = {
   data: WorkoutPlanUpdateInput;
   documentId: Scalars['ID']['input'];
+};
+
+export type MyDependentInput = {
+  address?: InputMaybe<AddressInput>;
+  allergies?: InputMaybe<Scalars['String']['input']>;
+  birthdate: Scalars['String']['input'];
+  bloodType?: InputMaybe<Scalars['String']['input']>;
+  cpf?: InputMaybe<Scalars['String']['input']>;
+  emergencyContactName?: InputMaybe<Scalars['String']['input']>;
+  emergencyContactPhone?: InputMaybe<Scalars['String']['input']>;
+  gender?: InputMaybe<Scalars['String']['input']>;
+  medicalAlert?: InputMaybe<Scalars['String']['input']>;
+  medicalNotes?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  photo?: InputMaybe<Scalars['ID']['input']>;
+  relationship?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type MyDependentUpdateInput = {
+  address?: InputMaybe<AddressInput>;
+  allergies?: InputMaybe<Scalars['String']['input']>;
+  birthdate?: InputMaybe<Scalars['String']['input']>;
+  bloodType?: InputMaybe<Scalars['String']['input']>;
+  cpf?: InputMaybe<Scalars['String']['input']>;
+  emergencyContactName?: InputMaybe<Scalars['String']['input']>;
+  emergencyContactPhone?: InputMaybe<Scalars['String']['input']>;
+  gender?: InputMaybe<Scalars['String']['input']>;
+  medicalAlert?: InputMaybe<Scalars['String']['input']>;
+  medicalNotes?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  photo?: InputMaybe<Scalars['ID']['input']>;
+  relationship?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type MyProfileInput = {
+  address?: InputMaybe<AddressInput>;
+  birthdate?: InputMaybe<Scalars['String']['input']>;
+  gender?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  photo?: InputMaybe<Scalars['ID']['input']>;
+};
+
+/** The caller's active ficha plus the remaining (upcoming) ones. */
+export type MyWorkouts = {
+  __typename?: 'MyWorkouts';
+  active?: Maybe<WorkoutPlan>;
+  upcoming?: Maybe<Array<Maybe<WorkoutPlan>>>;
 };
 
 export type Pagination = {
@@ -1340,6 +1506,15 @@ export type PaymentUpdateInput = {
   paidAt?: InputMaybe<Scalars['String']['input']>;
   receiptUrl?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PixCheckout = {
+  __typename?: 'PixCheckout';
+  copyPaste: Scalars['String']['output'];
+  expiresAt: Scalars['String']['output'];
+  externalId: Scalars['String']['output'];
+  paymentId: Scalars['ID']['output'];
+  qrCode: Scalars['String']['output'];
 };
 
 export type Plan = {
@@ -1541,6 +1716,8 @@ export type Query = {
   /** Returns every active class scheduled to occur on the given date with its booking roster, ordered by startTime. */
   dailyAttendance?: Maybe<DailyAttendance>;
   dependent?: Maybe<Dependent>;
+  /** A dependent's academy weekly grid starting at `weekStart` (defaults to the current week). Same shape as myScheduleWeek; the `bookedByMe` / `myBooking*` fields reflect the dependent's own bookings (made on their behalf by the guardian). Requires the caller to be the dependent's guardian. */
+  dependentScheduleWeek?: Maybe<Array<Maybe<ScheduleOccurrence>>>;
   dependents?: Maybe<Array<Maybe<Dependent>>>;
   dreOverview?: Maybe<DreOverview>;
   enrollment?: Maybe<Enrollment>;
@@ -1554,15 +1731,30 @@ export type Query = {
   me?: Maybe<Student>;
   /** Returns the Asaas configuration status for the caller's academy. Never reveals the actual credentials. */
   myAsaasSettings?: Maybe<AsaasSettingsStatus>;
+  myBodyAssessments?: Maybe<Array<Maybe<BodyAssessment>>>;
   myDependents?: Maybe<Array<Maybe<Dependent>>>;
+  /** The caller's most recent avaliação física, or null. */
+  myLatestAssessment?: Maybe<BodyAssessment>;
+  myNextPayment?: Maybe<Payment>;
+  myPayments?: Maybe<Array<Maybe<Payment>>>;
+  /** The caller's pool (Piscina) fichas — same shape as myWorkouts, filtered to category 'pool'. Gated by the pool module. */
+  myPoolActivities?: Maybe<MyWorkouts>;
   /** Pool settings for the caller's academy. */
   myPoolSettings?: Maybe<PoolSettings>;
+  /** The caller's academy weekly grid starting at `weekStart` (yyyy-mm-dd, snapped to Monday; defaults to the current week). Sorted by date then start time. */
+  myScheduleWeek?: Maybe<Array<Maybe<ScheduleOccurrence>>>;
   /** Returns the active subscription for the caller's academy. Null if no subscription exists yet (shouldn't happen post-backfill). */
   mySubscription?: Maybe<AcademySubscription>;
   /** Count of the caller's unread in-app notifications. Stub returning 0 until Fase 7 ships the Notification content type. */
   myUnreadNotificationCount?: Maybe<Scalars['Int']['output']>;
   /** The caller's upcoming confirmed bookings, soonest first. Powers the app dashboard + schedule preview. */
   myUpcomingBookings?: Maybe<Array<Maybe<ClassBooking>>>;
+  /** The caller's finished training sessions, newest first. */
+  myWorkoutHistory?: Maybe<Array<Maybe<WorkoutSession>>>;
+  /** Derived training stats (this week / 30 days / streak). */
+  myWorkoutStats?: Maybe<WorkoutStats>;
+  /** The caller's active workout plan and the remaining ones. */
+  myWorkouts?: Maybe<MyWorkouts>;
   payment?: Maybe<Payment>;
   payments?: Maybe<Array<Maybe<Payment>>>;
   plan?: Maybe<Plan>;
@@ -1584,6 +1776,8 @@ export type Query = {
   suggestModulesForBusinessType?: Maybe<ModulePresetSuggestion>;
   workoutPlan?: Maybe<WorkoutPlan>;
   workoutPlans?: Maybe<Array<Maybe<WorkoutPlan>>>;
+  /** A single session the caller owns (the execution screen). */
+  workoutSession?: Maybe<WorkoutSession>;
 };
 
 
@@ -1648,6 +1842,12 @@ export type QueryDependentArgs = {
 };
 
 
+export type QueryDependentScheduleWeekArgs = {
+  dependentId: Scalars['ID']['input'];
+  weekStart?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryDependentsArgs = {
   pagination?: InputMaybe<PaginationInput>;
 };
@@ -1694,7 +1894,29 @@ export type QueryLeadsArgs = {
 };
 
 
+export type QueryMyBodyAssessmentsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMyPaymentsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMyScheduleWeekArgs = {
+  weekStart?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryMyUpcomingBookingsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMyWorkoutHistoryArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
@@ -1774,6 +1996,11 @@ export type QueryWorkoutPlansArgs = {
   pagination?: InputMaybe<PaginationInput>;
 };
 
+
+export type QueryWorkoutSessionArgs = {
+  documentId: Scalars['ID']['input'];
+};
+
 export type ResponseCollectionMeta = {
   __typename?: 'ResponseCollectionMeta';
   pagination: Pagination;
@@ -1809,6 +2036,29 @@ export type ScheduleConflictInput = {
   room?: InputMaybe<Scalars['String']['input']>;
   startTime: Scalars['String']['input'];
   weekdays: Array<Scalars['Int']['input']>;
+};
+
+/** One concrete class instance (a schedule on a specific date) for the student Agenda, with occupancy and the caller’s own booking state. */
+export type ScheduleOccurrence = {
+  __typename?: 'ScheduleOccurrence';
+  bookable: Scalars['Boolean']['output'];
+  bookedByMe: Scalars['Boolean']['output'];
+  bookedCount: Scalars['Int']['output'];
+  date: Scalars['String']['output'];
+  endTime?: Maybe<Scalars['String']['output']>;
+  instructor?: Maybe<Scalars['String']['output']>;
+  isFull: Scalars['Boolean']['output'];
+  maxCapacity?: Maybe<Scalars['Int']['output']>;
+  modality?: Maybe<Scalars['String']['output']>;
+  myBookingDocumentId?: Maybe<Scalars['ID']['output']>;
+  myBookingStatus?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  room?: Maybe<Scalars['String']['output']>;
+  scheduleDocumentId: Scalars['ID']['output'];
+  spotsLeft?: Maybe<Scalars['Int']['output']>;
+  startTime?: Maybe<Scalars['String']['output']>;
+  waitlistCount: Scalars['Int']['output'];
+  weekday: Scalars['Int']['output'];
 };
 
 export type ScheduleStats = {
@@ -1969,34 +2219,59 @@ export type UpdateLeadInput = {
 
 export type WorkoutPlan = {
   __typename?: 'WorkoutPlan';
+  category?: Maybe<Scalars['String']['output']>;
   documentId: Scalars['ID']['output'];
   exercises?: Maybe<Array<Maybe<Exercise>>>;
   instructor?: Maybe<Scalars['String']['output']>;
   isActive?: Maybe<Scalars['Boolean']['output']>;
   name: Scalars['String']['output'];
-  student?: Maybe<Student>;
+  /** The roster of students assigned to this ficha/activity. */
+  students?: Maybe<Array<Maybe<Student>>>;
   validFrom?: Maybe<Scalars['String']['output']>;
   validTo?: Maybe<Scalars['String']['output']>;
 };
 
 export type WorkoutPlanInput = {
+  category?: InputMaybe<Scalars['String']['input']>;
   dependent?: InputMaybe<Scalars['ID']['input']>;
   exercises?: InputMaybe<Array<InputMaybe<ExerciseInput>>>;
   instructor?: InputMaybe<Scalars['String']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   name: Scalars['String']['input'];
-  student?: InputMaybe<Scalars['ID']['input']>;
+  students?: InputMaybe<Array<InputMaybe<Scalars['ID']['input']>>>;
   validFrom?: InputMaybe<Scalars['String']['input']>;
   validTo?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type WorkoutPlanUpdateInput = {
+  category?: InputMaybe<Scalars['String']['input']>;
   exercises?: InputMaybe<Array<InputMaybe<ExerciseInput>>>;
   instructor?: InputMaybe<Scalars['String']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+  students?: InputMaybe<Array<InputMaybe<Scalars['ID']['input']>>>;
   validFrom?: InputMaybe<Scalars['String']['input']>;
   validTo?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** A single executed training session logged against a workout plan. */
+export type WorkoutSession = {
+  __typename?: 'WorkoutSession';
+  documentId: Scalars['ID']['output'];
+  durationMinutes?: Maybe<Scalars['Int']['output']>;
+  exercisesCompleted?: Maybe<Scalars['JSON']['output']>;
+  finishedAt?: Maybe<Scalars['String']['output']>;
+  notes?: Maybe<Scalars['String']['output']>;
+  startedAt?: Maybe<Scalars['String']['output']>;
+  workoutPlan?: Maybe<WorkoutPlan>;
+};
+
+/** Derived training stats for the Treinos header. */
+export type WorkoutStats = {
+  __typename?: 'WorkoutStats';
+  streakDays: Scalars['Int']['output'];
+  thirtyDaysCount: Scalars['Int']['output'];
+  thisWeekCount: Scalars['Int']['output'];
 };
 
 export type AdminFamilyForEditQueryVariables = Exact<{
@@ -2128,6 +2403,13 @@ export type AdminUpdatePoolInspectionMutationVariables = Exact<{
 
 
 export type AdminUpdatePoolInspectionMutation = { __typename?: 'Mutation', updatePoolInspection?: { __typename?: 'PoolInspection', documentId: string } | null };
+
+export type AdminDuplicatePoolActivityMutationVariables = Exact<{
+  data: WorkoutPlanInput;
+}>;
+
+
+export type AdminDuplicatePoolActivityMutation = { __typename?: 'Mutation', createWorkoutPlan?: { __typename?: 'WorkoutPlan', documentId: string, name: string } | null };
 
 export type AdminCreateClassScheduleMutationVariables = Exact<{
   data: ClassScheduleInput;
@@ -2430,14 +2712,14 @@ export type GuardiansQuery = { __typename?: 'Query', guardians?: Array<{ __typen
 export type AdminWorkoutsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type AdminWorkoutsQuery = { __typename?: 'Query', workoutPlans?: Array<{ __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null, isActive?: boolean | null, validFrom?: string | null, exercises?: Array<{ __typename?: 'Exercise', name: string, sets?: number | null, reps?: number | null, load?: string | null } | null> | null, student?: { __typename?: 'Student', documentId: string, name: string } | null } | null> | null };
+export type AdminWorkoutsQuery = { __typename?: 'Query', workoutPlans?: Array<{ __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null, isActive?: boolean | null, category?: string | null, validFrom?: string | null, exercises?: Array<{ __typename?: 'Exercise', name: string, sets?: number | null, reps?: number | null, load?: string | null } | null> | null, students?: Array<{ __typename?: 'Student', documentId: string, name: string } | null> | null } | null> | null };
 
 export type AdminWorkoutPlanQueryVariables = Exact<{
   documentId: Scalars['ID']['input'];
 }>;
 
 
-export type AdminWorkoutPlanQuery = { __typename?: 'Query', workoutPlan?: { __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null, isActive?: boolean | null, validFrom?: string | null, validTo?: string | null, exercises?: Array<{ __typename?: 'Exercise', name: string, sets?: number | null, reps?: number | null, load?: string | null, notes?: string | null } | null> | null, student?: { __typename?: 'Student', documentId: string, name: string } | null } | null };
+export type AdminWorkoutPlanQuery = { __typename?: 'Query', workoutPlan?: { __typename?: 'WorkoutPlan', documentId: string, name: string, instructor?: string | null, category?: string | null, isActive?: boolean | null, validFrom?: string | null, validTo?: string | null, exercises?: Array<{ __typename?: 'Exercise', name: string, sets?: number | null, reps?: number | null, load?: string | null, notes?: string | null } | null> | null, students?: Array<{ __typename?: 'Student', documentId: string, name: string } | null> | null } | null };
 
 export type AdminUpdateWorkoutPlanMutationVariables = Exact<{
   documentId: Scalars['ID']['input'];
@@ -2544,6 +2826,7 @@ export const AdminDeletePlanDocument = {"kind":"Document","definitions":[{"kind"
 export const AdminCreatePlanDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCreatePlan"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"PlanInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<AdminCreatePlanMutation, AdminCreatePlanMutationVariables>;
 export const AdminCreatePoolInspectionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCreatePoolInspection"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"PoolInspectionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createPoolInspection"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}}]}}]}}]} as unknown as DocumentNode<AdminCreatePoolInspectionMutation, AdminCreatePoolInspectionMutationVariables>;
 export const AdminUpdatePoolInspectionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdatePoolInspection"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"PoolInspectionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updatePoolInspection"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}}]}}]}}]} as unknown as DocumentNode<AdminUpdatePoolInspectionMutation, AdminUpdatePoolInspectionMutationVariables>;
+export const AdminDuplicatePoolActivityDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminDuplicatePoolActivity"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"WorkoutPlanInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createWorkoutPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<AdminDuplicatePoolActivityMutation, AdminDuplicatePoolActivityMutationVariables>;
 export const AdminCreateClassScheduleDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCreateClassSchedule"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ClassScheduleInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createClassSchedule"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}}]}}]}}]} as unknown as DocumentNode<AdminCreateClassScheduleMutation, AdminCreateClassScheduleMutationVariables>;
 export const SuggestModulesForBusinessTypeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SuggestModulesForBusinessType"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"businessType"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"suggestModulesForBusinessType"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"businessType"},"value":{"kind":"Variable","name":{"kind":"Name","value":"businessType"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"businessType"}},{"kind":"Field","name":{"kind":"Name","value":"modules"}}]}}]}}]} as unknown as DocumentNode<SuggestModulesForBusinessTypeQuery, SuggestModulesForBusinessTypeQueryVariables>;
 export const AssignPlanMenuPlansDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AssignPlanMenuPlans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"plans"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"100"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<AssignPlanMenuPlansQuery, AssignPlanMenuPlansQueryVariables>;
@@ -2587,8 +2870,8 @@ export const AdminCheckInBookingDocument = {"kind":"Document","definitions":[{"k
 export const AdminUpdateBookingStatusDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdateBookingStatus"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ClassBookingUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateClassBooking"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"checkedInAt"}}]}}]}}]} as unknown as DocumentNode<AdminUpdateBookingStatusMutation, AdminUpdateBookingStatusMutationVariables>;
 export const AdminDailyAttendanceDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminDailyAttendance"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"date"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"dailyAttendance"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"date"},"value":{"kind":"Variable","name":{"kind":"Name","value":"date"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"weekdayLabel"}},{"kind":"Field","name":{"kind":"Name","value":"classes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"scheduleDocumentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"room"}},{"kind":"Field","name":{"kind":"Name","value":"startTime"}},{"kind":"Field","name":{"kind":"Name","value":"endTime"}},{"kind":"Field","name":{"kind":"Name","value":"capacity"}},{"kind":"Field","name":{"kind":"Name","value":"bookedCount"}},{"kind":"Field","name":{"kind":"Name","value":"attendedCount"}},{"kind":"Field","name":{"kind":"Name","value":"missedCount"}},{"kind":"Field","name":{"kind":"Name","value":"bookings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"checkedInAt"}},{"kind":"Field","name":{"kind":"Name","value":"student"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"photo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<AdminDailyAttendanceQuery, AdminDailyAttendanceQueryVariables>;
 export const GuardiansDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Guardians"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"guardians"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"guardian"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"initials"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}}]}},{"kind":"Field","name":{"kind":"Name","value":"dependents"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"age"}},{"kind":"Field","name":{"kind":"Name","value":"className"}},{"kind":"Field","name":{"kind":"Name","value":"classTime"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"gender"}},{"kind":"Field","name":{"kind":"Name","value":"medicalAlert"}}]}}]}}]}}]} as unknown as DocumentNode<GuardiansQuery, GuardiansQueryVariables>;
-export const AdminWorkoutsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminWorkouts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workoutPlans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"validFrom"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"sets"}},{"kind":"Field","name":{"kind":"Name","value":"reps"}},{"kind":"Field","name":{"kind":"Name","value":"load"}}]}},{"kind":"Field","name":{"kind":"Name","value":"student"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<AdminWorkoutsQuery, AdminWorkoutsQueryVariables>;
-export const AdminWorkoutPlanDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminWorkoutPlan"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workoutPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"validFrom"}},{"kind":"Field","name":{"kind":"Name","value":"validTo"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"sets"}},{"kind":"Field","name":{"kind":"Name","value":"reps"}},{"kind":"Field","name":{"kind":"Name","value":"load"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}}]}},{"kind":"Field","name":{"kind":"Name","value":"student"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<AdminWorkoutPlanQuery, AdminWorkoutPlanQueryVariables>;
+export const AdminWorkoutsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminWorkouts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workoutPlans"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"validFrom"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"sets"}},{"kind":"Field","name":{"kind":"Name","value":"reps"}},{"kind":"Field","name":{"kind":"Name","value":"load"}}]}},{"kind":"Field","name":{"kind":"Name","value":"students"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<AdminWorkoutsQuery, AdminWorkoutsQueryVariables>;
+export const AdminWorkoutPlanDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminWorkoutPlan"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workoutPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"validFrom"}},{"kind":"Field","name":{"kind":"Name","value":"validTo"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"sets"}},{"kind":"Field","name":{"kind":"Name","value":"reps"}},{"kind":"Field","name":{"kind":"Name","value":"load"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}}]}},{"kind":"Field","name":{"kind":"Name","value":"students"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<AdminWorkoutPlanQuery, AdminWorkoutPlanQueryVariables>;
 export const AdminUpdateWorkoutPlanDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdateWorkoutPlan"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"WorkoutPlanUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateWorkoutPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]} as unknown as DocumentNode<AdminUpdateWorkoutPlanMutation, AdminUpdateWorkoutPlanMutationVariables>;
 export const AdminDeleteWorkoutPlanDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminDeleteWorkoutPlan"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteWorkoutPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}}]}}]}}]} as unknown as DocumentNode<AdminDeleteWorkoutPlanMutation, AdminDeleteWorkoutPlanMutationVariables>;
 export const StudentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Students"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"PaginationInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"students"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"isGuardian"}},{"kind":"Field","name":{"kind":"Name","value":"enrollments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"endDate"}},{"kind":"Field","name":{"kind":"Name","value":"paymentMethod"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"plan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"billingCycle"}}]}}]}}]}}]}}]} as unknown as DocumentNode<StudentsQuery, StudentsQueryVariables>;

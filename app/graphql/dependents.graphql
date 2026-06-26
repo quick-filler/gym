@@ -1,0 +1,110 @@
+# Dependentes (Fase 6). O responsável vê a turma dos filhos, reserva em nome
+# deles, cadastra e edita. Reserva/cancelamento reusam a infra de agenda:
+# bookClassForDependent reserva; o cancelamento usa CancelMyBooking
+# (schedule.graphql), que já resolve a posse via dependent.guardian.
+
+query MyDependents {
+  me {
+    documentId
+    name
+    academy {
+      documentId
+      name
+    }
+  }
+  myDependents {
+    documentId
+    name
+    birthdate
+    cpf
+    gender
+    relationship
+    status
+    bloodType
+    allergies
+    medicalNotes
+    medicalAlert
+    emergencyContactName
+    emergencyContactPhone
+    address {
+      cep
+      street
+      number
+      complement
+      neighborhood
+      city
+      state
+    }
+    photo {
+      documentId
+      url
+    }
+    enrollments {
+      documentId
+      startDate
+      endDate
+      status
+      plan {
+        documentId
+        name
+        price
+        billingCycle
+      }
+    }
+  }
+}
+
+# Grade semanal de um dependente — mesma forma de MyScheduleWeek; os campos
+# bookedByMe / myBooking* refletem as reservas DO dependente.
+query DependentScheduleWeek($dependentId: ID!, $weekStart: String) {
+  dependentScheduleWeek(dependentId: $dependentId, weekStart: $weekStart) {
+    scheduleDocumentId
+    date
+    weekday
+    name
+    instructor
+    modality
+    room
+    startTime
+    endTime
+    maxCapacity
+    bookedCount
+    spotsLeft
+    isFull
+    bookable
+    waitlistCount
+    bookedByMe
+    myBookingDocumentId
+    myBookingStatus
+  }
+}
+
+mutation BookClassForDependent(
+  $dependentId: ID!
+  $scheduleDocumentId: ID!
+  $date: String!
+) {
+  bookClassForDependent(
+    dependentId: $dependentId
+    scheduleDocumentId: $scheduleDocumentId
+    date: $date
+  ) {
+    documentId
+    status
+    date
+  }
+}
+
+mutation AddMyDependent($input: MyDependentInput!) {
+  addMyDependent(input: $input) {
+    documentId
+    name
+  }
+}
+
+mutation UpdateMyDependent($documentId: ID!, $input: MyDependentUpdateInput!) {
+  updateMyDependent(documentId: $documentId, input: $input) {
+    documentId
+    name
+  }
+}

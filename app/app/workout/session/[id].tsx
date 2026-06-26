@@ -43,6 +43,7 @@ interface ChecklistItem {
   reps?: number | null;
   load?: string | null;
   completed: boolean;
+  markedAt?: number | null; // elapsed seconds when ticked (a "marcação")
 }
 
 function exLabel(sets?: number | null, reps?: number | null): string {
@@ -82,6 +83,9 @@ export default function WorkoutSessionScreen() {
 
   const session = data?.workoutSession;
   const isDone = !!session?.finishedAt;
+  const isPool = session?.workoutPlan?.category === 'pool';
+  const noun = isPool ? 'atividade' : 'treino';
+  const Noun = isPool ? 'Atividade' : 'Treino';
 
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [notes, setNotes] = useState('');
@@ -99,37 +103,58 @@ export default function WorkoutSessionScreen() {
         reps: it?.reps ?? null,
         load: it?.load ?? null,
         completed: !!it?.completed,
+        markedAt: typeof it?.markedAt === 'number' ? it.markedAt : null,
       })),
     );
     setNotes(session.notes ?? '');
     hydrated.current = true;
   }, [session]);
 
-  // Live elapsed timer (open sessions only).
-  const [, forceTick] = useState(0);
+  // Live elapsed timer (open sessions only). `tick` drives the 1s refresh and
+  // is a dependency of elapsedSec so the clock actually advances every second.
+  const [tick, forceTick] = useState(0);
   useEffect(() => {
     if (isDone || !session?.startedAt) return;
     const t = setInterval(() => forceTick((n) => n + 1), 1000);
     return () => clearInterval(t);
   }, [isDone, session?.startedAt]);
 
-  const elapsedSec = useMemo(() => {
+  /** Elapsed seconds since the session started (frozen at finishedAt when done). */
+  const computeElapsed = () => {
     if (!session?.startedAt) return 0;
     const start = new Date(session.startedAt).getTime();
     const end = isDone && session.finishedAt ? new Date(session.finishedAt).getTime() : Date.now();
     return (end - start) / 1000;
-  }, [session?.startedAt, session?.finishedAt, isDone, checklist]); // checklist dep keeps it fresh on tick
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const elapsedSec = useMemo(computeElapsed, [
+    session?.startedAt,
+    session?.finishedAt,
+    isDone,
+    tick, // advances every second
+  ]);
 
   const doneCount = checklist.filter((c) => c.completed).length;
 
-  const toggle = (i: number) =>
-    setChecklist((prev) => prev.map((c, idx) => (idx === i ? { ...c, completed: !c.completed } : c)));
+  // Tapping an exercise toggles it done and stamps the clock at that moment
+  // (a "marcação"/split); un-ticking clears the mark.
+  const toggle = (i: number) => {
+    if (isDone) return;
+    const at = Math.floor(computeElapsed());
+    setChecklist((prev) =>
+      prev.map((c, idx) =>
+        idx === i
+          ? { ...c, completed: !c.completed, markedAt: !c.completed ? at : null }
+          : c,
+      ),
+    );
+  };
 
   const setLoad = (i: number, load: string) =>
     setChecklist((prev) => prev.map((c, idx) => (idx === i ? { ...c, load } : c)));
 
   const onFinish = () => {
-    Alert.alert('Finalizar treino', 'Deseja finalizar e salvar este treino?', [
+    Alert.alert(`Finalizar ${noun}`, `Deseja finalizar e salvar est${isPool ? 'a atividade' : 'e treino'}?`, [
       { text: 'Voltar', style: 'cancel' },
       {
         text: 'Finalizar',
@@ -138,8 +163,8 @@ export default function WorkoutSessionScreen() {
             await finishMutation({
               variables: { sessionId: id, exercisesCompleted: checklist, notes: notes || null },
             });
-            Alert.alert('Treino concluído!', 'Sua sessão foi registrada no histórico.', [
-              { text: 'OK', onPress: () => router.replace('/(tabs)/workouts') },
+            Alert.alert(`${Noun} concluíd${isPool ? 'a' : 'o'}!`, 'Sua sessão foi registrada no histórico.', [
+              { text: 'OK', onPress: () => router.replace(isPool ? '/(tabs)/pool' : '/(tabs)/workouts') },
             ]);
           } catch (err: any) {
             Alert.alert(
@@ -153,7 +178,7 @@ export default function WorkoutSessionScreen() {
   };
 
   const onCancel = () => {
-    Alert.alert('Cancelar treino', 'Descartar esta sessão sem salvar?', [
+    Alert.alert(`Cancelar ${noun}`, 'Descartar esta sessão sem salvar?', [
       { text: 'Voltar', style: 'cancel' },
       {
         text: 'Descartar',
@@ -161,7 +186,7 @@ export default function WorkoutSessionScreen() {
         onPress: async () => {
           try {
             await cancelMutation({ variables: { sessionId: id } });
-            router.replace('/(tabs)/workouts');
+            router.replace(isPool ? '/(tabs)/pool' : '/(tabs)/workouts');
           } catch (err: any) {
             Alert.alert(
               'Não foi possível',
@@ -203,7 +228,7 @@ export default function WorkoutSessionScreen() {
             <Text style={styles.placeholder}>Sessão não encontrada.</Text>
           ) : (
             <>
-              <Text style={styles.planName}>{session.workoutPlan?.name ?? 'Treino'}</Text>
+              <Text style={styles.planName}>{session.workoutPlan?.name ?? Noun}</Text>
 
               {/* Timer / duration */}
               <View style={[styles.timerBox, { backgroundColor: withAlpha(accent, 0.08), borderColor: withAlpha(accent, 0.25) }]}>
@@ -240,7 +265,19 @@ export default function WorkoutSessionScreen() {
                         <Text style={[styles.exName, ex.completed && styles.exNameDone]}>
                           {ex.name}
                         </Text>
-                        <Text style={styles.exDetail}>{exLabel(ex.sets, ex.reps)}</Text>
+                        <View style={styles.exMetaRow}>
+                          {exLabel(ex.sets, ex.reps) ? (
+                            <Text style={styles.exDetail}>{exLabel(ex.sets, ex.reps)}</Text>
+                          ) : null}
+                          {ex.completed && ex.markedAt != null ? (
+                            <View style={[styles.markBadge, { backgroundColor: withAlpha(accent, 0.12) }]}>
+                              <Clock size={10} color={accent} strokeWidth={2.6} />
+                              <Text style={[styles.markText, { color: accent }]}>
+                                {fmtClock(ex.markedAt)}
+                              </Text>
+                            </View>
+                          ) : null}
+                        </View>
                       </View>
                       {isDone ? (
                         <Text style={[styles.exLoad, { color: accent }]}>{ex.load || '—'}</Text>
@@ -272,7 +309,7 @@ export default function WorkoutSessionScreen() {
                   <TextInput
                     value={notes}
                     onChangeText={setNotes}
-                    placeholder="Como foi o treino? (opcional)"
+                    placeholder={`Como foi ${isPool ? 'a atividade' : 'o treino'}? (opcional)`}
                     placeholderTextColor={theme.ink300}
                     multiline
                     style={styles.notesInput}
@@ -375,7 +412,17 @@ const styles = StyleSheet.create({
   checkBtn: { width: 28, alignItems: 'center', justifyContent: 'center' },
   exName: { fontSize: 15, fontWeight: '600', color: theme.ink900 },
   exNameDone: { textDecorationLine: 'line-through', color: theme.ink400 },
-  exDetail: { fontSize: 12, color: theme.ink400, marginTop: 2 },
+  exMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 3 },
+  exDetail: { fontSize: 12, color: theme.ink400 },
+  markBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 999,
+  },
+  markText: { fontSize: 11, fontWeight: '800', fontVariant: ['tabular-nums'] },
   exLoad: { fontSize: 13, fontWeight: '800', minWidth: 56, textAlign: 'right' },
   loadInput: {
     width: 72,

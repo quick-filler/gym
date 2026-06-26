@@ -579,7 +579,10 @@ describe('mapWorkouts', () => {
           { name: 'Supino', sets: 4, reps: 12, load: '60kg' },
           { name: 'Crucifixo', sets: 3, reps: 15, load: null },
         ],
-        student: { documentId: 's1', name: 'João Silva' },
+        students: [
+          { documentId: 's1', name: 'João Silva' },
+          { documentId: 's2', name: 'Maria Souza' },
+        ],
       },
       {
         documentId: 'w2',
@@ -593,7 +596,8 @@ describe('mapWorkouts', () => {
     expect(out.cards[1]!.icon).toBe('zap');
     expect(out.cards[0]!.exercises[0]!.sets).toBe('4×12');
     expect(out.cards[0]!.exercises[1]!.load).toBe('—'); // null load
-    expect(out.cards[0]!.student.initials).toBe('JS');
+    expect(out.cards[0]!.student.initials).toBe('JS'); // first of the roster
+    expect(out.cards[0]!.studentCount).toBe(2);
     expect(out.cards[0]!.status).toBe('active');
     expect(out.cards[1]!.status).toBe('archived');
   });

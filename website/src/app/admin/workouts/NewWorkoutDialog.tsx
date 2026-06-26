@@ -37,18 +37,25 @@ export function NewWorkoutDialog({
   open,
   onClose,
   onCreated,
+  category = "gym",
 }: {
   open: boolean;
   onClose: () => void;
   onCreated?: () => void;
+  /** 'gym' (Treinos) or 'pool' (Piscina → Atividades). Drives copy + the
+   * category sent to the backend so the ficha lands in the right tab. */
+  category?: "gym" | "pool";
 }) {
+  const isPool = category === "pool";
   const today = new Date().toISOString().slice(0, 10);
   const { data: studentsData } = useQuery(STUDENTS_FOR_WORKOUT, {
     skip: USE_MOCKS || !open,
   });
 
   const [name, setName] = useState("");
-  const [studentId, setStudentId] = useState("");
+  const [students, setStudents] = useState<Array<{ id: string; name: string }>>(
+    [],
+  );
   const [instructor, setInstructor] = useState("");
   const [validFrom, setValidFrom] = useState(today);
   const [exercises, setExercises] = useState<ExerciseDraft[]>(() => [
@@ -59,7 +66,7 @@ export function NewWorkoutDialog({
 
   function reset() {
     setName("");
-    setStudentId("");
+    setStudents([]);
     setInstructor("");
     setValidFrom(today);
     setExercises([emptyExercise()]);
@@ -82,27 +89,31 @@ export function NewWorkoutDialog({
       setError("Adicione ao menos um exercício com nome.");
       return;
     }
-    if (!studentId) {
-      setError("Selecione um aluno.");
+    if (students.length === 0) {
+      setError("Selecione ao menos um aluno.");
       return;
     }
 
+    const exercisePayload = valid.map((e) => ({
+      name: e.name.trim(),
+      sets: e.sets,
+      reps: e.reps,
+      load: e.load,
+      notes: e.notes?.trim() || undefined,
+    }));
+
     try {
+      // One ficha/activity shared by the whole roster (manyToMany students).
       await createWorkout({
         variables: {
           data: {
             name,
             instructor: instructor || undefined,
-            student: studentId,
+            students: students.map((s) => s.id),
+            category,
             validFrom,
             isActive: true,
-            exercises: valid.map((e) => ({
-              name: e.name.trim(),
-              sets: e.sets,
-              reps: e.reps,
-              load: e.load,
-              notes: e.notes?.trim() || undefined,
-            })),
+            exercises: exercisePayload,
           },
         },
       });
@@ -123,33 +134,42 @@ export function NewWorkoutDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      title="Nova ficha de treino"
-      subtitle="Defina os exercícios, séries e cargas. O aluno vê a ficha no app."
+      title={isPool ? "Nova atividade de piscina" : "Nova ficha de treino"}
+      subtitle={
+        isPool
+          ? "Defina os exercícios da atividade aquática. O aluno vê na aba Piscina do app."
+          : "Defina os exercícios, séries e cargas. O aluno vê a ficha no app."
+      }
       wide
     >
       <form id="new-workout-form" onSubmit={handleSubmit}>
-        <Field label="Nome da ficha">
+        <Field label={isPool ? "Nome da atividade" : "Nome da ficha"}>
           <Input
             required
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Treino A — Peito e Tríceps"
+            placeholder={isPool ? "Natação — Técnica de Crawl" : "Treino A — Peito e Tríceps"}
           />
         </Field>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Aluno">
+          <Field label={students.length > 1 ? "Alunos" : "Aluno(s)"}>
             <Combobox
-              required
-              value={studentId}
-              onChange={setStudentId}
-              placeholder="Selecione um aluno…"
+              value=""
+              onChange={(id) => {
+                const opt = studentOptions.find((s) => s.id === id);
+                if (opt && !students.some((s) => s.id === id)) {
+                  setStudents((prev) => [...prev, { id: opt.id, name: opt.name }]);
+                }
+              }}
+              placeholder={
+                students.length ? "Adicionar outro aluno…" : "Selecione os alunos…"
+              }
               searchPlaceholder="Buscar aluno"
               emptyMessage="Nenhum aluno"
-              options={studentOptions.map((s) => ({
-                id: s.id,
-                label: s.name,
-              }))}
+              options={studentOptions
+                .filter((s) => !students.some((sel) => sel.id === s.id))
+                .map((s) => ({ id: s.id, label: s.name }))}
             />
           </Field>
           <Field label="Instrutor">
@@ -160,6 +180,29 @@ export function NewWorkoutDialog({
             />
           </Field>
         </div>
+
+        {students.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4 -mt-1">
+            {students.map((s) => (
+              <span
+                key={s.id}
+                className="inline-flex items-center gap-1.5 rounded-full bg-ink-900 text-paper text-[0.78rem] font-medium pl-3 pr-2 py-1"
+              >
+                {s.name}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setStudents((prev) => prev.filter((x) => x.id !== s.id))
+                  }
+                  aria-label={`Remover ${s.name}`}
+                  className="inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-paper/20 transition-colors"
+                >
+                  <Icon name="x" size="sm" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
         <Field label="Válido a partir de">
           <Input
             required

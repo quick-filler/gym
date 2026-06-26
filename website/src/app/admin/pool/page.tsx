@@ -24,8 +24,22 @@ import { Icon } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
-import { usePoolInspections, usePoolSettings } from "@/lib/hooks";
+import { cn } from "@/lib/utils";
+import { USE_MOCKS } from "@/lib/config";
+import {
+  DELETE_WORKOUT_PLAN,
+  UPDATE_WORKOUT_PLAN,
+  WORKOUT_PLAN_BY_ID,
+  usePoolInspections,
+  usePoolSettings,
+  useWorkouts,
+} from "@/lib/hooks";
+import { WorkoutCard, type CardActions } from "@/components/admin/WorkoutCard";
+import { NewWorkoutDialog } from "../workouts/NewWorkoutDialog";
+import { EditWorkoutDialog } from "../workouts/EditWorkoutDialog";
 import type { PoolInspection, PoolShift, PoolStatus } from "@/lib/types";
+
+type PoolTab = "inspections" | "activities";
 
 const CREATE_POOL_INSPECTION = graphql(`
   mutation AdminCreatePoolInspection($data: PoolInspectionInput!) {
@@ -42,6 +56,15 @@ const UPDATE_POOL_INSPECTION = graphql(`
   ) {
     updatePoolInspection(documentId: $documentId, data: $data) {
       documentId
+    }
+  }
+`);
+
+const DUPLICATE_POOL_ACTIVITY = graphql(`
+  mutation AdminDuplicatePoolActivity($data: WorkoutPlanInput!) {
+    createWorkoutPlan(data: $data) {
+      documentId
+      name
     }
   }
 `);
@@ -76,6 +99,7 @@ export default function PoolPage() {
     usePoolInspections(today);
   const { data: history, loading: loadingHistory } = usePoolInspections();
   const apollo = useApolloClient();
+  const [tab, setTab] = useState<PoolTab>("inspections");
   const [editTarget, setEditTarget] = useState<
     | { mode: "create"; shift: PoolShift }
     | { mode: "edit"; inspection: PoolInspection }
@@ -114,6 +138,33 @@ export default function PoolPage() {
           }
         />
 
+        <div className="flex items-center gap-1 border-b border-line mb-6">
+          {(
+            [
+              { id: "inspections", label: "Inspeções" },
+              { id: "activities", label: "Atividades" },
+            ] as Array<{ id: PoolTab; label: string }>
+          ).map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "font-mono text-[0.76rem] uppercase tracking-[0.08em] font-semibold px-4 py-3 border-b-2 transition-colors -mb-px",
+                t.id === tab
+                  ? "border-flame text-flame"
+                  : "border-transparent text-ink-400 hover:text-ink-700",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "activities" && <PoolActivities />}
+
+        {tab === "inspections" && (
+          <>
         {loading && <LoadingState />}
 
         <div className="grid grid-cols-2 gap-5 mb-8 max-[720px]:grid-cols-1">
@@ -209,6 +260,8 @@ export default function PoolPage() {
             </div>
           )}
         </Card>
+          </>
+        )}
 
         <InspectionDialog
           target={editTarget}
@@ -219,6 +272,150 @@ export default function PoolPage() {
           }}
         />
       </main>
+    </>
+  );
+}
+
+/**
+ * Atividades de piscina = fichas (WorkoutPlan) com category 'pool'. Reusa o
+ * WorkoutCard e os diálogos de Treinos; vive aqui porque o menu Piscina é
+ * gated pelo módulo `pool`, então as atividades ficam atrás do gate correto.
+ */
+function PoolActivities() {
+  const { data, loading, error } = useWorkouts();
+  const apollo = useApolloClient();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const [updateWorkout] = useMutation(UPDATE_WORKOUT_PLAN, {
+    refetchQueries: ["AdminWorkouts"],
+  });
+  const [deleteWorkout] = useMutation(DELETE_WORKOUT_PLAN, {
+    refetchQueries: ["AdminWorkouts"],
+  });
+  const [duplicateActivity] = useMutation(DUPLICATE_POOL_ACTIVITY, {
+    refetchQueries: ["AdminWorkouts"],
+  });
+
+  const refetch = () => apollo.refetchQueries({ include: ["AdminWorkouts"] });
+  const cards = (data?.cards ?? []).filter((c) => c.category === "pool");
+
+  const cardActions: CardActions = {
+    busyId,
+    onEdit: (id) => setEditingId(id),
+    onArchiveToggle: async (id, currentlyActive) => {
+      if (USE_MOCKS) return;
+      setBusyId(id);
+      try {
+        await updateWorkout({
+          variables: { documentId: id, data: { isActive: !currentlyActive } },
+        });
+      } finally {
+        setBusyId(null);
+      }
+    },
+    onDelete: async (id) => {
+      if (
+        !window.confirm(
+          "Excluir esta atividade definitivamente? A ação não pode ser desfeita.",
+        )
+      )
+        return;
+      if (USE_MOCKS) return;
+      setBusyId(id);
+      try {
+        await deleteWorkout({ variables: { documentId: id } });
+      } finally {
+        setBusyId(null);
+      }
+    },
+    onDuplicate: async (id) => {
+      if (USE_MOCKS) return;
+      setBusyId(id);
+      try {
+        const result = await apollo.query({
+          query: WORKOUT_PLAN_BY_ID,
+          variables: { documentId: id },
+          fetchPolicy: "network-only",
+        });
+        const src = result.data?.workoutPlan;
+        const roster = (src?.students ?? [])
+          .filter((s): s is NonNullable<typeof s> => !!s)
+          .map((s) => s.documentId);
+        if (!src || roster.length === 0) return;
+        await duplicateActivity({
+          variables: {
+            data: {
+              name: `Cópia de ${src.name ?? "Atividade"}`,
+              instructor: src.instructor ?? undefined,
+              students: roster,
+              category: "pool",
+              validFrom: src.validFrom ?? new Date().toISOString().slice(0, 10),
+              isActive: true,
+              exercises: (src.exercises ?? [])
+                .filter((e): e is NonNullable<typeof e> => !!e)
+                .map((e) => ({
+                  name: e.name ?? "",
+                  sets: e.sets ?? 0,
+                  reps: e.reps ?? 0,
+                  load: e.load ?? "—",
+                  notes: e.notes ?? undefined,
+                })),
+            },
+          },
+        });
+      } finally {
+        setBusyId(null);
+      }
+    },
+  };
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <p className="font-mono text-[0.72rem] uppercase tracking-[0.08em] text-ink-500">
+          {cards.length} atividade{cards.length === 1 ? "" : "s"} de piscina
+        </p>
+        <Button variant="primary" onClick={() => setDialogOpen(true)}>
+          <Icon name="plus" /> Nova atividade
+        </Button>
+      </div>
+
+      {loading && !data && <LoadingState />}
+      {error && <div className="text-rose">{error.message}</div>}
+
+      {data && cards.length === 0 && (
+        <Card className="p-12 text-center">
+          <div className="font-display text-[1.2rem] font-semibold text-ink-900 mb-2">
+            Nenhuma atividade de piscina
+          </div>
+          <p className="text-[0.9rem] text-ink-500">
+            Crie uma atividade aquática (natação, hidroginástica…). O aluno a vê
+            na aba Piscina do app.
+          </p>
+        </Card>
+      )}
+
+      {data && cards.length > 0 && (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5 max-[720px]:grid-cols-1">
+          {cards.map((plan) => (
+            <WorkoutCard key={plan.id} plan={plan} actions={cardActions} />
+          ))}
+        </div>
+      )}
+
+      <NewWorkoutDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        onCreated={refetch}
+        category="pool"
+      />
+      <EditWorkoutDialog
+        documentId={editingId}
+        onClose={() => setEditingId(null)}
+        onUpdated={refetch}
+      />
     </>
   );
 }

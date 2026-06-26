@@ -1,15 +1,10 @@
 /**
- * useScheduleWeek — single data entrypoint for the Agenda tab (Fase 2).
+ * useDependentSchedule — the dependent agenda for a guardian (Fase 6).
  *
- * Same mock-vs-API contract as useDashboard:
- *   EXPO_PUBLIC_USE_MOCKS=true  → returns MOCK_SCHEDULE, book/cancel are
- *                                 no-ops that surface a "demo mode" message.
- *   EXPO_PUBLIC_USE_MOCKS=false → runs MyScheduleWeek via Apollo, exposes
- *                                 real bookClass / cancelMyBooking mutations.
- *
- * The backend returns a flat list of occurrences (one schedule × date); the
- * hook buckets them into the 7 days of the current week so the screen keeps
- * its day-picker layout.
+ * Returns the same `ScheduleWeekResult` contract as useScheduleWeek so the
+ * shared ScheduleWeekView renders both screens identically. `book` reserves on
+ * the dependent's behalf (bookClassForDependent); `cancel` reuses
+ * CancelMyBooking, which already resolves dependent ownership via the guardian.
  */
 
 import { useCallback, useMemo } from 'react';
@@ -18,33 +13,25 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { USE_MOCKS } from '../lib/config';
 import { MOCK_SCHEDULE } from '../lib/mock-data';
 import {
-  BookClassDocument,
+  BookClassForDependentDocument,
   CancelMyBookingDocument,
-  MyScheduleWeekDocument,
+  DependentScheduleWeekDocument,
 } from '../gql/graphql';
-import {
-  buildWeekDays,
-  hhmm,
-  mondayOfWeekISO,
-  todayISO,
-} from '../lib/format';
+import { buildWeekDays, mondayOfWeekISO, todayISO } from '../lib/format';
+import { gqlMessage, mapOccurrence } from './useScheduleWeek';
 import type {
   BookingActionResult,
-  ClassBookingStatus,
   ClassSlot,
   ScheduleDay,
   ScheduleWeekResult,
 } from '../lib/types';
 
-/* ------------------------------------------------------------------
- * Mock branch
- * ------------------------------------------------------------------ */
 const DEMO: BookingActionResult = {
   ok: false,
   message: 'Modo demonstração — reservas reais precisam do backend.',
 };
 
-function useMockScheduleWeek(): ScheduleWeekResult {
+function useMockDependentSchedule(): ScheduleWeekResult {
   const days = useMemo<ScheduleDay[]>(() => MOCK_SCHEDULE, []);
   const noop = useCallback(async (): Promise<BookingActionResult> => DEMO, []);
   return {
@@ -58,65 +45,28 @@ function useMockScheduleWeek(): ScheduleWeekResult {
   };
 }
 
-/* ------------------------------------------------------------------
- * API branch
- * ------------------------------------------------------------------ */
-export function mapOccurrence(o: any): ClassSlot {
-  const status: ClassBookingStatus = o.bookedByMe
-    ? o.myBookingStatus === 'waitlist'
-      ? 'waitlisted'
-      : 'booked'
-    : o.isFull
-      ? 'waitlist'
-      : 'available';
-
-  return {
-    id: `${o.scheduleDocumentId}|${o.date}`,
-    startTime: hhmm(o.startTime),
-    endTime: hhmm(o.endTime),
-    name: o.name,
-    instructor: (o.instructor ?? '').toUpperCase(),
-    room: (o.room ?? '').toUpperCase(),
-    capacity: o.maxCapacity ?? 0,
-    taken: o.bookedCount ?? 0,
-    status,
-    scheduleDocumentId: o.scheduleDocumentId,
-    date: o.date,
-    bookable: !!o.bookable,
-    bookingDocumentId: o.myBookingDocumentId ?? null,
-    unlimited: o.maxCapacity == null,
-  };
-}
-
-/** Pulls the human message out of an Apollo/GraphQL error. */
-export function gqlMessage(err: any, fallback: string): string {
-  return (
-    err?.graphQLErrors?.[0]?.message ??
-    err?.errors?.[0]?.message ??
-    (typeof err?.message === 'string' && !err.message.includes('go.apollo.dev')
-      ? err.message
-      : null) ??
-    fallback
+function useApiDependentSchedule(dependentId: string): ScheduleWeekResult {
+  const { data, loading, error, refetch } = useQuery<any>(
+    DependentScheduleWeekDocument,
+    {
+      variables: { dependentId },
+      skip: !dependentId,
+      fetchPolicy: 'cache-and-network',
+      errorPolicy: 'all',
+    },
   );
-}
-
-function useApiScheduleWeek(): ScheduleWeekResult {
-  const { data, loading, error, refetch } = useQuery<any>(MyScheduleWeekDocument, {
-    fetchPolicy: 'cache-and-network',
-    errorPolicy: 'all',
-  });
-  const [bookMutation, bookState] = useMutation<any>(BookClassDocument);
+  const [bookMutation, bookState] = useMutation<any>(BookClassForDependentDocument);
   const [cancelMutation, cancelState] = useMutation<any>(CancelMyBookingDocument);
 
   const days = useMemo<ScheduleDay[]>(() => {
     const today = todayISO();
     const monday = mondayOfWeekISO(today);
-    const occ: any[] = data?.myScheduleWeek ?? [];
+    const occ: any[] = data?.dependentScheduleWeek ?? [];
     const byDate = new Map<string, ClassSlot[]>();
     for (const o of occ) {
-      const list = byDate.get(o.date) ?? [];
-      list.push(mapOccurrence(o));
-      byDate.set(o.date, list);
+      const slotList = byDate.get(o.date) ?? [];
+      slotList.push(mapOccurrence(o));
+      byDate.set(o.date, slotList);
     }
     return buildWeekDays(monday, today).map((d) => ({
       ...d,
@@ -138,25 +88,26 @@ function useApiScheduleWeek(): ScheduleWeekResult {
       try {
         const res = await bookMutation({
           variables: {
+            dependentId,
             scheduleDocumentId: slot.scheduleDocumentId,
             date: slot.date,
           },
         });
         await refetch();
-        const status = res.data?.bookClass?.status;
+        const status = res.data?.bookClassForDependent?.status;
         return {
           ok: true,
           status,
           message:
             status === 'waitlist'
-              ? 'Turma cheia — você entrou na lista de espera.'
+              ? 'Turma cheia — entrou na lista de espera.'
               : 'Reserva confirmada!',
         };
       } catch (err) {
         return { ok: false, message: gqlMessage(err, 'Não foi possível reservar.') };
       }
     },
-    [bookMutation, refetch],
+    [bookMutation, refetch, dependentId],
   );
 
   const cancel = useCallback(
@@ -197,14 +148,11 @@ function useApiScheduleWeek(): ScheduleWeekResult {
   };
 }
 
-/* ------------------------------------------------------------------
- * Public hook — branch fixed at build time (env inlined), same as useDashboard.
- * ------------------------------------------------------------------ */
-export function useScheduleWeek(): ScheduleWeekResult {
+export function useDependentSchedule(dependentId: string): ScheduleWeekResult {
   if (USE_MOCKS) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useMockScheduleWeek();
+    return useMockDependentSchedule();
   }
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  return useApiScheduleWeek();
+  return useApiDependentSchedule(dependentId);
 }

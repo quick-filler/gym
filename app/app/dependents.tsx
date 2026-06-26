@@ -7,10 +7,11 @@
  * status, optional medical alert, info rows (plano / turma / tipo
  * sanguíneo / próximo vencimento) and an emergency contact box.
  *
- * Data flow: pulls the tenant accent from `useDashboard` (so the
- * header matches the rest of the app) and reads the dependents list
- * from `MOCK_DEPENDENTS`. Swap the import for a `useDependents()`
- * hook once the backend `me.dependents` query is wired.
+ * Data flow: pulls the tenant accent from `useDashboard` (so the header
+ * matches the rest of the app) and the roster from `useDependents()`
+ * (mock or real `myDependents`). The cards link to the dependent agenda
+ * (`/dependent/[id]/schedule`), edit (`/dependent/[id]/edit`) and the
+ * new-dependent form (`/dependent/new`).
  */
 
 import React from 'react';
@@ -35,6 +36,7 @@ import {
 
 import { useDashboard } from '../hooks/useDashboard';
 import { useDependents } from '../hooks/useDependents';
+import { useModuleGuard } from '../hooks/useModuleGuard';
 import { theme, withAlpha } from '../lib/theme';
 import type { DependentRecord, DependentStatus } from '../lib/types';
 
@@ -55,9 +57,12 @@ const STATUS_TONE: Record<
 
 export default function DependentsScreen() {
   const { data: dashData } = useDashboard();
+  const allowed = useModuleGuard('dependents');
   const { data: payload, loading } = useDependents();
   const accent = dashData?.academy.primaryColor ?? theme.ink900;
   const academyName = payload?.guardianAcademy || dashData?.academy.name || 'Gym';
+
+  if (!allowed) return null;
 
   if (loading || !payload) {
     return (
@@ -117,6 +122,7 @@ export default function DependentsScreen() {
             style={styles.addCard}
             activeOpacity={0.75}
             accessibilityLabel="Adicionar dependente"
+            onPress={() => router.push('/dependent/new')}
           >
             <View
               style={[
@@ -201,12 +207,14 @@ function DependentCard({
         <TouchableOpacity
           style={[styles.primaryBtn, { backgroundColor: accent }]}
           activeOpacity={0.85}
+          onPress={() => router.push(`/dependent/${dep.id}/schedule`)}
         >
           <Text style={styles.primaryBtnText}>Ver agenda</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.outlineBtn, { borderColor: accent }]}
           activeOpacity={0.7}
+          onPress={() => router.push(`/dependent/${dep.id}/edit`)}
         >
           <Text style={[styles.outlineBtnText, { color: accent }]}>Editar</Text>
         </TouchableOpacity>

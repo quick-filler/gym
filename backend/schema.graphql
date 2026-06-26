@@ -974,13 +974,23 @@ type Mutation {
   activateAccount(data: ActivateAccountInput!): ActivateAccountResult
 
   """
+  Guardian self-service: registers a new dependent owned by the caller, in the caller’s academy. Auth only — managing family data is not a paid action, so no admin role or active subscription is required (booking still gates on the dependent’s enrollment).
+  """
+  addMyDependent(input: MyDependentInput!): Dependent
+
+  """
   Books the caller into a class on a date. Confirms while seats remain; queues onto the waitlist once full. Requires an active enrollment; closes 1h before start.
   """
   bookClass(date: String!, scheduleDocumentId: ID!): ClassBooking
+
+  """
+  Books a dependent (child) into a class on the guardian’s behalf. Same windows, capacity and waitlist rules as bookClass, but eligibility reads the dependent’s own active enrollment. Requires the caller to be the dependent’s guardian.
+  """
+  bookClassForDependent(date: String!, dependentId: ID!, scheduleDocumentId: ID!): ClassBooking
   bulkImportStudents(dryRun: Boolean = false, rows: [StudentImportRow!]!): BulkImportResult
 
   """
-  Cancels the caller’s own booking. Confirmed seats: until 24h before start; waitlist spots: any time. Frees a seat → auto-promotes the first waitlister.
+  Cancels the caller’s own booking — self or a dependent’s (guardian-owned). Confirmed seats: until 24h before start; waitlist spots: any time. Frees a seat → auto-promotes the first waitlister.
   """
   cancelMyBooking(documentId: ID!): ClassBooking
 
@@ -1064,6 +1074,11 @@ type Mutation {
   updateMyBilling(data: BillingInfoInput!): AcademySubscription
 
   """
+  Guardian self-service: edits a dependent the caller owns. Whitelisted fields only; guardian / academy / status are immutable here.
+  """
+  updateMyDependent(documentId: ID!, input: MyDependentUpdateInput!): Dependent
+
+  """
   Authenticated student changes their own password: verifies the current one, then sets the new one.
   """
   updateMyPassword(newPassword: String!, oldPassword: String!): Boolean
@@ -1075,6 +1090,38 @@ type Mutation {
   updatePoolInspection(data: PoolInspectionInput!, documentId: ID!): PoolInspection
   updateStudent(data: StudentUpdateInput!, documentId: ID!): Student
   updateWorkoutPlan(data: WorkoutPlanUpdateInput!, documentId: ID!): WorkoutPlan
+}
+
+input MyDependentInput {
+  address: AddressInput
+  allergies: String
+  birthdate: String!
+  bloodType: String
+  cpf: String
+  emergencyContactName: String
+  emergencyContactPhone: String
+  gender: String
+  medicalAlert: String
+  medicalNotes: String
+  name: String!
+  photo: ID
+  relationship: String
+}
+
+input MyDependentUpdateInput {
+  address: AddressInput
+  allergies: String
+  birthdate: String
+  bloodType: String
+  cpf: String
+  emergencyContactName: String
+  emergencyContactPhone: String
+  gender: String
+  medicalAlert: String
+  medicalNotes: String
+  name: String
+  photo: ID
+  relationship: String
 }
 
 input MyProfileInput {
@@ -1348,6 +1395,11 @@ type Query {
   """
   dailyAttendance(date: String!): DailyAttendance
   dependent(documentId: ID!): Dependent
+
+  """
+  A dependent's academy weekly grid starting at `weekStart` (defaults to the current week). Same shape as myScheduleWeek; the `bookedByMe` / `myBooking*` fields reflect the dependent's own bookings (made on their behalf by the guardian). Requires the caller to be the dependent's guardian.
+  """
+  dependentScheduleWeek(dependentId: ID!, weekStart: String): [ScheduleOccurrence]
   dependents(pagination: PaginationInput): [Dependent]
   dreOverview(month: Int, year: Int): DREOverview
   enrollment(documentId: ID!): Enrollment
@@ -1372,6 +1424,11 @@ type Query {
   myLatestAssessment: BodyAssessment
   myNextPayment: Payment
   myPayments(limit: Int, offset: Int): [Payment]
+
+  """
+  The caller's pool (Piscina) fichas — same shape as myWorkouts, filtered to category 'pool'. Gated by the pool module.
+  """
+  myPoolActivities: MyWorkouts
 
   """Pool settings for the caller's academy."""
   myPoolSettings: PoolSettings
@@ -1662,32 +1719,38 @@ input UpdateLeadInput {
 }
 
 type WorkoutPlan {
+  category: String
   documentId: ID!
   exercises: [Exercise]
   instructor: String
   isActive: Boolean
   name: String!
-  student: Student
+
+  """The roster of students assigned to this ficha/activity."""
+  students: [Student]
   validFrom: String
   validTo: String
 }
 
 input WorkoutPlanInput {
+  category: String
   dependent: ID
   exercises: [ExerciseInput]
   instructor: String
   isActive: Boolean
   name: String!
-  student: ID
+  students: [ID]
   validFrom: String
   validTo: String
 }
 
 input WorkoutPlanUpdateInput {
+  category: String
   exercises: [ExerciseInput]
   instructor: String
   isActive: Boolean
   name: String
+  students: [ID]
   validFrom: String
   validTo: String
 }

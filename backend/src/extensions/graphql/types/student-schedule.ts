@@ -27,6 +27,7 @@
 import type { Core } from '@strapi/strapi';
 import {
   requireActiveSubscription,
+  requireModule,
   resolveUserAcademyId,
   withAcademyScope,
 } from '../helpers';
@@ -34,6 +35,7 @@ import {
 const BOOKING_UID = 'api::class-booking.class-booking';
 const SCHEDULE_UID = 'api::class-schedule.class-schedule';
 const STUDENT_UID = 'api::student.student';
+const DEPENDENT_UID = 'api::dependent.dependent';
 
 const HOUR_MS = 3600 * 1000;
 const OCCUPYING = ['confirmed', 'attended'];
@@ -94,6 +96,15 @@ export function isWithinBookingWindow(now: Date, start: Date | null): boolean {
 export function isWithinCancelWindow(now: Date, start: Date | null): boolean {
   if (!start) return true;
   return now.getTime() <= start.getTime() - 24 * HOUR_MS;
+}
+
+/** True when any enrollment in the list is `active`. Shared by the caller
+ * (self) eligibility check and the dependent booking eligibility check. */
+export function hasActiveEnrollment(enrollments: unknown): boolean {
+  return (
+    Array.isArray(enrollments) &&
+    enrollments.some((e: any) => e?.status === 'active')
+  );
 }
 
 /** Confirmed while seats remain; waitlist once full. `null` capacity = unlimited. */
@@ -157,9 +168,44 @@ async function resolveCallerStudent(
     documentId: me.documentId,
     academyId: me.academy?.documentId ?? null,
     status: me.status ?? null,
-    hasActiveEnrollment:
-      Array.isArray(me.enrollments) &&
-      me.enrollments.some((e: any) => e?.status === 'active'),
+    hasActiveEnrollment: hasActiveEnrollment(me.enrollments),
+  };
+}
+
+interface OwnedDependent {
+  documentId: string;
+  academyId: string | null;
+  hasActiveEnrollment: boolean;
+}
+
+/**
+ * Loads a dependent and asserts the caller (`guardianDocumentId`) owns it.
+ * Throws PT-BR on missing / not-owned so the guardian can never read or book
+ * for a child that isn't theirs. The dependent — not the guardian — is the
+ * practitioner, so eligibility reads the dependent's own enrollments.
+ */
+async function loadOwnedDependent(
+  strapi: Core.Strapi,
+  dependentDocumentId: string,
+  guardianDocumentId: string,
+): Promise<OwnedDependent> {
+  const dep: any = await strapi.documents(DEPENDENT_UID).findOne({
+    documentId: dependentDocumentId,
+    fields: ['documentId'],
+    populate: {
+      guardian: { fields: ['documentId'] },
+      academy: { fields: ['documentId'] },
+      enrollments: { fields: ['status'] },
+    },
+  });
+  if (!dep) throw new Error('Dependente não encontrado.');
+  if (dep.guardian?.documentId !== guardianDocumentId) {
+    throw new Error('Dependente não pertence a esta conta.');
+  }
+  return {
+    documentId: dep.documentId,
+    academyId: dep.academy?.documentId ?? null,
+    hasActiveEnrollment: hasActiveEnrollment(dep.enrollments),
   };
 }
 
@@ -217,6 +263,97 @@ async function promoteNextWaitlister(
   });
 }
 
+/**
+ * Builds the academy weekly grid (one ScheduleOccurrence per active schedule ×
+ * matching weekday) for `academyId`, enriched with occupancy and the subject's
+ * own booking state. `isMine` decides which booking in a slot belongs to the
+ * subject in view — the caller (self) for `myScheduleWeek`, the dependent for
+ * `dependentScheduleWeek`. Capacity counts every occupying booking in the
+ * academy regardless of who made it; only the "mine" flags are subject-scoped.
+ */
+async function buildWeekOccurrences(
+  strapi: Core.Strapi,
+  academyId: string,
+  weekStartArg: string | null | undefined,
+  isMine: (booking: any) => boolean,
+): Promise<any[]> {
+  const weekStart = normalizeWeekStart(weekStartArg);
+  const dates = Array.from({ length: 7 }, (_, i) => addDaysISO(weekStart, i));
+  const weekEnd = dates[6];
+
+  const schedules: any[] = await strapi.documents(SCHEDULE_UID).findMany({
+    filters: { ...withAcademyScope({}, academyId), isActive: true },
+    limit: 500,
+  });
+
+  // Single bookings sweep for the whole window, grouped in JS. Populates both
+  // student and dependent so the same grid powers self- and dependent agendas.
+  const bookings: any[] = await strapi.documents(BOOKING_UID).findMany({
+    filters: {
+      classSchedule: { academy: { documentId: academyId } },
+      date: { $gte: weekStart, $lte: weekEnd },
+      status: { $ne: 'cancelled' },
+    } as any,
+    populate: {
+      classSchedule: { fields: ['documentId'] },
+      student: { fields: ['documentId'] },
+      dependent: { fields: ['documentId'] },
+    },
+    limit: 5000,
+  });
+
+  const now = new Date();
+  const occurrences: any[] = [];
+  for (const date of dates) {
+    const wd = weekdayOfISO(date);
+    for (const s of schedules) {
+      const weekdays: number[] = Array.isArray(s.weekdays) ? s.weekdays : [];
+      if (!weekdays.includes(wd)) continue;
+
+      const slot = bookings.filter(
+        (b) => b.classSchedule?.documentId === s.documentId && b.date === date,
+      );
+      const bookedCount = slot.filter((b) => OCCUPYING.includes(b.status)).length;
+      const waitlistCount = slot.filter((b) => b.status === 'waitlist').length;
+      const mine = slot.find(isMine);
+
+      const maxCapacity = s.maxCapacity ?? null;
+      const isFull = maxCapacity != null && bookedCount >= maxCapacity;
+      const start = classStartInstant(date, s.startTime);
+
+      occurrences.push({
+        scheduleDocumentId: s.documentId,
+        date,
+        weekday: wd,
+        name: s.name,
+        instructor: s.instructor ?? null,
+        modality: s.modality ?? null,
+        room: s.room ?? null,
+        startTime: s.startTime ?? null,
+        endTime: s.endTime ?? null,
+        maxCapacity,
+        bookedCount,
+        spotsLeft: maxCapacity != null ? Math.max(0, maxCapacity - bookedCount) : null,
+        isFull,
+        bookable: isWithinBookingWindow(now, start),
+        waitlistCount,
+        bookedByMe: !!mine,
+        myBookingDocumentId: mine?.documentId ?? null,
+        myBookingStatus: mine?.status ?? null,
+      });
+    }
+  }
+
+  occurrences.sort((a, b) =>
+    a.date !== b.date
+      ? a.date < b.date
+        ? -1
+        : 1
+      : timeToMinutes(a.startTime) - timeToMinutes(b.startTime),
+  );
+  return occurrences;
+}
+
 /* ==================================================================
  * Schema
  * ================================================================ */
@@ -263,83 +400,38 @@ export function buildStudentSchedule({
           "The caller's academy weekly grid starting at `weekStart` (yyyy-mm-dd, snapped to Monday; defaults to the current week). Sorted by date then start time.",
         args: { weekStart: nexus.stringArg() },
         resolve: async (_root: any, args: any, ctx: any) => {
+          await requireModule(strapi, ctx, 'classes');
           const me = await resolveCallerStudent(strapi, ctx);
           if (!me?.academyId) return [];
-
-          const weekStart = normalizeWeekStart(args.weekStart);
-          const dates = Array.from({ length: 7 }, (_, i) => addDaysISO(weekStart, i));
-          const weekEnd = dates[6];
-
-          const schedules: any[] = await strapi.documents(SCHEDULE_UID).findMany({
-            filters: { ...withAcademyScope({}, me.academyId), isActive: true },
-            limit: 500,
-          });
-
-          // Single bookings sweep for the whole window, grouped in JS.
-          const bookings: any[] = await strapi.documents(BOOKING_UID).findMany({
-            filters: {
-              classSchedule: { academy: { documentId: me.academyId } },
-              date: { $gte: weekStart, $lte: weekEnd },
-              status: { $ne: 'cancelled' },
-            } as any,
-            populate: {
-              classSchedule: { fields: ['documentId'] },
-              student: { fields: ['documentId'] },
-            },
-            limit: 5000,
-          });
-
-          const now = new Date();
-          const occurrences: any[] = [];
-          for (const date of dates) {
-            const wd = weekdayOfISO(date);
-            for (const s of schedules) {
-              const weekdays: number[] = Array.isArray(s.weekdays) ? s.weekdays : [];
-              if (!weekdays.includes(wd)) continue;
-
-              const slot = bookings.filter(
-                (b) => b.classSchedule?.documentId === s.documentId && b.date === date,
-              );
-              const bookedCount = slot.filter((b) => OCCUPYING.includes(b.status)).length;
-              const waitlistCount = slot.filter((b) => b.status === 'waitlist').length;
-              const mine = slot.find((b) => b.student?.documentId === me.documentId);
-
-              const maxCapacity = s.maxCapacity ?? null;
-              const isFull = maxCapacity != null && bookedCount >= maxCapacity;
-              const start = classStartInstant(date, s.startTime);
-
-              occurrences.push({
-                scheduleDocumentId: s.documentId,
-                date,
-                weekday: wd,
-                name: s.name,
-                instructor: s.instructor ?? null,
-                modality: s.modality ?? null,
-                room: s.room ?? null,
-                startTime: s.startTime ?? null,
-                endTime: s.endTime ?? null,
-                maxCapacity,
-                bookedCount,
-                spotsLeft:
-                  maxCapacity != null ? Math.max(0, maxCapacity - bookedCount) : null,
-                isFull,
-                bookable: isWithinBookingWindow(now, start),
-                waitlistCount,
-                bookedByMe: !!mine,
-                myBookingDocumentId: mine?.documentId ?? null,
-                myBookingStatus: mine?.status ?? null,
-              });
-            }
-          }
-
-          occurrences.sort((a, b) =>
-            a.date !== b.date
-              ? a.date < b.date
-                ? -1
-                : 1
-              : timeToMinutes(a.startTime) - timeToMinutes(b.startTime),
+          return await buildWeekOccurrences(
+            strapi,
+            me.academyId,
+            args.weekStart,
+            (b) => b.student?.documentId === me.documentId,
           );
-          return occurrences;
+        },
+      });
+
+      t.list.field('dependentScheduleWeek', {
+        type: 'ScheduleOccurrence',
+        description:
+          "A dependent's academy weekly grid starting at `weekStart` (defaults to the current week). Same shape as myScheduleWeek; the `bookedByMe` / `myBooking*` fields reflect the dependent's own bookings (made on their behalf by the guardian). Requires the caller to be the dependent's guardian.",
+        args: {
+          dependentId: nexus.nonNull(nexus.idArg()),
+          weekStart: nexus.stringArg(),
+        },
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await requireModule(strapi, ctx, 'dependents');
+          const me = await resolveCallerStudent(strapi, ctx);
+          if (!me) return [];
+          const dep = await loadOwnedDependent(strapi, args.dependentId, me.documentId);
+          if (!dep.academyId) return [];
+          return await buildWeekOccurrences(
+            strapi,
+            dep.academyId,
+            args.weekStart,
+            (b) => b.dependent?.documentId === args.dependentId,
+          );
         },
       });
     },
@@ -357,6 +449,7 @@ export function buildStudentSchedule({
           date: nexus.nonNull(nexus.stringArg()),
         },
         resolve: async (_root: any, args: any, ctx: any) => {
+          await requireModule(strapi, ctx, 'classes');
           await requireActiveSubscription(strapi, ctx);
 
           const me = await resolveCallerStudent(strapi, ctx);
@@ -408,12 +501,77 @@ export function buildStudentSchedule({
         },
       });
 
+      t.field('bookClassForDependent', {
+        type: 'ClassBooking',
+        description:
+          'Books a dependent (child) into a class on the guardian’s behalf. Same windows, capacity and waitlist rules as bookClass, but eligibility reads the dependent’s own active enrollment. Requires the caller to be the dependent’s guardian.',
+        args: {
+          dependentId: nexus.nonNull(nexus.idArg()),
+          scheduleDocumentId: nexus.nonNull(nexus.idArg()),
+          date: nexus.nonNull(nexus.stringArg()),
+        },
+        resolve: async (_root: any, args: any, ctx: any) => {
+          await requireModule(strapi, ctx, 'dependents');
+          await requireActiveSubscription(strapi, ctx);
+
+          const me = await resolveCallerStudent(strapi, ctx);
+          if (!me) throw new Error('Sua conta não está vinculada a um aluno.');
+
+          const dep = await loadOwnedDependent(strapi, args.dependentId, me.documentId);
+          if (!dep.academyId) {
+            throw new Error('Dependente não está vinculado a nenhuma academia.');
+          }
+          if (!dep.hasActiveEnrollment) {
+            throw new Error(
+              'O dependente precisa de uma matrícula ativa para reservar aulas. Fale com a recepção da sua academia.',
+            );
+          }
+
+          if (!isISODate(args.date)) throw new Error('Data inválida.');
+
+          const sched: any = await strapi.documents(SCHEDULE_UID).findOne({
+            documentId: args.scheduleDocumentId,
+            populate: { academy: { fields: ['documentId'] } },
+          });
+          if (!sched) throw new Error('Aula não encontrada.');
+          if (sched.academy?.documentId !== dep.academyId) {
+            throw new Error('Aula de outra academia.');
+          }
+          if (sched.isActive === false) throw new Error('Esta turma não está ativa.');
+
+          const weekdays: number[] = Array.isArray(sched.weekdays) ? sched.weekdays : [];
+          if (weekdays.length > 0 && !weekdays.includes(weekdayOfISO(args.date))) {
+            throw new Error('Esta turma não tem aula nesse dia.');
+          }
+
+          const start = classStartInstant(args.date, sched.startTime);
+          if (!isWithinBookingWindow(new Date(), start)) {
+            throw new Error('As reservas encerram 1h antes do início da aula.');
+          }
+
+          const occupied = await countOccupying(strapi, args.scheduleDocumentId, args.date);
+          const status = decideBookingStatus(occupied, sched.maxCapacity ?? null);
+
+          // Cancellation reuses cancelMyBooking — it already resolves dependent
+          // ownership via dependent.guardian (see resolver above).
+          return await strapi.documents(BOOKING_UID).create({
+            data: {
+              dependent: dep.documentId,
+              classSchedule: args.scheduleDocumentId,
+              date: args.date,
+              status,
+            } as any,
+          });
+        },
+      });
+
       t.field('cancelMyBooking', {
         type: 'ClassBooking',
         description:
-          'Cancels the caller’s own booking. Confirmed seats: until 24h before start; waitlist spots: any time. Frees a seat → auto-promotes the first waitlister.',
+          'Cancels the caller’s own booking — self or a dependent’s (guardian-owned). Confirmed seats: until 24h before start; waitlist spots: any time. Frees a seat → auto-promotes the first waitlister.',
         args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any, ctx: any) => {
+          await requireModule(strapi, ctx, 'classes');
           const me = await resolveCallerStudent(strapi, ctx);
           if (!me) throw new Error('Sua conta não está vinculada a um aluno.');
 
@@ -468,7 +626,9 @@ export function buildStudentSchedule({
     types: [ScheduleOccurrence, queries, mutations],
     resolversConfig: {
       'Query.myScheduleWeek': { auth: true },
+      'Query.dependentScheduleWeek': { auth: true },
       'Mutation.bookClass': { auth: true },
+      'Mutation.bookClassForDependent': { auth: true },
       'Mutation.cancelMyBooking': { auth: true },
     },
   };

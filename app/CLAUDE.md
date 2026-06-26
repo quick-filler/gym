@@ -77,18 +77,24 @@ app/
 │       └── profile.tsx           # Perfil (dados + avaliações)
 ├── components/
 │   ├── Skeleton.tsx              # Animated skeleton placeholder
-│   └── PlaceholderScreen.tsx     # Shared "em breve" layout for unwired tabs
+│   ├── PlaceholderScreen.tsx     # Shared "em breve" layout for unwired tabs
+│   ├── ScheduleWeekView.tsx      # Shared agenda body (tab + dependent agenda)
+│   └── DependentForm.tsx         # Shared add/edit dependent form (+ photo)
 ├── hooks/
 │   ├── useDashboard.ts           # Single data entrypoint — mock or Apollo
 │   ├── useScheduleWeek.ts        # Agenda — weekly grid + book/cancel
+│   ├── useDependentSchedule.ts   # Dependent agenda — book on their behalf
 │   ├── useWorkouts.ts            # Treinos — active/upcoming/history/stats
 │   ├── usePayments.ts            # Finanças — charges + next bill + banner
 │   ├── useProfile.ts             # Perfil — me + avaliações + editable form
-│   └── useDependents.ts          # Guardian's children roster
+│   ├── useDependents.ts          # Guardian's roster + add/update (Fase 6)
+│   ├── usePoolActivities.ts      # Piscina — pool fichas (category 'pool')
+│   └── useModuleGuard.ts         # Redirect home if a module is disabled
 ├── lib/
 │   ├── apollo.ts                 # Apollo Client (httpLink + authLink)
 │   ├── apollo-provider.tsx       # Mock-aware provider (pass-through in demo mode)
 │   ├── config.ts                 # EXPO_PUBLIC_* env reader, USE_MOCKS flag
+│   ├── modules.ts                # hasModule() — per-academy module gating
 │   ├── mock-data.ts              # Fixtures for demo mode
 │   ├── theme.ts                  # Paper/ink palette + withAlpha helper
 │   └── types.ts                  # Domain shape consumed by every screen
@@ -198,13 +204,28 @@ export function DashboardScreen() {
 | `/(tabs)/workouts` | Active workout + history | ✅ |
 | `/(tabs)/payments` | Payment history, pending charges, receipts | ✅ |
 | `/(tabs)/profile` | Personal info, body assessments, settings | ✅ |
+| `/(tabs)/pool` | Piscina — pool fichas (WorkoutPlan category 'pool') | ✅ |
 | `/dependents` | Guardian's dependents roster (responsável) | ✅ |
+| `/dependent/new` | Register a new dependent (guardian) | ✅ |
+| `/dependent/[id]/edit` | Edit a dependent (whitelisted fields + photo) | ✅ |
+| `/dependent/[id]/schedule` | Book classes on a dependent's behalf | ✅ |
 | `/workout/[id]` | Workout plan detail (exercises) + "Iniciar treino" | ✅ |
 | `/workout/session/[id]` | Live execution: timer, checklist, finish/cancel | ✅ |
 | `/booking/[id]` | Class booking detail (room, instructor, capacity) | ✅ |
 | `/payment/[id]` | Checkout — PIX / boleto / cartão tabs (mocked gateway) | ✅ |
 | `/profile/edit` | Edit profile — phone/address/gender/birthdate + photo upload | ✅ |
 | `/profile/password` | Change password (atual + nova) | ✅ |
+
+## Module gating
+
+The app shows only the modules the academy enabled
+(`Academy.enabledModules`, toggled in the admin). `MyDashboard` selects
+`academy.enabledModules`; `lib/modules.ts → hasModule()` drives tab
+visibility (`(tabs)/_layout.tsx`: Agenda/Treinos/Piscina), the dashboard
+cards + quick-actions, and the dependents entry. `hooks/useModuleGuard`
+bounces a deep link to a disabled screen home. **null/unset = all on.**
+The backend `requireModule` enforces the same on the API. See
+design-decisions §2.13.
 
 ## Push notifications
 

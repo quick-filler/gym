@@ -21,12 +21,14 @@ import {
   Dumbbell,
   Home,
   User,
+  Waves,
   type LucideIcon,
 } from 'lucide-react-native';
 
 import { theme } from '../../lib/theme';
 import { useDashboard } from '../../hooks/useDashboard';
 import { USE_MOCKS } from '../../lib/config';
+import { hasModule, type AppModule } from '../../lib/modules';
 
 /* ------------------------------------------------------------------
  * Icon registry — route name → lucide component + label. Adding a new
@@ -36,8 +38,17 @@ const TAB_ICONS: Record<string, { Icon: LucideIcon; label: string }> = {
   index:    { Icon: Home,       label: 'Início' },
   schedule: { Icon: Calendar,   label: 'Agenda' },
   workouts: { Icon: Dumbbell,   label: 'Treinos' },
+  pool:     { Icon: Waves,      label: 'Piscina' },
   payments: { Icon: CreditCard, label: 'Finanças' },
   profile:  { Icon: User,       label: 'Perfil' },
+};
+
+// Tabs gated by a per-academy module. Routes absent here are always shown
+// (Início / Finanças / Perfil). Mirrors the backend `requireModule`.
+const TAB_MODULE: Record<string, AppModule> = {
+  schedule: 'classes',
+  workouts: 'workouts',
+  pool: 'pool',
 };
 
 export default function TabsLayout() {
@@ -63,6 +74,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" />
       <Tabs.Screen name="schedule" />
       <Tabs.Screen name="workouts" />
+      <Tabs.Screen name="pool" />
       <Tabs.Screen name="payments" />
       <Tabs.Screen name="profile" />
     </Tabs>
@@ -76,6 +88,7 @@ export default function TabsLayout() {
 function BrandedTabBar({ state, navigation }: BottomTabBarProps) {
   const { data } = useDashboard();
   const accent = data?.academy.primaryColor ?? theme.ink900;
+  const modules = data?.academy.enabledModules ?? null;
   const insets = useSafeAreaInsets();
 
   return (
@@ -88,6 +101,10 @@ function BrandedTabBar({ state, navigation }: BottomTabBarProps) {
       {state.routes.map((route, index) => {
         const entry = TAB_ICONS[route.name];
         if (!entry) return null;
+
+        // Hide tabs whose module the academy hasn't enabled.
+        const gate = TAB_MODULE[route.name];
+        if (gate && !hasModule(modules, gate)) return null;
 
         const isFocused = state.index === index;
         const { Icon, label } = entry;

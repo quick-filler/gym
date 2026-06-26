@@ -77,6 +77,7 @@ function useApiDashboard(): DataSourceResult {
         initials: initialsOf(academy?.name ?? ''),
         primaryColor: academy?.primaryColor ?? '#0c0a09',
         primaryDark: shade(academy?.primaryColor ?? '#0c0a09', -0.15),
+        enabledModules: academy?.enabledModules ?? null,
       },
       nextClass: nc
         ? {

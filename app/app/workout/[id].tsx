@@ -19,7 +19,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { ArrowLeft, Dumbbell, Play, User } from 'lucide-react-native';
+import { ArrowLeft, Dumbbell, Play, User, Waves } from 'lucide-react-native';
 
 import {
   StartWorkoutSessionDocument,
@@ -49,6 +49,8 @@ export default function WorkoutDetailScreen() {
   const [startMutation, { loading: starting }] = useMutation<any>(StartWorkoutSessionDocument);
 
   const plan = data?.workoutPlan;
+  const isPool = plan?.category === 'pool';
+  const noun = isPool ? 'atividade' : 'treino';
   const exercises: any[] = Array.isArray(plan?.exercises) ? plan.exercises : [];
 
   const onStart = async () => {
@@ -60,7 +62,7 @@ export default function WorkoutDetailScreen() {
     } catch (err: any) {
       Alert.alert(
         'Não foi possível iniciar',
-        err?.graphQLErrors?.[0]?.message ?? err?.message ?? 'Erro ao iniciar o treino.',
+        err?.graphQLErrors?.[0]?.message ?? err?.message ?? `Erro ao iniciar ${isPool ? 'a atividade' : 'o treino'}.`,
       );
     }
   };
@@ -71,7 +73,7 @@ export default function WorkoutDetailScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.back} activeOpacity={0.7}>
           <ArrowLeft size={20} color={theme.ink900} strokeWidth={2} />
         </TouchableOpacity>
-        <Text style={styles.title}>Treino</Text>
+        <Text style={styles.title}>{isPool ? 'Atividade' : 'Treino'}</Text>
         <View style={styles.back} />
       </View>
 
@@ -90,11 +92,17 @@ export default function WorkoutDetailScreen() {
             <Text style={styles.errBody}>{error.message}</Text>
           </View>
         ) : !plan ? (
-          <Text style={styles.placeholder}>Ficha não encontrada.</Text>
+          <Text style={styles.placeholder}>
+            {isPool ? 'Atividade não encontrada.' : 'Ficha não encontrada.'}
+          </Text>
         ) : (
           <>
             <View style={[styles.planIcon, { backgroundColor: withAlpha(accent, 0.1) }]}>
-              <Dumbbell size={26} color={accent} strokeWidth={2.2} />
+              {isPool ? (
+                <Waves size={26} color={accent} strokeWidth={2.2} />
+              ) : (
+                <Dumbbell size={26} color={accent} strokeWidth={2.2} />
+              )}
             </View>
             <Text style={styles.planName}>{plan.name}</Text>
             {plan.instructor ? (
@@ -138,7 +146,9 @@ export default function WorkoutDetailScreen() {
               ) : (
                 <>
                   <Play size={16} color="#fff" strokeWidth={2.5} />
-                  <Text style={styles.ctaText}>Iniciar treino</Text>
+                  <Text style={styles.ctaText}>
+                    {isPool ? 'Iniciar atividade' : 'Iniciar treino'}
+                  </Text>
                 </>
               )}
             </TouchableOpacity>

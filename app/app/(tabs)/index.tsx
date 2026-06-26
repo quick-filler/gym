@@ -41,6 +41,7 @@ import {
 import { useDashboard } from '../../hooks/useDashboard';
 import { Skeleton, SkeletonLines } from '../../components/Skeleton';
 import { USE_MOCKS } from '../../lib/config';
+import { hasModule, type AppModule } from '../../lib/modules';
 import { theme, withAlpha } from '../../lib/theme';
 import type { DashboardData } from '../../lib/types';
 
@@ -62,6 +63,8 @@ export default function DashboardScreen() {
 function DashboardHome({ data }: { data: DashboardData }) {
   const accent = data.academy.primaryColor;
   const accentDark = data.academy.primaryDark;
+  const can = (m: AppModule) => hasModule(data.academy.enabledModules, m);
+  const quickActions = QUICK_ACTIONS.filter((a) => !a.module || can(a.module));
 
   return (
     <SafeAreaView
@@ -109,8 +112,8 @@ function DashboardHome({ data }: { data: DashboardData }) {
 
         {/* CONTENT */}
         <View style={styles.content}>
-          {/* NEXT CLASS HERO — only shown if we actually have one */}
-          {data.nextClass ? (
+          {/* NEXT CLASS HERO — gated by the classes module + having one */}
+          {can('classes') && data.nextClass ? (
             <View
               style={[
                 styles.classCard,
@@ -136,9 +139,9 @@ function DashboardHome({ data }: { data: DashboardData }) {
             </View>
           ) : null}
 
-          {/* QUICK ACTIONS */}
+          {/* QUICK ACTIONS — filtered by enabled modules */}
           <View style={styles.actionsRow}>
-            {QUICK_ACTIONS.map(({ label, Icon, href }) => (
+            {quickActions.map(({ label, Icon, href }) => (
               <TouchableOpacity
                 key={label}
                 style={styles.actionBtn}
@@ -177,8 +180,8 @@ function DashboardHome({ data }: { data: DashboardData }) {
             </View>
           ) : null}
 
-          {/* CURRENT WORKOUT */}
-          {data.workout ? (
+          {/* CURRENT WORKOUT — gated by the workouts module */}
+          {can('workouts') && data.workout ? (
             <View style={styles.card}>
               <Text style={styles.cardLabel}>TREINO ATUAL</Text>
               <View style={styles.workoutHeader}>
@@ -406,9 +409,14 @@ function EmptyHome() {
  * SUB-COMPONENTS
  * ================================================================ */
 
-const QUICK_ACTIONS: Array<{ label: string; Icon: LucideIcon; href: string }> = [
-  { label: 'Agenda',   Icon: Calendar,   href: '/schedule' },
-  { label: 'Treino',   Icon: Dumbbell,   href: '/workouts' },
+const QUICK_ACTIONS: Array<{
+  label: string;
+  Icon: LucideIcon;
+  href: string;
+  module?: AppModule; // omit = always shown
+}> = [
+  { label: 'Agenda',   Icon: Calendar,   href: '/schedule', module: 'classes' },
+  { label: 'Treino',   Icon: Dumbbell,   href: '/workouts', module: 'workouts' },
   { label: 'Finanças', Icon: CreditCard, href: '/payments' },
 ];
 

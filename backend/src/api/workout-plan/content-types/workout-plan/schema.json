@@ -16,9 +16,9 @@
       "type": "string",
       "required": true
     },
-    "student": {
+    "students": {
       "type": "relation",
-      "relation": "manyToOne",
+      "relation": "manyToMany",
       "target": "api::student.student",
       "inversedBy": "workoutPlans"
     },
@@ -30,6 +30,11 @@
     },
     "instructor": {
       "type": "string"
+    },
+    "category": {
+      "type": "enumeration",
+      "enum": ["gym", "pool"],
+      "default": "gym"
     },
     "exercises": {
       "type": "json"

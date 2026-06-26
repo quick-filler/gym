@@ -35,6 +35,7 @@ query MyDashboard {
       slug
       primaryColor
       secondaryColor
+      enabledModules
       logo {
         documentId
         url

@@ -22,6 +22,7 @@ import type { Core } from '@strapi/strapi';
 
 const PLATFORM_ADMIN = 'api::platform-admin.platform-admin';
 const STUDENT = 'api::student.student';
+const ACADEMY = 'api::academy.academy';
 
 // Sentinel that never matches a real documentId. Used to neutralize filters
 // when the caller has no academy linked — falling back to "no rows" instead
@@ -29,6 +30,87 @@ const STUDENT = 'api::student.student';
 const NO_ACADEMY = '__none__';
 
 export type UserRole = 'academy_admin' | 'instructor' | 'member';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Module gating (per-academy opt-in features)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Toggleable student-app modules. Mirrors `module-presets.ts` /
+ * `Academy.enabledModules`. The admin picks which are available per academy;
+ * the app shows only these, and `requireModule` enforces it on the API.
+ */
+export type ToggleableModule = 'dependents' | 'workouts' | 'classes' | 'pool';
+
+const MODULE_LABEL: Record<ToggleableModule, string> = {
+  dependents: 'Dependentes',
+  workouts: 'Treinos',
+  classes: 'Agenda & Presença',
+  pool: 'Piscina',
+};
+
+/**
+ * A module is enabled when `enabledModules` is unset (null/undefined → never
+ * configured → everything on, the backward-compatible default) or explicitly
+ * lists it. Pure + exported for unit tests.
+ */
+export function isModuleEnabled(
+  enabledModules: string[] | null | undefined,
+  module: ToggleableModule,
+): boolean {
+  if (enabledModules == null) return true;
+  return enabledModules.includes(module);
+}
+
+/**
+ * Throws when the caller's academy hasn't enabled `module`. Platform admins
+ * bypass (cross-academy). No academy linked → defers to the other guards
+ * (they already return "no rows" / refuse). The API enforcement layer behind
+ * the app's UI gating, so a client outside the app can't use a disabled
+ * module.
+ */
+export async function requireModule(
+  strapi: Core.Strapi,
+  ctx: any,
+  module: ToggleableModule,
+): Promise<void> {
+  if (await isPlatformAdmin(strapi, ctx)) return;
+  const academyId = await resolveUserAcademyId(strapi, ctx);
+  if (!academyId) return;
+  const academy: any = await strapi.documents(ACADEMY).findOne({
+    documentId: academyId,
+    fields: ['enabledModules'],
+  });
+  if (!isModuleEnabled(academy?.enabledModules ?? null, module)) {
+    throw new Error(
+      `O módulo "${MODULE_LABEL[module]}" não está disponível nesta academia.`,
+    );
+  }
+}
+
+/**
+ * Like `requireModule`, but passes when ANY of `modules` is enabled. Used by
+ * shared infra that serves more than one module — e.g. workout sessions back
+ * both "Treinos" (gym fichas) and "Piscina" (aquatic fichas), so a session is
+ * allowed when either is on.
+ */
+export async function requireAnyModule(
+  strapi: Core.Strapi,
+  ctx: any,
+  modules: ToggleableModule[],
+): Promise<void> {
+  if (await isPlatformAdmin(strapi, ctx)) return;
+  const academyId = await resolveUserAcademyId(strapi, ctx);
+  if (!academyId) return;
+  const academy: any = await strapi.documents(ACADEMY).findOne({
+    documentId: academyId,
+    fields: ['enabledModules'],
+  });
+  const enabled = academy?.enabledModules ?? null;
+  if (modules.some((m) => isModuleEnabled(enabled, m))) return;
+  const labels = modules.map((m) => MODULE_LABEL[m]).join(' / ');
+  throw new Error(`Nenhum módulo disponível para esta ação (${labels}).`);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Caller identity
@@ -300,6 +382,11 @@ export async function resolveDocAcademyId(
           dependent: { populate: { academy: { fields: ['documentId'] } } },
         };
       case 'api::workout-plan.workout-plan':
+        // manyToMany students — any member of the roster gives the academy.
+        return {
+          students: { populate: { academy: { fields: ['documentId'] } } },
+          dependent: { populate: { academy: { fields: ['documentId'] } } },
+        };
       case 'api::body-assessment.body-assessment':
         return {
           student: { populate: { academy: { fields: ['documentId'] } } },
@@ -346,6 +433,11 @@ export async function resolveDocAcademyId(
       );
     }
     case 'api::workout-plan.workout-plan':
+      return (
+        doc.students?.[0]?.academy?.documentId ??
+        doc.dependent?.academy?.documentId ??
+        null
+      );
     case 'api::body-assessment.body-assessment':
       return (
         doc.student?.academy?.documentId ??
@@ -439,6 +531,25 @@ export function withStudentScope(
     ...filters,
     $or: [
       { student: { academy: { documentId: id } } },
+      { dependent: { academy: { documentId: id } } },
+    ],
+  };
+}
+
+/**
+ * Like withStudentScope but for WorkoutPlan, whose `students` is manyToMany
+ * (the roster) — tenancy holds if any rostered student (or the dependent)
+ * belongs to the academy.
+ */
+export function withWorkoutPlanScope(
+  filters: any,
+  academyId: string | null,
+): any {
+  const id = academyId ?? NO_ACADEMY;
+  return {
+    ...filters,
+    $or: [
+      { students: { academy: { documentId: id } } },
       { dependent: { academy: { documentId: id } } },
     ],
   };

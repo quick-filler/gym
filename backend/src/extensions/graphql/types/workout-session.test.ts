@@ -3,10 +3,22 @@ import {
   computeDurationMinutes,
   computeStreak,
   isoDateBR,
+  isPoolPlan,
   partitionWorkoutPlans,
   seedExercisesCompleted,
   summarizeStats,
 } from './workout-session';
+
+describe('isPoolPlan', () => {
+  it('is true only for category "pool"', () => {
+    expect(isPoolPlan({ category: 'pool' })).toBe(true);
+  });
+  it('treats gym / missing / null category as not-pool (legacy = gym)', () => {
+    expect(isPoolPlan({ category: 'gym' })).toBe(false);
+    expect(isPoolPlan({ category: null })).toBe(false);
+    expect(isPoolPlan({})).toBe(false);
+  });
+});
 
 describe('computeDurationMinutes', () => {
   it('floors the gap to whole minutes', () => {

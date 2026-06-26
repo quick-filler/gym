@@ -384,6 +384,7 @@ const ADMIN_WORKOUTS = graphql(`
       name
       instructor
       isActive
+      category
       validFrom
       exercises {
         name
@@ -391,7 +392,7 @@ const ADMIN_WORKOUTS = graphql(`
         reps
         load
       }
-      student {
+      students {
         documentId
         name
       }
@@ -405,6 +406,7 @@ export const WORKOUT_PLAN_BY_ID = graphql(`
       documentId
       name
       instructor
+      category
       isActive
       validFrom
       validTo
@@ -415,7 +417,7 @@ export const WORKOUT_PLAN_BY_ID = graphql(`
         load
         notes
       }
-      student {
+      students {
         documentId
         name
       }

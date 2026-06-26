@@ -437,9 +437,12 @@ export interface WorkoutPlanCard {
   instructorName: string;
   icon: WorkoutIcon;
   iconBg: string; // css color for icon background tile
-  student: WorkoutStudent;
+  student: WorkoutStudent; // first student of the roster (avatar)
+  studentCount?: number; // roster size; >1 shows a "+N" badge
   exercises: WorkoutExercise[];
   status: "active" | "archived";
+  // pool fichas live in /admin/pool → Atividades; absent (mocks) = gym.
+  category?: "gym" | "pool";
 }
 
 export interface WorkoutsData {

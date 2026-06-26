@@ -490,6 +490,155 @@ right below. We want the history, not a clean slate.
 
 ---
 
+### 2.12 Dependent self-service + booking on behalf (Fase 6)
+
+- **Decision** — a guardian (a Student) manages their dependents and books
+  classes for them through dedicated, caller-scoped resolvers:
+  - `dependent.ts`: **`addMyDependent(input: MyDependentInput)`** +
+    **`updateMyDependent(documentId, input: MyDependentUpdateInput)`** —
+    forces `guardian` = caller and `academy` = caller's academy; funnels
+    fields through `pickDependentFields` (pure, unit-tested) so
+    `guardian` / `academy` / `status` / `enrollments` can never be set
+    self-service. Same whitelist-is-the-boundary rule as §2.11.
+  - `student-schedule.ts`: **`dependentScheduleWeek(dependentId, weekStart)`**
+    + **`bookClassForDependent(dependentId, scheduleDocumentId, date)`**.
+- **No new `cancelDependentBooking`.** `cancelMyBooking` already resolves
+  ownership through `dependent.guardian`, so a guardian cancels a child's
+  booking through the existing mutation. Adding a parallel resolver would
+  duplicate the 24h-window + waitlist-promotion logic for no gain (anti-slop
+  rule). The plan listed `cancelDependentBooking`; we reuse instead.
+- **`ScheduleOccurrence` is reused, not forked.** `dependentScheduleWeek`
+  returns the same type as `myScheduleWeek`; the shared `buildWeekOccurrences`
+  helper takes an `isMine(booking)` matcher (caller's student vs the
+  dependent). So `bookedByMe` / `myBooking*` mean "booked for the subject in
+  view" — the app's one `ScheduleWeekView` renders both agendas verbatim.
+  Capacity counts every occupying booking in the academy; only the "mine"
+  flags are subject-scoped.
+- **Eligibility reads the *dependent's* enrollment, not the guardian's.** The
+  child is the practitioner, so `bookClassForDependent` requires the
+  dependent to have an `active` enrollment (shared `hasActiveEnrollment`
+  helper). It still gates on the academy's `requireActiveSubscription`, same
+  as `bookClass`.
+- **Add/edit need only a JWT (no role / subscription).** Managing family
+  data isn't a paid action — a lapsed member can still register/edit a
+  dependent (consistent with §2.11). Booking is where the enrollment gate
+  bites. Photo reuses the `member`-enabled `mintUploadUrl`/`confirmUpload`.
+- **Gender / relationship are content-type enums.** Dependent `gender` is
+  `girl|boy|other` (not the student's `female|male|other`) and `relationship`
+  is `son|daughter|grandchild|nibling|ward|other`. The app form offers
+  exactly these so submits pass server-side validation.
+- **Consequences** — no new content type/role/permission, so **no
+  `config:export`** this phase. The admin `dependents` list already selects
+  `photo`, so a self-registered/edited dependent surfaces in the panel
+  immediately. `requestBodyAssessment` (Fase 5b) remains the only deferred
+  item across Fases 5–6.
+- **Revisit when** — dependents get their own login (today they have none —
+  the guardian acts for them), or a per-dependent payment/enrollment flow
+  lands in the app.
+
+---
+
+### 2.13 Module gating synced to the app (UI + API)
+
+- **Decision** — the academy admin already toggles `Academy.enabledModules`
+  (settings → "Módulos"; the 4 toggleable modules are `dependents`,
+  `workouts`, `classes`, `pool` — see `module-presets.ts`). Fase 6 makes the
+  **student app respect it on both layers**:
+  - **App (UI):** `lib/modules.ts → hasModule(enabledModules, m)` drives tab
+    visibility (`(tabs)/_layout.tsx` hides Agenda/Treinos/Piscina when off),
+    dashboard cards + quick-actions, and the dependents entry.
+    `MyDashboard` now selects `academy.enabledModules`. `hooks/useModuleGuard`
+    bounces a deep link to a disabled screen back home.
+  - **Backend (API):** `helpers.ts → requireModule(ctx, module)` throws on the
+    module's resolvers (classes: myScheduleWeek/bookClass/cancelMyBooking;
+    workouts: myWorkouts/history/stats + session mutations; dependents:
+    myDependents/add/update + dependentScheduleWeek/bookClassForDependent).
+    The API is the real boundary — a client outside the app can't use a
+    disabled module.
+- **`null`/unset `enabledModules` = all on.** Never-configured academies keep
+  every module (backward compatible); the admin UI uses the same fallback.
+  Only an explicit array restricts. (Live: academy 1 = `["pool"]` →
+  classes/workouts/dependents refused; academies with `null` unaffected.)
+- **The `me{}` dashboard sub-fields (`nextClass`, `workoutPlans`) are NOT
+  API-gated** — only the dedicated module resolvers + mutations are. The app
+  hides those cards via `hasModule`; gating every sub-field would mean
+  rewriting the `me` resolver for little gain (the write/standalone paths are
+  the boundary that matters). Documented so it isn't mistaken for a leak.
+- **Piscina ≠ the admin pool-inspection screen.** In the admin, `pool` is
+  pH/cloro/temp inspections; in the app, Piscina is a pool-specific kind of
+  "Treinos" (aquatic activities). Same toggle, two surfaces. See §2.14 for the
+  student-app activities model.
+- **Consequences** — no schema change (`enabledModules` already existed),
+  so **no schema regen / no `config:export`**. Pure logic
+  (`isModuleEnabled` / `hasModule`) is unit-tested on both sides.
+- **Revisit when** — modules need per-plan (not per-academy) gating, or the
+  admin `pool` toggle should also gate the inspections screen the same way.
+
+---
+
+### 2.14 Piscina activities reuse the workout model
+
+- **Decision** — a student "atividade de piscina" **is a `WorkoutPlan`** with
+  a new `category` enum (`gym` default | `pool`), not a separate content type.
+  The product owner framed Piscina as "um tipo de Treinos para piscina", so we
+  reuse the ficha/exercise model and the whole execution flow instead of
+  duplicating it.
+- **Split by category, not by a second model:**
+  - `myWorkouts` returns `category != 'pool'` (gym + legacy null), gated by
+    `workouts`.
+  - `myPoolActivities` returns `category == 'pool'`, gated by `pool`. Same
+    `MyWorkouts` GraphQL shape (active + upcoming) so the app reuses the
+    Treinos view model.
+  - `isPoolPlan` (pure, unit-tested) is the single classifier; **null/legacy
+    category = gym**, so existing fichas stay in Treinos untouched.
+- **Sessions are shared infra.** The session mutations
+  (`startWorkoutSession` / `finishWorkoutSession` / `cancelWorkoutSession`)
+  **and the `workoutSession` read query** back BOTH tabs, so all gate on
+  `requireAnyModule(['workouts','pool'])` (not just `workouts`) — a pool-only
+  academy can still run *and open* an aquatic session. (`myWorkoutHistory` /
+  `myWorkoutStats` stay `workouts`-only — the Piscina tab doesn't surface
+  them.) The `/workout/[id]` detail + execution screens are reused verbatim by
+  the Piscina tab, and the session screen returns to `/(tabs)/pool` for pool
+  fichas after finish/cancel.
+- **v1 scope.** The Piscina tab shows active + upcoming pool fichas with the
+  start-session CTA. Pool **history/stats are not** surfaced yet
+  (`myWorkoutHistory`/`myWorkoutStats` stay `workouts`-gated) — deferred until
+  there's demand.
+- **Admin UI lives under Piscina, not Treinos.** The website manages pool
+  fichas in `/admin/pool` via a new **"Atividades"** tab (next to
+  "Inspeções"), reusing the shared `WorkoutCard` + the workout dialogs with
+  `category="pool"`. Reason: the Piscina menu item is gated by the `pool`
+  module, so pool activities sit behind the correct gate — putting them on the
+  Treinos page (gated by `workouts`) would hide them from a pool-only academy.
+  The Treinos page filters `category !== 'pool'` so the two never overlap.
+  In the app, the shared `/workout/[id]` + session screens swap their copy
+  (Treino ↔ Atividade) off the plan's `category`.
+- **`WorkoutPlan.student` (manyToOne) → `students` (manyToMany).** A ficha/
+  activity has an **editable roster** — students join or leave at any time
+  (the product owner's requirement; a pool activity is a group, and even gym
+  fichas can be shared). `Student.workoutPlans` became manyToMany (`mappedBy`
+  `students`). Consequences:
+  - The create dialog assigns a roster (chips) and writes **one** plan with
+    `students: [ids]` (no longer one-plan-per-student). Edit dialog manages
+    the roster (add/remove) and sends `students` to replace the set.
+  - App `myWorkouts`/`myPoolActivities` filter `students: { documentId: me }`;
+    `startWorkoutSession` checks the caller is in the roster (the session
+    still records the single executing student via `WorkoutSession.student`).
+  - Tenancy: `resolveDocAcademyId` + `withWorkoutPlanScope` resolve via any
+    rostered student's academy (`students[0]`), `body-assessment` keeps the
+    singular `student`.
+  - **Migration:** the old `workout_plans_student_lnk` rows were copied into
+    the new `workout_plans_students_lnk` so existing fichas kept their member.
+    Schema regenerated; no `config:export` (relation change isn't a content
+    type / role / permission change).
+- **Consequences** — added one content-type field (`category`) → schema
+  regenerated; **no `config:export`** (a field isn't a content type / role /
+  permission change). Legacy rows get `null` and read as gym.
+- **Revisit when** — pool needs its own scheduling/booking (aquatic classes),
+  or pool history/stats are requested.
+
+---
+
 ## 3. GraphQL API
 
 ### 3.1 GraphQL is the only data API; REST is reserved for auth + webhooks

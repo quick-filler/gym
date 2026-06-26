@@ -137,6 +137,10 @@ describe('schema introspection', () => {
       // Student app — Fase 5 (perfil + avaliações)
       'myBodyAssessments',
       'myLatestAssessment',
+      // Student app — Fase 6 (dependentes)
+      'dependentScheduleWeek',
+      // Student app — Piscina (fichas aquáticas)
+      'myPoolActivities',
     ];
     for (const name of required) {
       expect(names.has(name), `missing Query.${name}`).toBe(true);
@@ -164,6 +168,10 @@ describe('schema introspection', () => {
       // Fase 5 — perfil
       'updateMyProfile',
       'updateMyPassword',
+      // Fase 6 — dependentes (reservas + cadastro pelo responsável)
+      'bookClassForDependent',
+      'addMyDependent',
+      'updateMyDependent',
       // shared infra
       'mintUploadUrl',
       'confirmUpload',

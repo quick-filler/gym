@@ -1248,7 +1248,7 @@ export interface ApiStudentStudent extends Struct.CollectionTypeSchema {
       'plugin::users-permissions.user'
     >;
     workoutPlans: Schema.Attribute.Relation<
-      'oneToMany',
+      'manyToMany',
       'api::workout-plan.workout-plan'
     >;
   };
@@ -1266,6 +1266,8 @@ export interface ApiWorkoutPlanWorkoutPlan extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    category: Schema.Attribute.Enumeration<['gym', 'pool']> &
+      Schema.Attribute.DefaultTo<'gym'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1284,7 +1286,7 @@ export interface ApiWorkoutPlanWorkoutPlan extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     name: Schema.Attribute.String & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
-    student: Schema.Attribute.Relation<'manyToOne', 'api::student.student'>;
+    students: Schema.Attribute.Relation<'manyToMany', 'api::student.student'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

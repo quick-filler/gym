@@ -23,7 +23,7 @@
  */
 
 import type { Core } from '@strapi/strapi';
-import { requireActiveSubscription } from '../helpers';
+import { requireActiveSubscription, requireAnyModule, requireModule } from '../helpers';
 import { addDaysISO, isISODate, mondayOfWeek } from './student-schedule';
 
 const SESSION_UID = 'api::workout-session.workout-session';
@@ -110,6 +110,15 @@ export function partitionWorkoutPlans<T extends {
   const active = live[0] ?? null;
   const upcoming = plans.filter((p) => p !== active).sort(byValidFromDesc);
   return { active, upcoming };
+}
+
+/**
+ * A plan is a pool (Piscina) activity when its category is exactly 'pool'.
+ * Everything else — including legacy plans with no category — counts as gym,
+ * so existing fichas stay in Treinos.
+ */
+export function isPoolPlan(plan: { category?: string | null }): boolean {
+  return plan?.category === 'pool';
 }
 
 /** Seeds the per-exercise checklist for a fresh session from the plan's exercises. */
@@ -222,15 +231,35 @@ export function buildWorkoutSession({
         type: 'MyWorkouts',
         description: "The caller's active workout plan and the remaining ones.",
         resolve: async (_root: any, _args: any, ctx: any) => {
+          await requireModule(strapi, ctx, 'workouts');
           const me = await resolveCallerStudent(strapi, ctx);
           if (!me?.documentId) return { active: null, upcoming: [] };
           const plans: any[] = await strapi.documents(PLAN_UID).findMany({
-            filters: { student: { documentId: me.documentId } } as any,
+            filters: { students: { documentId: me.documentId } } as any,
             sort: { validFrom: 'desc' },
             limit: 200,
           });
           const today = isoDateBR(new Date());
-          return partitionWorkoutPlans(plans, today);
+          // Pool fichas live in the Piscina tab (myPoolActivities), not here.
+          return partitionWorkoutPlans(plans.filter((p) => !isPoolPlan(p)), today);
+        },
+      });
+
+      t.field('myPoolActivities', {
+        type: 'MyWorkouts',
+        description:
+          "The caller's pool (Piscina) fichas — same shape as myWorkouts, filtered to category 'pool'. Gated by the pool module.",
+        resolve: async (_root: any, _args: any, ctx: any) => {
+          await requireModule(strapi, ctx, 'pool');
+          const me = await resolveCallerStudent(strapi, ctx);
+          if (!me?.documentId) return { active: null, upcoming: [] };
+          const plans: any[] = await strapi.documents(PLAN_UID).findMany({
+            filters: { students: { documentId: me.documentId } } as any,
+            sort: { validFrom: 'desc' },
+            limit: 200,
+          });
+          const today = isoDateBR(new Date());
+          return partitionWorkoutPlans(plans.filter(isPoolPlan), today);
         },
       });
 
@@ -239,6 +268,8 @@ export function buildWorkoutSession({
         description: "A single session the caller owns (the execution screen).",
         args: { documentId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any, ctx: any) => {
+          // Sessions back both Treinos and Piscina fichas.
+          await requireAnyModule(strapi, ctx, ['workouts', 'pool']);
           const me = await resolveCallerStudent(strapi, ctx);
           if (!me?.documentId) return null;
           const session: any = await strapi.documents(SESSION_UID).findOne({
@@ -258,6 +289,7 @@ export function buildWorkoutSession({
         description: "The caller's finished training sessions, newest first.",
         args: { limit: nexus.intArg() },
         resolve: async (_root: any, args: any, ctx: any) => {
+          await requireModule(strapi, ctx, 'workouts');
           const me = await resolveCallerStudent(strapi, ctx);
           if (!me?.documentId) return [];
           return await strapi.documents(SESSION_UID).findMany({
@@ -275,6 +307,7 @@ export function buildWorkoutSession({
         type: 'WorkoutStats',
         description: 'Derived training stats (this week / 30 days / streak).',
         resolve: async (_root: any, _args: any, ctx: any) => {
+          await requireModule(strapi, ctx, 'workouts');
           const me = await resolveCallerStudent(strapi, ctx);
           if (!me?.documentId) {
             return { thisWeekCount: 0, thirtyDaysCount: 0, streakDays: 0 };
@@ -303,6 +336,8 @@ export function buildWorkoutSession({
           'Opens a training session against one of the caller’s active fichas. Requires an active enrollment. Seeds the per-exercise checklist from the plan.',
         args: { workoutPlanId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any, ctx: any) => {
+          // Sessions back both Treinos and Piscina fichas.
+          await requireAnyModule(strapi, ctx, ['workouts', 'pool']);
           await requireActiveSubscription(strapi, ctx);
 
           const me = await resolveCallerStudent(strapi, ctx);
@@ -317,13 +352,16 @@ export function buildWorkoutSession({
           }
 
           // WorkoutPlan has no direct academy relation — tenancy is via its
-          // student, so we only populate the owner and match it to the caller.
+          // student roster, so we populate it and check the caller is in it.
           const plan: any = await strapi.documents(PLAN_UID).findOne({
             documentId: args.workoutPlanId,
-            populate: { student: { fields: ['documentId'] } },
+            populate: { students: { fields: ['documentId'] } },
           });
           if (!plan) throw new Error('Ficha não encontrada.');
-          if (plan.student?.documentId !== me.documentId) {
+          const inRoster =
+            Array.isArray(plan.students) &&
+            plan.students.some((s: any) => s?.documentId === me.documentId);
+          if (!inRoster) {
             throw new Error('Esta ficha não pertence a você.');
           }
 
@@ -349,6 +387,7 @@ export function buildWorkoutSession({
           notes: nexus.stringArg(),
         },
         resolve: async (_root: any, args: any, ctx: any) => {
+          await requireAnyModule(strapi, ctx, ['workouts', 'pool']);
           const me = await resolveCallerStudent(strapi, ctx);
           if (!me) throw new Error('Sua conta não está vinculada a um aluno.');
 
@@ -382,6 +421,7 @@ export function buildWorkoutSession({
         description: 'Drops an open (not-yet-finished) session.',
         args: { sessionId: nexus.nonNull(nexus.idArg()) },
         resolve: async (_root: any, args: any, ctx: any) => {
+          await requireAnyModule(strapi, ctx, ['workouts', 'pool']);
           const me = await resolveCallerStudent(strapi, ctx);
           if (!me) throw new Error('Sua conta não está vinculada a um aluno.');
 
@@ -408,6 +448,7 @@ export function buildWorkoutSession({
     types: [WorkoutSession, MyWorkouts, WorkoutStats, queries, mutations],
     resolversConfig: {
       'Query.myWorkouts': { auth: true },
+      'Query.myPoolActivities': { auth: true },
       'Query.workoutSession': { auth: true },
       'Query.myWorkoutHistory': { auth: true },
       'Query.myWorkoutStats': { auth: true },
