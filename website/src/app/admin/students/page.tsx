@@ -12,9 +12,11 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
+import { Pill } from "@/components/ui/Pill";
 import Link from "next/link";
 import { useStudents } from "@/lib/hooks";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
+import { FINANCIAL_STATUS } from "@/lib/finance";
 import type { StudentRow, StudentStatus } from "@/lib/types";
 import { useApolloClient, useMutation } from "@apollo/client/react";
 import { graphql } from "@/gql";
@@ -231,8 +233,23 @@ export default function StudentsPage() {
                       <td className="px-6 py-4">
                         <PaymentMethodLabel method={s.paymentMethod} />
                       </td>
-                      <td className="px-6 py-4 font-mono text-[0.82rem] text-ink-500">
-                        {s.nextPayment}
+                      <td className="px-6 py-4">
+                        {s.hasActiveEnrollment === false ? (
+                          <span className="font-mono text-[0.82rem] text-ink-400">—</span>
+                        ) : (
+                          <div className="flex flex-col gap-1">
+                            <span className="font-mono text-[0.82rem] text-ink-600">
+                              {s.nextPayment && s.nextPayment !== "—"
+                                ? formatDate(s.nextPayment)
+                                : "—"}
+                            </span>
+                            {s.financialStatus ? (
+                              <Pill tone={FINANCIAL_STATUS[s.financialStatus].tone}>
+                                {FINANCIAL_STATUS[s.financialStatus].label}
+                              </Pill>
+                            ) : null}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="inline-flex items-center gap-1">

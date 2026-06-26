@@ -94,11 +94,17 @@ function useApiDashboard(): DataSourceResult {
       enrollment: activeEnrollment
         ? {
             planName: activeEnrollment.plan?.name ?? '',
-            amount: formatBRL(activeEnrollment.plan?.price ?? 0),
-            dueDate: formatDate(activeEnrollment.endDate),
+            amount: formatBRL(
+              activeEnrollment.nextCharge?.amount ?? activeEnrollment.plan?.price ?? 0,
+            ),
+            // Próxima cobrança derivada (data + situação) em vez do endDate.
+            dueDate: formatDate(
+              activeEnrollment.nextCharge?.date ?? activeEnrollment.endDate,
+            ),
             method: mapMethod(activeEnrollment.paymentMethod),
-            // Derived server-side from the enrollment's payments.
-            status: (activeEnrollment.computedStatus ?? 'em_dia') as EnrollmentStatus,
+            status: (activeEnrollment.nextCharge?.status ??
+              activeEnrollment.computedStatus ??
+              'em_dia') as EnrollmentStatus,
           }
         : null,
       workout: activeWorkout

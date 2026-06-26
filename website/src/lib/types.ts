@@ -95,7 +95,9 @@ export interface StudentRow {
   status: StudentStatus;
   paymentMethod: PaymentMethod;
   joinedAt: string; // DD/MM/YYYY
-  nextPayment: string; // DD/MM/YYYY
+  nextPayment: string; // DD/MM/YYYY — próxima cobrança derivada (nextCharge)
+  /** Situação financeira derivada da próxima cobrança. Ausente = sem plano. */
+  financialStatus?: "em_dia" | "pendente" | "atrasado";
   initials: string;
   avatarColor: string;
   /** True quando o aluno tem pelo menos uma matrícula com status ativo.

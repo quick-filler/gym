@@ -15,7 +15,11 @@ import { useQuery } from '@apollo/client/react';
 
 import { USE_MOCKS } from '../lib/config';
 import { MOCK_PAYMENTS } from '../lib/mock-data';
-import { MyNextPaymentDocument, MyPaymentsDocument } from '../gql/graphql';
+import {
+  MyFinanceStatusDocument,
+  MyNextPaymentDocument,
+  MyPaymentsDocument,
+} from '../gql/graphql';
 import { brl, brlAmount, fmtDateBR } from '../lib/format';
 import type {
   PaymentMethodType,
@@ -114,6 +118,10 @@ function useApiPayments(): PaymentsResult {
     fetchPolicy: 'cache-and-network',
     errorPolicy: 'all',
   });
+  const statusQ = useQuery<any>(MyFinanceStatusDocument, {
+    fetchPolicy: 'cache-and-network',
+    errorPolicy: 'all',
+  });
 
   const history = useMemo<PaymentView[]>(() => {
     const rows: any[] = listQ.data?.myPayments ?? [];
@@ -134,56 +142,87 @@ function useApiPayments(): PaymentsResult {
   }, [listQ.data]);
 
   const next = nextQ.data?.myNextPayment ?? null;
+  // Derived next charge + financial status from the active enrollment.
+  const activeEnr = (statusQ.data?.me?.enrollments ?? []).find(
+    (e: any) => e?.status === 'active',
+  );
+  const nc = activeEnr?.nextCharge ?? null;
 
   const nextBill = useMemo(() => {
-    if (!next) {
+    // Prefer a real open Payment (carries documentId → checkout). Fall back to
+    // the derived nextCharge so a freshly-assigned plan still shows the date.
+    if (next) {
       return {
-        documentId: null,
-        amount: '0,00',
+        documentId: next.documentId,
+        amount: brlAmount(next.amount),
         currency: 'R$',
-        dueDate: '—',
-        method: '—',
-        overdue: false,
+        dueDate: fmtDateBR(next.dueDate),
+        method: methodLabel(next.method),
+        overdue: next.status === 'overdue' || nc?.status === 'atrasado',
+      };
+    }
+    if (nc) {
+      return {
+        documentId: null, // derived charge — no record to check out yet
+        amount: brlAmount(nc.amount),
+        currency: 'R$',
+        dueDate: fmtDateBR(nc.date),
+        method: methodLabel(activeEnr?.paymentMethod),
+        overdue: nc.status === 'atrasado',
       };
     }
     return {
-      documentId: next.documentId,
-      amount: brlAmount(next.amount),
+      documentId: null,
+      amount: '0,00',
       currency: 'R$',
-      dueDate: fmtDateBR(next.dueDate),
-      method: methodLabel(next.method),
-      overdue: next.status === 'overdue',
+      dueDate: '—',
+      method: '—',
+      overdue: false,
     };
-  }, [next]);
+  }, [next, nc, activeEnr]);
 
   const statusBanner = useMemo<PaymentsResult['statusBanner']>(() => {
-    if (!next) {
-      return {
-        tone: 'ok',
-        title: 'Tudo em dia',
-        body: 'Você não tem cobranças em aberto.',
-      };
-    }
-    if (next.status === 'overdue') {
+    const date = next?.dueDate ?? nc?.date;
+    const fin = nc?.status; // em_dia | pendente | atrasado
+    if (fin === 'atrasado' || next?.status === 'overdue') {
       return {
         tone: 'danger',
         title: 'Pagamento em atraso',
-        body: `Cobrança vencida em ${fmtDateBR(next.dueDate)}. Regularize para manter o acesso.`,
+        body: date
+          ? `Cobrança venceu em ${fmtDateBR(date)}. Regularize para manter o acesso.`
+          : 'Você tem uma cobrança vencida. Regularize para manter o acesso.',
+      };
+    }
+    if (fin === 'pendente') {
+      return {
+        tone: 'warn',
+        title: 'Cobrança próxima',
+        body: `Sua próxima cobrança vence em ${fmtDateBR(date)}.`,
+      };
+    }
+    if (date) {
+      return {
+        tone: 'ok',
+        title: 'Tudo em dia',
+        body: `Próxima cobrança em ${fmtDateBR(date)}.`,
       };
     }
     return {
       tone: 'ok',
       title: 'Tudo em dia',
-      body: `Próxima cobrança em ${fmtDateBR(next.dueDate)}.`,
+      body: 'Você não tem cobranças em aberto.',
     };
-  }, [next]);
+  }, [next, nc]);
 
   const refetch = useCallback(() => {
     listQ.refetch().catch(() => {});
     nextQ.refetch().catch(() => {});
-  }, [listQ, nextQ]);
+    statusQ.refetch().catch(() => {});
+  }, [listQ, nextQ, statusQ]);
 
   const error = useMemo<Error | null>(() => {
+    // statusQ (nextCharge) é complemento — se falhar, o nextCharge só cai pro
+    // myNextPayment; não deve derrubar o histórico/checkout.
     const e = listQ.error ?? nextQ.error;
     return e ? new Error(e.message || 'Falha ao carregar os pagamentos') : null;
   }, [listQ.error, nextQ.error]);
@@ -192,7 +231,7 @@ function useApiPayments(): PaymentsResult {
     nextBill,
     statusBanner,
     history,
-    loading: listQ.loading || nextQ.loading,
+    loading: listQ.loading || nextQ.loading || statusQ.loading,
     error,
     refetch,
   };

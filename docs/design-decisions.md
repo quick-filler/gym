@@ -639,6 +639,34 @@ right below. We want the history, not a clean slate.
 
 ---
 
+### 2.15 Próxima cobrança derivada + situação financeira
+
+- **Decision** — `Enrollment.nextCharge { date, amount, status }` é um campo
+  **computado** (sem motor de cobrança / sem criar registros). Pure helper
+  `computeNextCharge` (unit-tested):
+  - se há cobrança **em aberto** (pending/overdue), ela é a próxima (menor
+    dueDate + seu valor);
+  - senão, é **um ciclo após** a última cobrança paga (ou o `startDate` quando
+    nada foi pago), com o preço do plano (`addBillingCycle`: monthly/quarterly/
+    annual).
+  - `status`: `atrasado` (data passou), `pendente` (≤ 7 dias — "semana do
+    pagamento"), `em_dia` (mais longe). Mesmo vocabulário do `computedStatus`.
+- **Por quê derivar e não gerar Payment ao atribuir plano** — evita escopo de
+  motor de cobrança/recorrência agora; a próxima cobrança aparece mesmo sem
+  nenhum registro (plano atribuído hoje → cobra +1 ciclo). Quando existe um
+  Payment real, ele tem prioridade (e carrega o `documentId` p/ checkout).
+- **Surfaces** — `/admin/students` (coluna "Próx. cobrança" = data + badge),
+  `/admin/finance` (seção "Próximas cobranças" por aluno, reusa `useStudents`),
+  app **Finanças** (`usePayments`: card + banner derivados; `myNextPayment`
+  ainda dá o `documentId` p/ pagar) e **dashboard** ("Situação do plano").
+  Helper de apresentação compartilhado: `website/src/lib/finance.ts`.
+- **Consequences** — sem mudança de content type/role/permissão → **sem
+  `config:export`**; schema regenerado (tipo `NextCharge`).
+- **Revisit when** — entrar um motor de cobrança/recorrência (gerar Payments
+  por ciclo) — aí `nextCharge` passa a ler os registros gerados.
+
+---
+
 ## 3. GraphQL API
 
 ### 3.1 GraphQL is the only data API; REST is reserved for auth + webhooks

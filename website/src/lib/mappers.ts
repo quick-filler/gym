@@ -219,6 +219,11 @@ export interface RawStudent {
       price?: number | null;
       billingCycle?: string | null;
     } | null;
+    nextCharge?: {
+      date?: string | null;
+      amount?: number | null;
+      status?: string | null;
+    } | null;
   } | null> | null;
 }
 
@@ -247,7 +252,14 @@ export function mapStudents(
         status: (s.status as StudentStatus) ?? "active",
         paymentMethod: method,
         joinedAt: enrolled?.startDate ?? "",
-        nextPayment: enrolled?.endDate ?? "—",
+        // Próxima cobrança derivada (nextCharge); cai pro endDate legado se ausente.
+        nextPayment: enrolled?.nextCharge?.date ?? enrolled?.endDate ?? "—",
+        financialStatus:
+          (enrolled?.nextCharge?.status as
+            | "em_dia"
+            | "pendente"
+            | "atrasado"
+            | undefined) ?? undefined,
         initials: initialsFromName(s.name ?? ""),
         avatarColor: pickColor(s.documentId ?? ""),
         hasActiveEnrollment: !!active,

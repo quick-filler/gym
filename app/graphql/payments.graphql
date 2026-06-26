@@ -26,6 +26,23 @@ query MyNextPayment {
   }
 }
 
+# Próxima cobrança derivada + situação financeira (Enrollment.nextCharge).
+# Funciona mesmo sem registro de pagamento; complementa myNextPayment, que
+# carrega o Payment real (com documentId) para o checkout.
+query MyFinanceStatus {
+  me {
+    enrollments {
+      status
+      paymentMethod
+      nextCharge {
+        date
+        amount
+        status
+      }
+    }
+  }
+}
+
 mutation PayChargePix($paymentId: ID!) {
   payChargePix(paymentId: $paymentId) {
     paymentId

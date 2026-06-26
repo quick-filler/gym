@@ -13,10 +13,12 @@ import { PaymentMethodLabel } from "@/components/admin/StatusPill";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
+import { Pill } from "@/components/ui/Pill";
 import { Select } from "@/components/ui/Field";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
-import { useFinance } from "@/lib/hooks";
-import { formatBRL } from "@/lib/utils";
+import { useFinance, useStudents } from "@/lib/hooks";
+import { formatBRL, formatDate } from "@/lib/utils";
+import { FINANCIAL_STATUS } from "@/lib/finance";
 import type { PaymentStatus } from "@/lib/types";
 import { NewChargeDialog } from "./NewChargeDialog";
 
@@ -420,6 +422,8 @@ function FinancePageInner() {
                 </div>
               </Card>
             </div>
+
+            <UpcomingCharges />
           </>
         )}
 
@@ -487,5 +491,70 @@ function StatusSelector({
         onSelect: () => onChange(o.value),
       }))}
     />
+  );
+}
+
+/* ==================================================================
+ * Próximas cobranças — por aluno (Enrollment.nextCharge), ordenado por data.
+ * Reaproveita useStudents (já traz nextPayment + financialStatus derivados).
+ * ================================================================ */
+function UpcomingCharges() {
+  const { data: students, loading } = useStudents();
+
+  const rows = (students ?? [])
+    .filter((s) => s.hasActiveEnrollment !== false && !!s.financialStatus)
+    .sort((a, b) => (a.nextPayment < b.nextPayment ? -1 : 1)); // vencidas/próximas primeiro
+
+  return (
+    <Card className="p-0 overflow-hidden mt-8">
+      <div className="flex items-center justify-between p-6 border-b border-line">
+        <div>
+          <h3 className="font-display text-[1.1rem] font-semibold text-ink-900">
+            Próximas cobranças
+          </h3>
+          <p className="font-mono text-[0.7rem] uppercase tracking-[0.1em] text-ink-400 mt-1">
+            {rows.length} aluno{rows.length === 1 ? "" : "s"} com plano ativo
+          </p>
+        </div>
+      </div>
+
+      {loading && rows.length === 0 ? (
+        <div className="p-8">
+          <LoadingState />
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="p-10 text-center text-ink-400 text-[0.9rem]">
+          Nenhum aluno com plano ativo.
+        </div>
+      ) : (
+        <div className="divide-y divide-line/60">
+          {rows.map((s) => (
+            <div key={s.id} className="flex items-center gap-3 px-6 py-3.5">
+              <Avatar initials={s.initials} color={s.avatarColor} />
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-[0.9rem] text-ink-900 truncate">
+                  {s.name}
+                </div>
+                <div className="font-mono text-[0.74rem] text-ink-400">
+                  {s.plan} · {s.planPrice}
+                </div>
+              </div>
+              <div className="font-mono text-[0.82rem] text-ink-600 shrink-0">
+                {s.nextPayment && s.nextPayment !== "—"
+                  ? formatDate(s.nextPayment)
+                  : "—"}
+              </div>
+              {s.financialStatus ? (
+                <div className="shrink-0 w-24 text-right">
+                  <Pill tone={FINANCIAL_STATUS[s.financialStatus].tone}>
+                    {FINANCIAL_STATUS[s.financialStatus].label}
+                  </Pill>
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   );
 }

@@ -55,7 +55,87 @@ export function computeEnrollmentStatus(
   return hasPending ? 'pendente' : 'em_dia';
 }
 
+/** Adds `n` days to a `yyyy-mm-dd` date, returns `yyyy-mm-dd`. TZ-safe via UTC. */
+function addDaysISO(dateISO: string, n: number): string {
+  const d = new Date(`${dateISO}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Adds `n` billing cycles to a `yyyy-mm-dd` date. monthly (default) / quarterly
+ * (3 months) / annual (12 months). Month overflow follows JS Date semantics.
+ */
+export function addBillingCycle(dateISO: string, cycle: string, n = 1): string {
+  const d = new Date(`${dateISO}T00:00:00Z`);
+  if (cycle === 'annual') d.setUTCFullYear(d.getUTCFullYear() + n);
+  else if (cycle === 'quarterly') d.setUTCMonth(d.getUTCMonth() + 3 * n);
+  else d.setUTCMonth(d.getUTCMonth() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+export interface NextChargeResult {
+  date: string;
+  amount: number;
+  status: 'em_dia' | 'pendente' | 'atrasado';
+}
+
+/**
+ * The enrollment's next charge, derived (no billing engine yet):
+ *   - If there's an open charge (pending/overdue), that IS the next charge
+ *     (earliest dueDate, its own amount).
+ *   - Else it's one billing cycle after the last paid charge (or the
+ *     enrollment start when nothing is paid yet), priced at the plan.
+ * Status by the charge date vs `today`:
+ *   atrasado — date already passed (unpaid)
+ *   pendente — date within the next 7 days ("semana do pagamento")
+ *   em_dia   — still further out
+ */
+export function computeNextCharge(args: {
+  payments: Array<{ status?: string; dueDate?: string; amount?: number }>;
+  startDate: string;
+  billingCycle: string;
+  planPrice: number;
+  today: string;
+}): NextChargeResult {
+  const { payments, startDate, billingCycle, planPrice, today } = args;
+  const list = payments ?? [];
+
+  const open = list
+    .filter((p) => (p.status === 'pending' || p.status === 'overdue') && p.dueDate)
+    .sort((a, b) => (a.dueDate! < b.dueDate! ? -1 : 1));
+
+  let date: string;
+  let amount: number;
+  if (open.length) {
+    date = open[0].dueDate!;
+    amount = open[0].amount ?? planPrice;
+  } else {
+    const lastPaid = list
+      .filter((p) => p.status === 'paid' && p.dueDate)
+      .sort((a, b) => (a.dueDate! > b.dueDate! ? -1 : 1))[0];
+    date = addBillingCycle(lastPaid?.dueDate ?? startDate, billingCycle, 1);
+    amount = planPrice;
+  }
+
+  const status: NextChargeResult['status'] =
+    date < today ? 'atrasado' : date <= addDaysISO(today, 7) ? 'pendente' : 'em_dia';
+
+  return { date, amount, status };
+}
+
 export function buildEnrollment({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }) {
+  const NextCharge = nexus.objectType({
+    name: 'NextCharge',
+    description:
+      "The enrollment's next billing: derived date (open charge or startDate + cycle), amount, and financial status (em_dia / pendente / atrasado).",
+    definition(t: any) {
+      t.nonNull.string('date'); // yyyy-mm-dd
+      t.nonNull.float('amount');
+      t.nonNull.string('status'); // em_dia | pendente | atrasado
+    },
+  });
+
   const Enrollment = nexus.objectType({
     name: 'Enrollment',
     definition(t: any) {
@@ -111,6 +191,29 @@ export function buildEnrollment({ nexus, strapi }: { nexus: any; strapi: Core.St
             });
           }
           return computeEnrollmentStatus(payments ?? []);
+        },
+      });
+      t.field('nextCharge', {
+        type: 'NextCharge',
+        description:
+          'Próxima cobrança derivada (data + valor + situação financeira). Null quando a matrícula não tem plano.',
+        resolve: async (parent: any) => {
+          const doc: any = await strapi.documents(UID).findOne({
+            documentId: parent.documentId,
+            fields: ['startDate'],
+            populate: {
+              plan: { fields: ['price', 'billingCycle'] },
+              payments: { fields: ['status', 'dueDate', 'amount'] },
+            },
+          });
+          if (!doc?.plan) return null; // sem plano → sem próxima cobrança
+          return computeNextCharge({
+            payments: doc.payments ?? [],
+            startDate: doc.startDate ?? parent.startDate,
+            billingCycle: doc.plan.billingCycle ?? 'monthly',
+            planPrice: Number(doc.plan.price ?? 0),
+            today: todayBR(),
+          });
         },
       });
     },
@@ -254,7 +357,7 @@ export function buildEnrollment({ nexus, strapi }: { nexus: any; strapi: Core.St
   });
 
   return {
-    types: [Enrollment, EnrollmentInput, EnrollmentUpdateInput, queries, mutations],
+    types: [NextCharge, Enrollment, EnrollmentInput, EnrollmentUpdateInput, queries, mutations],
     resolversConfig: {
       'Query.enrollments': { auth: true },
       'Query.enrollment': { auth: true },

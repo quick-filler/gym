@@ -614,6 +614,11 @@ type Enrollment {
   computedStatus: String
   documentId: ID!
   endDate: String
+
+  """
+  Próxima cobrança derivada (data + valor + situação financeira). Null quando a matrícula não tem plano.
+  """
+  nextCharge: NextCharge
   paymentMethod: String
   payments: [Payment]
   plan: Plan
@@ -1136,6 +1141,15 @@ input MyProfileInput {
 type MyWorkouts {
   active: WorkoutPlan
   upcoming: [WorkoutPlan]
+}
+
+"""
+The enrollment's next billing: derived date (open charge or startDate + cycle), amount, and financial status (em_dia / pendente / atrasado).
+"""
+type NextCharge {
+  amount: Float!
+  date: String!
+  status: String!
 }
 
 type Pagination {

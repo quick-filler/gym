@@ -467,6 +467,11 @@ const STUDENTS_QUERY = graphql(`
           price
           billingCycle
         }
+        nextCharge {
+          date
+          amount
+          status
+        }
       }
     }
   }
