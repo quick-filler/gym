@@ -339,6 +339,29 @@ export interface DataSourceResult {
 }
 
 /* ------------------------------------------------------------------
+ * Fase 7 — notificações (inbox + badge)
+ * ------------------------------------------------------------------ */
+export interface NotificationView {
+  id: string;
+  kind: string;
+  title: string;
+  body: string;
+  timeLabel: string; // "agora" / "há 2h" / "12/06"
+  read: boolean;
+  route?: string | null; // deep-link target (notification.data.route)
+}
+
+export interface NotificationsResult {
+  items: NotificationView[];
+  unreadCount: number;
+  loading: boolean;
+  error: Error | null;
+  refetch: () => void;
+  markRead: (id: string) => Promise<void>;
+  markAllRead: () => Promise<void>;
+}
+
+/* ------------------------------------------------------------------
  * Dependentes screen — guardian's children roster
  * ------------------------------------------------------------------ */
 export type DependentStatus = 'active' | 'pending' | 'inactive';

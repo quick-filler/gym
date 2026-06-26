@@ -15,6 +15,7 @@
  */
 
 import { pickRelationId, resolveNumericId } from '../../../../utils/relation';
+import { createInApp, notifyAcademyAdmins } from '../../../../services/notify';
 
 const UID = 'api::class-booking.class-booking';
 const SCHEDULE_UID = 'api::class-schedule.class-schedule';
@@ -183,5 +184,53 @@ export default {
         }
       }
     }
+  },
+
+  // Fase 7b: notify the booker (student or dependent's guardian) + the admins.
+  async afterCreate(event: any) {
+    const docId = event.result?.documentId;
+    if (!docId) return;
+    const b: any = await strapi.documents(UID).findOne({
+      documentId: docId,
+      populate: {
+        classSchedule: { populate: { academy: true } },
+        student: { populate: { user: true, academy: true } },
+        dependent: {
+          populate: { guardian: { populate: { user: true } }, academy: true },
+        },
+      },
+    });
+    if (!b) return;
+
+    const status = b.status ?? 'confirmed';
+    if (status === 'cancelled') return;
+
+    const userId = b.student?.user?.id ?? b.dependent?.guardian?.user?.id;
+    const academyId =
+      b.student?.academy?.id ??
+      b.dependent?.academy?.id ??
+      b.classSchedule?.academy?.id ??
+      null;
+    const className = b.classSchedule?.name ?? 'Aula';
+    const dateBR = (b.date ?? '').split('-').reverse().join('/');
+
+    if (userId) {
+      const waitlist = status === 'waitlist';
+      await createInApp(strapi, {
+        userId,
+        academyId,
+        kind: 'booking_confirmed',
+        title: waitlist ? 'Você entrou na lista de espera' : 'Reserva confirmada',
+        body: `${b.dependent ? `${b.dependent.name} · ` : ''}${className} · ${dateBR}`,
+        data: { route: `/booking/${docId}`, bookingId: docId },
+      });
+    }
+    const who = b.student?.name ?? b.dependent?.name ?? 'Aluno';
+    await notifyAcademyAdmins(strapi, academyId, {
+      kind: 'admin_booking',
+      title: 'Nova reserva',
+      body: `${who} · ${className} · ${dateBR}`,
+      data: { route: '/admin/schedule', bookingId: docId },
+    });
   },
 };

@@ -27,6 +27,7 @@ import {
 
 import { theme } from '../../lib/theme';
 import { useDashboard } from '../../hooks/useDashboard';
+import { usePushRegistration } from '../../hooks/usePushRegistration';
 import { USE_MOCKS } from '../../lib/config';
 import { hasModule, type AppModule } from '../../lib/modules';
 
@@ -52,6 +53,9 @@ const TAB_MODULE: Record<string, AppModule> = {
 };
 
 export default function TabsLayout() {
+  // Register for push once we're in the authed area (self-guards in Expo Go).
+  usePushRegistration();
+
   const [authState, setAuthState] = useState<'loading' | 'ok' | 'redirect'>(
     USE_MOCKS ? 'ok' : 'loading',
   );

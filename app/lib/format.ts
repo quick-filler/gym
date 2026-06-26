@@ -59,6 +59,29 @@ export function fmtDateBR(iso: string | null | undefined): string {
 }
 
 /**
+ * Compact relative time for the notification inbox: "agora", "há 5 min",
+ * "há 3 h", "ontem", else "DD/MM". Falls back to "" on bad input.
+ */
+export function timeAgoBR(
+  iso: string | null | undefined,
+  now: Date = new Date(),
+): string {
+  if (!iso) return '';
+  const t = new Date(iso);
+  if (Number.isNaN(t.getTime())) return '';
+  const sec = Math.floor((now.getTime() - t.getTime()) / 1000);
+  if (sec < 60) return 'agora';
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `há ${h} h`;
+  const days = Math.floor(h / 24);
+  if (days === 1) return 'ontem';
+  if (days < 7) return `há ${days} dias`;
+  return fmtDateBR(t.toISOString());
+}
+
+/**
  * Brazilian date input → ISO. "12/03/2018" → "2018-03-12". Passes through
  * a value already in ISO (`YYYY-MM-DD`). Returns "" for empty/invalid so
  * callers can treat it as "not provided".

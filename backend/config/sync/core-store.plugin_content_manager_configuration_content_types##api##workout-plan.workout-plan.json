@@ -34,9 +34,9 @@
           "sortable": true
         }
       },
-      "student": {
+      "students": {
         "edit": {
-          "label": "student",
+          "label": "students",
           "description": "",
           "placeholder": "",
           "visible": true,
@@ -44,9 +44,9 @@
           "mainField": "name"
         },
         "list": {
-          "label": "student",
-          "searchable": true,
-          "sortable": true
+          "label": "students",
+          "searchable": false,
+          "sortable": false
         }
       },
       "dependent": {
@@ -74,6 +74,20 @@
         },
         "list": {
           "label": "instructor",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "category": {
+        "edit": {
+          "label": "category",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "category",
           "searchable": true,
           "sortable": true
         }
@@ -205,17 +219,13 @@
       "list": [
         "id",
         "name",
-        "student",
-        "dependent"
+        "dependent",
+        "students"
       ],
       "edit": [
         [
           {
             "name": "name",
-            "size": 6
-          },
-          {
-            "name": "student",
             "size": 6
           }
         ],
@@ -247,6 +257,16 @@
           {
             "name": "isActive",
             "size": 4
+          }
+        ],
+        [
+          {
+            "name": "category",
+            "size": 6
+          },
+          {
+            "name": "students",
+            "size": 6
           }
         ]
       ]

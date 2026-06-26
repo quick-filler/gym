@@ -11,8 +11,25 @@ import {
   mondayOfWeekISO,
   monthlyBRL,
   nextClassTimeLabel,
+  timeAgoBR,
   weekdayIndexISO,
 } from './format';
+
+describe('timeAgoBR', () => {
+  const now = new Date('2026-06-26T12:00:00Z');
+  it('formats relative buckets', () => {
+    expect(timeAgoBR('2026-06-26T11:59:30Z', now)).toBe('agora');
+    expect(timeAgoBR('2026-06-26T11:30:00Z', now)).toBe('há 30 min');
+    expect(timeAgoBR('2026-06-26T09:00:00Z', now)).toBe('há 3 h');
+    expect(timeAgoBR('2026-06-25T10:00:00Z', now)).toBe('ontem');
+    expect(timeAgoBR('2026-06-23T10:00:00Z', now)).toBe('há 3 dias');
+  });
+  it('falls back to a date for older / bad input', () => {
+    expect(timeAgoBR('2026-06-01T10:00:00Z', now)).toBe('01/06/2026');
+    expect(timeAgoBR(null, now)).toBe('');
+    expect(timeAgoBR('nope', now)).toBe('');
+  });
+});
 
 describe('monthlyBRL', () => {
   it('formats integer with R$ and no decimals', () => {

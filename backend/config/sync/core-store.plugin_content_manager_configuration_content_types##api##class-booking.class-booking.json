@@ -107,6 +107,20 @@
           "sortable": true
         }
       },
+      "reminderSentAt": {
+        "edit": {
+          "label": "reminderSentAt",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "reminderSentAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
       "createdAt": {
         "edit": {
           "label": "createdAt",
@@ -209,6 +223,12 @@
           },
           {
             "name": "checkedInAt",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "reminderSentAt",
             "size": 6
           }
         ]

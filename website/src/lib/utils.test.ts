@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { cn, formatBRL, formatDate } from './utils';
+import { cn, formatBRL, formatDate, timeAgo } from './utils';
+
+describe('timeAgo', () => {
+  const now = new Date('2026-06-26T12:00:00Z');
+  it('formats relative buckets', () => {
+    expect(timeAgo('2026-06-26T11:59:30Z', now)).toBe('agora');
+    expect(timeAgo('2026-06-26T11:30:00Z', now)).toBe('há 30 min');
+    expect(timeAgo('2026-06-26T09:00:00Z', now)).toBe('há 3 h');
+    expect(timeAgo('2026-06-25T10:00:00Z', now)).toBe('ontem');
+    expect(timeAgo('2026-06-23T10:00:00Z', now)).toBe('há 3 dias');
+  });
+  it('falls back to a date / empty for old or bad input', () => {
+    expect(timeAgo('2026-06-01T10:00:00Z', now)).toBe('01/06/2026');
+    expect(timeAgo(null, now)).toBe('');
+    expect(timeAgo('nope', now)).toBe('');
+  });
+});
 
 describe('cn', () => {
   it('joins truthy string/number inputs with spaces', () => {

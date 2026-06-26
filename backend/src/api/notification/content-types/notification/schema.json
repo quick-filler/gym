@@ -1,0 +1,58 @@
+{
+  "kind": "collectionType",
+  "collectionName": "notifications",
+  "info": {
+    "singularName": "notification",
+    "pluralName": "notifications",
+    "displayName": "Notification",
+    "description": "In-app notification for a user (student or academy admin)."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "recipient": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "academy": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::academy.academy"
+    },
+    "kind": {
+      "type": "enumeration",
+      "enum": [
+        "payment_paid",
+        "payment_due",
+        "booking_confirmed",
+        "class_reminder",
+        "workout_new",
+        "admin_booking",
+        "admin_payment",
+        "generic"
+      ],
+      "default": "generic",
+      "required": true
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "body": {
+      "type": "text"
+    },
+    "data": {
+      "type": "json"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "readAt": {
+      "type": "datetime"
+    }
+  }
+}

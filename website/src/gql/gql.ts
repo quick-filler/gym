@@ -81,6 +81,9 @@ type Documents = {
     "\n  query MySubscription {\n    mySubscription {\n      documentId\n      status\n      recurrency\n      trialEndsAt\n      trialDaysLeft\n      currentPeriodEnd\n      platformPlan {\n        documentId\n        slug\n        name\n      }\n    }\n  }\n": typeof types.MySubscriptionDocument,
     "\n  query MyPoolSettings {\n    myPoolSettings {\n      documentId\n      phMin\n      phMax\n      chlorineMin\n      chlorineMax\n      temperatureMin\n      temperatureMax\n      alertTolerance\n      inspectionTimes\n    }\n  }\n": typeof types.MyPoolSettingsDocument,
     "\n  query PoolInspections($date: String) {\n    poolInspections(date: $date) {\n      documentId\n      date\n      shift\n      scheduledTime\n      chlorine\n      ph\n      temperature\n      peopleCount\n      peopleCountSource\n      notes\n      status\n      createdAt\n    }\n  }\n": typeof types.PoolInspectionsDocument,
+    "\n  query AdminNotifications($limit: Int) {\n    myNotifications(limit: $limit) {\n      documentId\n      kind\n      title\n      body\n      data\n      read\n      createdAt\n    }\n    myUnreadNotificationCount\n  }\n": typeof types.AdminNotificationsDocument,
+    "\n  mutation AdminMarkNotificationRead($documentId: ID!) {\n    markNotificationRead(documentId: $documentId) {\n      documentId\n      read\n    }\n  }\n": typeof types.AdminMarkNotificationReadDocument,
+    "\n  mutation AdminMarkAllNotificationsRead {\n    markAllNotificationsRead\n  }\n": typeof types.AdminMarkAllNotificationsReadDocument,
     "\n  mutation MintUploadUrl(\n    $filename: String!\n    $contentType: String!\n    $size: Int!\n  ) {\n    mintUploadUrl(\n      filename: $filename\n      contentType: $contentType\n      size: $size\n    ) {\n      uploadUrl\n      publicUrl\n      key\n    }\n  }\n": typeof types.MintUploadUrlDocument,
     "\n  mutation ConfirmUpload($url: String!, $name: String!) {\n    confirmUpload(url: $url, name: $name) {\n      documentId\n      url\n      mime\n    }\n  }\n": typeof types.ConfirmUploadDocument,
 };
@@ -152,6 +155,9 @@ const documents: Documents = {
     "\n  query MySubscription {\n    mySubscription {\n      documentId\n      status\n      recurrency\n      trialEndsAt\n      trialDaysLeft\n      currentPeriodEnd\n      platformPlan {\n        documentId\n        slug\n        name\n      }\n    }\n  }\n": types.MySubscriptionDocument,
     "\n  query MyPoolSettings {\n    myPoolSettings {\n      documentId\n      phMin\n      phMax\n      chlorineMin\n      chlorineMax\n      temperatureMin\n      temperatureMax\n      alertTolerance\n      inspectionTimes\n    }\n  }\n": types.MyPoolSettingsDocument,
     "\n  query PoolInspections($date: String) {\n    poolInspections(date: $date) {\n      documentId\n      date\n      shift\n      scheduledTime\n      chlorine\n      ph\n      temperature\n      peopleCount\n      peopleCountSource\n      notes\n      status\n      createdAt\n    }\n  }\n": types.PoolInspectionsDocument,
+    "\n  query AdminNotifications($limit: Int) {\n    myNotifications(limit: $limit) {\n      documentId\n      kind\n      title\n      body\n      data\n      read\n      createdAt\n    }\n    myUnreadNotificationCount\n  }\n": types.AdminNotificationsDocument,
+    "\n  mutation AdminMarkNotificationRead($documentId: ID!) {\n    markNotificationRead(documentId: $documentId) {\n      documentId\n      read\n    }\n  }\n": types.AdminMarkNotificationReadDocument,
+    "\n  mutation AdminMarkAllNotificationsRead {\n    markAllNotificationsRead\n  }\n": types.AdminMarkAllNotificationsReadDocument,
     "\n  mutation MintUploadUrl(\n    $filename: String!\n    $contentType: String!\n    $size: Int!\n  ) {\n    mintUploadUrl(\n      filename: $filename\n      contentType: $contentType\n      size: $size\n    ) {\n      uploadUrl\n      publicUrl\n      key\n    }\n  }\n": types.MintUploadUrlDocument,
     "\n  mutation ConfirmUpload($url: String!, $name: String!) {\n    confirmUpload(url: $url, name: $name) {\n      documentId\n      url\n      mime\n    }\n  }\n": types.ConfirmUploadDocument,
 };
@@ -438,6 +444,18 @@ export function graphql(source: "\n  query MyPoolSettings {\n    myPoolSettings 
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query PoolInspections($date: String) {\n    poolInspections(date: $date) {\n      documentId\n      date\n      shift\n      scheduledTime\n      chlorine\n      ph\n      temperature\n      peopleCount\n      peopleCountSource\n      notes\n      status\n      createdAt\n    }\n  }\n"): (typeof documents)["\n  query PoolInspections($date: String) {\n    poolInspections(date: $date) {\n      documentId\n      date\n      shift\n      scheduledTime\n      chlorine\n      ph\n      temperature\n      peopleCount\n      peopleCountSource\n      notes\n      status\n      createdAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query AdminNotifications($limit: Int) {\n    myNotifications(limit: $limit) {\n      documentId\n      kind\n      title\n      body\n      data\n      read\n      createdAt\n    }\n    myUnreadNotificationCount\n  }\n"): (typeof documents)["\n  query AdminNotifications($limit: Int) {\n    myNotifications(limit: $limit) {\n      documentId\n      kind\n      title\n      body\n      data\n      read\n      createdAt\n    }\n    myUnreadNotificationCount\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AdminMarkNotificationRead($documentId: ID!) {\n    markNotificationRead(documentId: $documentId) {\n      documentId\n      read\n    }\n  }\n"): (typeof documents)["\n  mutation AdminMarkNotificationRead($documentId: ID!) {\n    markNotificationRead(documentId: $documentId) {\n      documentId\n      read\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AdminMarkAllNotificationsRead {\n    markAllNotificationsRead\n  }\n"): (typeof documents)["\n  mutation AdminMarkAllNotificationsRead {\n    markAllNotificationsRead\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

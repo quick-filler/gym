@@ -1,0 +1,33 @@
+{
+  "kind": "collectionType",
+  "collectionName": "push_devices",
+  "info": {
+    "singularName": "push-device",
+    "pluralName": "push-devices",
+    "displayName": "Push Device",
+    "description": "An Expo push token registered for a user's device."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "token": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "platform": {
+      "type": "enumeration",
+      "enum": ["ios", "android", "web"]
+    },
+    "lastSeenAt": {
+      "type": "datetime"
+    }
+  }
+}

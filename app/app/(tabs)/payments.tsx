@@ -27,7 +27,6 @@ import { router } from 'expo-router';
 import {
   Check,
   CreditCard,
-  Download,
   FileText,
   Receipt,
   Wallet,
@@ -37,6 +36,7 @@ import {
 
 import { useDashboard } from '../../hooks/useDashboard';
 import { usePayments } from '../../hooks/usePayments';
+import { NotificationBell } from '../../components/NotificationBell';
 import { theme, withAlpha } from '../../lib/theme';
 import type {
   PaymentMethodType,
@@ -80,13 +80,7 @@ export default function PaymentsScreen() {
               </View>
               <Text style={styles.academyName}>{academyName}</Text>
             </View>
-            <TouchableOpacity
-              style={styles.iconBtn}
-              activeOpacity={0.7}
-              accessibilityLabel="Baixar extrato"
-            >
-              <Download size={18} color="#fff" strokeWidth={2.2} />
-            </TouchableOpacity>
+            <NotificationBell />
           </View>
           <Text style={styles.eyebrow}>FINANÇAS</Text>
           <Text style={styles.title}>Pagamentos</Text>
@@ -295,14 +289,6 @@ const styles = StyleSheet.create({
   },
   logoText: { color: '#fff', fontWeight: '700', fontSize: 15, letterSpacing: -0.5 },
   academyName: { color: '#fff', fontWeight: '700', fontSize: 16, letterSpacing: -0.3 },
-  iconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   eyebrow: {
     color: 'rgba(255,255,255,0.78)',
     fontSize: 11,

@@ -29,7 +29,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import {
-  Bell,
   Calendar,
   Check,
   Copy,
@@ -39,6 +38,7 @@ import {
 } from 'lucide-react-native';
 
 import { useDashboard } from '../../hooks/useDashboard';
+import { NotificationBell } from '../../components/NotificationBell';
 import { Skeleton, SkeletonLines } from '../../components/Skeleton';
 import { USE_MOCKS } from '../../lib/config';
 import { hasModule, type AppModule } from '../../lib/modules';
@@ -91,20 +91,7 @@ function DashboardHome({ data }: { data: DashboardData }) {
                 ) : null}
               </View>
             </View>
-            <TouchableOpacity
-              style={styles.iconBtn}
-              activeOpacity={0.7}
-              accessibilityLabel={
-                data.unreadCount > 0
-                  ? `Notificações (${data.unreadCount} não lidas)`
-                  : 'Notificações'
-              }
-            >
-              {data.unreadCount > 0 ? (
-                <View style={[styles.notifDot, { borderColor: accent }]} />
-              ) : null}
-              <Bell size={18} color="#fff" strokeWidth={2.2} />
-            </TouchableOpacity>
+            <NotificationBell />
           </View>
           <Text style={styles.welcome}>Bem-vindo de volta,</Text>
           <Text style={styles.welcomeName}>{data.student.name}</Text>
@@ -532,19 +519,6 @@ const styles = StyleSheet.create({
   logoText: { color: '#fff', fontWeight: '700', fontSize: 15, letterSpacing: -0.5 },
   academyName: { color: '#fff', fontWeight: '700', fontSize: 16, letterSpacing: -0.3 },
   academyTag: { color: 'rgba(255,255,255,0.7)', fontSize: 11, marginTop: 2 },
-  iconBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center', justifyContent: 'center',
-    position: 'relative',
-  },
-  notifDot: {
-    position: 'absolute', top: 6, right: 6,
-    width: 8, height: 8, borderRadius: 4,
-    backgroundColor: '#fbbf24',
-    borderWidth: 2,
-    zIndex: 1,
-  },
   welcome: { color: 'rgba(255,255,255,0.78)', fontSize: 14 },
   welcomeName: {
     color: '#fff', fontSize: 28, fontWeight: '700', letterSpacing: -0.8, marginTop: 2,

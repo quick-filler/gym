@@ -141,6 +141,9 @@ describe('schema introspection', () => {
       'dependentScheduleWeek',
       // Student app — Piscina (fichas aquáticas)
       'myPoolActivities',
+      // Fase 7 — notificações (app + web)
+      'myNotifications',
+      'myUnreadNotificationCount',
     ];
     for (const name of required) {
       expect(names.has(name), `missing Query.${name}`).toBe(true);
@@ -172,6 +175,12 @@ describe('schema introspection', () => {
       'bookClassForDependent',
       'addMyDependent',
       'updateMyDependent',
+      // Fase 7 — notificações
+      'markNotificationRead',
+      'markAllNotificationsRead',
+      'runNotificationReminders',
+      'registerPushToken',
+      'unregisterPushToken',
       // shared infra
       'mintUploadUrl',
       'confirmUpload',

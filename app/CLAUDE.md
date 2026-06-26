@@ -89,6 +89,8 @@ app/
 │   ├── useProfile.ts             # Perfil — me + avaliações + editable form
 │   ├── useDependents.ts          # Guardian's roster + add/update (Fase 6)
 │   ├── usePoolActivities.ts      # Piscina — pool fichas (category 'pool')
+│   ├── useNotifications.ts       # Inbox + badge (polling, mark-read)
+│   ├── usePushRegistration.ts    # Expo push: permission + token + register (7e)
 │   └── useModuleGuard.ts         # Redirect home if a module is disabled
 ├── lib/
 │   ├── apollo.ts                 # Apollo Client (httpLink + authLink)
@@ -215,6 +217,7 @@ export function DashboardScreen() {
 | `/payment/[id]` | Checkout — PIX / boleto / cartão tabs (mocked gateway) | ✅ |
 | `/profile/edit` | Edit profile — phone/address/gender/birthdate + photo upload | ✅ |
 | `/profile/password` | Change password (atual + nova) | ✅ |
+| `/notifications` | Inbox in-app (badge real, polling, mark-read, deep-link) | ✅ |
 
 ## Module gating
 

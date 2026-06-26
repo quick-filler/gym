@@ -1049,16 +1049,37 @@ type Mutation {
   Closes an open session: records duration, the per-exercise checklist and optional notes.
   """
   finishWorkoutSession(exercisesCompleted: JSON, notes: String, sessionId: ID!): WorkoutSession
+
+  """
+  Marks every unread notification of the caller as read. Returns how many were updated.
+  """
+  markAllNotificationsRead: Int
+
+  """Marks one of the caller’s notifications as read."""
+  markNotificationRead(documentId: ID!): Notification
   mintUploadUrl(contentType: String!, filename: String!, size: Int!): PresignedUpload
   payChargeBoleto(paymentId: ID!): BoletoCheckout
   payChargeCard(card: CardInput!, paymentId: ID!): Payment
   payChargePix(paymentId: ID!): PixCheckout
 
   """
+  Registra (ou reatribui) um Expo push token ao usuário do caller. Idempotente por token.
+  """
+  registerPushToken(platform: String, token: String!): Boolean
+
+  """
+  Dispara os crons de lembrete (cobrança + aula) manualmente e retorna quantas notificações criou. Restrito a platform admin (liberado fora de produção p/ testes).
+  """
+  runNotificationReminders: Int
+
+  """
   Opens a training session against one of the caller’s active fichas. Requires an active enrollment. Seeds the per-exercise checklist from the plan.
   """
   startWorkoutSession(workoutPlanId: ID!): WorkoutSession
   submitContactForm(input: ContactFormInput!): ContactFormResult
+
+  """Remove um Expo push token (logout do aparelho)."""
+  unregisterPushToken(token: String!): Boolean
   updateAcademy(data: AcademyUpdateInput!, documentId: ID!): Academy
   updateBodyAssessment(data: BodyAssessmentUpdateInput!, documentId: ID!): BodyAssessment
   updateClassBooking(data: ClassBookingUpdateInput!, documentId: ID!): ClassBooking
@@ -1150,6 +1171,17 @@ type NextCharge {
   amount: Float!
   date: String!
   status: String!
+}
+
+type Notification {
+  body: String
+  createdAt: String
+  data: JSON
+  documentId: ID!
+  kind: String!
+  read: Boolean!
+  readAt: String
+  title: String!
 }
 
 type Pagination {
@@ -1437,6 +1469,11 @@ type Query {
   """The caller's most recent avaliação física, or null."""
   myLatestAssessment: BodyAssessment
   myNextPayment: Payment
+
+  """
+  The caller's notifications, newest first. `unreadOnly` filters to unread.
+  """
+  myNotifications(limit: Int, offset: Int, unreadOnly: Boolean): [Notification]
   myPayments(limit: Int, offset: Int): [Payment]
 
   """
@@ -1457,9 +1494,7 @@ type Query {
   """
   mySubscription: AcademySubscription
 
-  """
-  Count of the caller's unread in-app notifications. Stub returning 0 until Fase 7 ships the Notification content type.
-  """
+  """Count of the caller's unread in-app notifications."""
   myUnreadNotificationCount: Int
 
   """

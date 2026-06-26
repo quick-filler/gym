@@ -1,0 +1,32 @@
+# Notificações in-app (Fase 7). Lista + contador numa query só (1 poll cobre
+# badge e inbox). Mutations marcam como lida.
+
+query AppNotifications($limit: Int) {
+  myNotifications(limit: $limit) {
+    documentId
+    kind
+    title
+    body
+    data
+    read
+    readAt
+    createdAt
+  }
+  myUnreadNotificationCount
+}
+
+mutation AppMarkNotificationRead($documentId: ID!) {
+  markNotificationRead(documentId: $documentId) {
+    documentId
+    read
+    readAt
+  }
+}
+
+mutation AppMarkAllNotificationsRead {
+  markAllNotificationsRead
+}
+
+mutation AppRegisterPushToken($token: String!, $platform: String) {
+  registerPushToken(token: $token, platform: $platform)
+}

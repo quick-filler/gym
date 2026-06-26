@@ -1037,13 +1037,23 @@ export type Mutation = {
   deleteWorkoutPlan?: Maybe<WorkoutPlan>;
   /** Closes an open session: records duration, the per-exercise checklist and optional notes. */
   finishWorkoutSession?: Maybe<WorkoutSession>;
+  /** Marks every unread notification of the caller as read. Returns how many were updated. */
+  markAllNotificationsRead?: Maybe<Scalars['Int']['output']>;
+  /** Marks one of the caller’s notifications as read. */
+  markNotificationRead?: Maybe<Notification>;
   mintUploadUrl?: Maybe<PresignedUpload>;
   payChargeBoleto?: Maybe<BoletoCheckout>;
   payChargeCard?: Maybe<Payment>;
   payChargePix?: Maybe<PixCheckout>;
+  /** Registra (ou reatribui) um Expo push token ao usuário do caller. Idempotente por token. */
+  registerPushToken?: Maybe<Scalars['Boolean']['output']>;
+  /** Dispara os crons de lembrete (cobrança + aula) manualmente e retorna quantas notificações criou. Restrito a platform admin (liberado fora de produção p/ testes). */
+  runNotificationReminders?: Maybe<Scalars['Int']['output']>;
   /** Opens a training session against one of the caller’s active fichas. Requires an active enrollment. Seeds the per-exercise checklist from the plan. */
   startWorkoutSession?: Maybe<WorkoutSession>;
   submitContactForm?: Maybe<ContactFormResult>;
+  /** Remove um Expo push token (logout do aparelho). */
+  unregisterPushToken?: Maybe<Scalars['Boolean']['output']>;
   updateAcademy?: Maybe<Academy>;
   updateBodyAssessment?: Maybe<BodyAssessment>;
   updateClassBooking?: Maybe<ClassBooking>;
@@ -1267,6 +1277,11 @@ export type MutationFinishWorkoutSessionArgs = {
 };
 
 
+export type MutationMarkNotificationReadArgs = {
+  documentId: Scalars['ID']['input'];
+};
+
+
 export type MutationMintUploadUrlArgs = {
   contentType: Scalars['String']['input'];
   filename: Scalars['String']['input'];
@@ -1290,6 +1305,12 @@ export type MutationPayChargePixArgs = {
 };
 
 
+export type MutationRegisterPushTokenArgs = {
+  platform?: InputMaybe<Scalars['String']['input']>;
+  token: Scalars['String']['input'];
+};
+
+
 export type MutationStartWorkoutSessionArgs = {
   workoutPlanId: Scalars['ID']['input'];
 };
@@ -1297,6 +1318,11 @@ export type MutationStartWorkoutSessionArgs = {
 
 export type MutationSubmitContactFormArgs = {
   input: ContactFormInput;
+};
+
+
+export type MutationUnregisterPushTokenArgs = {
+  token: Scalars['String']['input'];
 };
 
 
@@ -1468,6 +1494,18 @@ export type NextCharge = {
   amount: Scalars['Float']['output'];
   date: Scalars['String']['output'];
   status: Scalars['String']['output'];
+};
+
+export type Notification = {
+  __typename?: 'Notification';
+  body?: Maybe<Scalars['String']['output']>;
+  createdAt?: Maybe<Scalars['String']['output']>;
+  data?: Maybe<Scalars['JSON']['output']>;
+  documentId: Scalars['ID']['output'];
+  kind: Scalars['String']['output'];
+  read: Scalars['Boolean']['output'];
+  readAt?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
 };
 
 export type Pagination = {
@@ -1746,6 +1784,8 @@ export type Query = {
   /** The caller's most recent avaliação física, or null. */
   myLatestAssessment?: Maybe<BodyAssessment>;
   myNextPayment?: Maybe<Payment>;
+  /** The caller's notifications, newest first. `unreadOnly` filters to unread. */
+  myNotifications?: Maybe<Array<Maybe<Notification>>>;
   myPayments?: Maybe<Array<Maybe<Payment>>>;
   /** The caller's pool (Piscina) fichas — same shape as myWorkouts, filtered to category 'pool'. Gated by the pool module. */
   myPoolActivities?: Maybe<MyWorkouts>;
@@ -1755,7 +1795,7 @@ export type Query = {
   myScheduleWeek?: Maybe<Array<Maybe<ScheduleOccurrence>>>;
   /** Returns the active subscription for the caller's academy. Null if no subscription exists yet (shouldn't happen post-backfill). */
   mySubscription?: Maybe<AcademySubscription>;
-  /** Count of the caller's unread in-app notifications. Stub returning 0 until Fase 7 ships the Notification content type. */
+  /** Count of the caller's unread in-app notifications. */
   myUnreadNotificationCount?: Maybe<Scalars['Int']['output']>;
   /** The caller's upcoming confirmed bookings, soonest first. Powers the app dashboard + schedule preview. */
   myUpcomingBookings?: Maybe<Array<Maybe<ClassBooking>>>;
@@ -1907,6 +1947,13 @@ export type QueryLeadsArgs = {
 export type QueryMyBodyAssessmentsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMyNotificationsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  unreadOnly?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -2340,6 +2387,33 @@ export type UpdateMyDependentMutationVariables = Exact<{
 
 export type UpdateMyDependentMutation = { __typename?: 'Mutation', updateMyDependent?: { __typename?: 'Dependent', documentId: string, name: string } | null };
 
+export type AppNotificationsQueryVariables = Exact<{
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type AppNotificationsQuery = { __typename?: 'Query', myUnreadNotificationCount?: number | null, myNotifications?: Array<{ __typename?: 'Notification', documentId: string, kind: string, title: string, body?: string | null, data?: unknown | null, read: boolean, readAt?: string | null, createdAt?: string | null } | null> | null };
+
+export type AppMarkNotificationReadMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+}>;
+
+
+export type AppMarkNotificationReadMutation = { __typename?: 'Mutation', markNotificationRead?: { __typename?: 'Notification', documentId: string, read: boolean, readAt?: string | null } | null };
+
+export type AppMarkAllNotificationsReadMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AppMarkAllNotificationsReadMutation = { __typename?: 'Mutation', markAllNotificationsRead?: number | null };
+
+export type AppRegisterPushTokenMutationVariables = Exact<{
+  token: Scalars['String']['input'];
+  platform?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type AppRegisterPushTokenMutation = { __typename?: 'Mutation', registerPushToken?: boolean | null };
+
 export type MyPaymentsQueryVariables = Exact<{
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
@@ -2536,6 +2610,10 @@ export const DependentScheduleWeekDocument = {"kind":"Document","definitions":[{
 export const BookClassForDependentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"BookClassForDependent"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"dependentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"scheduleDocumentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"date"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"bookClassForDependent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"dependentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"dependentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"scheduleDocumentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"scheduleDocumentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"date"},"value":{"kind":"Variable","name":{"kind":"Name","value":"date"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"date"}}]}}]}}]} as unknown as DocumentNode<BookClassForDependentMutation, BookClassForDependentMutationVariables>;
 export const AddMyDependentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AddMyDependent"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"MyDependentInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"addMyDependent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<AddMyDependentMutation, AddMyDependentMutationVariables>;
 export const UpdateMyDependentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateMyDependent"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"MyDependentUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateMyDependent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<UpdateMyDependentMutation, UpdateMyDependentMutationVariables>;
+export const AppNotificationsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AppNotifications"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myNotifications"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"body"}},{"kind":"Field","name":{"kind":"Name","value":"data"}},{"kind":"Field","name":{"kind":"Name","value":"read"}},{"kind":"Field","name":{"kind":"Name","value":"readAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"myUnreadNotificationCount"}}]}}]} as unknown as DocumentNode<AppNotificationsQuery, AppNotificationsQueryVariables>;
+export const AppMarkNotificationReadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AppMarkNotificationRead"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"markNotificationRead"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"read"}},{"kind":"Field","name":{"kind":"Name","value":"readAt"}}]}}]}}]} as unknown as DocumentNode<AppMarkNotificationReadMutation, AppMarkNotificationReadMutationVariables>;
+export const AppMarkAllNotificationsReadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AppMarkAllNotificationsRead"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"markAllNotificationsRead"}}]}}]} as unknown as DocumentNode<AppMarkAllNotificationsReadMutation, AppMarkAllNotificationsReadMutationVariables>;
+export const AppRegisterPushTokenDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AppRegisterPushToken"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"token"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"platform"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"registerPushToken"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"token"},"value":{"kind":"Variable","name":{"kind":"Name","value":"token"}}},{"kind":"Argument","name":{"kind":"Name","value":"platform"},"value":{"kind":"Variable","name":{"kind":"Name","value":"platform"}}}]}]}}]} as unknown as DocumentNode<AppRegisterPushTokenMutation, AppRegisterPushTokenMutationVariables>;
 export const MyPaymentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyPayments"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"offset"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myPayments"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}},{"kind":"Argument","name":{"kind":"Name","value":"offset"},"value":{"kind":"Variable","name":{"kind":"Name","value":"offset"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"dueDate"}},{"kind":"Field","name":{"kind":"Name","value":"paidAt"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"method"}},{"kind":"Field","name":{"kind":"Name","value":"receiptUrl"}}]}}]}}]} as unknown as DocumentNode<MyPaymentsQuery, MyPaymentsQueryVariables>;
 export const MyNextPaymentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyNextPayment"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myNextPayment"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"dueDate"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"method"}}]}}]}}]} as unknown as DocumentNode<MyNextPaymentQuery, MyNextPaymentQueryVariables>;
 export const MyFinanceStatusDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyFinanceStatus"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"enrollments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"paymentMethod"}},{"kind":"Field","name":{"kind":"Name","value":"nextCharge"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]}}]}}]} as unknown as DocumentNode<MyFinanceStatusQuery, MyFinanceStatusQueryVariables>;

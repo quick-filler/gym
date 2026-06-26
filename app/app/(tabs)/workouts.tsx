@@ -21,7 +21,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowRight, Clock, Dumbbell, Play } from 'lucide-react-native';
+import { ArrowRight, Dumbbell, Play } from 'lucide-react-native';
+
+import { NotificationBell } from '../../components/NotificationBell';
 
 import { useDashboard } from '../../hooks/useDashboard';
 import { useModuleGuard } from '../../hooks/useModuleGuard';
@@ -64,9 +66,7 @@ export default function WorkoutsScreen() {
               </View>
               <Text style={styles.academyName}>{academyName}</Text>
             </View>
-            <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7} accessibilityLabel="Histórico">
-              <Clock size={18} color="#fff" strokeWidth={2.2} />
-            </TouchableOpacity>
+            <NotificationBell />
           </View>
           <Text style={styles.eyebrow}>TREINOS</Text>
           <Text style={styles.title}>Minhas fichas</Text>
@@ -258,14 +258,6 @@ const styles = StyleSheet.create({
   },
   logoText: { color: '#fff', fontWeight: '700', fontSize: 15, letterSpacing: -0.5 },
   academyName: { color: '#fff', fontWeight: '700', fontSize: 16, letterSpacing: -0.3 },
-  iconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   eyebrow: {
     color: 'rgba(255,255,255,0.78)',
     fontSize: 11,

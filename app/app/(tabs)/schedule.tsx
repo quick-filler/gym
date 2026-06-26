@@ -8,10 +8,9 @@
  */
 
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Filter } from 'lucide-react-native';
-
+import { StyleSheet, Text, View } from 'react-native';
 import { ScheduleWeekView } from '../../components/ScheduleWeekView';
+import { NotificationBell } from '../../components/NotificationBell';
 import { useDashboard } from '../../hooks/useDashboard';
 import { useModuleGuard } from '../../hooks/useModuleGuard';
 import { useScheduleWeek } from '../../hooks/useScheduleWeek';
@@ -41,9 +40,7 @@ export default function ScheduleScreen() {
               </View>
               <Text style={styles.academyName}>{academyName}</Text>
             </View>
-            <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7} accessibilityLabel="Filtros">
-              <Filter size={18} color="#fff" strokeWidth={2.2} />
-            </TouchableOpacity>
+            <NotificationBell />
           </View>
           <Text style={styles.eyebrow}>AGENDA</Text>
           <Text style={styles.title}>Suas aulas</Text>
@@ -73,14 +70,6 @@ const styles = StyleSheet.create({
   },
   logoText: { color: '#fff', fontWeight: '700', fontSize: 15, letterSpacing: -0.5 },
   academyName: { color: '#fff', fontWeight: '700', fontSize: 16, letterSpacing: -0.3 },
-  iconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   eyebrow: {
     color: 'rgba(255,255,255,0.78)',
     fontSize: 11,

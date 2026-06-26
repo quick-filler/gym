@@ -42,6 +42,10 @@
     },
     "checkedInAt": {
       "type": "datetime"
+    },
+    "reminderSentAt": {
+      "type": "datetime",
+      "private": true
     }
   }
 }

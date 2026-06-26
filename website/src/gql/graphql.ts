@@ -1037,10 +1037,16 @@ export type Mutation = {
   deleteWorkoutPlan?: Maybe<WorkoutPlan>;
   /** Closes an open session: records duration, the per-exercise checklist and optional notes. */
   finishWorkoutSession?: Maybe<WorkoutSession>;
+  /** Marks every unread notification of the caller as read. Returns how many were updated. */
+  markAllNotificationsRead?: Maybe<Scalars['Int']['output']>;
+  /** Marks one of the caller’s notifications as read. */
+  markNotificationRead?: Maybe<Notification>;
   mintUploadUrl?: Maybe<PresignedUpload>;
   payChargeBoleto?: Maybe<BoletoCheckout>;
   payChargeCard?: Maybe<Payment>;
   payChargePix?: Maybe<PixCheckout>;
+  /** Dispara os crons de lembrete (cobrança + aula) manualmente e retorna quantas notificações criou. Restrito a platform admin (liberado fora de produção p/ testes). */
+  runNotificationReminders?: Maybe<Scalars['Int']['output']>;
   /** Opens a training session against one of the caller’s active fichas. Requires an active enrollment. Seeds the per-exercise checklist from the plan. */
   startWorkoutSession?: Maybe<WorkoutSession>;
   submitContactForm?: Maybe<ContactFormResult>;
@@ -1267,6 +1273,11 @@ export type MutationFinishWorkoutSessionArgs = {
 };
 
 
+export type MutationMarkNotificationReadArgs = {
+  documentId: Scalars['ID']['input'];
+};
+
+
 export type MutationMintUploadUrlArgs = {
   contentType: Scalars['String']['input'];
   filename: Scalars['String']['input'];
@@ -1468,6 +1479,18 @@ export type NextCharge = {
   amount: Scalars['Float']['output'];
   date: Scalars['String']['output'];
   status: Scalars['String']['output'];
+};
+
+export type Notification = {
+  __typename?: 'Notification';
+  body?: Maybe<Scalars['String']['output']>;
+  createdAt?: Maybe<Scalars['String']['output']>;
+  data?: Maybe<Scalars['JSON']['output']>;
+  documentId: Scalars['ID']['output'];
+  kind: Scalars['String']['output'];
+  read: Scalars['Boolean']['output'];
+  readAt?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
 };
 
 export type Pagination = {
@@ -1746,6 +1769,8 @@ export type Query = {
   /** The caller's most recent avaliação física, or null. */
   myLatestAssessment?: Maybe<BodyAssessment>;
   myNextPayment?: Maybe<Payment>;
+  /** The caller's notifications, newest first. `unreadOnly` filters to unread. */
+  myNotifications?: Maybe<Array<Maybe<Notification>>>;
   myPayments?: Maybe<Array<Maybe<Payment>>>;
   /** The caller's pool (Piscina) fichas — same shape as myWorkouts, filtered to category 'pool'. Gated by the pool module. */
   myPoolActivities?: Maybe<MyWorkouts>;
@@ -1755,7 +1780,7 @@ export type Query = {
   myScheduleWeek?: Maybe<Array<Maybe<ScheduleOccurrence>>>;
   /** Returns the active subscription for the caller's academy. Null if no subscription exists yet (shouldn't happen post-backfill). */
   mySubscription?: Maybe<AcademySubscription>;
-  /** Count of the caller's unread in-app notifications. Stub returning 0 until Fase 7 ships the Notification content type. */
+  /** Count of the caller's unread in-app notifications. */
   myUnreadNotificationCount?: Maybe<Scalars['Int']['output']>;
   /** The caller's upcoming confirmed bookings, soonest first. Powers the app dashboard + schedule preview. */
   myUpcomingBookings?: Maybe<Array<Maybe<ClassBooking>>>;
@@ -1907,6 +1932,13 @@ export type QueryLeadsArgs = {
 export type QueryMyBodyAssessmentsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMyNotificationsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  unreadOnly?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -2800,6 +2832,25 @@ export type PoolInspectionsQueryVariables = Exact<{
 
 export type PoolInspectionsQuery = { __typename?: 'Query', poolInspections?: Array<{ __typename?: 'PoolInspection', documentId: string, date: string, shift: string, scheduledTime?: string | null, chlorine?: number | null, ph?: number | null, temperature?: number | null, peopleCount?: number | null, peopleCountSource?: string | null, notes?: string | null, status: string, createdAt?: string | null } | null> | null };
 
+export type AdminNotificationsQueryVariables = Exact<{
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type AdminNotificationsQuery = { __typename?: 'Query', myUnreadNotificationCount?: number | null, myNotifications?: Array<{ __typename?: 'Notification', documentId: string, kind: string, title: string, body?: string | null, data?: unknown | null, read: boolean, createdAt?: string | null } | null> | null };
+
+export type AdminMarkNotificationReadMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+}>;
+
+
+export type AdminMarkNotificationReadMutation = { __typename?: 'Mutation', markNotificationRead?: { __typename?: 'Notification', documentId: string, read: boolean } | null };
+
+export type AdminMarkAllNotificationsReadMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AdminMarkAllNotificationsReadMutation = { __typename?: 'Mutation', markAllNotificationsRead?: number | null };
+
 export type MintUploadUrlMutationVariables = Exact<{
   filename: Scalars['String']['input'];
   contentType: Scalars['String']['input'];
@@ -2893,5 +2944,8 @@ export const AdminPlansDocument = {"kind":"Document","definitions":[{"kind":"Ope
 export const MySubscriptionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MySubscription"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mySubscription"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"recurrency"}},{"kind":"Field","name":{"kind":"Name","value":"trialEndsAt"}},{"kind":"Field","name":{"kind":"Name","value":"trialDaysLeft"}},{"kind":"Field","name":{"kind":"Name","value":"currentPeriodEnd"}},{"kind":"Field","name":{"kind":"Name","value":"platformPlan"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<MySubscriptionQuery, MySubscriptionQueryVariables>;
 export const MyPoolSettingsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyPoolSettings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myPoolSettings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"phMin"}},{"kind":"Field","name":{"kind":"Name","value":"phMax"}},{"kind":"Field","name":{"kind":"Name","value":"chlorineMin"}},{"kind":"Field","name":{"kind":"Name","value":"chlorineMax"}},{"kind":"Field","name":{"kind":"Name","value":"temperatureMin"}},{"kind":"Field","name":{"kind":"Name","value":"temperatureMax"}},{"kind":"Field","name":{"kind":"Name","value":"alertTolerance"}},{"kind":"Field","name":{"kind":"Name","value":"inspectionTimes"}}]}}]}}]} as unknown as DocumentNode<MyPoolSettingsQuery, MyPoolSettingsQueryVariables>;
 export const PoolInspectionsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PoolInspections"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"date"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"poolInspections"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"date"},"value":{"kind":"Variable","name":{"kind":"Name","value":"date"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"shift"}},{"kind":"Field","name":{"kind":"Name","value":"scheduledTime"}},{"kind":"Field","name":{"kind":"Name","value":"chlorine"}},{"kind":"Field","name":{"kind":"Name","value":"ph"}},{"kind":"Field","name":{"kind":"Name","value":"temperature"}},{"kind":"Field","name":{"kind":"Name","value":"peopleCount"}},{"kind":"Field","name":{"kind":"Name","value":"peopleCountSource"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}}]}}]} as unknown as DocumentNode<PoolInspectionsQuery, PoolInspectionsQueryVariables>;
+export const AdminNotificationsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminNotifications"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myNotifications"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"body"}},{"kind":"Field","name":{"kind":"Name","value":"data"}},{"kind":"Field","name":{"kind":"Name","value":"read"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"myUnreadNotificationCount"}}]}}]} as unknown as DocumentNode<AdminNotificationsQuery, AdminNotificationsQueryVariables>;
+export const AdminMarkNotificationReadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminMarkNotificationRead"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"markNotificationRead"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"read"}}]}}]}}]} as unknown as DocumentNode<AdminMarkNotificationReadMutation, AdminMarkNotificationReadMutationVariables>;
+export const AdminMarkAllNotificationsReadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminMarkAllNotificationsRead"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"markAllNotificationsRead"}}]}}]} as unknown as DocumentNode<AdminMarkAllNotificationsReadMutation, AdminMarkAllNotificationsReadMutationVariables>;
 export const MintUploadUrlDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"MintUploadUrl"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"filename"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"contentType"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"size"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mintUploadUrl"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filename"},"value":{"kind":"Variable","name":{"kind":"Name","value":"filename"}}},{"kind":"Argument","name":{"kind":"Name","value":"contentType"},"value":{"kind":"Variable","name":{"kind":"Name","value":"contentType"}}},{"kind":"Argument","name":{"kind":"Name","value":"size"},"value":{"kind":"Variable","name":{"kind":"Name","value":"size"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"uploadUrl"}},{"kind":"Field","name":{"kind":"Name","value":"publicUrl"}},{"kind":"Field","name":{"kind":"Name","value":"key"}}]}}]}}]} as unknown as DocumentNode<MintUploadUrlMutation, MintUploadUrlMutationVariables>;
 export const ConfirmUploadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ConfirmUpload"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"url"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"name"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"confirmUpload"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"url"},"value":{"kind":"Variable","name":{"kind":"Name","value":"url"}}},{"kind":"Argument","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"name"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"mime"}}]}}]}}]} as unknown as DocumentNode<ConfirmUploadMutation, ConfirmUploadMutationVariables>;

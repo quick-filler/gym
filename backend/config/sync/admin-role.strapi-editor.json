@@ -907,7 +907,6 @@
       "properties": {
         "fields": [
           "name",
-          "student",
           "dependent",
           "instructor",
           "exercises",
@@ -945,7 +944,6 @@
       "properties": {
         "fields": [
           "name",
-          "student",
           "dependent",
           "instructor",
           "exercises",
@@ -965,7 +963,6 @@
       "properties": {
         "fields": [
           "name",
-          "student",
           "dependent",
           "instructor",
           "exercises",

@@ -20,6 +20,7 @@ import { useMemo } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { graphql } from "@/gql";
 import { USE_MOCKS } from "./config";
+import { timeAgo } from "./utils";
 import {
   MOCK_ACADEMY,
   MOCK_DAILY_ATTENDANCE,
@@ -1095,5 +1096,131 @@ export function usePoolInspections(
     ) as PoolInspection[],
     loading: false,
     error: null,
+  };
+}
+
+/* ------------------------------------------------------------------
+ * Notificações (Fase 7d) — sino + inbox do admin web.
+ * Mesmas operações do app (recipient = usuário logado), com polling.
+ * ------------------------------------------------------------------ */
+const ADMIN_NOTIFICATIONS = graphql(`
+  query AdminNotifications($limit: Int) {
+    myNotifications(limit: $limit) {
+      documentId
+      kind
+      title
+      body
+      data
+      read
+      createdAt
+    }
+    myUnreadNotificationCount
+  }
+`);
+
+const ADMIN_MARK_NOTIFICATION_READ = graphql(`
+  mutation AdminMarkNotificationRead($documentId: ID!) {
+    markNotificationRead(documentId: $documentId) {
+      documentId
+      read
+    }
+  }
+`);
+
+const ADMIN_MARK_ALL_NOTIFICATIONS_READ = graphql(`
+  mutation AdminMarkAllNotificationsRead {
+    markAllNotificationsRead
+  }
+`);
+
+export interface AdminNotificationItem {
+  id: string;
+  kind: string;
+  title: string;
+  body: string;
+  timeLabel: string;
+  read: boolean;
+  route?: string | null;
+}
+
+export interface AdminNotificationsResult {
+  items: AdminNotificationItem[];
+  unreadCount: number;
+  loading: boolean;
+  refetch: () => void;
+  markRead: (id: string) => Promise<void>;
+  markAllRead: () => Promise<void>;
+}
+
+const MOCK_ADMIN_NOTIFICATIONS: AdminNotificationItem[] = [
+  {
+    id: "m1",
+    kind: "admin_booking",
+    title: "Nova reserva",
+    body: "Ana Costa · Musculação A · 29/06",
+    timeLabel: "há 10 min",
+    read: false,
+    route: "/admin/schedule",
+  },
+  {
+    id: "m2",
+    kind: "admin_payment",
+    title: "Pagamento recebido",
+    body: "João Silva · R$ 200,00",
+    timeLabel: "há 2 h",
+    read: true,
+    route: "/admin/finance",
+  },
+];
+
+export function useNotifications(): AdminNotificationsResult {
+  const q = useQuery(ADMIN_NOTIFICATIONS, {
+    variables: { limit: 30 },
+    skip: USE_MOCKS,
+    pollInterval: USE_MOCKS ? undefined : 20000, // near-real-time
+    fetchPolicy: "cache-and-network",
+  });
+  const [markReadMut] = useMutation(ADMIN_MARK_NOTIFICATION_READ);
+  const [markAllMut] = useMutation(ADMIN_MARK_ALL_NOTIFICATIONS_READ);
+
+  if (USE_MOCKS) {
+    return {
+      items: MOCK_ADMIN_NOTIFICATIONS,
+      unreadCount: MOCK_ADMIN_NOTIFICATIONS.filter((n) => !n.read).length,
+      loading: false,
+      refetch: () => {},
+      markRead: async () => {},
+      markAllRead: async () => {},
+    };
+  }
+
+  const data = q.data;
+  const items: AdminNotificationItem[] = (data?.myNotifications ?? [])
+    .filter((n): n is NonNullable<typeof n> => !!n)
+    .map((n) => ({
+      id: n.documentId,
+      kind: n.kind,
+      title: n.title,
+      body: n.body ?? "",
+      timeLabel: timeAgo(n.createdAt),
+      read: !!n.read,
+      route: (n.data as { route?: string } | null)?.route ?? null,
+    }));
+
+  return {
+    items,
+    unreadCount: data?.myUnreadNotificationCount ?? 0,
+    loading: q.loading && !data,
+    refetch: () => {
+      q.refetch().catch(() => {});
+    },
+    markRead: async (id: string) => {
+      await markReadMut({ variables: { documentId: id } });
+      await q.refetch();
+    },
+    markAllRead: async () => {
+      await markAllMut();
+      await q.refetch();
+    },
   };
 }

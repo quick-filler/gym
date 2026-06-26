@@ -345,7 +345,7 @@
       "locale": null
     },
     {
-      "documentId": "k183sv93mgy82a2az8nflu11",
+      "documentId": "domfkfpbuxv7vji6m8i67xls",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::class-booking.class-booking",
@@ -356,7 +356,8 @@
           "classSchedule",
           "date",
           "status",
-          "checkedInAt"
+          "checkedInAt",
+          "reminderSentAt"
         ]
       },
       "conditions": [],
@@ -381,7 +382,7 @@
       "locale": null
     },
     {
-      "documentId": "m0lye0xx39n3sp026rndl32s",
+      "documentId": "ipqhys66fu2wd25upmyso1m6",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::class-booking.class-booking",
@@ -392,14 +393,15 @@
           "classSchedule",
           "date",
           "status",
-          "checkedInAt"
+          "checkedInAt",
+          "reminderSentAt"
         ]
       },
       "conditions": [],
       "locale": null
     },
     {
-      "documentId": "ebmtjgda2pu7gddt8gbvjwpr",
+      "documentId": "j2kzzo65cjo13nt33niujz5s",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::class-booking.class-booking",
@@ -410,7 +412,8 @@
           "classSchedule",
           "date",
           "status",
-          "checkedInAt"
+          "checkedInAt",
+          "reminderSentAt"
         ]
       },
       "conditions": [],
@@ -873,6 +876,84 @@
           "status",
           "planInterest",
           "notes"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "c59wzmruu60b7a75ppwlc3we",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::notification.notification",
+      "properties": {
+        "fields": [
+          "recipient",
+          "academy",
+          "kind",
+          "title",
+          "body",
+          "data",
+          "read",
+          "readAt"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "ky0ik2bx4p4hos4ooxevkmo7",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::notification.notification",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "h8u0rcvq39j8wygj49axnqtt",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::notification.notification",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "q3ywzhv9ty39h2eg0exiegz1",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::notification.notification",
+      "properties": {
+        "fields": [
+          "recipient",
+          "academy",
+          "kind",
+          "title",
+          "body",
+          "data",
+          "read",
+          "readAt"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "hpragq3fofetcoo67u7ej6ph",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::notification.notification",
+      "properties": {
+        "fields": [
+          "recipient",
+          "academy",
+          "kind",
+          "title",
+          "body",
+          "data",
+          "read",
+          "readAt"
         ]
       },
       "conditions": [],
@@ -1368,6 +1449,72 @@
       "locale": null
     },
     {
+      "documentId": "knukkz8mn7xdfv5otb7jhm5n",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::push-device.push-device",
+      "properties": {
+        "fields": [
+          "owner",
+          "token",
+          "platform",
+          "lastSeenAt"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "n8ld1lzk803x0mmarq36t3pb",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::push-device.push-device",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "runaprjr14j7wi9dqu4uz415",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::push-device.push-device",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "fxj66hdlljyveoio0ehyjzpx",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::push-device.push-device",
+      "properties": {
+        "fields": [
+          "owner",
+          "token",
+          "platform",
+          "lastSeenAt"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "h7rrsgofsutvowfreeqwu1xm",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::push-device.push-device",
+      "properties": {
+        "fields": [
+          "owner",
+          "token",
+          "platform",
+          "lastSeenAt"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
       "documentId": "dyv6qe8a60xootrrgqb82gxo",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
@@ -1482,16 +1629,17 @@
       "locale": null
     },
     {
-      "documentId": "rgps34tn2cm0mbyuppprn1bp",
+      "documentId": "ldqv77e3p0rgar16lwmd1e0a",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::workout-plan.workout-plan",
       "properties": {
         "fields": [
           "name",
-          "student",
+          "students",
           "dependent",
           "instructor",
+          "category",
           "exercises",
           "validFrom",
           "validTo",
@@ -1520,16 +1668,17 @@
       "locale": null
     },
     {
-      "documentId": "iuwr8s50o224ugj1woxvzhcg",
+      "documentId": "peyb2gnu5s170o7r1bb4ysha",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::workout-plan.workout-plan",
       "properties": {
         "fields": [
           "name",
-          "student",
+          "students",
           "dependent",
           "instructor",
+          "category",
           "exercises",
           "validFrom",
           "validTo",
@@ -1540,16 +1689,17 @@
       "locale": null
     },
     {
-      "documentId": "znxc7ub8k5bqz913wl0wn5t9",
+      "documentId": "hn4dhra6zmgimz1m507hy79t",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::workout-plan.workout-plan",
       "properties": {
         "fields": [
           "name",
-          "student",
+          "students",
           "dependent",
           "instructor",
+          "category",
           "exercises",
           "validFrom",
           "validTo",

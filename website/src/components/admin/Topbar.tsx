@@ -3,6 +3,7 @@
 import { Icon } from "@/components/ui/Icon";
 import { logoutAndRedirect } from "@/lib/auth";
 import { useMe } from "@/lib/hooks";
+import { NotificationBell } from "@/components/admin/NotificationBell";
 
 interface TopbarProps {
   title: string;
@@ -42,13 +43,7 @@ export function Topbar({ title, searchValue, onSearchChange, searchPlaceholder }
         </div>
       )}
       <div className="flex-1" />
-      <button
-        className="relative w-10 h-10 rounded-full bg-paper-2 hover:bg-paper-3 text-ink-700 flex items-center justify-center transition-colors"
-        aria-label="Notificações"
-      >
-        <Icon name="bell" size="lg" />
-        <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-flame" />
-      </button>
+      <NotificationBell />
       {me?.photoUrl ? (
         <div className="w-10 h-10 rounded-full overflow-hidden bg-paper-2 shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}

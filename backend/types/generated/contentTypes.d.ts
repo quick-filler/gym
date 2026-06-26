@@ -656,6 +656,7 @@ export interface ApiClassBookingClassBooking
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
+    reminderSentAt: Schema.Attribute.DateTime & Schema.Attribute.Private;
     status: Schema.Attribute.Enumeration<
       ['confirmed', 'waitlist', 'cancelled', 'attended', 'missed']
     > &
@@ -932,6 +933,59 @@ export interface ApiLeadLead extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiNotificationNotification
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'notifications';
+  info: {
+    description: 'In-app notification for a user (student or academy admin).';
+    displayName: 'Notification';
+    pluralName: 'notifications';
+    singularName: 'notification';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academy: Schema.Attribute.Relation<'manyToOne', 'api::academy.academy'>;
+    body: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    data: Schema.Attribute.JSON;
+    kind: Schema.Attribute.Enumeration<
+      [
+        'payment_paid',
+        'payment_due',
+        'booking_confirmed',
+        'class_reminder',
+        'workout_new',
+        'admin_booking',
+        'admin_payment',
+        'generic',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'generic'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::notification.notification'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    read: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    readAt: Schema.Attribute.DateTime;
+    recipient: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiPaymentPayment extends Struct.CollectionTypeSchema {
   collectionName: 'payments';
   info: {
@@ -1176,6 +1230,43 @@ export interface ApiPoolSettingPoolSetting extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     temperatureMax: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<31>;
     temperatureMin: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<28>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPushDevicePushDevice extends Struct.CollectionTypeSchema {
+  collectionName: 'push_devices';
+  info: {
+    description: "An Expo push token registered for a user's device.";
+    displayName: 'Push Device';
+    pluralName: 'push-devices';
+    singularName: 'push-device';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    lastSeenAt: Schema.Attribute.DateTime;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::push-device.push-device'
+    > &
+      Schema.Attribute.Private;
+    owner: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    platform: Schema.Attribute.Enumeration<['ios', 'android', 'web']>;
+    publishedAt: Schema.Attribute.DateTime;
+    token: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1859,12 +1950,14 @@ declare module '@strapi/strapi' {
       'api::enrollment.enrollment': ApiEnrollmentEnrollment;
       'api::expense.expense': ApiExpenseExpense;
       'api::lead.lead': ApiLeadLead;
+      'api::notification.notification': ApiNotificationNotification;
       'api::payment.payment': ApiPaymentPayment;
       'api::plan.plan': ApiPlanPlan;
       'api::platform-admin.platform-admin': ApiPlatformAdminPlatformAdmin;
       'api::platform-plan.platform-plan': ApiPlatformPlanPlatformPlan;
       'api::pool-inspection.pool-inspection': ApiPoolInspectionPoolInspection;
       'api::pool-setting.pool-setting': ApiPoolSettingPoolSetting;
+      'api::push-device.push-device': ApiPushDevicePushDevice;
       'api::student.student': ApiStudentStudent;
       'api::workout-plan.workout-plan': ApiWorkoutPlanWorkoutPlan;
       'api::workout-session.workout-session': ApiWorkoutSessionWorkoutSession;

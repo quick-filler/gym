@@ -1,0 +1,261 @@
+{
+  "key": "plugin_content_manager_configuration_content_types::api::notification.notification",
+  "value": {
+    "settings": {
+      "bulkable": true,
+      "filterable": true,
+      "searchable": true,
+      "pageSize": 10,
+      "relationOpenMode": "modal",
+      "mainField": "title",
+      "defaultSortBy": "title",
+      "defaultSortOrder": "ASC"
+    },
+    "metadatas": {
+      "id": {
+        "edit": {},
+        "list": {
+          "label": "id",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "recipient": {
+        "edit": {
+          "label": "recipient",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "username"
+        },
+        "list": {
+          "label": "recipient",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "academy": {
+        "edit": {
+          "label": "academy",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "academy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "kind": {
+        "edit": {
+          "label": "kind",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "kind",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "title": {
+        "edit": {
+          "label": "title",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "title",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "body": {
+        "edit": {
+          "label": "body",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "body",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "data": {
+        "edit": {
+          "label": "data",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "data",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "read": {
+        "edit": {
+          "label": "read",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "read",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "readAt": {
+        "edit": {
+          "label": "readAt",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "readAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdAt": {
+        "edit": {
+          "label": "createdAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "createdAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedAt": {
+        "edit": {
+          "label": "updatedAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "updatedAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdBy": {
+        "edit": {
+          "label": "createdBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "createdBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedBy": {
+        "edit": {
+          "label": "updatedBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "updatedBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "documentId": {
+        "edit": {},
+        "list": {
+          "label": "documentId",
+          "searchable": true,
+          "sortable": true
+        }
+      }
+    },
+    "layouts": {
+      "list": [
+        "id",
+        "recipient",
+        "academy",
+        "kind"
+      ],
+      "edit": [
+        [
+          {
+            "name": "recipient",
+            "size": 6
+          },
+          {
+            "name": "academy",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "kind",
+            "size": 6
+          },
+          {
+            "name": "title",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "body",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "data",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "read",
+            "size": 4
+          },
+          {
+            "name": "readAt",
+            "size": 6
+          }
+        ]
+      ]
+    },
+    "uid": "api::notification.notification"
+  },
+  "type": "object",
+  "environment": null,
+  "tag": null
+}

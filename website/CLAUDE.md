@@ -207,6 +207,12 @@ FAQPage / AboutPage / ContactPage) via `src/lib/seo.tsx → JsonLd`.
 Admin routes are marked `robots: { index: false, follow: false }` via
 `src/app/admin/layout.tsx`.
 
+The admin **Topbar** has a real **notification bell** (`NotificationBell` +
+`useNotifications`, polling 20s): badge + dropdown inbox + mark-read +
+deep-link. Admin notifications (nova reserva, pagamento recebido) are created
+server-side via `notifyAcademyAdmins`. Same backend as the app inbox — see
+design-decisions §2.16.
+
 ## SEO
 
 The marketing pages target organic search for Brazilian gym owners — the

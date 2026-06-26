@@ -25,6 +25,7 @@ import { ArrowRight, Play, Waves } from 'lucide-react-native';
 
 import { useDashboard } from '../../hooks/useDashboard';
 import { usePoolActivities } from '../../hooks/usePoolActivities';
+import { NotificationBell } from '../../components/NotificationBell';
 import { theme, withAlpha } from '../../lib/theme';
 import type { ActiveWorkoutPlan, UpcomingWorkoutPlan } from '../../lib/types';
 
@@ -49,11 +50,14 @@ export default function PoolScreen() {
         }
       >
         <View style={[styles.header, { backgroundColor: accent }]}>
-          <View style={styles.brand}>
-            <View style={styles.logoBox}>
-              <Text style={styles.logoText}>{initials}</Text>
+          <View style={styles.headerTop}>
+            <View style={styles.brand}>
+              <View style={styles.logoBox}>
+                <Text style={styles.logoText}>{initials}</Text>
+              </View>
+              <Text style={styles.academyName}>{academyName}</Text>
             </View>
-            <Text style={styles.academyName}>{academyName}</Text>
+            <NotificationBell />
           </View>
           <Text style={styles.eyebrow}>PISCINA</Text>
           <Text style={styles.title}>Atividades de piscina</Text>
@@ -183,7 +187,13 @@ const styles = StyleSheet.create({
   scroll: { paddingBottom: 32, flexGrow: 1, backgroundColor: theme.paper },
 
   header: { paddingTop: 16, paddingHorizontal: 20, paddingBottom: 28 },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   logoBox: {
     width: 44,
     height: 44,

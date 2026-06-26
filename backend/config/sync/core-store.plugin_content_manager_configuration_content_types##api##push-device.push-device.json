@@ -1,0 +1,182 @@
+{
+  "key": "plugin_content_manager_configuration_content_types::api::push-device.push-device",
+  "value": {
+    "settings": {
+      "bulkable": true,
+      "filterable": true,
+      "searchable": true,
+      "pageSize": 10,
+      "relationOpenMode": "modal",
+      "mainField": "token",
+      "defaultSortBy": "token",
+      "defaultSortOrder": "ASC"
+    },
+    "metadatas": {
+      "id": {
+        "edit": {},
+        "list": {
+          "label": "id",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "owner": {
+        "edit": {
+          "label": "owner",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "username"
+        },
+        "list": {
+          "label": "owner",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "token": {
+        "edit": {
+          "label": "token",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "token",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "platform": {
+        "edit": {
+          "label": "platform",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "platform",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "lastSeenAt": {
+        "edit": {
+          "label": "lastSeenAt",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "lastSeenAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdAt": {
+        "edit": {
+          "label": "createdAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "createdAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedAt": {
+        "edit": {
+          "label": "updatedAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "updatedAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdBy": {
+        "edit": {
+          "label": "createdBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "createdBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedBy": {
+        "edit": {
+          "label": "updatedBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "updatedBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "documentId": {
+        "edit": {},
+        "list": {
+          "label": "documentId",
+          "searchable": true,
+          "sortable": true
+        }
+      }
+    },
+    "layouts": {
+      "list": [
+        "id",
+        "owner",
+        "token",
+        "platform"
+      ],
+      "edit": [
+        [
+          {
+            "name": "owner",
+            "size": 6
+          },
+          {
+            "name": "token",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "platform",
+            "size": 6
+          },
+          {
+            "name": "lastSeenAt",
+            "size": 6
+          }
+        ]
+      ]
+    },
+    "uid": "api::push-device.push-device"
+  },
+  "type": "object",
+  "environment": null,
+  "tag": null
+}

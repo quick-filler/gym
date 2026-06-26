@@ -667,6 +667,48 @@ right below. We want the history, not a clean slate.
 
 ---
 
+### 2.16 Notificações in-app + tempo real (Fase 7)
+
+- **Decision** — sistema de notificação **in-app** servindo **app (aluno) e
+  web (admin)** pelo mesmo content type `Notification` (recipient = user,
+  academy, kind, title, body, data JSON, read/readAt). Resolvers caller-scoped
+  (`myNotifications`, `myUnreadNotificationCount`, `markNotificationRead`,
+  `markAllNotificationsRead`). Serviço `notify` (`createInApp` +
+  `notifyAcademyAdmins`) é chamado server-side por lifecycles/crons.
+- **Tempo real = polling**, não websocket/subscription. O GraphQL do Strapi v5
+  não tem subscription confiável; Apollo `pollInterval` (20s) no app e no web dá
+  "near-real-time" sem infra extra. Revisitar se precisar de push instantâneo.
+- **Gatilhos** (lifecycles, best-effort — nunca quebram a escrita):
+  - `Payment` afterUpdate (→paid): aluno "Pagamento confirmado" + admins
+    "Pagamento recebido".
+  - `ClassBooking` afterCreate: aluno/responsável "Reserva confirmada" + admins
+    "Nova reserva".
+  - `WorkoutPlan` afterCreate: roster → "Nova ficha/atividade" (por categoria).
+- **Crons** (`config/server.ts`, só agendam após restart):
+  - diário → "Cobrança vence em 3/1 dia" (via `nextCharge`, dia exato = 1 envio).
+  - 15min → "Aula em 1h". **Escalável**: query janelada no banco
+    (`classSchedule.startTime` na próxima ~hora) + flag `reminderSentAt`
+    (dedup sem N+1) — cada tick toca só as reservas entrando na janela.
+  - `runNotificationReminders` dispara ambos manual (platform admin; liberado
+    fora de produção p/ teste).
+- **Push-to-device (Fase 7e) — Expo Push.** Content type `PushDevice`
+  (owner/token/platform), `registerPushToken`/`unregisterPushToken` (upsert por
+  token). `notify.createInApp` faz fan-out via `notify.sendPush` → **Expo Push
+  Service** (relay p/ APNs/FCM), best-effort. No app, `usePushRegistration`
+  pede permissão, pega o ExpoPushToken e registra — **guardado** (não quebra no
+  Expo Go nem em simulador). Entrega real **só em dev/standalone build (EAS)**;
+  Expo (framework) é produção, Expo Go é só dev. Push opcional: o in-app
+  funciona sem ele.
+- **Consequences** — dois content types novos (`Notification`, `PushDevice`) →
+  **`config:export`** feito. `reminderSentAt` é campo interno (`private`, fora
+  do GraphQL) → sem regen por ele. Helpers puros (`chargeReminderKind`,
+  `startsWithinMinutes`, `brtClockPlus`, `buildExpoPushMessages`,
+  `timeAgo`/`timeAgoBR`) unit-testados nos 3 projetos.
+- **Revisit when** — push instantâneo (websocket/Expo Push) ou volume de
+  notificações exigir paginação/arquivamento.
+
+---
+
 ## 3. GraphQL API
 
 ### 3.1 GraphQL is the only data API; REST is reserved for auth + webhooks
