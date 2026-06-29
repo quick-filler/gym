@@ -145,6 +145,8 @@ describe('schema introspection', () => {
       // Fase 7 — notificações (app + web)
       'myNotifications',
       'myUnreadNotificationCount',
+      // Address autofill (CEP → ViaCEP proxy)
+      'cepLookup',
     ];
     for (const name of required) {
       expect(names.has(name), `missing Query.${name}`).toBe(true);

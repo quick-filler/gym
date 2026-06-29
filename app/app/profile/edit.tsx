@@ -25,17 +25,37 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { ArrowLeft, Camera } from 'lucide-react-native';
-import { useMutation } from '@apollo/client/react';
+import { useLazyQuery, useMutation } from '@apollo/client/react';
 
 import { useProfile } from '../../hooks/useProfile';
 import { useDashboard } from '../../hooks/useDashboard';
 import {
+  CepLookupDocument,
   ConfirmUploadDocument,
   MintUploadUrlDocument,
   MyProfileDocument,
   UpdateMyProfileDocument,
 } from '../../gql/graphql';
+import {
+  brDateToISO,
+  cepDigits,
+  fmtDateBR,
+  maskCEP,
+  maskDateBR,
+  maskPhoneBR,
+} from '../../lib/format';
 import { theme, withAlpha } from '../../lib/theme';
+import type { EditableProfile } from '../../lib/types';
+
+/** ISO/raw editable values → masked, display-ready form values. */
+function toFormView(e: EditableProfile): EditableProfile {
+  return {
+    ...e,
+    phone: maskPhoneBR(e.phone),
+    birthdate: fmtDateBR(e.birthdate),
+    address: { ...e.address, cep: maskCEP(e.address?.cep) },
+  };
+}
 
 const GENDERS: Array<{ value: string; label: string }> = [
   { value: 'female', label: 'Feminino' },
@@ -49,18 +69,19 @@ export default function EditProfileScreen() {
 
   const { editable, photoUrl, loading: loadingProfile } = useProfile();
 
-  const [form, setForm] = useState(editable);
+  const [form, setForm] = useState(() => toFormView(editable));
   const [photoPreview, setPhotoPreview] = useState<string | null>(photoUrl);
   const [photoId, setPhotoId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const numberRef = useRef<TextInput>(null);
 
   // Hydrate the form once, when the profile query first resolves (API mode).
   const hydrated = useRef(false);
   useEffect(() => {
     if (hydrated.current || loadingProfile) return;
     hydrated.current = true;
-    setForm(editable);
+    setForm(toFormView(editable));
     setPhotoPreview(photoUrl);
     // editable/photoUrl intentionally read once on first resolve.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,9 +92,38 @@ export default function EditProfileScreen() {
   });
   const [mintUrl] = useMutation<any>(MintUploadUrlDocument);
   const [confirmUpload] = useMutation<any>(ConfirmUploadDocument);
+  const [lookupCep, cepState] = useLazyQuery<any>(CepLookupDocument);
 
   const setAddr = (key: keyof typeof form.address, v: string) =>
     setForm((f) => ({ ...f, address: { ...f.address, [key]: v } }));
+
+  // CEP autofill: as soon as 8 digits are typed, resolve the address via the
+  // backend (ViaCEP proxy) and fill street/neighborhood/city/state, then jump
+  // to the number field. Best-effort — on miss the user fills it by hand.
+  const onCepChange = async (v: string) => {
+    setAddr('cep', maskCEP(v));
+    const digits = cepDigits(v);
+    if (digits.length !== 8) return;
+    try {
+      const res = await lookupCep({ variables: { cep: digits } });
+      const a = res?.data?.cepLookup;
+      if (!a) return;
+      setForm((f) => ({
+        ...f,
+        address: {
+          ...f.address,
+          cep: maskCEP(a.cep),
+          street: a.street || f.address.street,
+          neighborhood: a.neighborhood || f.address.neighborhood,
+          city: a.city || f.address.city,
+          state: a.state || f.address.state,
+        },
+      }));
+      numberRef.current?.focus();
+    } catch {
+      /* keep manual entry */
+    }
+  };
 
   const pickPhoto = async () => {
     setError(null);
@@ -121,10 +171,15 @@ export default function EditProfileScreen() {
 
   const onSave = async () => {
     setError(null);
+    const isoBirth = form.birthdate ? brDateToISO(form.birthdate) : '';
+    if (form.birthdate && !isoBirth) {
+      setError('Data de nascimento inválida. Use DD/MM/AAAA.');
+      return;
+    }
     try {
       const input: any = {
         phone: form.phone || null,
-        birthdate: form.birthdate || null,
+        birthdate: isoBirth || null,
         gender: form.gender || null,
         address: form.address,
       };
@@ -174,8 +229,8 @@ export default function EditProfileScreen() {
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
-          <Field label="TELEFONE" value={form.phone} onChange={(v: string) => setForm((f) => ({ ...f, phone: v }))} placeholder="(11) 90000-0000" keyboardType="phone-pad" />
-          <Field label="DATA DE NASCIMENTO" value={form.birthdate} onChange={(v: string) => setForm((f) => ({ ...f, birthdate: v }))} placeholder="AAAA-MM-DD" />
+          <Field label="TELEFONE" value={form.phone} onChange={(v: string) => setForm((f) => ({ ...f, phone: maskPhoneBR(v) }))} placeholder="(11) 90000-0000" keyboardType="phone-pad" maxLength={15} />
+          <Field label="DATA DE NASCIMENTO" value={form.birthdate} onChange={(v: string) => setForm((f) => ({ ...f, birthdate: maskDateBR(v) }))} placeholder="DD/MM/AAAA" keyboardType="number-pad" maxLength={10} />
 
           <Text style={styles.label}>GÊNERO</Text>
           <View style={styles.genderRow}>
@@ -195,13 +250,18 @@ export default function EditProfileScreen() {
           </View>
 
           <Text style={styles.section}>ENDEREÇO</Text>
-          <Field label="CEP" value={form.address.cep} onChange={(v: string) => setAddr('cep', v)} placeholder="00000-000" keyboardType="number-pad" />
+          <View style={{ position: 'relative' }}>
+            <Field label="CEP" value={form.address.cep} onChange={onCepChange} placeholder="00000-000" keyboardType="number-pad" maxLength={9} />
+            {cepState.loading ? (
+              <ActivityIndicator color={accent} size="small" style={styles.cepSpinner} />
+            ) : null}
+          </View>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <View style={{ flex: 3 }}>
               <Field label="RUA" value={form.address.street} onChange={(v: string) => setAddr('street', v)} placeholder="Rua / Av." />
             </View>
             <View style={{ flex: 1 }}>
-              <Field label="Nº" value={form.address.number} onChange={(v: string) => setAddr('number', v)} placeholder="123" />
+              <Field label="Nº" value={form.address.number} onChange={(v: string) => setAddr('number', v)} placeholder="123" keyboardType="number-pad" inputRef={numberRef} />
             </View>
           </View>
           <Field label="COMPLEMENTO" value={form.address.complement} onChange={(v: string) => setAddr('complement', v)} placeholder="Apto / bloco" />
@@ -229,11 +289,12 @@ export default function EditProfileScreen() {
   );
 }
 
-function Field({ label, value, onChange, ...rest }: any) {
+function Field({ label, value, onChange, inputRef, ...rest }: any) {
   return (
     <View style={{ marginBottom: 12 }}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
+        ref={inputRef}
         style={styles.input}
         value={value}
         onChangeText={onChange}
@@ -303,6 +364,7 @@ const styles = StyleSheet.create({
     color: theme.ink900,
     backgroundColor: '#fff',
   },
+  cepSpinner: { position: 'absolute', right: 14, top: 34 },
 
   genderRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   genderChip: {

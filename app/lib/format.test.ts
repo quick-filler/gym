@@ -6,8 +6,12 @@ import {
   brl,
   brlAmount,
   buildWeekDays,
+  cepDigits,
   fmtDateBR,
   hhmm,
+  maskCEP,
+  maskDateBR,
+  maskPhoneBR,
   mondayOfWeekISO,
   monthlyBRL,
   nextClassTimeLabel,
@@ -182,6 +186,67 @@ describe('brDateToISO', () => {
     expect(brDateToISO(null)).toBe('');
     expect(brDateToISO('notadate')).toBe('');
     expect(brDateToISO('3/3/18')).toBe('');
+  });
+});
+
+describe('maskPhoneBR', () => {
+  it('masks an 11-digit mobile', () => {
+    expect(maskPhoneBR('11990001234')).toBe('(11) 99000-1234');
+  });
+  it('masks a 10-digit landline', () => {
+    expect(maskPhoneBR('1130001234')).toBe('(11) 3000-1234');
+  });
+  it('formats partials as the user types', () => {
+    expect(maskPhoneBR('11')).toBe('(11');
+    expect(maskPhoneBR('119')).toBe('(11) 9');
+    expect(maskPhoneBR('119900')).toBe('(11) 9900');
+  });
+  it('strips non-digits and caps at 11', () => {
+    expect(maskPhoneBR('(11) 99000-1234')).toBe('(11) 99000-1234');
+    expect(maskPhoneBR('119900012349999')).toBe('(11) 99000-1234');
+  });
+  it('returns "" for empty', () => {
+    expect(maskPhoneBR('')).toBe('');
+    expect(maskPhoneBR(null)).toBe('');
+  });
+});
+
+describe('maskCEP', () => {
+  it('masks a full CEP', () => {
+    expect(maskCEP('01310100')).toBe('01310-100');
+  });
+  it('leaves the first 5 digits unhyphenated', () => {
+    expect(maskCEP('01310')).toBe('01310');
+    expect(maskCEP('013')).toBe('013');
+  });
+  it('strips non-digits and caps at 8', () => {
+    expect(maskCEP('01310-100')).toBe('01310-100');
+    expect(maskCEP('013101009999')).toBe('01310-100');
+  });
+});
+
+describe('maskDateBR', () => {
+  it('masks a full date', () => {
+    expect(maskDateBR('20081995')).toBe('20/08/1995');
+  });
+  it('formats partials', () => {
+    expect(maskDateBR('20')).toBe('20');
+    expect(maskDateBR('2008')).toBe('20/08');
+    expect(maskDateBR('200819')).toBe('20/08/19');
+  });
+  it('strips non-digits and caps at 8', () => {
+    expect(maskDateBR('20/08/1995')).toBe('20/08/1995');
+    expect(maskDateBR('2008199599')).toBe('20/08/1995');
+  });
+});
+
+describe('cepDigits', () => {
+  it('returns 8 digits for a complete CEP', () => {
+    expect(cepDigits('01310-100')).toBe('01310100');
+  });
+  it('returns fewer for partials', () => {
+    expect(cepDigits('013')).toBe('013');
+    expect(cepDigits('')).toBe('');
   });
 });
 

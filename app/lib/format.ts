@@ -104,6 +104,42 @@ export function hhmm(time: string | null | undefined): string {
 }
 
 /* ------------------------------------------------------------------
+ * Input masks (pure, digit-driven) — format as the user types. Each
+ * strips to digits then re-formats, so they're idempotent and safe to
+ * call on every keystroke or on a pasted value.
+ * ------------------------------------------------------------------ */
+
+/** BR phone → "(11) 90000-0000" (11 digits) or "(11) 9000-0000" (10). */
+export function maskPhoneBR(input: string | null | undefined): string {
+  const d = (input ?? '').replace(/\D/g, '').slice(0, 11);
+  if (d.length === 0) return '';
+  if (d.length <= 2) return `(${d}`;
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
+/** BR CEP → "00000-000". */
+export function maskCEP(input: string | null | undefined): string {
+  const d = (input ?? '').replace(/\D/g, '').slice(0, 8);
+  if (d.length <= 5) return d;
+  return `${d.slice(0, 5)}-${d.slice(5)}`;
+}
+
+/** BR date → "DD/MM/AAAA" as the user types. */
+export function maskDateBR(input: string | null | undefined): string {
+  const d = (input ?? '').replace(/\D/g, '').slice(0, 8);
+  if (d.length <= 2) return d;
+  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
+  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
+}
+
+/** Digits only (8 for a complete CEP) — for triggering the CEP lookup. */
+export function cepDigits(input: string | null | undefined): string {
+  return (input ?? '').replace(/\D/g, '').slice(0, 8);
+}
+
+/* ------------------------------------------------------------------
  * Calendar helpers for the weekly Agenda (TZ-safe via UTC midnight, so a
  * yyyy-mm-dd calendar date keeps its weekday regardless of device TZ).
  * ------------------------------------------------------------------ */

@@ -98,3 +98,14 @@ mutation ConfirmUpload($url: String!, $name: String!) {
     url
   }
 }
+
+# Address autofill from a CEP (ViaCEP proxy) — the user only fills the number.
+query CepLookup($cep: String!) {
+  cepLookup(cep: $cep) {
+    cep
+    street
+    neighborhood
+    city
+    state
+  }
+}

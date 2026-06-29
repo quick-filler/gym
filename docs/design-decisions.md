@@ -778,6 +778,34 @@ right below. We want the history, not a clean slate.
 
 ---
 
+### 2.19 CEP autofill via GraphQL + máscaras de input
+
+- **Decision** — autocompletar endereço por CEP (rua/bairro/cidade/UF; o usuário
+  só digita o número) passa por uma query **`cepLookup(cep): CepAddress`** que
+  faz proxy do **ViaCEP** **no servidor** — o app **não** chama API externa
+  direto.
+- **Por que no backend** — a regra dura #4 (CLAUDE) diz que toda chamada de
+  dados do front vai por GraphQL (REST só pra auth + webhook Asaas). Um `fetch`
+  client-side pro ViaCEP seria uma 3ª exceção não documentada. O proxy também é
+  **reusável** (o form de aluno do admin web pode adotar) e esconde o provedor
+  (trocar ViaCEP→BrasilAPI = 1 arquivo). Best-effort: falha/forbidden/not-found
+  → `null` e o usuário preenche à mão. `auth: true` (padrão).
+- **Lógica pura** em `services/cep.ts`: `sanitizeCep` (só dígitos, cap 8) e
+  `mapViaCep` (ViaCEP raw → shape; `erro:true`/vazio → null), unit-testadas
+  (7 testes). `lookupCep` faz o fetch.
+- **Máscaras de input** (puras, em `app/lib/format.ts`, dirigidas por dígitos →
+  idempotentes): `maskPhoneBR` (`(11) 99000-1234`), `maskCEP` (`01310-100`),
+  `maskDateBR` (`DD/MM/AAAA`) + `cepDigits`. Aplicadas no `/profile/edit`.
+- **Data de nascimento** deixou de aparecer em ISO/inglês no form: hidrata via
+  `fmtDateBR` (ISO→DD/MM/AAAA) e salva via `brDateToISO` com validação.
+- **Consequences** — schema regen (`CepAddress`/`cepLookup`); sem content type /
+  permissão (sem `config:export`). Smoke ao vivo: `cepLookup` resolve Av.
+  Paulista e devolve `null` p/ CEP inexistente. Máscaras = 14 testes novos.
+- **Revisit when** — adotar no admin web, ou precisar de número/uppercase de UF
+  validados server-side, ou trocar de provedor de CEP.
+
+---
+
 ## 3. GraphQL API
 
 ### 3.1 GraphQL is the only data API; REST is reserved for auth + webhooks
@@ -2071,3 +2099,8 @@ Explicit no's so we don't re-argue them.
   do login; "Trocar academia" no login/perfil. `normalizeSlug` puro
   (`lib/slug.ts`, 10 testes). Zero mudança de backend. QR scan +
   universal links deferidos.
+- **2026-06-29** — Added §2.19 (CEP autofill + máscaras): query
+  `cepLookup` (proxy ViaCEP no backend, honra a regra GraphQL-only) +
+  máscaras puras `maskPhoneBR`/`maskCEP`/`maskDateBR` no `/profile/edit`;
+  data de nascimento agora em DD/MM/AAAA (hidrata via `fmtDateBR`, salva
+  via `brDateToISO`). `services/cep.ts` (7 testes) + 14 testes de máscara.

@@ -528,6 +528,7 @@ Custom queries / mutations:
 | Field | Auth | Purpose |
 |---|---|---|
 | `Query.academyBySlug(slug)` | **public** | Branding lookup for the white-label theming |
+| `Query.cepLookup(cep)` | required | Brazilian CEP → address (street/neighborhood/city/state) via a server-side **ViaCEP** proxy (`services/cep.ts`). Best-effort (null on miss). Powers address autofill in the app's profile/dependent forms — keeps the frontend on GraphQL-only (no client-side external REST). |
 | `Query.me` | required | Authenticated student's full profile (deeply populated) |
 | `Query.scheduleBookings(documentId, date?)` | required | Bookings for a schedule on a given date |
 | `Mutation.checkInBooking(documentId)` | required | Mark attendance + stamp `checkedInAt` |

@@ -272,6 +272,17 @@ input CardInput {
   number: String!
 }
 
+"""
+Address resolved from a Brazilian CEP (postal code). Null when the CEP is not found.
+"""
+type CepAddress {
+  cep: String!
+  city: String!
+  neighborhood: String!
+  state: String!
+  street: String!
+}
+
 type ClassBooking {
   checkedInAt: String
   classSchedule: ClassSchedule
@@ -1456,6 +1467,11 @@ type Query {
   allAcademies(page: Int, pageSize: Int): PlatformAcademyList
   bodyAssessment(documentId: ID!): BodyAssessment
   bodyAssessments(pagination: PaginationInput): [BodyAssessment]
+
+  """
+  Resolve a Brazilian CEP to street/neighborhood/city/state (ViaCEP). Null when invalid or not found. Powers address autofill so the user only types the number.
+  """
+  cepLookup(cep: String!): CepAddress
   classBooking(documentId: ID!): ClassBooking
   classBookings(pagination: PaginationInput): [ClassBooking]
   classSchedule(documentId: ID!): ClassSchedule

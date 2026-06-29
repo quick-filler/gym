@@ -345,6 +345,10 @@ the marketing site (`website/`) is the only SEO-relevant surface.
 - **Language:** PT-BR
 - **Date format:** `DD/MM/YYYY` (`date-fns/locale/pt-BR`)
 - **Currency:** `R$ 1.234,56` (`Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })`)
+- **Input masks:** pure digit-driven helpers in `lib/format.ts` —
+  `maskPhoneBR`, `maskCEP`, `maskDateBR` (birthdate edits in DD/MM/AAAA, saved
+  via `brDateToISO`). Address autofill from CEP uses the backend `cepLookup`
+  query (ViaCEP proxy) so the user only types the number. See design-decisions §2.19.
 - **Bottom nav** (5 tabs): Início / Agenda / Treinos / Finanças / Perfil
 - The header always shows the academy's logo + name (so the student
   knows whose app they're in)
