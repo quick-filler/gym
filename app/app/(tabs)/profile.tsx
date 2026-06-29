@@ -10,11 +10,12 @@
  *   2. Measurements grid — weight / height / gordura corporal.
  *   3. Assessment history — list of monthly body assessments with
  *      a delta pill (down/up/flat).
- *   4. Settings — list of links (editar dados, notificações, idioma).
+ *   4. Settings — editar dados / alterar senha / trocar academia.
  *   5. Logout button — danger-toned outline.
  *
- * Data: academy branding from `useDashboard()`, content from
- * `MOCK_PROFILE`. Swap for `useProfile()` when the backend ships it.
+ * Data: academy branding from `useDashboard()`, profile + assessments from
+ * `useProfile()` (mock fixture in demo mode, real `MyProfile` /
+ * `MyBodyAssessments` otherwise).
  */
 
 import React from 'react';
@@ -38,7 +39,6 @@ import {
   LogOut,
   Mail,
   Phone,
-  Settings,
   TrendingDown,
   TrendingUp,
   User,
@@ -49,6 +49,7 @@ import { useDashboard } from '../../hooks/useDashboard';
 import { useProfile } from '../../hooks/useProfile';
 import { logout } from '../../lib/auth';
 import { useActiveAcademy } from '../../lib/academy-provider';
+import { NotificationBell } from '../../components/NotificationBell';
 import { theme, withAlpha } from '../../lib/theme';
 import type { BodyAssessment } from '../../lib/types';
 
@@ -96,13 +97,7 @@ export default function ProfileScreen() {
               </View>
               <Text style={styles.academyName}>{academyName}</Text>
             </View>
-            <TouchableOpacity
-              style={styles.iconBtn}
-              activeOpacity={0.7}
-              accessibilityLabel="Configurações"
-            >
-              <Settings size={18} color="#fff" strokeWidth={2.2} />
-            </TouchableOpacity>
+            <NotificationBell />
           </View>
           <Text style={styles.eyebrow}>PERFIL</Text>
           <Text style={styles.title}>Minha conta</Text>
@@ -369,14 +364,6 @@ const styles = StyleSheet.create({
   },
   logoText: { color: '#fff', fontWeight: '700', fontSize: 15, letterSpacing: -0.5 },
   academyName: { color: '#fff', fontWeight: '700', fontSize: 16, letterSpacing: -0.3 },
-  iconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   eyebrow: {
     color: 'rgba(255,255,255,0.78)',
     fontSize: 11,

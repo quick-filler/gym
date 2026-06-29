@@ -6,8 +6,9 @@
  * near-real-time delivery. `notifyAcademyAdmins` fans a notification out to
  * every academy_admin of an academy (admin-web notifications).
  *
- * Push-to-device (Expo) is intentionally deferred — see design-decisions
- * §2.16. When it lands, call it from here so every caller gets push for free.
+ * Push-to-device (Expo, Fase 7e) ships here too: `createInApp` calls `sendPush`
+ * after writing the row, so every caller gets in-app + push for free. Real
+ * delivery only validates on a dev/standalone EAS build — see design-decisions §2.16.
  */
 
 import type { Core } from '@strapi/strapi';

@@ -18,7 +18,7 @@
  *   - Cancellation window: until 24h before class start (confirmed only;
  *     waitlist spots can be dropped any time).
  *   - Full class → waitlist + automatic FIFO promotion on a freed seat.
- *     (Push notification on promotion is deferred to Fase 7.)
+ *     (Promotion notifies the student via the in-app inbox + push — Fase 7.)
  *
  * Capacity-occupying statuses are `confirmed` + `attended`; `waitlist` and
  * `cancelled` never occupy a seat (mirrors the ClassBooking lifecycle).
@@ -31,6 +31,7 @@ import {
   resolveUserAcademyId,
   withAcademyScope,
 } from '../helpers';
+import { createInApp } from '../../../services/notify';
 
 const BOOKING_UID = 'api::class-booking.class-booking';
 const SCHEDULE_UID = 'api::class-schedule.class-schedule';
@@ -230,7 +231,8 @@ async function countOccupying(
 /**
  * Promotes the earliest waitlister (FIFO by createdAt) of a (schedule, date)
  * to `confirmed`, but only if a seat is actually free. Returns the promoted
- * booking or null. TODO(Fase 7): push "Sua vaga foi confirmada".
+ * booking or null. Notifies the promoted student ("Sua vaga foi confirmada")
+ * via the in-app inbox + push (Fase 7, best-effort).
  */
 async function promoteNextWaitlister(
   strapi: Core.Strapi,
@@ -257,10 +259,48 @@ async function promoteNextWaitlister(
   });
   const next = queue[0];
   if (!next?.documentId) return null;
-  return await strapi.documents(BOOKING_UID).update({
+  const promoted = await strapi.documents(BOOKING_UID).update({
     documentId: next.documentId,
     data: { status: 'confirmed' },
   });
+
+  // Notify the promoted student that their seat is now confirmed. A status-only
+  // update doesn't fire the afterCreate booking notification, so do it here.
+  // Best-effort — a notify failure must never break the cancel that triggered it.
+  try {
+    const b: any = await strapi.documents(BOOKING_UID).findOne({
+      documentId: next.documentId,
+      populate: {
+        classSchedule: { populate: { academy: true } },
+        student: { populate: { user: true, academy: true } },
+        dependent: {
+          populate: { guardian: { populate: { user: true } }, academy: true },
+        },
+      },
+    });
+    const userId = b?.student?.user?.id ?? b?.dependent?.guardian?.user?.id;
+    if (userId) {
+      const academyId =
+        b?.student?.academy?.id ??
+        b?.dependent?.academy?.id ??
+        b?.classSchedule?.academy?.id ??
+        null;
+      const className = b?.classSchedule?.name ?? 'Aula';
+      const dateBR = (b?.date ?? '').split('-').reverse().join('/');
+      await createInApp(strapi, {
+        userId,
+        academyId,
+        kind: 'booking_confirmed',
+        title: 'Sua vaga foi confirmada',
+        body: `${b.dependent ? `${b.dependent.name} · ` : ''}${className} · ${dateBR}`,
+        data: { route: `/booking/${next.documentId}`, bookingId: next.documentId },
+      });
+    }
+  } catch (e) {
+    strapi.log.error(`[promote] notify failed: ${(e as Error).message}`);
+  }
+
+  return promoted;
 }
 
 /**

@@ -345,8 +345,10 @@ right below. We want the history, not a clean slate.
   - The booking decision (confirmed vs waitlist) is made in the resolver
     (the lifecycle can't "downgrade" a full booking), so `bookClass`
     computes occupancy first and passes the chosen status to `create`.
-  - Push on promotion is **deferred to Fase 7** — promotion is silent
-    today (a `TODO(Fase 7)` marks the spot in `promoteNextWaitlister`).
+  - Promotion **notifies** the promoted student ("Sua vaga foi confirmada")
+    via the in-app inbox + push — `promoteNextWaitlister` calls `createInApp`
+    after the status-only update (which doesn't fire the afterCreate booking
+    notification). Best-effort: a notify failure never breaks the cancel.
   - Date/time math is TZ-anchored to **BRT (-03:00, fixed since Brazil
     dropped DST in 2019)**; weekday/window helpers are pure and unit-tested
     (`student-schedule.test.ts`).
@@ -2111,3 +2113,14 @@ Explicit no's so we don't re-argue them.
   `updateBodyAssessment` / `deleteBodyAssessment` que já existiam (Fase 5).
   **Sem mudança de backend.** Fecha o gap: era a única forma de alterar o
   peso do aluno (antes só via painel do Strapi). O aluno vê no Perfil do app.
+- **2026-06-29** — Lote de pontas soltas (auditoria pós-Fase 9):
+  (1) promoção de lista de espera agora **notifica** o aluno
+  (`promoteNextWaitlister` → `createInApp`); (2) app: botões mortos
+  resolvidos — engrenagem do Perfil virou `NotificationBell`, "Esqueci a
+  senha" liga no `forgot-password` (`requestPasswordReset`), "Face ID"
+  (não implementável agora) removido; (3) máscaras + autofill de CEP
+  aplicados também no `DependentForm` (mesmos helpers do `/profile/edit`);
+  (4) comentários desatualizados corrigidos (`notify.ts` push já existe;
+  `profile.tsx` já usa `useProfile`). Deferidos (não no lote): gateway
+  real de pagamento, `/profile/notifications`, `requestBodyAssessment`,
+  QR scan + universal links, biometria.

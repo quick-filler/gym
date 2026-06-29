@@ -33,6 +33,30 @@ export async function logout(): Promise<void> {
 }
 
 /**
+ * Triggers the users-permissions forgot-password flow: Strapi emails a reset
+ * link that lands on the website's `/reset-password`. Pre-auth, so it goes over
+ * a plain fetch (no Apollo). No-op in mock mode.
+ */
+export async function requestPasswordReset(email: string): Promise<void> {
+  if (USE_MOCKS) return;
+  const res = await fetch(`${REST_BASE}/api/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok) {
+    let message = 'Não foi possível enviar o e-mail de redefinição.';
+    try {
+      const body = await res.json();
+      message = body?.error?.message ?? message;
+    } catch {
+      /* ignore parse errors */
+    }
+    throw new Error(message);
+  }
+}
+
+/**
  * Self-service first access: an imported student proves identity
  * (email + birthdate/phone) and sets a password. On success the backend
  * returns a JWT and we store it — the student lands logged in.

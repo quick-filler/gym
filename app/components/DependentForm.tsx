@@ -25,11 +25,33 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { ArrowLeft, Camera } from 'lucide-react-native';
-import { useMutation } from '@apollo/client/react';
+import { useLazyQuery, useMutation } from '@apollo/client/react';
 
-import { ConfirmUploadDocument, MintUploadUrlDocument } from '../gql/graphql';
+import {
+  CepLookupDocument,
+  ConfirmUploadDocument,
+  MintUploadUrlDocument,
+} from '../gql/graphql';
+import {
+  brDateToISO,
+  cepDigits,
+  fmtDateBR,
+  maskCEP,
+  maskDateBR,
+  maskPhoneBR,
+} from '../lib/format';
 import { theme, withAlpha } from '../lib/theme';
 import type { DependentActionResult, DependentEditable } from '../lib/types';
+
+/** ISO/raw editable values → masked, display-ready form values. */
+function toFormView(d: DependentEditable): DependentEditable {
+  return {
+    ...d,
+    birthdate: fmtDateBR(d.birthdate),
+    emergencyContactPhone: maskPhoneBR(d.emergencyContactPhone),
+    address: { ...d.address, cep: maskCEP(d.address?.cep) },
+  };
+}
 
 // Mirrors the Dependent content-type enums (girl/boy/other and the
 // relationship set) so submits pass server-side validation.
@@ -88,28 +110,57 @@ export function DependentForm({
   saving: boolean;
   onSubmit: (input: Record<string, unknown>) => Promise<DependentActionResult>;
 }) {
-  const [form, setForm] = useState<DependentEditable>(initial ?? EMPTY);
+  const [form, setForm] = useState<DependentEditable>(() => toFormView(initial ?? EMPTY));
   const [photoPreview, setPhotoPreview] = useState<string | null>(initial?.photoUrl ?? null);
   const [photoId, setPhotoId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const numberRef = useRef<TextInput>(null);
 
   // Hydrate once when an edit record first resolves (no-op for /new).
   const hydrated = useRef(false);
   useEffect(() => {
     if (hydrated.current || !initial) return;
     hydrated.current = true;
-    setForm(initial);
+    setForm(toFormView(initial));
     setPhotoPreview(initial.photoUrl);
   }, [initial]);
 
   const [mintUrl] = useMutation<any>(MintUploadUrlDocument);
   const [confirmUpload] = useMutation<any>(ConfirmUploadDocument);
+  const [lookupCep, cepState] = useLazyQuery<any>(CepLookupDocument);
 
   const set = (key: keyof DependentEditable, v: string) =>
     setForm((f) => ({ ...f, [key]: v }));
   const setAddr = (key: keyof DependentEditable['address'], v: string) =>
     setForm((f) => ({ ...f, address: { ...f.address, [key]: v } }));
+
+  // CEP autofill: 8 digits → resolve via backend (ViaCEP) and fill the address,
+  // then focus the number field. Best-effort.
+  const onCepChange = async (v: string) => {
+    setAddr('cep', maskCEP(v));
+    const digits = cepDigits(v);
+    if (digits.length !== 8) return;
+    try {
+      const res = await lookupCep({ variables: { cep: digits } });
+      const a = res?.data?.cepLookup;
+      if (!a) return;
+      setForm((f) => ({
+        ...f,
+        address: {
+          ...f.address,
+          cep: maskCEP(a.cep),
+          street: a.street || f.address.street,
+          neighborhood: a.neighborhood || f.address.neighborhood,
+          city: a.city || f.address.city,
+          state: a.state || f.address.state,
+        },
+      }));
+      numberRef.current?.focus();
+    } catch {
+      /* keep manual entry */
+    }
+  };
 
   const pickPhoto = async () => {
     setError(null);
@@ -159,13 +210,14 @@ export function DependentForm({
       setError('Informe o nome do dependente.');
       return;
     }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(form.birthdate)) {
-      setError('Informe a data de nascimento (AAAA-MM-DD).');
+    const isoBirth = brDateToISO(form.birthdate);
+    if (!isoBirth) {
+      setError('Informe a data de nascimento (DD/MM/AAAA).');
       return;
     }
     const input: Record<string, unknown> = {
       name: form.name.trim(),
-      birthdate: form.birthdate,
+      birthdate: isoBirth,
       cpf: form.cpf || null,
       gender: form.gender || null,
       relationship: form.relationship || null,
@@ -223,7 +275,7 @@ export function DependentForm({
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <Field label="NOME" value={form.name} onChange={(v: string) => set('name', v)} placeholder="Nome completo" />
-          <Field label="DATA DE NASCIMENTO" value={form.birthdate} onChange={(v: string) => set('birthdate', v)} placeholder="AAAA-MM-DD" />
+          <Field label="DATA DE NASCIMENTO" value={form.birthdate} onChange={(v: string) => set('birthdate', maskDateBR(v))} placeholder="DD/MM/AAAA" keyboardType="number-pad" maxLength={10} />
           <Field label="CPF" value={form.cpf} onChange={(v: string) => set('cpf', v)} placeholder="000.000.000-00" keyboardType="number-pad" />
 
           <Text style={styles.label}>GÊNERO</Text>
@@ -268,16 +320,21 @@ export function DependentForm({
 
           <Text style={styles.section}>CONTATO DE EMERGÊNCIA</Text>
           <Field label="NOME" value={form.emergencyContactName} onChange={(v: string) => set('emergencyContactName', v)} placeholder="Responsável" />
-          <Field label="TELEFONE" value={form.emergencyContactPhone} onChange={(v: string) => set('emergencyContactPhone', v)} placeholder="(11) 90000-0000" keyboardType="phone-pad" />
+          <Field label="TELEFONE" value={form.emergencyContactPhone} onChange={(v: string) => set('emergencyContactPhone', maskPhoneBR(v))} placeholder="(11) 90000-0000" keyboardType="phone-pad" maxLength={15} />
 
           <Text style={styles.section}>ENDEREÇO</Text>
-          <Field label="CEP" value={form.address.cep} onChange={(v: string) => setAddr('cep', v)} placeholder="00000-000" keyboardType="number-pad" />
+          <View>
+            <Field label="CEP" value={form.address.cep} onChange={onCepChange} placeholder="00000-000" keyboardType="number-pad" maxLength={9} />
+            {cepState.loading ? (
+              <ActivityIndicator color={accent} size="small" style={styles.cepSpinner} />
+            ) : null}
+          </View>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <View style={{ flex: 3 }}>
               <Field label="RUA" value={form.address.street} onChange={(v: string) => setAddr('street', v)} placeholder="Rua / Av." />
             </View>
             <View style={{ flex: 1 }}>
-              <Field label="Nº" value={form.address.number} onChange={(v: string) => setAddr('number', v)} placeholder="123" />
+              <Field label="Nº" value={form.address.number} onChange={(v: string) => setAddr('number', v)} placeholder="123" keyboardType="number-pad" inputRef={numberRef} />
             </View>
           </View>
           <Field label="COMPLEMENTO" value={form.address.complement} onChange={(v: string) => setAddr('complement', v)} placeholder="Apto / bloco" />
@@ -305,11 +362,12 @@ export function DependentForm({
   );
 }
 
-function Field({ label, value, onChange, ...rest }: any) {
+function Field({ label, value, onChange, inputRef, ...rest }: any) {
   return (
     <View style={{ marginBottom: 12 }}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
+        ref={inputRef}
         style={styles.input}
         value={value}
         onChangeText={onChange}
@@ -373,6 +431,7 @@ const styles = StyleSheet.create({
     color: theme.ink900,
     backgroundColor: '#fff',
   },
+  cepSpinner: { position: 'absolute', right: 14, top: 34 },
 
   genderRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   genderChip: {

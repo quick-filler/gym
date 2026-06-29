@@ -8,6 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -20,10 +21,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Check, Scan } from 'lucide-react-native';
+import { Check } from 'lucide-react-native';
 
 import { useAcademyBranding } from '../hooks/useAcademyBranding';
-import { login } from '../lib/auth';
+import { login, requestPasswordReset } from '../lib/auth';
 import { useActiveAcademy } from '../lib/academy-provider';
 import { USE_MOCKS } from '../lib/config';
 import { theme, withAlpha } from '../lib/theme';
@@ -44,6 +45,23 @@ export default function LoginScreen() {
   const switchAcademy = async () => {
     await clearSlug();
     router.replace('/academy');
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setError('Informe seu e-mail para redefinir a senha.');
+      return;
+    }
+    setError(null);
+    try {
+      await requestPasswordReset(email.trim());
+      Alert.alert(
+        'Verifique seu e-mail',
+        'Se existir uma conta com esse e-mail, enviamos um link para redefinir a senha.',
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao solicitar a redefinição.');
+    }
   };
 
   const [email, setEmail] = useState('');
@@ -160,7 +178,7 @@ export default function LoginScreen() {
                 </View>
                 <Text style={styles.checkboxLabel}>Manter conectado</Text>
               </TouchableOpacity>
-              <TouchableOpacity activeOpacity={0.6}>
+              <TouchableOpacity activeOpacity={0.6} onPress={handleForgotPassword}>
                 <Text style={[styles.forgot, { color: accent }]}>
                   Esqueci a senha
                 </Text>
@@ -180,11 +198,6 @@ export default function LoginScreen() {
               <Text style={styles.primaryBtnText}>
                 {submitting ? 'Entrando…' : 'Entrar'}
               </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.biometricBtn} activeOpacity={0.7}>
-              <Scan size={18} color={theme.ink700} strokeWidth={1.8} />
-              <Text style={styles.biometricText}>Entrar com Face ID</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -345,23 +358,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 15,
-  },
-  biometricBtn: {
-    marginTop: 12,
-    paddingVertical: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: theme.line,
-    borderRadius: 14,
-  },
-  biometricText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: theme.ink700,
   },
   activateBtn: {
     marginTop: 16,
