@@ -1116,6 +1116,11 @@ type Mutation {
   updateMyDependent(documentId: ID!, input: MyDependentUpdateInput!): Dependent
 
   """
+  Updates the caller's push opt-out. Only the known boolean categories are accepted; omitted ones keep their value.
+  """
+  updateMyNotificationPreferences(input: NotificationPreferencesInput!): NotificationPreferences
+
+  """
   Authenticated student changes their own password: verifies the current one, then sets the new one.
   """
   updateMyPassword(newPassword: String!, oldPassword: String!): Boolean
@@ -1193,6 +1198,21 @@ type Notification {
   read: Boolean!
   readAt: String
   title: String!
+}
+
+"""
+Per-category push opt-out for the caller. The in-app inbox always receives everything; these gate only push delivery. All default true.
+"""
+type NotificationPreferences {
+  classes: Boolean!
+  payments: Boolean!
+  workouts: Boolean!
+}
+
+input NotificationPreferencesInput {
+  classes: Boolean
+  payments: Boolean
+  workouts: Boolean
 }
 
 type Pagination {
@@ -1515,6 +1535,9 @@ type Query {
   """The caller's most recent avaliação física, or null."""
   myLatestAssessment: BodyAssessment
   myNextPayment: Payment
+
+  """The caller's push preferences (all on by default)."""
+  myNotificationPreferences: NotificationPreferences
 
   """
   The caller's notifications, newest first. `unreadOnly` filters to unread.

@@ -16,9 +16,11 @@ import {
   remindUpcomingCharges,
   remindUpcomingClasses,
 } from '../../../services/reminders';
+import { resolvePrefs, sanitizePrefsInput } from '../../../services/notification-prefs';
 
 const UID = 'api::notification.notification';
 const PUSH_DEVICE = 'api::push-device.push-device';
+const STUDENT = 'api::student.student';
 
 export function buildNotification({
   nexus,
@@ -41,9 +43,44 @@ export function buildNotification({
     },
   });
 
+  const NotificationPreferences = nexus.objectType({
+    name: 'NotificationPreferences',
+    description:
+      "Per-category push opt-out for the caller. The in-app inbox always receives everything; these gate only push delivery. All default true.",
+    definition(t: any) {
+      t.nonNull.boolean('payments');
+      t.nonNull.boolean('classes');
+      t.nonNull.boolean('workouts');
+    },
+  });
+
+  const NotificationPreferencesInput = nexus.inputObjectType({
+    name: 'NotificationPreferencesInput',
+    definition(t: any) {
+      t.boolean('payments');
+      t.boolean('classes');
+      t.boolean('workouts');
+    },
+  });
+
   const queries = nexus.extendType({
     type: 'Query',
     definition(t: any) {
+      t.field('myNotificationPreferences', {
+        type: 'NotificationPreferences',
+        description: "The caller's push preferences (all on by default).",
+        resolve: async (_root: any, _args: any, ctx: any) => {
+          const userId = ctx?.state?.user?.id;
+          if (!userId) return resolvePrefs(null);
+          const rows: any[] = await strapi.db.query(STUDENT).findMany({
+            where: { user: { id: userId } },
+            select: ['notificationPrefs'],
+            limit: 1,
+          });
+          return resolvePrefs(rows[0]?.notificationPrefs);
+        },
+      });
+
       t.list.field('myNotifications', {
         type: 'Notification',
         description:
@@ -87,6 +124,35 @@ export function buildNotification({
   const mutations = nexus.extendType({
     type: 'Mutation',
     definition(t: any) {
+      t.field('updateMyNotificationPreferences', {
+        type: 'NotificationPreferences',
+        description:
+          'Updates the caller\'s push opt-out. Only the known boolean categories are accepted; omitted ones keep their value.',
+        args: {
+          input: nexus.nonNull(nexus.arg({ type: 'NotificationPreferencesInput' })),
+        },
+        resolve: async (_root: any, args: any, ctx: any) => {
+          const userId = ctx?.state?.user?.id;
+          if (!userId) throw new Error('Não autenticado.');
+          const rows: any[] = await strapi.db.query(STUDENT).findMany({
+            where: { user: { id: userId } },
+            select: ['id', 'notificationPrefs'],
+            limit: 1,
+          });
+          const student = rows[0];
+          if (!student) throw new Error('Sua conta não está vinculada a um aluno.');
+          const next = {
+            ...resolvePrefs(student.notificationPrefs),
+            ...sanitizePrefsInput(args.input),
+          };
+          await strapi.db.query(STUDENT).update({
+            where: { id: student.id },
+            data: { notificationPrefs: next },
+          });
+          return next;
+        },
+      });
+
       t.field('markNotificationRead', {
         type: 'Notification',
         description: 'Marks one of the caller’s notifications as read.',
@@ -202,10 +268,18 @@ export function buildNotification({
   });
 
   return {
-    types: [Notification, queries, mutations],
+    types: [
+      Notification,
+      NotificationPreferences,
+      NotificationPreferencesInput,
+      queries,
+      mutations,
+    ],
     resolversConfig: {
       'Query.myNotifications': { auth: true },
       'Query.myUnreadNotificationCount': { auth: true },
+      'Query.myNotificationPreferences': { auth: true },
+      'Mutation.updateMyNotificationPreferences': { auth: true },
       'Mutation.markNotificationRead': { auth: true },
       'Mutation.markAllNotificationsRead': { auth: true },
       'Mutation.runNotificationReminders': { auth: true },

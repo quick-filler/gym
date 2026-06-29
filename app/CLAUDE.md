@@ -231,6 +231,7 @@ export function DashboardScreen() {
 | `/payment/[id]` | Checkout — PIX / boleto / cartão tabs (mocked gateway) | ✅ |
 | `/profile/edit` | Edit profile — phone/address/gender/birthdate + photo upload | ✅ |
 | `/profile/password` | Change password (atual + nova) | ✅ |
+| `/profile/notifications` | Push preferences — opt-out per category (Pagamentos/Aulas/Treinos) | ✅ |
 | `/notifications` | Inbox in-app (badge real, polling, mark-read, deep-link) | ✅ |
 
 ## Module gating

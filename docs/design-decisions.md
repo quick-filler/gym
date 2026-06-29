@@ -701,11 +701,22 @@ right below. We want the history, not a clean slate.
   Expo Go nem em simulador). Entrega real **só em dev/standalone build (EAS)**;
   Expo (framework) é produção, Expo Go é só dev. Push opcional: o in-app
   funciona sem ele.
+- **Preferências de push (opt-out por categoria).** `Student.notificationPrefs`
+  (JSON) guarda `{ payments, classes, workouts }` — tudo ligado por padrão
+  (opt-out; lojas preferem opt-out a opt-in). `sendPush` recebe o `kind`, mapeia
+  pra categoria (`kindToCategory`) e **pula só o push** quando a categoria está
+  off — o registro **in-app continua sendo criado** (a inbox é o fallback
+  sempre disponível). Kinds `admin_*`/sem categoria nunca são gateados.
+  GraphQL: `myNotificationPreferences` + `updateMyNotificationPreferences`
+  (caller-scoped). Tela `/profile/notifications` no app. Helpers puros em
+  `notification-prefs.ts` (9 testes).
 - **Consequences** — dois content types novos (`Notification`, `PushDevice`) →
   **`config:export`** feito. `reminderSentAt` é campo interno (`private`, fora
-  do GraphQL) → sem regen por ele. Helpers puros (`chargeReminderKind`,
+  do GraphQL) → sem regen por ele. `Student.notificationPrefs` é só um campo
+  (não muda `config/sync`). Helpers puros (`chargeReminderKind`,
   `startsWithinMinutes`, `brtClockPlus`, `buildExpoPushMessages`,
-  `timeAgo`/`timeAgoBR`) unit-testados nos 3 projetos.
+  `timeAgo`/`timeAgoBR`, `resolvePrefs`/`kindToCategory`/`pushAllowed`)
+  unit-testados nos 3 projetos.
 - **Revisit when** — push instantâneo (websocket/Expo Push) ou volume de
   notificações exigir paginação/arquivamento.
 
@@ -2124,3 +2135,9 @@ Explicit no's so we don't re-argue them.
   `profile.tsx` já usa `useProfile`). Deferidos (não no lote): gateway
   real de pagamento, `/profile/notifications`, `requestBodyAssessment`,
   QR scan + universal links, biometria.
+- **2026-06-29** — Item 5: preferências de push (`/profile/notifications`).
+  Opt-out por categoria (Pagamentos/Aulas/Treinos), tudo on por padrão,
+  em `Student.notificationPrefs` (JSON). `sendPush` respeita via `kind`
+  → `pushAllowed` (in-app inbox não é afetada). `myNotificationPreferences`
+  / `updateMyNotificationPreferences`; helpers puros `notification-prefs.ts`
+  (9 testes). Smoke ao vivo OK. Sem `config:export` (só campo). Ver §2.16.

@@ -65,6 +65,9 @@
     "notes": {
       "type": "text"
     },
+    "notificationPrefs": {
+      "type": "json"
+    },
     "academy": {
       "type": "relation",
       "relation": "manyToOne",

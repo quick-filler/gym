@@ -529,6 +529,7 @@ Custom queries / mutations:
 |---|---|---|
 | `Query.academyBySlug(slug)` | **public** | Branding lookup for the white-label theming |
 | `Query.cepLookup(cep)` | required | Brazilian CEP → address (street/neighborhood/city/state) via a server-side **ViaCEP** proxy (`services/cep.ts`). Best-effort (null on miss). Powers address autofill in the app's profile/dependent forms — keeps the frontend on GraphQL-only (no client-side external REST). |
+| `Query.myNotificationPreferences` / `Mutation.updateMyNotificationPreferences` | required | Per-category push opt-out (`payments`/`classes`/`workouts`), stored on `Student.notificationPrefs` (JSON, default all on). `notify.sendPush` honours it via the `kind` → category map (`services/notification-prefs.ts`); the in-app inbox is never gated. App screen: `/profile/notifications`. |
 | `Query.me` | required | Authenticated student's full profile (deeply populated) |
 | `Query.scheduleBookings(documentId, date?)` | required | Bookings for a schedule on a given date |
 | `Mutation.checkInBooking(documentId)` | required | Mark attendance + stamp `checkedInAt` |

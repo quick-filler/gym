@@ -145,6 +145,7 @@ describe('schema introspection', () => {
       // Fase 7 — notificações (app + web)
       'myNotifications',
       'myUnreadNotificationCount',
+      'myNotificationPreferences',
       // Address autofill (CEP → ViaCEP proxy)
       'cepLookup',
     ];

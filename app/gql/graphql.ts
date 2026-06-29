@@ -1078,6 +1078,8 @@ export type Mutation = {
   updateMyBilling?: Maybe<AcademySubscription>;
   /** Guardian self-service: edits a dependent the caller owns. Whitelisted fields only; guardian / academy / status are immutable here. */
   updateMyDependent?: Maybe<Dependent>;
+  /** Updates the caller's push opt-out. Only the known boolean categories are accepted; omitted ones keep their value. */
+  updateMyNotificationPreferences?: Maybe<NotificationPreferences>;
   /** Authenticated student changes their own password: verifies the current one, then sets the new one. */
   updateMyPassword?: Maybe<Scalars['Boolean']['output']>;
   updateMyPoolSettings?: Maybe<PoolSettings>;
@@ -1400,6 +1402,11 @@ export type MutationUpdateMyDependentArgs = {
 };
 
 
+export type MutationUpdateMyNotificationPreferencesArgs = {
+  input: NotificationPreferencesInput;
+};
+
+
 export type MutationUpdateMyPasswordArgs = {
   newPassword: Scalars['String']['input'];
   oldPassword: Scalars['String']['input'];
@@ -1516,6 +1523,20 @@ export type Notification = {
   read: Scalars['Boolean']['output'];
   readAt?: Maybe<Scalars['String']['output']>;
   title: Scalars['String']['output'];
+};
+
+/** Per-category push opt-out for the caller. The in-app inbox always receives everything; these gate only push delivery. All default true. */
+export type NotificationPreferences = {
+  __typename?: 'NotificationPreferences';
+  classes: Scalars['Boolean']['output'];
+  payments: Scalars['Boolean']['output'];
+  workouts: Scalars['Boolean']['output'];
+};
+
+export type NotificationPreferencesInput = {
+  classes?: InputMaybe<Scalars['Boolean']['input']>;
+  payments?: InputMaybe<Scalars['Boolean']['input']>;
+  workouts?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type Pagination = {
@@ -1821,6 +1842,8 @@ export type Query = {
   /** The caller's most recent avaliação física, or null. */
   myLatestAssessment?: Maybe<BodyAssessment>;
   myNextPayment?: Maybe<Payment>;
+  /** The caller's push preferences (all on by default). */
+  myNotificationPreferences?: Maybe<NotificationPreferences>;
   /** The caller's notifications, newest first. `unreadOnly` filters to unread. */
   myNotifications?: Maybe<Array<Maybe<Notification>>>;
   myPayments?: Maybe<Array<Maybe<Payment>>>;
@@ -2456,6 +2479,18 @@ export type AppRegisterPushTokenMutationVariables = Exact<{
 
 export type AppRegisterPushTokenMutation = { __typename?: 'Mutation', registerPushToken?: boolean | null };
 
+export type AppNotificationPreferencesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AppNotificationPreferencesQuery = { __typename?: 'Query', myNotificationPreferences?: { __typename?: 'NotificationPreferences', payments: boolean, classes: boolean, workouts: boolean } | null };
+
+export type AppUpdateNotificationPreferencesMutationVariables = Exact<{
+  input: NotificationPreferencesInput;
+}>;
+
+
+export type AppUpdateNotificationPreferencesMutation = { __typename?: 'Mutation', updateMyNotificationPreferences?: { __typename?: 'NotificationPreferences', payments: boolean, classes: boolean, workouts: boolean } | null };
+
 export type MyPaymentsQueryVariables = Exact<{
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
@@ -2668,6 +2703,8 @@ export const AppNotificationsDocument = {"kind":"Document","definitions":[{"kind
 export const AppMarkNotificationReadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AppMarkNotificationRead"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"markNotificationRead"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"read"}},{"kind":"Field","name":{"kind":"Name","value":"readAt"}}]}}]}}]} as unknown as DocumentNode<AppMarkNotificationReadMutation, AppMarkNotificationReadMutationVariables>;
 export const AppMarkAllNotificationsReadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AppMarkAllNotificationsRead"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"markAllNotificationsRead"}}]}}]} as unknown as DocumentNode<AppMarkAllNotificationsReadMutation, AppMarkAllNotificationsReadMutationVariables>;
 export const AppRegisterPushTokenDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AppRegisterPushToken"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"token"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"platform"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"registerPushToken"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"token"},"value":{"kind":"Variable","name":{"kind":"Name","value":"token"}}},{"kind":"Argument","name":{"kind":"Name","value":"platform"},"value":{"kind":"Variable","name":{"kind":"Name","value":"platform"}}}]}]}}]} as unknown as DocumentNode<AppRegisterPushTokenMutation, AppRegisterPushTokenMutationVariables>;
+export const AppNotificationPreferencesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AppNotificationPreferences"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myNotificationPreferences"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"payments"}},{"kind":"Field","name":{"kind":"Name","value":"classes"}},{"kind":"Field","name":{"kind":"Name","value":"workouts"}}]}}]}}]} as unknown as DocumentNode<AppNotificationPreferencesQuery, AppNotificationPreferencesQueryVariables>;
+export const AppUpdateNotificationPreferencesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AppUpdateNotificationPreferences"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"NotificationPreferencesInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateMyNotificationPreferences"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"payments"}},{"kind":"Field","name":{"kind":"Name","value":"classes"}},{"kind":"Field","name":{"kind":"Name","value":"workouts"}}]}}]}}]} as unknown as DocumentNode<AppUpdateNotificationPreferencesMutation, AppUpdateNotificationPreferencesMutationVariables>;
 export const MyPaymentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyPayments"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"offset"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myPayments"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}},{"kind":"Argument","name":{"kind":"Name","value":"offset"},"value":{"kind":"Variable","name":{"kind":"Name","value":"offset"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"dueDate"}},{"kind":"Field","name":{"kind":"Name","value":"paidAt"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"method"}},{"kind":"Field","name":{"kind":"Name","value":"receiptUrl"}}]}}]}}]} as unknown as DocumentNode<MyPaymentsQuery, MyPaymentsQueryVariables>;
 export const MyNextPaymentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyNextPayment"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myNextPayment"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"dueDate"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"method"}}]}}]}}]} as unknown as DocumentNode<MyNextPaymentQuery, MyNextPaymentQueryVariables>;
 export const MyFinanceStatusDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyFinanceStatus"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"enrollments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"paymentMethod"}},{"kind":"Field","name":{"kind":"Name","value":"nextCharge"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]}}]}}]} as unknown as DocumentNode<MyFinanceStatusQuery, MyFinanceStatusQueryVariables>;

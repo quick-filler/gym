@@ -33,6 +33,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
+  Bell,
   Building2,
   ChevronRight,
   KeyRound,
@@ -188,6 +189,11 @@ export default function ProfileScreen() {
               Icon={User}
               label="Editar dados pessoais"
               onPress={() => router.push('/profile/edit')}
+            />
+            <SettingsRow
+              Icon={Bell}
+              label="Notificações"
+              onPress={() => router.push('/profile/notifications')}
             />
             <SettingsRow
               Icon={KeyRound}

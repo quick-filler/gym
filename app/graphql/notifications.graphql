@@ -30,3 +30,20 @@ mutation AppMarkAllNotificationsRead {
 mutation AppRegisterPushToken($token: String!, $platform: String) {
   registerPushToken(token: $token, platform: $platform)
 }
+
+# Push preferences (opt-out por categoria) — /profile/notifications.
+query AppNotificationPreferences {
+  myNotificationPreferences {
+    payments
+    classes
+    workouts
+  }
+}
+
+mutation AppUpdateNotificationPreferences($input: NotificationPreferencesInput!) {
+  updateMyNotificationPreferences(input: $input) {
+    payments
+    classes
+    workouts
+  }
+}

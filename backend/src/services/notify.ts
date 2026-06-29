@@ -12,11 +12,22 @@
  */
 
 import type { Core } from '@strapi/strapi';
+import { pushAllowed, resolvePrefs } from './notification-prefs';
 
 const UID = 'api::notification.notification';
 const STUDENT = 'api::student.student';
 const PUSH_DEVICE = 'api::push-device.push-device';
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
+
+/** The recipient's push prefs (from their Student row), defaulted all-on. */
+async function getUserPushPrefs(strapi: Core.Strapi, userId: number) {
+  const rows: any[] = await strapi.db.query(STUDENT).findMany({
+    where: { user: { id: userId } },
+    select: ['notificationPrefs'],
+    limit: 1,
+  });
+  return resolvePrefs(rows[0]?.notificationPrefs);
+}
 
 export interface ExpoPushMessage {
   to: string;
@@ -56,9 +67,15 @@ export async function sendPush(
   strapi: Core.Strapi,
   userId: number | null | undefined,
   payload: { title: string; body?: string | null; data?: unknown },
+  kind?: string,
 ): Promise<void> {
   if (!userId) return;
   try {
+    // Respect the recipient's per-category opt-out (in-app row was still saved).
+    if (kind) {
+      const prefs = await getUserPushPrefs(strapi, userId);
+      if (!pushAllowed(prefs, kind)) return;
+    }
     const devices: any[] = await strapi.db.query(PUSH_DEVICE).findMany({
       where: { owner: { id: userId } },
       select: ['token'],
@@ -113,12 +130,14 @@ export async function createInApp(
     strapi.log.error(`[notify] createInApp failed: ${(err as Error)?.message}`);
     return null;
   }
-  // Fan out to the device(s) too (best-effort, never throws).
-  await sendPush(strapi, input.userId, {
-    title: input.title,
-    body: input.body,
-    data: input.data,
-  });
+  // Fan out to the device(s) too (best-effort, never throws). Push delivery
+  // respects the recipient's per-category opt-out; the in-app row above doesn't.
+  await sendPush(
+    strapi,
+    input.userId,
+    { title: input.title, body: input.body, data: input.data },
+    input.kind,
+  );
   return row;
 }
 
