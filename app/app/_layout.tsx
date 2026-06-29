@@ -13,22 +13,26 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
 import { ApolloClientProvider } from '../lib/apollo-provider';
+import { AcademyProvider } from '../lib/academy-provider';
 
 export default function RootLayout() {
   return (
     <ApolloClientProvider>
-      <SafeAreaProvider>
-        <StatusBar style="light" />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="login" />
-          <Stack.Screen name="activate" />
-          <Stack.Screen name="dependents" />
-          <Stack.Screen name="workout/[id]" />
-          <Stack.Screen name="booking/[id]" />
-          <Stack.Screen name="payment/[id]" />
-        </Stack>
-      </SafeAreaProvider>
+      <AcademyProvider>
+        <SafeAreaProvider>
+          <StatusBar style="light" />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="academy" />
+            <Stack.Screen name="login" />
+            <Stack.Screen name="activate" />
+            <Stack.Screen name="dependents" />
+            <Stack.Screen name="workout/[id]" />
+            <Stack.Screen name="booking/[id]" />
+            <Stack.Screen name="payment/[id]" />
+          </Stack>
+        </SafeAreaProvider>
+      </AcademyProvider>
     </ApolloClientProvider>
   );
 }

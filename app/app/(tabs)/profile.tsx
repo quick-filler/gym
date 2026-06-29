@@ -32,6 +32,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
+  Building2,
   ChevronRight,
   KeyRound,
   LogOut,
@@ -47,6 +48,7 @@ import {
 import { useDashboard } from '../../hooks/useDashboard';
 import { useProfile } from '../../hooks/useProfile';
 import { logout } from '../../lib/auth';
+import { useActiveAcademy } from '../../lib/academy-provider';
 import { theme, withAlpha } from '../../lib/theme';
 import type { BodyAssessment } from '../../lib/types';
 
@@ -55,6 +57,14 @@ export default function ProfileScreen() {
   const accent = data?.academy.primaryColor ?? theme.ink900;
   const academyName = data?.academy.name ?? 'Gym';
   const initials = data?.academy.initials ?? 'G';
+
+  const { canSwitch, clearSlug } = useActiveAcademy();
+
+  const handleSwitchAcademy = async () => {
+    await logout();
+    await clearSlug();
+    router.replace('/academy');
+  };
 
   const { profile, photoUrl, loading, error, refetch } = useProfile();
   const avatarInitials = profile.name
@@ -191,6 +201,18 @@ export default function ProfileScreen() {
               last
             />
           </View>
+
+          {/* Switch academy (multi-tenant builds only) */}
+          {canSwitch ? (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.switchBtn}
+              onPress={handleSwitchAcademy}
+            >
+              <Building2 size={16} color={theme.ink600} strokeWidth={2.2} />
+              <Text style={styles.switchText}>Trocar de academia</Text>
+            </TouchableOpacity>
+          ) : null}
 
           {/* Logout */}
           <TouchableOpacity
@@ -597,13 +619,31 @@ const styles = StyleSheet.create({
     color: theme.ink700,
   },
 
-  logoutBtn: {
+  switchBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
     marginTop: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: theme.line,
+    backgroundColor: '#fff',
+  },
+  switchText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: theme.ink600,
+  },
+
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    marginTop: 10,
     marginBottom: 8,
     borderRadius: 14,
     borderWidth: 1,

@@ -6,8 +6,8 @@
  * birthdate, falling back to phone) and set their own password. On success
  * the backend returns a JWT and the student lands logged in.
  *
- * Mirrors the login screen's white-labeled look. The academy comes from
- * EXPO_PUBLIC_ACADEMY_SLUG (this build's tenant).
+ * Mirrors the login screen's white-labeled look. The academy is the active
+ * slug chosen in the picker (AcademyProvider).
  */
 
 import React, { useState } from 'react';
@@ -28,13 +28,14 @@ import { ArrowLeft } from 'lucide-react-native';
 
 import { useAcademyBranding } from '../hooks/useAcademyBranding';
 import { activateAccount } from '../lib/auth';
-import { ACADEMY_SLUG } from '../lib/config';
+import { useActiveAcademy } from '../lib/academy-provider';
 import { brDateToISO } from '../lib/format';
 import { theme, withAlpha } from '../lib/theme';
 
 export default function ActivateScreen() {
   const branding = useAcademyBranding();
   const accent = branding.primaryColor;
+  const { slug: academySlug } = useActiveAcademy();
 
   const [email, setEmail] = useState('');
   const [birthdate, setBirthdate] = useState('');
@@ -57,9 +58,9 @@ export default function ActivateScreen() {
     if (password !== confirm) {
       return setError('As senhas não conferem.');
     }
-    if (!ACADEMY_SLUG) {
+    if (!academySlug) {
       return setError(
-        'Academia não configurada neste app. Fale com a recepção.',
+        'Academia não selecionada. Volte e escolha sua academia.',
       );
     }
 
@@ -71,7 +72,7 @@ export default function ActivateScreen() {
     setSubmitting(true);
     try {
       await activateAccount({
-        academySlug: ACADEMY_SLUG,
+        academySlug,
         email: email.trim(),
         birthdate: iso || undefined,
         phone: phone.trim() || undefined,

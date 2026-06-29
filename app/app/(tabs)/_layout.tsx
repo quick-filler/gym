@@ -28,6 +28,7 @@ import {
 import { theme } from '../../lib/theme';
 import { useDashboard } from '../../hooks/useDashboard';
 import { usePushRegistration } from '../../hooks/usePushRegistration';
+import { useActiveAcademy } from '../../lib/academy-provider';
 import { USE_MOCKS } from '../../lib/config';
 import { hasModule, type AppModule } from '../../lib/modules';
 
@@ -56,19 +57,21 @@ export default function TabsLayout() {
   // Register for push once we're in the authed area (self-guards in Expo Go).
   usePushRegistration();
 
-  const [authState, setAuthState] = useState<'loading' | 'ok' | 'redirect'>(
-    USE_MOCKS ? 'ok' : 'loading',
-  );
+  const { slug, ready: academyReady } = useActiveAcademy();
+  const [hasToken, setHasToken] = useState<boolean | null>(USE_MOCKS ? true : null);
 
   useEffect(() => {
     if (USE_MOCKS) return;
-    SecureStore.getItemAsync('jwt').then((token) => {
-      setAuthState(token ? 'ok' : 'redirect');
-    });
+    SecureStore.getItemAsync('jwt').then((token) => setHasToken(!!token));
   }, []);
 
-  if (authState === 'loading') return null;
-  if (authState === 'redirect') return <Redirect href="/login" />;
+  if (!USE_MOCKS) {
+    // Still loading the persisted slug / token — render nothing (no flash).
+    if (!academyReady || hasToken === null) return null;
+    // Fresh install with no academy chosen yet → picker, before login.
+    if (!slug) return <Redirect href="/academy" />;
+    if (!hasToken) return <Redirect href="/login" />;
+  }
 
   return (
     <Tabs

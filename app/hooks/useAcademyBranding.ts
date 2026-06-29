@@ -5,15 +5,17 @@
  * academy's name and primary color before the user authenticates.
  * In mock mode returns the MOCK_DASHBOARD academy directly.
  *
- * Requires EXPO_PUBLIC_ACADEMY_SLUG to be set at build time; shows
- * generic branding when the slug is missing or the query fails.
+ * The slug is the active academy chosen in the picker (or a baked
+ * single-tenant slug), read from AcademyProvider. Shows generic branding
+ * when there's no slug yet or the query fails.
  */
 
 import { useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 
-import { ACADEMY_SLUG, USE_MOCKS } from '../lib/config';
+import { USE_MOCKS } from '../lib/config';
+import { useActiveAcademy } from '../lib/academy-provider';
 import { MOCK_DASHBOARD } from '../lib/mock-data';
 
 const ACADEMY_BY_SLUG = gql`
@@ -57,11 +59,13 @@ export function useAcademyBranding(): AcademyBranding {
   }
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { slug } = useActiveAcademy();
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const { data } = useQuery<{
     academyBySlug: { documentId: string; name: string; primaryColor: string } | null;
   }>(ACADEMY_BY_SLUG, {
-    variables: { slug: ACADEMY_SLUG },
-    skip: !ACADEMY_SLUG,
+    variables: { slug: slug ?? '' },
+    skip: !slug,
     fetchPolicy: 'cache-first',
   });
 

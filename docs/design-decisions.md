@@ -742,6 +742,42 @@ right below. We want the history, not a clean slate.
 
 ---
 
+### 2.18 Academy picker — slug em runtime (Fase 9)
+
+- **Decision** — o slug da academia (que dirige branding + login white-label)
+  deixou de ser **só** build-time (`EXPO_PUBLIC_ACADEMY_SLUG`) e virou uma
+  **escolha em runtime** persistida no SecureStore, feita numa **tela de
+  picker** (`app/academy.tsx`). Um build genérico atende qualquer academia.
+- **Duas fontes, nesta ordem** (em `lib/academy.ts` + `AcademyProvider`):
+  1. slug escolhido no picker (SecureStore, chave `academySlug`);
+  2. `EXPO_PUBLIC_ACADEMY_SLUG` baked (build single-tenant) → picker pulado e
+     **troca desabilitada** (`canSwitchAcademy = false`);
+  3. senão `null` → gate manda pro picker.
+- **Gate de entrada** em `(tabs)/_layout.tsx`: carrega slug + JWT async; sem
+  slug → `/academy`; com slug e sem JWT → `/login`; com ambos → tabs (próxima
+  abertura cai direto no dashboard). Retorna `null` enquanto carrega (sem
+  flash).
+- **`AcademyProvider`** (context) carrega o slug uma vez e expõe
+  `{ slug, ready, canSwitch, setSlug, clearSlug }`. `useAcademyBranding` e
+  `activate` passaram a ler o slug do context (não mais a constante).
+  **"Trocar academia"** no login e no perfil (perfil faz logout + clearSlug).
+- **`normalizeSlug` puro** (em `lib/slug.ts`, **sem import nativo** pra rodar no
+  vitest Node) aceita slug cru, deep link `gymapp://academy/<slug>` ou URL
+  `https://<slug>.host` e devolve o slug canônico. 10 testes unitários.
+  `lib/academy.ts` (que importa `expo-secure-store`) só **re-exporta** —
+  importar o módulo nativo no teste quebra o parser (Flow do react-native).
+- **Mock/demo** não tem tenancy real: provider devolve slug `'demo'` na hora,
+  `canSwitch=false`, picker nunca aparece.
+- **Consequences** — **zero mudança de backend** (`academyBySlug` já existe
+  pública); sem schema/codegen/config-sync. Deep link só via `?slug=`
+  (`gymapp://academy?slug=x`, grátis no expo-router).
+- **Deferido** — **QR scan** (precisa de `expo-camera`), deep link path-style
+  `gymapp://academy/<slug>` e **universal links** iOS/Android (config nativa).
+- **Revisit when** — multi-academia por aluno (hoje 1:1, §5.7 do plano) ou
+  precisar do QR/universal links pro onboarding.
+
+---
+
 ## 3. GraphQL API
 
 ### 3.1 GraphQL is the only data API; REST is reserved for auth + webhooks
@@ -2028,3 +2064,10 @@ Explicit no's so we don't re-argue them.
   `pool-status.ts` (compartilhado com o status do admin) e card de
   qualidade da água no topo da aba Piscina (não no dashboard — a aba
   dedicada virou o lar natural). 14 testes unitários novos.
+- **2026-06-29** — Added §2.18 (Fase 9 — academy picker): slug da
+  academia agora é escolha em runtime persistida no SecureStore via
+  `app/academy.tsx` + `AcademyProvider` (fallback pro slug baked
+  single-tenant). Gate de entrada manda fresh install pro picker antes
+  do login; "Trocar academia" no login/perfil. `normalizeSlug` puro
+  (`lib/slug.ts`, 10 testes). Zero mudança de backend. QR scan +
+  universal links deferidos.

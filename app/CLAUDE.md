@@ -65,7 +65,8 @@ Still to add when we need them:
 ```
 app/
 ├── app/                          # expo-router (file-based)
-│   ├── _layout.tsx               # Root: Apollo provider + safe-area provider + Stack
+│   ├── _layout.tsx               # Root: Apollo + AcademyProvider + safe-area + Stack
+│   ├── academy.tsx               # Academy picker (white-label tenant selection)
 │   ├── login.tsx                 # White-labeled student sign-in screen
 │   ├── dependents.tsx            # Guardian's children roster
 │   └── (tabs)/
@@ -96,6 +97,9 @@ app/
 ├── lib/
 │   ├── apollo.ts                 # Apollo Client (httpLink + authLink)
 │   ├── apollo-provider.tsx       # Mock-aware provider (pass-through in demo mode)
+│   ├── academy.ts                # Active-academy slug persistence (SecureStore)
+│   ├── academy-provider.tsx      # AcademyProvider / useActiveAcademy (Fase 9)
+│   ├── slug.ts                   # normalizeSlug() — pure, unit-tested
 │   ├── config.ts                 # EXPO_PUBLIC_* env reader, USE_MOCKS flag
 │   ├── modules.ts                # hasModule() — per-academy module gating
 │   ├── mock-data.ts              # Fixtures for demo mode
@@ -109,11 +113,13 @@ app/
 └── tsconfig.json
 ```
 
-### Still to scaffold
+### Scaffolded since
 
-- `(academy)` group (white-label subdomain picker)
-- `lib/auth.ts` (SecureStore wrappers), `lib/notifications.ts`,
-  `lib/format.ts` (currency + date helpers)
+- ✅ `/academy` picker + `AcademyProvider` (white-label tenant selection, Fase 9)
+- ✅ `lib/auth.ts` (login/activate + SecureStore JWT), `lib/format.ts`
+  (currency + date helpers)
+- Push lives in `hooks/usePushRegistration.ts` (no separate
+  `lib/notifications.ts` was needed)
 
 ## White-label theming
 
@@ -141,10 +147,16 @@ export function withAlpha(hex: string, alpha: number): string {
 }
 ```
 
-Once we add the `/login` flow and the subdomain picker, theming will
-graduate to a proper `WhiteLabelProvider` that fetches `academyBySlug`
-from SecureStore-persisted state. Until then, the dashboard query
-(`MyDashboard`) is the single source of truth for the active academy.
+**Which academy (the active slug)** is chosen at runtime in the `/academy`
+picker and persisted in SecureStore via `AcademyProvider`
+(`lib/academy-provider.tsx`), falling back to a baked
+`EXPO_PUBLIC_ACADEMY_SLUG` for single-tenant builds. `useActiveAcademy()`
+exposes `{ slug, ready, canSwitch, setSlug, clearSlug }`; the tabs entry gate
+sends a fresh install to the picker before login. Pre-auth branding
+(`useAcademyBranding`) reads that slug → `academyBySlug`; once logged in the
+dashboard query (`MyDashboard`) carries the academy. `normalizeSlug`
+(`lib/slug.ts`, pure + unit-tested) accepts a slug, deep link, or URL. See
+design-decisions §2.18.
 
 `mockups/student-dashboard.html` is the visual reference — note the
 phone-frame layout, the way the header colour cascades into the card
@@ -201,6 +213,7 @@ export function DashboardScreen() {
 
 | Route | Description | Status |
 |---|---|---|
+| `/academy` | Academy picker — choose tenant on first launch (Fase 9) | ✅ |
 | `/login` | Student login (white-labeled) | ✅ |
 | `/(tabs)` | Dashboard — next class, payment status, current workout | ✅ |
 | `/(tabs)/schedule` | Weekly schedule, book / cancel classes | ✅ |

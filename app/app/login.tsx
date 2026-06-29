@@ -6,7 +6,7 @@
  * In mock mode, any credentials accept and route to the dashboard.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -24,6 +24,8 @@ import { Check, Scan } from 'lucide-react-native';
 
 import { useAcademyBranding } from '../hooks/useAcademyBranding';
 import { login } from '../lib/auth';
+import { useActiveAcademy } from '../lib/academy-provider';
+import { USE_MOCKS } from '../lib/config';
 import { theme, withAlpha } from '../lib/theme';
 
 export default function LoginScreen() {
@@ -31,7 +33,18 @@ export default function LoginScreen() {
   const accent = branding.primaryColor;
   const academyName = branding.name;
   const initials = branding.initials;
-  const tagline = 'Unidade Vila Mariana';
+
+  const { slug, ready, canSwitch, clearSlug } = useActiveAcademy();
+
+  // No academy selected (fresh install reached login directly) → picker.
+  useEffect(() => {
+    if (!USE_MOCKS && ready && !slug) router.replace('/academy');
+  }, [ready, slug]);
+
+  const switchAcademy = async () => {
+    await clearSlug();
+    router.replace('/academy');
+  };
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -81,7 +94,11 @@ export default function LoginScreen() {
               <Text style={styles.logoText}>{initials}</Text>
             </View>
             <Text style={styles.academyName}>{academyName}</Text>
-            <Text style={styles.tagline}>{tagline}</Text>
+            {canSwitch ? (
+              <TouchableOpacity onPress={switchAcademy} activeOpacity={0.7} hitSlop={8}>
+                <Text style={styles.tagline}>Trocar academia</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
 
           {/* Form */}
