@@ -15,6 +15,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StatusBar,
@@ -27,7 +28,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useLazyQuery } from '@apollo/client/react';
-import { ArrowRight, Building2 } from 'lucide-react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import { ArrowRight, Building2, QrCode, X } from 'lucide-react-native';
 
 import { AcademyBySlugDocument } from '../gql/graphql';
 import { useActiveAcademy } from '../lib/academy-provider';
@@ -51,6 +53,9 @@ export default function AcademyPickerScreen() {
 
   const [value, setValue] = useState('');
   const [entering, setEntering] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [permission, requestPermission] = useCameraPermissions();
   const [lookup, { data, loading, error, called }] = useLazyQuery<any>(
     AcademyBySlugDocument,
     { fetchPolicy: 'network-only' },
@@ -63,6 +68,31 @@ export default function AcademyPickerScreen() {
     const slug = normalizeSlug(raw);
     if (!slug) return;
     lookup({ variables: { slug } });
+  };
+
+  const openScanner = async () => {
+    setScanError(null);
+    if (!permission?.granted) {
+      const res = await requestPermission();
+      if (!res.granted) {
+        setScanError('Permissão de câmera negada. Você pode digitar o identificador.');
+        return;
+      }
+    }
+    setScanning(true);
+  };
+
+  // A QR encodes a deep link / URL / slug; normalizeSlug pulls out the slug.
+  const onScanned = ({ data: raw }: { data: string }) => {
+    if (!scanning) return; // ignore the burst after the first hit
+    const slug = normalizeSlug(raw);
+    setScanning(false);
+    if (!slug) {
+      setScanError('QR não reconhecido. Tente de novo ou digite o identificador.');
+      return;
+    }
+    setValue(slug);
+    submit(slug);
   };
 
   // Deep-link prefill: gymapp://academy?slug=<slug>
@@ -125,6 +155,17 @@ export default function AcademyPickerScreen() {
             <Text style={styles.hint}>
               É o nome curto da sua academia (ou cole o link que ela enviou).
             </Text>
+
+            <TouchableOpacity
+              style={[styles.scanBtn, { borderColor: accent }]}
+              onPress={openScanner}
+              activeOpacity={0.85}
+            >
+              <QrCode size={18} color={accent} strokeWidth={2.2} />
+              <Text style={[styles.scanBtnText, { color: accent }]}>Escanear QR da academia</Text>
+            </TouchableOpacity>
+
+            {scanError ? <Text style={styles.errorText}>{scanError}</Text> : null}
 
             {loading ? (
               <View style={styles.statusRow}>
@@ -190,6 +231,29 @@ export default function AcademyPickerScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Modal visible={scanning} animationType="slide" onRequestClose={() => setScanning(false)}>
+        <View style={styles.scanRoot}>
+          <CameraView
+            style={StyleSheet.absoluteFill}
+            facing="back"
+            barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+            onBarcodeScanned={scanning ? onScanned : undefined}
+          />
+          <SafeAreaView style={styles.scanOverlay} edges={['top', 'bottom']}>
+            <Text style={styles.scanHint}>Aponte para o QR da sua academia</Text>
+            <View style={styles.scanFrame} />
+            <TouchableOpacity
+              style={styles.scanCancel}
+              onPress={() => setScanning(false)}
+              activeOpacity={0.8}
+            >
+              <X size={18} color="#fff" strokeWidth={2.4} />
+              <Text style={styles.scanCancelText}>Cancelar</Text>
+            </TouchableOpacity>
+          </SafeAreaView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -246,6 +310,55 @@ const styles = StyleSheet.create({
     color: theme.ink900,
   },
   hint: { fontSize: 12, color: theme.ink400, marginTop: 8, lineHeight: 17 },
+  scanBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 16,
+    paddingVertical: 13,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    backgroundColor: '#fff',
+  },
+  scanBtnText: { fontSize: 14, fontWeight: '700' },
+  scanRoot: { flex: 1, backgroundColor: '#000' },
+  scanOverlay: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  scanHint: {
+    position: 'absolute',
+    top: 80,
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowRadius: 6,
+  },
+  scanFrame: {
+    width: 240,
+    height: 240,
+    borderRadius: 24,
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: 'transparent',
+  },
+  scanCancel: {
+    position: 'absolute',
+    bottom: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  scanCancelText: { color: '#fff', fontSize: 14, fontWeight: '700' },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
   statusText: { fontSize: 13, color: theme.ink500 },
   errorText: { fontSize: 13, color: '#be123c', marginTop: 16 },

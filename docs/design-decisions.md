@@ -782,10 +782,16 @@ right below. We want the history, not a clean slate.
 - **Consequences** — **zero mudança de backend** (`academyBySlug` já existe
   pública); sem schema/codegen/config-sync. Deep link só via `?slug=`
   (`gymapp://academy?slug=x`, grátis no expo-router).
-- **Deferido** — **QR scan** (precisa de `expo-camera`), deep link path-style
-  `gymapp://academy/<slug>` e **universal links** iOS/Android (config nativa).
-- **Revisit when** — multi-academia por aluno (hoje 1:1, §5.7 do plano) ou
-  precisar do QR/universal links pro onboarding.
+- **QR scan (entregue, item 8).** Admin **gera** o QR (`AcademyQRCode` em
+  `/admin/settings`, `qrcode.react`) codificando `gymapp://academy?slug=<slug>`;
+  o app **lê** (`expo-camera` `CameraView` na tela `/academy`) e passa o
+  conteúdo pelo mesmo `normalizeSlug` (aceita deep link / URL / slug). Câmera só
+  valida em build real (não no headless).
+- **Deferido** — deep link path-style `gymapp://academy/<slug>`, **universal
+  links** iOS/Android (config nativa + arquivos AASA/assetlinks hospedados em
+  `gym.app`, que hoje não está configurado) e **biometria** (`expo-local-auth`).
+- **Revisit when** — multi-academia por aluno (hoje 1:1, §5.7 do plano), ou ter
+  o domínio `gym.app` pra universal links, ou habilitar biometria.
 
 ---
 
@@ -2170,3 +2176,9 @@ Explicit no's so we don't re-argue them.
   ao criar a avaliação. App: botão na aba Perfil. Admin: banner de pendências
   na aba Avaliações. `config:export` feito (content type novo). Smoke ao vivo
   (lado do aluno) + cleanup do DB.
+- **2026-06-29** — Admin: pré-preenche a avaliação ao criar com a última do
+  aluno (menos a data); editar mantém os dados da própria. Sem backend.
+- **2026-06-29** — Item 8 (parcial): QR scan (§2.18). Admin gera o QR
+  (`AcademyQRCode`, `qrcode.react`) em `/admin/settings`; app lê com
+  `expo-camera` na tela `/academy` → `normalizeSlug`. Universal links +
+  biometria seguem deferidos. Build do site OK; câmera só valida em build real.

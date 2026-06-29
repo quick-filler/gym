@@ -8,6 +8,7 @@ import { Topbar } from "@/components/admin/Topbar";
 import { LoadingState, Spinner } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { AdminPreview } from "@/components/admin/AdminPreview";
+import { AcademyQRCode } from "@/components/admin/AcademyQRCode";
 import { ContrastWarning } from "@/components/admin/ContrastWarning";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -370,6 +371,10 @@ export default function SettingsPage() {
                         </div>
                       </div>
                     </Field>
+
+                    <div className="mb-6">
+                      <AcademyQRCode slug={form.slug} color={form.primaryColor} />
+                    </div>
 
                     <Field label="Ícone quadrado (favicon)">
                       <input

@@ -200,7 +200,7 @@ FAQPage / AboutPage / ContactPage) via `src/lib/seo.tsx → JsonLd`.
 | `/admin/schedule` | Week navigator + 7-column weekly grid + side stats + upcoming classes | ✅ |
 | `/admin/workouts` | Tabs (Ativas / **Avaliações** / Arquivadas). Ativas/Arquivadas = workout-plan card grid (gym fichas only — pool fichas live under Piscina). **Avaliações** = body-assessment table (peso/altura/gordura/IMC por aluno) com criar/editar/excluir (`AssessmentsTab` + `AssessmentDialog`, wired to `bodyAssessments`/`createBodyAssessment`/`updateBodyAssessment`/`deleteBodyAssessment`) + banner de **solicitações pendentes** (`assessmentRequests`) que o aluno pede pelo app e some ao registrar a avaliação. | ✅ |
 | `/admin/pool` | Tabs **Inspeções** (pH/cloro/temp) + **Atividades** (pool fichas = WorkoutPlan `category:'pool'`, shared `WorkoutCard`) | ✅ |
-| `/admin/settings` | Identity/Appearance/Integration/**Módulos** tabs + live white-label phone preview | ✅ |
+| `/admin/settings` | Identity/Appearance/Integration/**Módulos** tabs + live white-label phone preview + **app-access QR** (`AcademyQRCode`, encodes `gymapp://academy?slug=<slug>` for students to scan) | ✅ |
 | `/admin/students/[id]` | Student detail | — future |
 | `/admin/plans` | Plans CRUD | — future |
 

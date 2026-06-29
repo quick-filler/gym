@@ -25,6 +25,7 @@ by the GraphQL API.
 - **react-native-safe-area-context** for notch-aware layouts
 - **expo-secure-store** for the JWT (NOT AsyncStorage — secrets belong in the keychain)
 - **expo-clipboard** (PIX copia-e-cola / boleto), **expo-image-picker** (profile photo, Fase 5)
+- **expo-camera** (scan the academy QR in the picker — item 8; camera permission in `app.json`)
 - **@graphql-codegen/cli** (client preset) for type-safe queries
 
 Planned on-demand:
@@ -213,7 +214,7 @@ export function DashboardScreen() {
 
 | Route | Description | Status |
 |---|---|---|
-| `/academy` | Academy picker — choose tenant on first launch (Fase 9) | ✅ |
+| `/academy` | Academy picker — type the slug **or scan the academy QR** (`expo-camera` → `normalizeSlug`); choose tenant on first launch (Fase 9) | ✅ |
 | `/login` | Student login (white-labeled) | ✅ |
 | `/(tabs)` | Dashboard — next class, payment status, current workout | ✅ |
 | `/(tabs)/schedule` | Weekly schedule, book / cancel classes | ✅ |
