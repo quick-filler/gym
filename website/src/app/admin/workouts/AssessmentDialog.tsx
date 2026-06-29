@@ -98,12 +98,15 @@ export function AssessmentDialog({
   onClose,
   onSaved,
   editing,
+  assessments,
 }: {
   open: boolean;
   onClose: () => void;
   onSaved?: () => void;
   /** When set, the dialog edits this assessment (student is locked). */
   editing?: AssessmentRow | null;
+  /** Existing assessments (date-desc) — used to prefill from the student's last one. */
+  assessments?: AssessmentRow[];
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const isEdit = !!editing;
@@ -120,15 +123,32 @@ export function AssessmentDialog({
   const [m, setM] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [prefilled, setPrefilled] = useState(false);
 
   const [createAssessment, createState] = useMutation(CREATE_ASSESSMENT);
   const [updateAssessment, updateState] = useMutation(UPDATE_ASSESSMENT);
   const saving = createState.loading || updateState.loading;
 
+  // When a student is picked (create mode), seed the metric fields from their
+  // most recent assessment — the values usually change incrementally, so the
+  // instructor just tweaks what moved. Date stays "today". Clears when the
+  // student has no prior assessment.
+  const onSelectStudent = (id: string) => {
+    setStudentId(id);
+    const last = (assessments ?? []).find((a) => a.student?.documentId === id);
+    setInstructor(last?.instructor ?? "");
+    setWeight(numStr(last?.weight ?? null));
+    setHeight(numStr(last?.height ?? null));
+    setBodyFat(numStr(last?.bodyFat ?? null));
+    setM(measurementsToStrings(last?.measurements ?? null));
+    setPrefilled(!!last);
+  };
+
   // Hydrate on open: prefill from `editing`, or reset for a new assessment.
   useEffect(() => {
     if (!open) return;
     setError(null);
+    setPrefilled(false);
     if (editing) {
       setStudentId(editing.student?.documentId ?? "");
       setDate(editing.date ?? today);
@@ -218,13 +238,18 @@ export function AssessmentDialog({
             ) : (
               <Combobox
                 value={studentId}
-                onChange={setStudentId}
+                onChange={onSelectStudent}
                 placeholder="Selecione o aluno…"
                 searchPlaceholder="Buscar aluno"
                 emptyMessage="Nenhum aluno"
                 options={studentOptions}
               />
             )}
+            {prefilled ? (
+              <p className="text-[0.78rem] text-ink-400 mt-1.5">
+                Preenchido com a última avaliação — ajuste o que mudou.
+              </p>
+            ) : null}
           </Field>
           <Field label="Data">
             <Input

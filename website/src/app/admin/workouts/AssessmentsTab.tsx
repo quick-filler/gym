@@ -48,6 +48,20 @@ const DELETE_ASSESSMENT = graphql(`
   }
 `);
 
+const ADMIN_ASSESSMENT_REQUESTS = graphql(`
+  query AdminAssessmentRequests {
+    assessmentRequests(status: "pending") {
+      documentId
+      notes
+      createdAt
+      student {
+        documentId
+        name
+      }
+    }
+  }
+`);
+
 const MEASURE_KEYS = [
   "chest",
   "waist",
@@ -93,9 +107,19 @@ export function AssessmentsTab() {
     skip: USE_MOCKS,
     fetchPolicy: "cache-and-network",
   });
+  const reqQ = useQuery(ADMIN_ASSESSMENT_REQUESTS, {
+    skip: USE_MOCKS,
+    fetchPolicy: "cache-and-network",
+  });
   const [deleteAssessment] = useMutation(DELETE_ASSESSMENT, {
     refetchQueries: ["AdminBodyAssessments"],
   });
+
+  const requests = USE_MOCKS
+    ? []
+    : (reqQ.data?.assessmentRequests ?? []).filter(
+        (r): r is NonNullable<typeof r> => !!r,
+      );
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<AssessmentRow | null>(null);
@@ -142,6 +166,28 @@ export function AssessmentsTab() {
 
   return (
     <>
+      {requests.length > 0 ? (
+        <div className="mb-4 rounded-2xl border border-flame-100 bg-flame-50 p-4">
+          <div className="font-semibold text-ink-900 text-[0.92rem] mb-1">
+            {requests.length} solicitaç{requests.length > 1 ? "ões" : "ão"} de avaliação
+          </div>
+          <p className="text-[0.82rem] text-ink-500 mb-3">
+            Estes alunos pediram uma avaliação. Registre abaixo — a solicitação é
+            baixada automaticamente quando você cria a avaliação do aluno.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {requests.map((r) => (
+              <span
+                key={r.documentId}
+                className="inline-flex items-center rounded-full bg-white border border-line px-3 py-1 text-[0.8rem] font-medium text-ink-700"
+              >
+                {r.student?.name ?? "Aluno"}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="flex items-center justify-between mb-4">
         <p className="text-[0.86rem] text-ink-500">
           Peso, altura, gordura e medidas dos alunos. O aluno vê no Perfil do app.
@@ -218,9 +264,13 @@ export function AssessmentsTab() {
       <AssessmentDialog
         open={dialogOpen}
         editing={editing}
+        assessments={rows}
         onClose={() => setDialogOpen(false)}
         onSaved={() => {
-          if (!USE_MOCKS) q.refetch();
+          if (!USE_MOCKS) {
+            q.refetch();
+            reqQ.refetch(); // creating an assessment auto-resolves the request
+          }
         }}
       />
 

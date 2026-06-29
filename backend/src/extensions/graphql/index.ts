@@ -49,6 +49,7 @@ import { buildBulkImport } from './types/bulk-import';
 import { buildNotification } from './types/notification';
 import { buildAccount } from './types/account';
 import { buildCep } from './types/cep';
+import { buildBodyAssessmentRequest } from './types/body-assessment-request';
 
 export function registerGraphQL(strapi: Core.Strapi) {
   const extensionService = strapi.plugin('graphql').service('extension');
@@ -82,6 +83,7 @@ export function registerGraphQL(strapi: Core.Strapi) {
       buildNotification(ctx),
       buildAccount(ctx),
       buildCep(ctx),
+      buildBodyAssessmentRequest(ctx),
     ];
 
     const types: any[] = [...buildCommonTypes(ctx)];

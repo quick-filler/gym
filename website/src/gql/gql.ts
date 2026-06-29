@@ -49,6 +49,7 @@ type Documents = {
     "\n  mutation AdminUpdateBodyAssessment(\n    $documentId: ID!\n    $data: BodyAssessmentUpdateInput!\n  ) {\n    updateBodyAssessment(documentId: $documentId, data: $data) {\n      documentId\n    }\n  }\n": typeof types.AdminUpdateBodyAssessmentDocument,
     "\n  query AdminBodyAssessments {\n    bodyAssessments(pagination: { limit: 100 }) {\n      documentId\n      date\n      instructor\n      weight\n      height\n      bodyFat\n      bmi\n      notes\n      measurements {\n        chest\n        waist\n        hips\n        arms\n        thighs\n        calves\n        shoulders\n      }\n      student {\n        documentId\n        name\n      }\n    }\n  }\n": typeof types.AdminBodyAssessmentsDocument,
     "\n  mutation AdminDeleteBodyAssessment($documentId: ID!) {\n    deleteBodyAssessment(documentId: $documentId) {\n      documentId\n    }\n  }\n": typeof types.AdminDeleteBodyAssessmentDocument,
+    "\n  query AdminAssessmentRequests {\n    assessmentRequests(status: \"pending\") {\n      documentId\n      notes\n      createdAt\n      student {\n        documentId\n        name\n      }\n    }\n  }\n": typeof types.AdminAssessmentRequestsDocument,
     "\n  query StudentsForWorkoutEdit {\n    students(pagination: { limit: 200 }) {\n      documentId\n      name\n    }\n  }\n": typeof types.StudentsForWorkoutEditDocument,
     "\n  query StudentsForWorkout {\n    students(pagination: { limit: 200 }) {\n      documentId\n      name\n    }\n  }\n": typeof types.StudentsForWorkoutDocument,
     "\n  mutation AdminCreateWorkoutPlan($data: WorkoutPlanInput!) {\n    createWorkoutPlan(data: $data) {\n      documentId\n      name\n    }\n  }\n": typeof types.AdminCreateWorkoutPlanDocument,
@@ -128,6 +129,7 @@ const documents: Documents = {
     "\n  mutation AdminUpdateBodyAssessment(\n    $documentId: ID!\n    $data: BodyAssessmentUpdateInput!\n  ) {\n    updateBodyAssessment(documentId: $documentId, data: $data) {\n      documentId\n    }\n  }\n": types.AdminUpdateBodyAssessmentDocument,
     "\n  query AdminBodyAssessments {\n    bodyAssessments(pagination: { limit: 100 }) {\n      documentId\n      date\n      instructor\n      weight\n      height\n      bodyFat\n      bmi\n      notes\n      measurements {\n        chest\n        waist\n        hips\n        arms\n        thighs\n        calves\n        shoulders\n      }\n      student {\n        documentId\n        name\n      }\n    }\n  }\n": types.AdminBodyAssessmentsDocument,
     "\n  mutation AdminDeleteBodyAssessment($documentId: ID!) {\n    deleteBodyAssessment(documentId: $documentId) {\n      documentId\n    }\n  }\n": types.AdminDeleteBodyAssessmentDocument,
+    "\n  query AdminAssessmentRequests {\n    assessmentRequests(status: \"pending\") {\n      documentId\n      notes\n      createdAt\n      student {\n        documentId\n        name\n      }\n    }\n  }\n": types.AdminAssessmentRequestsDocument,
     "\n  query StudentsForWorkoutEdit {\n    students(pagination: { limit: 200 }) {\n      documentId\n      name\n    }\n  }\n": types.StudentsForWorkoutEditDocument,
     "\n  query StudentsForWorkout {\n    students(pagination: { limit: 200 }) {\n      documentId\n      name\n    }\n  }\n": types.StudentsForWorkoutDocument,
     "\n  mutation AdminCreateWorkoutPlan($data: WorkoutPlanInput!) {\n    createWorkoutPlan(data: $data) {\n      documentId\n      name\n    }\n  }\n": types.AdminCreateWorkoutPlanDocument,
@@ -326,6 +328,10 @@ export function graphql(source: "\n  query AdminBodyAssessments {\n    bodyAsses
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation AdminDeleteBodyAssessment($documentId: ID!) {\n    deleteBodyAssessment(documentId: $documentId) {\n      documentId\n    }\n  }\n"): (typeof documents)["\n  mutation AdminDeleteBodyAssessment($documentId: ID!) {\n    deleteBodyAssessment(documentId: $documentId) {\n      documentId\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query AdminAssessmentRequests {\n    assessmentRequests(status: \"pending\") {\n      documentId\n      notes\n      createdAt\n      student {\n        documentId\n        name\n      }\n    }\n  }\n"): (typeof documents)["\n  query AdminAssessmentRequests {\n    assessmentRequests(status: \"pending\") {\n      documentId\n      notes\n      createdAt\n      student {\n        documentId\n        name\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

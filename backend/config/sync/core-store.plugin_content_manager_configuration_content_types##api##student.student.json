@@ -202,6 +202,20 @@
           "sortable": true
         }
       },
+      "notificationPrefs": {
+        "edit": {
+          "label": "notificationPrefs",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "notificationPrefs",
+          "searchable": false,
+          "sortable": false
+        }
+      },
       "academy": {
         "edit": {
           "label": "academy",
@@ -482,6 +496,12 @@
           {
             "name": "activated",
             "size": 4
+          }
+        ],
+        [
+          {
+            "name": "notificationPrefs",
+            "size": 12
           }
         ]
       ]

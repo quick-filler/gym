@@ -221,6 +221,15 @@ export type BodyAssessmentInput = {
   weight?: InputMaybe<Scalars['Float']['input']>;
 };
 
+export type BodyAssessmentRequest = {
+  __typename?: 'BodyAssessmentRequest';
+  createdAt?: Maybe<Scalars['String']['output']>;
+  documentId: Scalars['ID']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  student?: Maybe<Student>;
+};
+
 export type BodyAssessmentUpdateInput = {
   bodyFat?: InputMaybe<Scalars['Float']['input']>;
   date?: InputMaybe<Scalars['String']['input']>;
@@ -1057,6 +1066,8 @@ export type Mutation = {
   payChargePix?: Maybe<PixCheckout>;
   /** Registra (ou reatribui) um Expo push token ao usuário do caller. Idempotente por token. */
   registerPushToken?: Maybe<Scalars['Boolean']['output']>;
+  /** Student asks for a body assessment. Idempotent — returns the open request if one already exists. Notifies the academy admins. */
+  requestBodyAssessment?: Maybe<BodyAssessmentRequest>;
   /** Dispara os crons de lembrete (cobrança + aula) manualmente e retorna quantas notificações criou. Restrito a platform admin (liberado fora de produção p/ testes). */
   runNotificationReminders?: Maybe<Scalars['Int']['output']>;
   /** Opens a training session against one of the caller’s active fichas. Requires an active enrollment. Seeds the per-exercise checklist from the plan. */
@@ -1320,6 +1331,11 @@ export type MutationPayChargePixArgs = {
 export type MutationRegisterPushTokenArgs = {
   platform?: InputMaybe<Scalars['String']['input']>;
   token: Scalars['String']['input'];
+};
+
+
+export type MutationRequestBodyAssessmentArgs = {
+  notes?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1809,6 +1825,8 @@ export type Query = {
   academyBySlug?: Maybe<Academy>;
   adminDashboard?: Maybe<AdminDashboard>;
   allAcademies?: Maybe<PlatformAcademyList>;
+  /** The academy's assessment requests (staff only). Defaults to pending. */
+  assessmentRequests?: Maybe<Array<Maybe<BodyAssessmentRequest>>>;
   bodyAssessment?: Maybe<BodyAssessment>;
   bodyAssessments?: Maybe<Array<Maybe<BodyAssessment>>>;
   /** Resolve a Brazilian CEP to street/neighborhood/city/state (ViaCEP). Null when invalid or not found. Powers address autofill so the user only types the number. */
@@ -1837,6 +1855,8 @@ export type Query = {
   myAcademyPoolStatus?: Maybe<PoolStatus>;
   /** Returns the Asaas configuration status for the caller's academy. Never reveals the actual credentials. */
   myAsaasSettings?: Maybe<AsaasSettingsStatus>;
+  /** The caller's own assessment requests, newest first. */
+  myAssessmentRequests?: Maybe<Array<Maybe<BodyAssessmentRequest>>>;
   myBodyAssessments?: Maybe<Array<Maybe<BodyAssessment>>>;
   myDependents?: Maybe<Array<Maybe<Dependent>>>;
   /** The caller's most recent avaliação física, or null. */
@@ -1909,6 +1929,11 @@ export type QueryAcademyBySlugArgs = {
 export type QueryAllAcademiesArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   pageSize?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryAssessmentRequestsArgs = {
+  status?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -2006,6 +2031,11 @@ export type QueryLeadsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   pageSize?: InputMaybe<Scalars['Int']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryMyAssessmentRequestsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -2590,6 +2620,18 @@ export type CepLookupQueryVariables = Exact<{
 
 export type CepLookupQuery = { __typename?: 'Query', cepLookup?: { __typename?: 'CepAddress', cep: string, street: string, neighborhood: string, city: string, state: string } | null };
 
+export type MyAssessmentRequestsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MyAssessmentRequestsQuery = { __typename?: 'Query', myAssessmentRequests?: Array<{ __typename?: 'BodyAssessmentRequest', documentId: string, status: string, createdAt?: string | null } | null> | null };
+
+export type RequestBodyAssessmentMutationVariables = Exact<{
+  notes?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type RequestBodyAssessmentMutation = { __typename?: 'Mutation', requestBodyAssessment?: { __typename?: 'BodyAssessmentRequest', documentId: string, status: string } | null };
+
 export type MyScheduleWeekQueryVariables = Exact<{
   weekStart?: InputMaybe<Scalars['String']['input']>;
 }>;
@@ -2719,6 +2761,8 @@ export const UpdateMyPasswordDocument = {"kind":"Document","definitions":[{"kind
 export const MintUploadUrlDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"MintUploadUrl"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"filename"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"contentType"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"size"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mintUploadUrl"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filename"},"value":{"kind":"Variable","name":{"kind":"Name","value":"filename"}}},{"kind":"Argument","name":{"kind":"Name","value":"contentType"},"value":{"kind":"Variable","name":{"kind":"Name","value":"contentType"}}},{"kind":"Argument","name":{"kind":"Name","value":"size"},"value":{"kind":"Variable","name":{"kind":"Name","value":"size"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"uploadUrl"}},{"kind":"Field","name":{"kind":"Name","value":"publicUrl"}},{"kind":"Field","name":{"kind":"Name","value":"key"}}]}}]}}]} as unknown as DocumentNode<MintUploadUrlMutation, MintUploadUrlMutationVariables>;
 export const ConfirmUploadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ConfirmUpload"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"url"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"name"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"confirmUpload"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"url"},"value":{"kind":"Variable","name":{"kind":"Name","value":"url"}}},{"kind":"Argument","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"name"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]} as unknown as DocumentNode<ConfirmUploadMutation, ConfirmUploadMutationVariables>;
 export const CepLookupDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CepLookup"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"cep"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"cepLookup"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"cep"},"value":{"kind":"Variable","name":{"kind":"Name","value":"cep"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"cep"}},{"kind":"Field","name":{"kind":"Name","value":"street"}},{"kind":"Field","name":{"kind":"Name","value":"neighborhood"}},{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"state"}}]}}]}}]} as unknown as DocumentNode<CepLookupQuery, CepLookupQueryVariables>;
+export const MyAssessmentRequestsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyAssessmentRequests"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myAssessmentRequests"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"5"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}}]}}]} as unknown as DocumentNode<MyAssessmentRequestsQuery, MyAssessmentRequestsQueryVariables>;
+export const RequestBodyAssessmentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RequestBodyAssessment"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"notes"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"requestBodyAssessment"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"notes"},"value":{"kind":"Variable","name":{"kind":"Name","value":"notes"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<RequestBodyAssessmentMutation, RequestBodyAssessmentMutationVariables>;
 export const MyScheduleWeekDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyScheduleWeek"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"weekStart"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myScheduleWeek"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"weekStart"},"value":{"kind":"Variable","name":{"kind":"Name","value":"weekStart"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"scheduleDocumentId"}},{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"weekday"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"modality"}},{"kind":"Field","name":{"kind":"Name","value":"room"}},{"kind":"Field","name":{"kind":"Name","value":"startTime"}},{"kind":"Field","name":{"kind":"Name","value":"endTime"}},{"kind":"Field","name":{"kind":"Name","value":"maxCapacity"}},{"kind":"Field","name":{"kind":"Name","value":"bookedCount"}},{"kind":"Field","name":{"kind":"Name","value":"spotsLeft"}},{"kind":"Field","name":{"kind":"Name","value":"isFull"}},{"kind":"Field","name":{"kind":"Name","value":"bookable"}},{"kind":"Field","name":{"kind":"Name","value":"waitlistCount"}},{"kind":"Field","name":{"kind":"Name","value":"bookedByMe"}},{"kind":"Field","name":{"kind":"Name","value":"myBookingDocumentId"}},{"kind":"Field","name":{"kind":"Name","value":"myBookingStatus"}}]}}]}}]} as unknown as DocumentNode<MyScheduleWeekQuery, MyScheduleWeekQueryVariables>;
 export const BookClassDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"BookClass"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"scheduleDocumentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"date"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"bookClass"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"scheduleDocumentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"scheduleDocumentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"date"},"value":{"kind":"Variable","name":{"kind":"Name","value":"date"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"date"}}]}}]}}]} as unknown as DocumentNode<BookClassMutation, BookClassMutationVariables>;
 export const CancelMyBookingDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CancelMyBooking"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"cancelMyBooking"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<CancelMyBookingMutation, CancelMyBookingMutationVariables>;

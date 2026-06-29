@@ -19,6 +19,7 @@ import {
 
 const UID = 'api::body-assessment.body-assessment';
 const STUDENT_UID = 'api::student.student';
+const REQUEST_UID = 'api::body-assessment-request.body-assessment-request';
 
 /* ------------------------------------------------------------------
  * Pure helpers (exported for unit tests)
@@ -240,7 +241,30 @@ export function buildBodyAssessment({ nexus, strapi }: { nexus: any; strapi: Cor
             );
             if (a !== academyId) throw new Error('Dependente de outra academia.');
           }
-          return await strapi.documents(UID).create({ data: args.data });
+          const created = await strapi.documents(UID).create({ data: args.data });
+          // Auto-resolve the student's open assessment request(s), if any.
+          if (args.data.student) {
+            try {
+              const pending: any[] = await strapi.documents(REQUEST_UID).findMany({
+                filters: {
+                  student: { documentId: args.data.student },
+                  status: 'pending',
+                } as any,
+                limit: 50,
+              });
+              for (const r of pending) {
+                await strapi.documents(REQUEST_UID).update({
+                  documentId: r.documentId,
+                  data: { status: 'done' },
+                });
+              }
+            } catch (e) {
+              strapi.log.error(
+                `[assessment] auto-resolve request failed: ${(e as Error).message}`,
+              );
+            }
+          }
+          return created;
         },
       });
 

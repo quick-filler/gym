@@ -207,6 +207,14 @@ input BodyAssessmentInput {
   weight: Float
 }
 
+type BodyAssessmentRequest {
+  createdAt: String
+  documentId: ID!
+  notes: String
+  status: String!
+  student: Student
+}
+
 input BodyAssessmentUpdateInput {
   bodyFat: Float
   date: String
@@ -1079,6 +1087,11 @@ type Mutation {
   registerPushToken(platform: String, token: String!): Boolean
 
   """
+  Student asks for a body assessment. Idempotent — returns the open request if one already exists. Notifies the academy admins.
+  """
+  requestBodyAssessment(notes: String): BodyAssessmentRequest
+
+  """
   Dispara os crons de lembrete (cobrança + aula) manualmente e retorna quantas notificações criou. Restrito a platform admin (liberado fora de produção p/ testes).
   """
   runNotificationReminders: Int
@@ -1485,6 +1498,9 @@ type Query {
   academyBySlug(slug: String!): Academy
   adminDashboard: AdminDashboard
   allAcademies(page: Int, pageSize: Int): PlatformAcademyList
+
+  """The academy's assessment requests (staff only). Defaults to pending."""
+  assessmentRequests(status: String): [BodyAssessmentRequest]
   bodyAssessment(documentId: ID!): BodyAssessment
   bodyAssessments(pagination: PaginationInput): [BodyAssessment]
 
@@ -1529,6 +1545,9 @@ type Query {
   Returns the Asaas configuration status for the caller's academy. Never reveals the actual credentials.
   """
   myAsaasSettings: AsaasSettingsStatus
+
+  """The caller's own assessment requests, newest first."""
+  myAssessmentRequests(limit: Int): [BodyAssessmentRequest]
   myBodyAssessments(limit: Int, offset: Int): [BodyAssessment]
   myDependents: [Dependent]
 

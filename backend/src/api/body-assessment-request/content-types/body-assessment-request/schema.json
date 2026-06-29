@@ -1,0 +1,34 @@
+{
+  "kind": "collectionType",
+  "collectionName": "body_assessment_requests",
+  "info": {
+    "singularName": "body-assessment-request",
+    "pluralName": "body-assessment-requests",
+    "displayName": "Body Assessment Request",
+    "description": "A student's request for the instructor to run a body assessment. Auto-resolved when an assessment is created for that student."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "student": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::student.student"
+    },
+    "academy": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::academy.academy"
+    },
+    "notes": {
+      "type": "text"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["pending", "done", "cancelled"],
+      "default": "pending"
+    }
+  }
+}

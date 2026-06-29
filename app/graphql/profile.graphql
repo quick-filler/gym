@@ -109,3 +109,19 @@ query CepLookup($cep: String!) {
     state
   }
 }
+
+# Body-assessment request (student asks the academy to run an avaliação).
+query MyAssessmentRequests {
+  myAssessmentRequests(limit: 5) {
+    documentId
+    status
+    createdAt
+  }
+}
+
+mutation RequestBodyAssessment($notes: String) {
+  requestBodyAssessment(notes: $notes) {
+    documentId
+    status
+  }
+}

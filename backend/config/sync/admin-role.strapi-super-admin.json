@@ -264,6 +264,72 @@
       "locale": null
     },
     {
+      "documentId": "ql0mmp7gpn1cyooxrfwp63fz",
+      "action": "plugin::content-manager.explorer.create",
+      "actionParameters": {},
+      "subject": "api::body-assessment-request.body-assessment-request",
+      "properties": {
+        "fields": [
+          "student",
+          "academy",
+          "notes",
+          "status"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "u8f4nt24ddv9dmej58jg3psv",
+      "action": "plugin::content-manager.explorer.delete",
+      "actionParameters": {},
+      "subject": "api::body-assessment-request.body-assessment-request",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "uhxe1cwx7o22wenkfzr4m99b",
+      "action": "plugin::content-manager.explorer.publish",
+      "actionParameters": {},
+      "subject": "api::body-assessment-request.body-assessment-request",
+      "properties": {},
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "jcgk1xoas017l1094h6mkguw",
+      "action": "plugin::content-manager.explorer.read",
+      "actionParameters": {},
+      "subject": "api::body-assessment-request.body-assessment-request",
+      "properties": {
+        "fields": [
+          "student",
+          "academy",
+          "notes",
+          "status"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
+      "documentId": "pf2of2xs01pjmc99hxo7hveg",
+      "action": "plugin::content-manager.explorer.update",
+      "actionParameters": {},
+      "subject": "api::body-assessment-request.body-assessment-request",
+      "properties": {
+        "fields": [
+          "student",
+          "academy",
+          "notes",
+          "status"
+        ]
+      },
+      "conditions": [],
+      "locale": null
+    },
+    {
       "documentId": "rzvh51qqj9wxwp485ca6arql",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
@@ -1515,7 +1581,7 @@
       "locale": null
     },
     {
-      "documentId": "dyv6qe8a60xootrrgqb82gxo",
+      "documentId": "n96y6zb4glo0le51m9ngy4ec",
       "action": "plugin::content-manager.explorer.create",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -1534,6 +1600,7 @@
           "isGuardian",
           "activated",
           "notes",
+          "notificationPrefs",
           "academy",
           "user",
           "enrollments",
@@ -1565,7 +1632,7 @@
       "locale": null
     },
     {
-      "documentId": "soeu5bh65giw99wpva4skeda",
+      "documentId": "c1am2ov2r22bs8zavlxdx4d2",
       "action": "plugin::content-manager.explorer.read",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -1584,6 +1651,7 @@
           "isGuardian",
           "activated",
           "notes",
+          "notificationPrefs",
           "academy",
           "user",
           "enrollments",
@@ -1597,7 +1665,7 @@
       "locale": null
     },
     {
-      "documentId": "x8g2d4l4s7zsrmz2ekdier0h",
+      "documentId": "exmglgri1u9nit0nih8ypuw4",
       "action": "plugin::content-manager.explorer.update",
       "actionParameters": {},
       "subject": "api::student.student",
@@ -1616,6 +1684,7 @@
           "isGuardian",
           "activated",
           "notes",
+          "notificationPrefs",
           "academy",
           "user",
           "enrollments",

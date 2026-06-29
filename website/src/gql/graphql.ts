@@ -221,6 +221,15 @@ export type BodyAssessmentInput = {
   weight?: InputMaybe<Scalars['Float']['input']>;
 };
 
+export type BodyAssessmentRequest = {
+  __typename?: 'BodyAssessmentRequest';
+  createdAt?: Maybe<Scalars['String']['output']>;
+  documentId: Scalars['ID']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  student?: Maybe<Student>;
+};
+
 export type BodyAssessmentUpdateInput = {
   bodyFat?: InputMaybe<Scalars['Float']['input']>;
   date?: InputMaybe<Scalars['String']['input']>;
@@ -1057,6 +1066,8 @@ export type Mutation = {
   payChargePix?: Maybe<PixCheckout>;
   /** Registra (ou reatribui) um Expo push token ao usuário do caller. Idempotente por token. */
   registerPushToken?: Maybe<Scalars['Boolean']['output']>;
+  /** Student asks for a body assessment. Idempotent — returns the open request if one already exists. Notifies the academy admins. */
+  requestBodyAssessment?: Maybe<BodyAssessmentRequest>;
   /** Dispara os crons de lembrete (cobrança + aula) manualmente e retorna quantas notificações criou. Restrito a platform admin (liberado fora de produção p/ testes). */
   runNotificationReminders?: Maybe<Scalars['Int']['output']>;
   /** Opens a training session against one of the caller’s active fichas. Requires an active enrollment. Seeds the per-exercise checklist from the plan. */
@@ -1078,6 +1089,8 @@ export type Mutation = {
   updateMyBilling?: Maybe<AcademySubscription>;
   /** Guardian self-service: edits a dependent the caller owns. Whitelisted fields only; guardian / academy / status are immutable here. */
   updateMyDependent?: Maybe<Dependent>;
+  /** Updates the caller's push opt-out. Only the known boolean categories are accepted; omitted ones keep their value. */
+  updateMyNotificationPreferences?: Maybe<NotificationPreferences>;
   /** Authenticated student changes their own password: verifies the current one, then sets the new one. */
   updateMyPassword?: Maybe<Scalars['Boolean']['output']>;
   updateMyPoolSettings?: Maybe<PoolSettings>;
@@ -1321,6 +1334,11 @@ export type MutationRegisterPushTokenArgs = {
 };
 
 
+export type MutationRequestBodyAssessmentArgs = {
+  notes?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationStartWorkoutSessionArgs = {
   workoutPlanId: Scalars['ID']['input'];
 };
@@ -1397,6 +1415,11 @@ export type MutationUpdateMyBillingArgs = {
 export type MutationUpdateMyDependentArgs = {
   documentId: Scalars['ID']['input'];
   input: MyDependentUpdateInput;
+};
+
+
+export type MutationUpdateMyNotificationPreferencesArgs = {
+  input: NotificationPreferencesInput;
 };
 
 
@@ -1516,6 +1539,20 @@ export type Notification = {
   read: Scalars['Boolean']['output'];
   readAt?: Maybe<Scalars['String']['output']>;
   title: Scalars['String']['output'];
+};
+
+/** Per-category push opt-out for the caller. The in-app inbox always receives everything; these gate only push delivery. All default true. */
+export type NotificationPreferences = {
+  __typename?: 'NotificationPreferences';
+  classes: Scalars['Boolean']['output'];
+  payments: Scalars['Boolean']['output'];
+  workouts: Scalars['Boolean']['output'];
+};
+
+export type NotificationPreferencesInput = {
+  classes?: InputMaybe<Scalars['Boolean']['input']>;
+  payments?: InputMaybe<Scalars['Boolean']['input']>;
+  workouts?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type Pagination = {
@@ -1788,6 +1825,8 @@ export type Query = {
   academyBySlug?: Maybe<Academy>;
   adminDashboard?: Maybe<AdminDashboard>;
   allAcademies?: Maybe<PlatformAcademyList>;
+  /** The academy's assessment requests (staff only). Defaults to pending. */
+  assessmentRequests?: Maybe<Array<Maybe<BodyAssessmentRequest>>>;
   bodyAssessment?: Maybe<BodyAssessment>;
   bodyAssessments?: Maybe<Array<Maybe<BodyAssessment>>>;
   /** Resolve a Brazilian CEP to street/neighborhood/city/state (ViaCEP). Null when invalid or not found. Powers address autofill so the user only types the number. */
@@ -1816,11 +1855,15 @@ export type Query = {
   myAcademyPoolStatus?: Maybe<PoolStatus>;
   /** Returns the Asaas configuration status for the caller's academy. Never reveals the actual credentials. */
   myAsaasSettings?: Maybe<AsaasSettingsStatus>;
+  /** The caller's own assessment requests, newest first. */
+  myAssessmentRequests?: Maybe<Array<Maybe<BodyAssessmentRequest>>>;
   myBodyAssessments?: Maybe<Array<Maybe<BodyAssessment>>>;
   myDependents?: Maybe<Array<Maybe<Dependent>>>;
   /** The caller's most recent avaliação física, or null. */
   myLatestAssessment?: Maybe<BodyAssessment>;
   myNextPayment?: Maybe<Payment>;
+  /** The caller's push preferences (all on by default). */
+  myNotificationPreferences?: Maybe<NotificationPreferences>;
   /** The caller's notifications, newest first. `unreadOnly` filters to unread. */
   myNotifications?: Maybe<Array<Maybe<Notification>>>;
   myPayments?: Maybe<Array<Maybe<Payment>>>;
@@ -1886,6 +1929,11 @@ export type QueryAcademyBySlugArgs = {
 export type QueryAllAcademiesArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   pageSize?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryAssessmentRequestsArgs = {
+  status?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1983,6 +2031,11 @@ export type QueryLeadsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   pageSize?: InputMaybe<Scalars['Int']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryMyAssessmentRequestsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -2620,6 +2673,11 @@ export type AdminDeleteBodyAssessmentMutationVariables = Exact<{
 
 export type AdminDeleteBodyAssessmentMutation = { __typename?: 'Mutation', deleteBodyAssessment?: { __typename?: 'BodyAssessment', documentId: string } | null };
 
+export type AdminAssessmentRequestsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AdminAssessmentRequestsQuery = { __typename?: 'Query', assessmentRequests?: Array<{ __typename?: 'BodyAssessmentRequest', documentId: string, notes?: string | null, createdAt?: string | null, student?: { __typename?: 'Student', documentId: string, name: string } | null } | null> | null };
+
 export type StudentsForWorkoutEditQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -2993,6 +3051,7 @@ export const AdminCreateBodyAssessmentDocument = {"kind":"Document","definitions
 export const AdminUpdateBodyAssessmentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdateBodyAssessment"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"BodyAssessmentUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateBodyAssessment"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}}]}}]}}]} as unknown as DocumentNode<AdminUpdateBodyAssessmentMutation, AdminUpdateBodyAssessmentMutationVariables>;
 export const AdminBodyAssessmentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminBodyAssessments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"bodyAssessments"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"100"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"weight"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"bodyFat"}},{"kind":"Field","name":{"kind":"Name","value":"bmi"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"measurements"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"chest"}},{"kind":"Field","name":{"kind":"Name","value":"waist"}},{"kind":"Field","name":{"kind":"Name","value":"hips"}},{"kind":"Field","name":{"kind":"Name","value":"arms"}},{"kind":"Field","name":{"kind":"Name","value":"thighs"}},{"kind":"Field","name":{"kind":"Name","value":"calves"}},{"kind":"Field","name":{"kind":"Name","value":"shoulders"}}]}},{"kind":"Field","name":{"kind":"Name","value":"student"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<AdminBodyAssessmentsQuery, AdminBodyAssessmentsQueryVariables>;
 export const AdminDeleteBodyAssessmentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminDeleteBodyAssessment"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteBodyAssessment"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}}]}}]}}]} as unknown as DocumentNode<AdminDeleteBodyAssessmentMutation, AdminDeleteBodyAssessmentMutationVariables>;
+export const AdminAssessmentRequestsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminAssessmentRequests"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"assessmentRequests"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"status"},"value":{"kind":"StringValue","value":"pending","block":false}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"student"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<AdminAssessmentRequestsQuery, AdminAssessmentRequestsQueryVariables>;
 export const StudentsForWorkoutEditDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"StudentsForWorkoutEdit"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"students"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"200"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<StudentsForWorkoutEditQuery, StudentsForWorkoutEditQueryVariables>;
 export const StudentsForWorkoutDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"StudentsForWorkout"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"students"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"200"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<StudentsForWorkoutQuery, StudentsForWorkoutQueryVariables>;
 export const AdminCreateWorkoutPlanDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCreateWorkoutPlan"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"WorkoutPlanInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createWorkoutPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<AdminCreateWorkoutPlanMutation, AdminCreateWorkoutPlanMutationVariables>;

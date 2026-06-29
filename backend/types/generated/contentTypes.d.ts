@@ -582,6 +582,40 @@ export interface ApiAcademyAcademy extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiBodyAssessmentRequestBodyAssessmentRequest
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'body_assessment_requests';
+  info: {
+    description: "A student's request for the instructor to run a body assessment. Auto-resolved when an assessment is created for that student.";
+    displayName: 'Body Assessment Request';
+    pluralName: 'body-assessment-requests';
+    singularName: 'body-assessment-request';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academy: Schema.Attribute.Relation<'manyToOne', 'api::academy.academy'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::body-assessment-request.body-assessment-request'
+    > &
+      Schema.Attribute.Private;
+    notes: Schema.Attribute.Text;
+    publishedAt: Schema.Attribute.DateTime;
+    status: Schema.Attribute.Enumeration<['pending', 'done', 'cancelled']> &
+      Schema.Attribute.DefaultTo<'pending'>;
+    student: Schema.Attribute.Relation<'manyToOne', 'api::student.student'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiBodyAssessmentBodyAssessment
   extends Struct.CollectionTypeSchema {
   collectionName: 'body_assessments';
@@ -1944,6 +1978,7 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::academy-subscription.academy-subscription': ApiAcademySubscriptionAcademySubscription;
       'api::academy.academy': ApiAcademyAcademy;
+      'api::body-assessment-request.body-assessment-request': ApiBodyAssessmentRequestBodyAssessmentRequest;
       'api::body-assessment.body-assessment': ApiBodyAssessmentBodyAssessment;
       'api::class-booking.class-booking': ApiClassBookingClassBooking;
       'api::class-schedule.class-schedule': ApiClassScheduleClassSchedule;

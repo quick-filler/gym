@@ -21,6 +21,7 @@
 import React from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   RefreshControl,
   ScrollView,
@@ -32,6 +33,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Bell,
   Building2,
@@ -51,6 +53,11 @@ import { useProfile } from '../../hooks/useProfile';
 import { logout } from '../../lib/auth';
 import { useActiveAcademy } from '../../lib/academy-provider';
 import { NotificationBell } from '../../components/NotificationBell';
+import { USE_MOCKS } from '../../lib/config';
+import {
+  MyAssessmentRequestsDocument,
+  RequestBodyAssessmentDocument,
+} from '../../gql/graphql';
 import { theme, withAlpha } from '../../lib/theme';
 import type { BodyAssessment } from '../../lib/types';
 
@@ -66,6 +73,34 @@ export default function ProfileScreen() {
     await logout();
     await clearSlug();
     router.replace('/academy');
+  };
+
+  const reqQuery = useQuery<any>(MyAssessmentRequestsDocument, {
+    skip: USE_MOCKS,
+    fetchPolicy: 'cache-and-network',
+  });
+  const [requestAssessment, requestState] = useMutation<any>(
+    RequestBodyAssessmentDocument,
+    { refetchQueries: ['MyAssessmentRequests'] },
+  );
+  const hasPendingRequest = (reqQuery.data?.myAssessmentRequests ?? []).some(
+    (r: any) => r?.status === 'pending',
+  );
+
+  const handleRequestAssessment = async () => {
+    if (USE_MOCKS) {
+      Alert.alert('Solicitação enviada', 'A recepção foi avisada (modo demo).');
+      return;
+    }
+    try {
+      await requestAssessment({ variables: { notes: null } });
+      Alert.alert(
+        'Solicitação enviada',
+        'A recepção da sua academia foi avisada. Em breve agendam sua avaliação.',
+      );
+    } catch (e) {
+      Alert.alert('Erro', e instanceof Error ? e.message : 'Não foi possível solicitar.');
+    }
   };
 
   const { profile, photoUrl, loading, error, refetch } = useProfile();
@@ -181,6 +216,31 @@ export default function ProfileScreen() {
               ))
             )}
           </View>
+
+          {/* Request a new assessment */}
+          <TouchableOpacity
+            style={[
+              styles.requestBtn,
+              { borderColor: accent },
+              (hasPendingRequest || requestState.loading) && styles.requestBtnDisabled,
+            ]}
+            onPress={handleRequestAssessment}
+            disabled={hasPendingRequest || requestState.loading}
+            activeOpacity={0.85}
+          >
+            <Text
+              style={[
+                styles.requestBtnText,
+                { color: hasPendingRequest ? theme.ink400 : accent },
+              ]}
+            >
+              {requestState.loading
+                ? 'Enviando…'
+                : hasPendingRequest
+                  ? 'Avaliação solicitada ✓'
+                  : 'Solicitar avaliação física'}
+            </Text>
+          </TouchableOpacity>
 
           {/* Settings */}
           <Text style={styles.sectionLabel}>CONFIGURAÇÕES</Text>
@@ -429,6 +489,17 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 12,
   },
+  requestBtn: {
+    marginTop: -4,
+    marginBottom: 8,
+    paddingVertical: 13,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  requestBtnDisabled: { borderColor: theme.line, backgroundColor: theme.paper2 },
+  requestBtnText: { fontSize: 13.5, fontWeight: '700' },
   heroName: {
     fontSize: 20,
     fontWeight: '800',

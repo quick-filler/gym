@@ -137,6 +137,8 @@ describe('schema introspection', () => {
       // Student app — Fase 5 (perfil + avaliações)
       'myBodyAssessments',
       'myLatestAssessment',
+      'myAssessmentRequests',
+      'assessmentRequests',
       // Student app — Fase 6 (dependentes)
       'dependentScheduleWeek',
       // Student app — Piscina (fichas aquáticas + Fase 8 qualidade da água)
@@ -175,6 +177,8 @@ describe('schema introspection', () => {
       // Fase 5 — perfil
       'updateMyProfile',
       'updateMyPassword',
+      'requestBodyAssessment',
+      'updateMyNotificationPreferences',
       // Fase 6 — dependentes (reservas + cadastro pelo responsável)
       'bookClassForDependent',
       'addMyDependent',

@@ -486,9 +486,8 @@ right below. We want the history, not a clean slate.
   `config:export`** this phase. The app's `/profile/edit` runs the full
   direct-to-S3 flow (expo-image-picker → mintUploadUrl → PUT → confirmUpload
   → `updateMyProfile(photo)`).
-- **Revisit when** — dependents need editable profiles (Fase 6), or
-  `requestBodyAssessment` (deferred Fase 5b) lets a student ask the academy
-  for a new avaliação.
+- **Revisit when** — dependents need editable profiles (Fase 6). [DONE]
+  `requestBodyAssessment` shipped — see §2.20.
 
 ---
 
@@ -532,8 +531,7 @@ right below. We want the history, not a clean slate.
 - **Consequences** — no new content type/role/permission, so **no
   `config:export`** this phase. The admin `dependents` list already selects
   `photo`, so a self-registered/edited dependent surfaces in the panel
-  immediately. `requestBodyAssessment` (Fase 5b) remains the only deferred
-  item across Fases 5–6.
+  immediately. (`requestBodyAssessment` later shipped — see §2.20.)
 - **Revisit when** — dependents get their own login (today they have none —
   the guardian acts for them), or a per-dependent payment/enrollment flow
   lands in the app.
@@ -816,6 +814,30 @@ right below. We want the history, not a clean slate.
   Paulista e devolve `null` p/ CEP inexistente. Máscaras = 14 testes novos.
 - **Revisit when** — adotar no admin web, ou precisar de número/uppercase de UF
   validados server-side, ou trocar de provedor de CEP.
+
+---
+
+### 2.20 Solicitação de avaliação física (Fase 5b)
+
+- **Decision** — content type novo **`BodyAssessmentRequest`** (student, academy,
+  notes, status `pending|done|cancelled`). O aluno pede pelo app
+  (`requestBodyAssessment(notes)`), os **admins são notificados**
+  (`notifyAcademyAdmins`, kind `admin_assessment_request`), e a solicitação é
+  **auto-resolvida** (`done`) quando o admin cria uma `BodyAssessment` pro aluno.
+- **Idempotente** — `requestBodyAssessment` reusa a solicitação `pending` aberta
+  em vez de empilhar duplicatas; o app mostra "Avaliação solicitada ✓".
+- **Surfaces** — `myAssessmentRequests` (aluno, próprias) e `assessmentRequests`
+  (staff, fila da academia — `requireRole(academy_admin/instructor)`). App:
+  botão na aba Perfil. Admin: banner de pendências no topo de
+  `/admin/workouts → Avaliações`, que some sozinho ao registrar a avaliação.
+- **Auto-resolve, não botão manual** — o admin não "fecha" a solicitação; criar
+  a avaliação fecha. Menos clique, sem estado órfão.
+- **Consequences** — content type novo → **`config:export`** feito (capturou
+  também o `Student.notificationPrefs` do §2.16 que faltava exportar). Schema
+  regen; introspection estendida. Smoke ao vivo (lado do aluno: criar +
+  idempotência + role-gate; dados de teste limpos do DB depois).
+- **Revisit when** — solicitação por dependente, ou janela/limite de
+  solicitações por período.
 
 ---
 
@@ -2133,11 +2155,18 @@ Explicit no's so we don't re-argue them.
   aplicados também no `DependentForm` (mesmos helpers do `/profile/edit`);
   (4) comentários desatualizados corrigidos (`notify.ts` push já existe;
   `profile.tsx` já usa `useProfile`). Deferidos (não no lote): gateway
-  real de pagamento, `/profile/notifications`, `requestBodyAssessment`,
-  QR scan + universal links, biometria.
+  real de pagamento, `/profile/notifications` (item 5), `requestBodyAssessment`
+  (item 7), QR scan + universal links, biometria.
 - **2026-06-29** — Item 5: preferências de push (`/profile/notifications`).
   Opt-out por categoria (Pagamentos/Aulas/Treinos), tudo on por padrão,
   em `Student.notificationPrefs` (JSON). `sendPush` respeita via `kind`
   → `pushAllowed` (in-app inbox não é afetada). `myNotificationPreferences`
   / `updateMyNotificationPreferences`; helpers puros `notification-prefs.ts`
-  (9 testes). Smoke ao vivo OK. Sem `config:export` (só campo). Ver §2.16.
+  (9 testes). Smoke ao vivo OK. Ver §2.16. (O config-manager do campo
+  `notificationPrefs` foi exportado junto com o item 7.)
+- **2026-06-29** — Item 7: solicitação de avaliação física (§2.20). Content
+  type `BodyAssessmentRequest` + `requestBodyAssessment` (idempotente, notifica
+  admins) + `myAssessmentRequests` / `assessmentRequests` (staff). Auto-resolve
+  ao criar a avaliação. App: botão na aba Perfil. Admin: banner de pendências
+  na aba Avaliações. `config:export` feito (content type novo). Smoke ao vivo
+  (lado do aluno) + cleanup do DB.
