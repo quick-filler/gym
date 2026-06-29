@@ -709,6 +709,39 @@ right below. We want the history, not a clean slate.
 
 ---
 
+### 2.17 Qualidade da água da piscina pro aluno (Fase 8)
+
+- **Decision** — query **read-only** `myAcademyPoolStatus` expõe ao aluno a
+  **última medição** da piscina da sua academia (pH / cloro / temperatura) com
+  status por métrica + status geral. As inspeções (`poolInspections`) e
+  configs (`myPoolSettings`) continuam **admin-only**; o aluno não enxerga o log
+  nem edita nada — só o estado atual.
+- **Lógica pura compartilhada** — extraí `classify`/`worst` (que viviam
+  inline no resolver `PoolInspection.status` do admin) para um módulo puro
+  `pool-status.ts` e adicionei `displayStatus` (null → `unknown`, não `ok`, pra
+  UI cinza), `pickLatestInspection` (mais recente por `(date, shift)`, evening >
+  morning) e `computePoolStatus` (monta o view per-métrica + geral). O resolver
+  do admin **reusa** os mesmos helpers — uma fonte de verdade pro cálculo.
+- **`ok`/`warning`/`critical`** seguem as faixas da `PoolSettings`
+  (`[min,max]` = ok; ±`alertTolerance` = warning; além = critical). Métrica não
+  medida (null) **nunca** degrada o status geral (continua igual ao admin), mas
+  aparece como `unknown` na métrica individual.
+- **Gating** — `requireModule(ctx, 'pool')`; academia sem o módulo recebe erro
+  PT-BR (a aba Piscina já fica escondida no app). Retorna **null** até a 1ª
+  inspeção → app mostra "aguardando primeira medição".
+- **Onde no app** — o card de **qualidade da água** fica no **topo da aba
+  Piscina**, não no dashboard como o plano original (Fase 8) sugeria. O plano
+  foi escrito antes da aba Piscina existir (ela nasceu na §2.14); com a aba
+  dedicada, a água é informação de piscina e vive lá — evita poluir a home.
+- **Consequences** — sem content type / permissão nova → **sem
+  `config:export`**. `myAcademyPoolStatus` é `auth: true` puro (camada GraphQL,
+  não a matriz users-permissions). `schema.graphql` regenerado (tipos
+  `PoolStatus`/`PoolMetricStatus`). `pool-status.ts` unit-testado (14 testes).
+- **Revisit when** — aluno precisar do histórico/tendência (gráfico de pH ao
+  longo do tempo) ou de alertas push quando a água sai da faixa.
+
+---
+
 ## 3. GraphQL API
 
 ### 3.1 GraphQL is the only data API; REST is reserved for auth + webhooks
@@ -1990,3 +2023,8 @@ Explicit no's so we don't re-argue them.
   (regex-validated, 11 digits), `address`, and `gender` (Student
   only). Detection of adult-vs-family is heuristic on
   `responsavel_nome` vs `prospect_nome`.
+- **2026-06-29** — Added §2.17 (Fase 8 — qualidade da água da piscina
+  pro aluno): query read-only `myAcademyPoolStatus`, módulo puro
+  `pool-status.ts` (compartilhado com o status do admin) e card de
+  qualidade da água no topo da aba Piscina (não no dashboard — a aba
+  dedicada virou o lar natural). 14 testes unitários novos.

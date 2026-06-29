@@ -139,8 +139,9 @@ describe('schema introspection', () => {
       'myLatestAssessment',
       // Student app — Fase 6 (dependentes)
       'dependentScheduleWeek',
-      // Student app — Piscina (fichas aquáticas)
+      // Student app — Piscina (fichas aquáticas + Fase 8 qualidade da água)
       'myPoolActivities',
+      'myAcademyPoolStatus',
       // Fase 7 — notificações (app + web)
       'myNotifications',
       'myUnreadNotificationCount',

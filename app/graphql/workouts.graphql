@@ -57,6 +57,34 @@ query MyPoolActivities {
   }
 }
 
+query MyAcademyPoolStatus {
+  myAcademyPoolStatus {
+    date
+    shift
+    scheduledTime
+    measuredAt
+    overall
+    ph {
+      value
+      min
+      max
+      status
+    }
+    chlorine {
+      value
+      min
+      max
+      status
+    }
+    temperature {
+      value
+      min
+      max
+      status
+    }
+  }
+}
+
 query WorkoutPlanDetail($documentId: ID!) {
   workoutPlan(documentId: $documentId) {
     documentId

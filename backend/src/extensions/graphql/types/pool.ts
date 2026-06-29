@@ -19,39 +19,16 @@ import {
   isPlatformAdmin,
   requireAcademyId,
   requireActiveSubscription,
+  requireModule,
   requireRole,
   resolveUserAcademyId,
 } from '../helpers';
+import { classify, computePoolStatus, pickLatestInspection, worst } from '../pool-status';
 
 // Casts as any porque contentTypes.d.ts só conhece os novos UIDs
 // depois do próximo boot do Strapi.
 const SETTINGS_UID = 'api::pool-setting.pool-setting' as any;
 const INSPECTION_UID = 'api::pool-inspection.pool-inspection' as any;
-const ACADEMY_UID = 'api::academy.academy';
-
-type Status = 'ok' | 'warning' | 'critical';
-
-/**
- * Classifica um valor frente à faixa ideal + tolerância. Null/undefined
- * devolve 'ok' (medição opcional, não deve degradar status).
- */
-function classify(
-  value: number | null | undefined,
-  min: number | null | undefined,
-  max: number | null | undefined,
-  tolerance: number,
-): Status {
-  if (value == null || min == null || max == null) return 'ok';
-  if (value >= min && value <= max) return 'ok';
-  if (value >= min - tolerance && value <= max + tolerance) return 'warning';
-  return 'critical';
-}
-
-function worst(...statuses: Status[]): Status {
-  if (statuses.includes('critical')) return 'critical';
-  if (statuses.includes('warning')) return 'warning';
-  return 'ok';
-}
 
 export function buildPool({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }) {
   const PoolSettings = nexus.objectType({
@@ -139,9 +116,61 @@ export function buildPool({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }
     },
   });
 
+  const PoolMetricStatus = nexus.objectType({
+    name: 'PoolMetricStatus',
+    description:
+      'A single pool metric (pH / chlorine / temperature): measured value, the academy ideal range, and a status (ok / warning / critical / unknown — unknown = not measured).',
+    definition(t: any) {
+      t.float('value');
+      t.float('min');
+      t.float('max');
+      t.nonNull.string('status');
+    },
+  });
+
+  const PoolStatus = nexus.objectType({
+    name: 'PoolStatus',
+    description:
+      "Latest pool water-quality reading for the caller's academy, with each metric graded against PoolSettings and a worst-of-three overall status. Read-only student view of the admin inspections.",
+    definition(t: any) {
+      t.nonNull.string('date');
+      t.nonNull.string('shift');
+      t.string('scheduledTime');
+      t.string('measuredAt');
+      t.int('peopleCount');
+      t.nonNull.field('ph', { type: 'PoolMetricStatus' });
+      t.nonNull.field('chlorine', { type: 'PoolMetricStatus' });
+      t.nonNull.field('temperature', { type: 'PoolMetricStatus' });
+      t.nonNull.string('overall');
+    },
+  });
+
   const queries = nexus.extendType({
     type: 'Query',
     definition(t: any) {
+      t.field('myAcademyPoolStatus', {
+        type: 'PoolStatus',
+        description:
+          "Latest pool water-quality reading for the caller's academy (Piscina module). Null until the first inspection is recorded. Students see the status without admin access to the inspection log.",
+        resolve: async (_: any, __: any, ctx: any) => {
+          await requireModule(strapi, ctx, 'pool');
+          const academyId = await resolveUserAcademyId(strapi, ctx);
+          if (!academyId) return null;
+          const settingsRows: any[] = await strapi.documents(SETTINGS_UID).findMany({
+            filters: { academy: { documentId: academyId } } as any,
+            limit: 1,
+          });
+          const rows: any[] = await strapi.documents(INSPECTION_UID).findMany({
+            filters: { academy: { documentId: academyId } } as any,
+            sort: { date: 'desc' } as any,
+            limit: 10,
+          });
+          const latest = pickLatestInspection(rows);
+          if (!latest) return null;
+          return computePoolStatus(settingsRows[0] ?? null, latest);
+        },
+      });
+
       t.field('myPoolSettings', {
         type: 'PoolSettings',
         description: "Pool settings for the caller's academy.",
@@ -270,10 +299,13 @@ export function buildPool({ nexus, strapi }: { nexus: any; strapi: Core.Strapi }
       PoolSettingsInput,
       PoolInspection,
       PoolInspectionInput,
+      PoolMetricStatus,
+      PoolStatus,
       queries,
       mutations,
     ],
     resolversConfig: {
+      'Query.myAcademyPoolStatus': { auth: true },
       'Query.myPoolSettings': { auth: true },
       'Query.poolInspections': { auth: true },
       'Mutation.updateMyPoolSettings': { auth: true },

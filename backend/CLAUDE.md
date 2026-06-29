@@ -409,6 +409,16 @@ GraphQL: `Query.poolInspections(date)`, `Mutation.createPoolInspection`,
 `Mutation.updatePoolInspection`. Mutations gateadas por
 `requireActiveSubscription` + role `academy_admin` ou `instructor`.
 
+**Student-facing (Fase 8):** `Query.myAcademyPoolStatus: PoolStatus` —
+read-only view of the **latest** reading for the caller's academy, with each
+metric (pH/chlorine/temperature) graded against PoolSettings + a worst-of-three
+`overall`. Gated by `requireModule('pool')`; returns null until the first
+inspection. Students never see the inspection log or settings. The grading
+logic is the pure module `src/extensions/graphql/pool-status.ts` (`classify` /
+`worst` / `displayStatus` / `pickLatestInspection` / `computePoolStatus`),
+reused by both `myAcademyPoolStatus` and the admin `PoolInspection.status`
+field — one source of truth, unit-tested in `pool-status.test.ts`.
+
 ### BodyAssessment (Avaliação Física)
 
 | Field | Type | Notes |

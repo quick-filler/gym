@@ -1382,6 +1382,16 @@ input PoolInspectionInput {
 }
 
 """
+A single pool metric (pH / chlorine / temperature): measured value, the academy ideal range, and a status (ok / warning / critical / unknown — unknown = not measured).
+"""
+type PoolMetricStatus {
+  max: Float
+  min: Float
+  status: String!
+  value: Float
+}
+
+"""
 Per-academy pool target ranges (defaults: pH 7.2–7.8, chlorine 1–3, temp 28–31°C — Brazilian legislation).
 """
 type PoolSettings {
@@ -1405,6 +1415,21 @@ input PoolSettingsInput {
   phMin: Float
   temperatureMax: Float
   temperatureMin: Float
+}
+
+"""
+Latest pool water-quality reading for the caller's academy, with each metric graded against PoolSettings and a worst-of-three overall status. Read-only student view of the admin inspections.
+"""
+type PoolStatus {
+  chlorine: PoolMetricStatus!
+  date: String!
+  measuredAt: String
+  overall: String!
+  peopleCount: Int
+  ph: PoolMetricStatus!
+  scheduledTime: String
+  shift: String!
+  temperature: PoolMetricStatus!
 }
 
 """
@@ -1458,6 +1483,11 @@ type Query {
 
   """Returns the authenticated user's linked Student profile."""
   me: Student
+
+  """
+  Latest pool water-quality reading for the caller's academy (Piscina module). Null until the first inspection is recorded. Students see the status without admin access to the inspection log.
+  """
+  myAcademyPoolStatus: PoolStatus
 
   """
   Returns the Asaas configuration status for the caller's academy. Never reveals the actual credentials.

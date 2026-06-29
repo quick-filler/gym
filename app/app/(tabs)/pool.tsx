@@ -25,9 +25,17 @@ import { ArrowRight, Play, Waves } from 'lucide-react-native';
 
 import { useDashboard } from '../../hooks/useDashboard';
 import { usePoolActivities } from '../../hooks/usePoolActivities';
+import { usePoolStatus } from '../../hooks/usePoolStatus';
 import { NotificationBell } from '../../components/NotificationBell';
+import { timeAgoBR } from '../../lib/format';
 import { theme, withAlpha } from '../../lib/theme';
-import type { ActiveWorkoutPlan, UpcomingWorkoutPlan } from '../../lib/types';
+import type {
+  ActiveWorkoutPlan,
+  PoolMetricStatus,
+  PoolMetricView,
+  PoolStatusResult,
+  UpcomingWorkoutPlan,
+} from '../../lib/types';
 
 export default function PoolScreen() {
   const { data } = useDashboard();
@@ -36,6 +44,7 @@ export default function PoolScreen() {
   const initials = data?.academy.initials ?? 'G';
 
   const { active, upcoming, loading, error, refetch } = usePoolActivities();
+  const poolStatus = usePoolStatus();
   const firstLoad = loading && !active && upcoming.length === 0;
 
   return (
@@ -64,6 +73,8 @@ export default function PoolScreen() {
         </View>
 
         <View style={styles.content}>
+          <PoolWaterCard result={poolStatus} accent={accent} />
+
           {firstLoad ? (
             <View style={styles.centerBox}>
               <ActivityIndicator color={accent} />
@@ -112,6 +123,98 @@ export default function PoolScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+/* ------------------------------------------------------------------
+ * Water-quality status (Fase 8) — latest pH / chlorine / temperature
+ * reading with a colour per metric + an overall pill. Secondary info,
+ * so it degrades quietly: hidden while first-loading or on a transient
+ * error, an "awaiting reading" note before the academy's first
+ * inspection, and the full card once a reading exists.
+ * ------------------------------------------------------------------ */
+const STATUS_META: Record<PoolMetricStatus, { color: string; bg: string; label: string }> = {
+  ok: { color: '#059669', bg: '#ecfdf5', label: 'Ideal' },
+  warning: { color: '#d97706', bg: '#fffbeb', label: 'Atenção' },
+  critical: { color: '#dc2626', bg: '#fef2f2', label: 'Crítico' },
+  unknown: { color: theme.ink400, bg: theme.paper2, label: 'Sem leitura' },
+};
+
+const SHIFT_PT: Record<string, string> = { morning: 'manhã', evening: 'tarde' };
+
+function fmtMetric(value: number | null, unit: string): string {
+  if (value == null) return '—';
+  return `${value}${unit}`;
+}
+
+function PoolWaterCard({ result, accent }: { result: PoolStatusResult; accent: string }) {
+  const { status, loading, error } = result;
+
+  // Quiet while the first request is in flight (the activities below show
+  // their own loader) and on a transient error with nothing cached.
+  if (!status) {
+    if (loading) return null;
+    if (error) return null;
+    return (
+      <>
+        <Text style={styles.sectionLabel}>QUALIDADE DA ÁGUA</Text>
+        <View style={styles.emptyCard}>
+          <View style={[styles.wIcon, { backgroundColor: withAlpha(accent, 0.1) }]}>
+            <Waves size={20} color={accent} strokeWidth={2.2} />
+          </View>
+          <Text style={styles.emptyTitle}>Aguardando primeira medição</Text>
+          <Text style={styles.emptyBody}>
+            A academia ainda não registrou a qualidade da água hoje.
+          </Text>
+        </View>
+      </>
+    );
+  }
+
+  const overall = STATUS_META[status.overall];
+  const when = status.measuredAt ? timeAgoBR(status.measuredAt) : null;
+  const shift = SHIFT_PT[status.shift] ?? status.shift;
+
+  return (
+    <>
+      <Text style={styles.sectionLabel}>QUALIDADE DA ÁGUA</Text>
+      <View style={styles.waterCard}>
+        <View style={styles.waterHead}>
+          <View style={[styles.statusPill, { backgroundColor: overall.bg }]}>
+            <View style={[styles.statusDot, { backgroundColor: overall.color }]} />
+            <Text style={[styles.statusPillText, { color: overall.color }]}>
+              {overall.label.toUpperCase()}
+            </Text>
+          </View>
+          <Text style={styles.waterWhen}>
+            {when ? `${when} · ${shift}` : shift}
+          </Text>
+        </View>
+
+        <View style={styles.metricRow}>
+          <MetricTile label="pH" metric={status.ph} unit="" />
+          <MetricTile label="Cloro" metric={status.chlorine} unit=" mg/L" />
+          <MetricTile label="Temp." metric={status.temperature} unit="°C" />
+        </View>
+      </View>
+    </>
+  );
+}
+
+function MetricTile({ label, metric, unit }: { label: string; metric: PoolMetricView; unit: string }) {
+  const meta = STATUS_META[metric.status];
+  const range =
+    metric.min != null && metric.max != null ? `ideal ${metric.min}–${metric.max}` : '—';
+  return (
+    <View style={styles.metricTile}>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={[styles.metricValue, { color: meta.color }]}>{fmtMetric(metric.value, unit)}</Text>
+      <View style={styles.metricStatusRow}>
+        <View style={[styles.statusDot, { backgroundColor: meta.color }]} />
+        <Text style={[styles.metricStatusText, { color: meta.color }]}>{meta.label}</Text>
+      </View>
+      <Text style={styles.metricRange}>{range}</Text>
+    </View>
   );
 }
 
@@ -237,6 +340,60 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 4,
   },
+
+  // Water-quality card (Fase 8)
+  waterCard: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: theme.line,
+    shadowColor: theme.ink900,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  waterHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  statusDot: { width: 7, height: 7, borderRadius: 4 },
+  statusPillText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  waterWhen: { fontSize: 11.5, color: theme.ink400, fontWeight: '600' },
+  metricRow: { flexDirection: 'row', gap: 10 },
+  metricTile: {
+    flex: 1,
+    backgroundColor: theme.paper,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: theme.line,
+    alignItems: 'center',
+  },
+  metricLabel: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: theme.ink400,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  metricValue: { fontSize: 19, fontWeight: '800', marginTop: 4, letterSpacing: -0.5 },
+  metricStatusRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
+  metricStatusText: { fontSize: 10.5, fontWeight: '700' },
+  metricRange: { fontSize: 9.5, color: theme.ink300, marginTop: 4, fontWeight: '600' },
 
   card: {
     backgroundColor: '#fff',

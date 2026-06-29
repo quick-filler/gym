@@ -198,6 +198,37 @@ export interface PoolActivitiesResult {
   refetch: () => void;
 }
 
+/**
+ * Pool water quality (Fase 8) — latest inspection surfaced to the student.
+ * Status is one of ok / warning / critical / unknown (unknown = not measured).
+ */
+export type PoolMetricStatus = 'ok' | 'warning' | 'critical' | 'unknown';
+
+export interface PoolMetricView {
+  value: number | null;
+  min: number | null;
+  max: number | null;
+  status: PoolMetricStatus;
+}
+
+export interface PoolStatusView {
+  date: string;
+  shift: string;
+  scheduledTime: string | null;
+  measuredAt: string | null;
+  overall: Exclude<PoolMetricStatus, 'unknown'>;
+  ph: PoolMetricView;
+  chlorine: PoolMetricView;
+  temperature: PoolMetricView;
+}
+
+export interface PoolStatusResult {
+  status: PoolStatusView | null;
+  loading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
+
 /* ------------------------------------------------------------------
  * Finanças tab — next bill, history, payment methods
  * ------------------------------------------------------------------ */

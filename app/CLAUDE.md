@@ -89,6 +89,7 @@ app/
 │   ├── useProfile.ts             # Perfil — me + avaliações + editable form
 │   ├── useDependents.ts          # Guardian's roster + add/update (Fase 6)
 │   ├── usePoolActivities.ts      # Piscina — pool fichas (category 'pool')
+│   ├── usePoolStatus.ts          # Piscina — water quality (latest reading, Fase 8)
 │   ├── useNotifications.ts       # Inbox + badge (polling, mark-read)
 │   ├── usePushRegistration.ts    # Expo push: permission + token + register (7e)
 │   └── useModuleGuard.ts         # Redirect home if a module is disabled
@@ -206,7 +207,7 @@ export function DashboardScreen() {
 | `/(tabs)/workouts` | Active workout + history | ✅ |
 | `/(tabs)/payments` | Payment history, pending charges, receipts | ✅ |
 | `/(tabs)/profile` | Personal info, body assessments, settings | ✅ |
-| `/(tabs)/pool` | Piscina — pool fichas (WorkoutPlan category 'pool') | ✅ |
+| `/(tabs)/pool` | Piscina — water-quality card (Fase 8) + pool fichas | ✅ |
 | `/dependents` | Guardian's dependents roster (responsável) | ✅ |
 | `/dependent/new` | Register a new dependent (guardian) | ✅ |
 | `/dependent/[id]/edit` | Edit a dependent (whitelisted fields + photo) | ✅ |
