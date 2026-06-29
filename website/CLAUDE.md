@@ -198,7 +198,7 @@ FAQPage / AboutPage / ContactPage) via `src/lib/seo.tsx → JsonLd`.
 | `/admin/dre` | Revenue/expenses/profit hero, 6-month cashflow SVG chart, expense category breakdown, expenses table | ✅ |
 | `/admin/dependents` | Info banner + auto-fill family card grid (guardian + dependents + status/allergy alerts) | ✅ |
 | `/admin/schedule` | Week navigator + 7-column weekly grid + side stats + upcoming classes | ✅ |
-| `/admin/workouts` | Tabs (Ativas / Avaliações / Arquivadas) + workout plan card grid (gym fichas only — pool fichas live under Piscina) | ✅ |
+| `/admin/workouts` | Tabs (Ativas / **Avaliações** / Arquivadas). Ativas/Arquivadas = workout-plan card grid (gym fichas only — pool fichas live under Piscina). **Avaliações** = body-assessment table (peso/altura/gordura/IMC por aluno) com criar/editar/excluir (`AssessmentsTab` + `AssessmentDialog`, wired to `bodyAssessments`/`createBodyAssessment`/`updateBodyAssessment`/`deleteBodyAssessment`). | ✅ |
 | `/admin/pool` | Tabs **Inspeções** (pH/cloro/temp) + **Atividades** (pool fichas = WorkoutPlan `category:'pool'`, shared `WorkoutCard`) | ✅ |
 | `/admin/settings` | Identity/Appearance/Integration/**Módulos** tabs + live white-label phone preview | ✅ |
 | `/admin/students/[id]` | Student detail | — future |

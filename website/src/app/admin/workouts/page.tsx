@@ -21,6 +21,7 @@ import { USE_MOCKS } from "@/lib/config";
 import { WorkoutCard, type CardActions } from "@/components/admin/WorkoutCard";
 import { NewWorkoutDialog } from "./NewWorkoutDialog";
 import { EditWorkoutDialog } from "./EditWorkoutDialog";
+import { AssessmentsTab } from "./AssessmentsTab";
 
 const CREATE_WORKOUT_PLAIN = graphql(`
   mutation AdminDuplicateWorkoutPlan($data: WorkoutPlanInput!) {
@@ -156,9 +157,11 @@ export default function WorkoutsPage() {
           title="Fichas de treino"
           subtitle={data?.subtitle}
           actions={
-            <Button variant="primary" onClick={() => setDialogOpen(true)}>
-              <Icon name="plus" /> Nova ficha
-            </Button>
+            activeTab !== "assessments" ? (
+              <Button variant="primary" onClick={() => setDialogOpen(true)}>
+                <Icon name="plus" /> Nova ficha
+              </Button>
+            ) : null
           }
         />
 
@@ -188,17 +191,7 @@ export default function WorkoutsPage() {
               })}
             </div>
 
-            {activeTab === "assessments" && (
-              <Card className="p-12 text-center">
-                <div className="font-display text-[1.2rem] font-semibold text-ink-900 mb-2">
-                  Avaliações físicas
-                </div>
-                <p className="text-[0.9rem] text-ink-500">
-                  Avaliações corporais e fotos de progresso aparecem aqui. Em
-                  breve.
-                </p>
-              </Card>
-            )}
+            {activeTab === "assessments" && <AssessmentsTab />}
 
             {activeTab !== "assessments" && visibleCards.length === 0 && (
               <Card className="p-12 text-center">

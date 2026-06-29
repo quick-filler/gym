@@ -289,6 +289,16 @@ export type CardInput = {
   number: Scalars['String']['input'];
 };
 
+/** Address resolved from a Brazilian CEP (postal code). Null when the CEP is not found. */
+export type CepAddress = {
+  __typename?: 'CepAddress';
+  cep: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  neighborhood: Scalars['String']['output'];
+  state: Scalars['String']['output'];
+  street: Scalars['String']['output'];
+};
+
 export type ClassBooking = {
   __typename?: 'ClassBooking';
   checkedInAt?: Maybe<Scalars['String']['output']>;
@@ -1045,11 +1055,15 @@ export type Mutation = {
   payChargeBoleto?: Maybe<BoletoCheckout>;
   payChargeCard?: Maybe<Payment>;
   payChargePix?: Maybe<PixCheckout>;
+  /** Registra (ou reatribui) um Expo push token ao usuário do caller. Idempotente por token. */
+  registerPushToken?: Maybe<Scalars['Boolean']['output']>;
   /** Dispara os crons de lembrete (cobrança + aula) manualmente e retorna quantas notificações criou. Restrito a platform admin (liberado fora de produção p/ testes). */
   runNotificationReminders?: Maybe<Scalars['Int']['output']>;
   /** Opens a training session against one of the caller’s active fichas. Requires an active enrollment. Seeds the per-exercise checklist from the plan. */
   startWorkoutSession?: Maybe<WorkoutSession>;
   submitContactForm?: Maybe<ContactFormResult>;
+  /** Remove um Expo push token (logout do aparelho). */
+  unregisterPushToken?: Maybe<Scalars['Boolean']['output']>;
   updateAcademy?: Maybe<Academy>;
   updateBodyAssessment?: Maybe<BodyAssessment>;
   updateClassBooking?: Maybe<ClassBooking>;
@@ -1301,6 +1315,12 @@ export type MutationPayChargePixArgs = {
 };
 
 
+export type MutationRegisterPushTokenArgs = {
+  platform?: InputMaybe<Scalars['String']['input']>;
+  token: Scalars['String']['input'];
+};
+
+
 export type MutationStartWorkoutSessionArgs = {
   workoutPlanId: Scalars['ID']['input'];
 };
@@ -1308,6 +1328,11 @@ export type MutationStartWorkoutSessionArgs = {
 
 export type MutationSubmitContactFormArgs = {
   input: ContactFormInput;
+};
+
+
+export type MutationUnregisterPushTokenArgs = {
+  token: Scalars['String']['input'];
 };
 
 
@@ -1694,6 +1719,15 @@ export type PoolInspectionInput = {
   temperature?: InputMaybe<Scalars['Float']['input']>;
 };
 
+/** A single pool metric (pH / chlorine / temperature): measured value, the academy ideal range, and a status (ok / warning / critical / unknown — unknown = not measured). */
+export type PoolMetricStatus = {
+  __typename?: 'PoolMetricStatus';
+  max?: Maybe<Scalars['Float']['output']>;
+  min?: Maybe<Scalars['Float']['output']>;
+  status: Scalars['String']['output'];
+  value?: Maybe<Scalars['Float']['output']>;
+};
+
 /** Per-academy pool target ranges (defaults: pH 7.2–7.8, chlorine 1–3, temp 28–31°C — Brazilian legislation). */
 export type PoolSettings = {
   __typename?: 'PoolSettings';
@@ -1719,6 +1753,20 @@ export type PoolSettingsInput = {
   temperatureMin?: InputMaybe<Scalars['Float']['input']>;
 };
 
+/** Latest pool water-quality reading for the caller's academy, with each metric graded against PoolSettings and a worst-of-three overall status. Read-only student view of the admin inspections. */
+export type PoolStatus = {
+  __typename?: 'PoolStatus';
+  chlorine: PoolMetricStatus;
+  date: Scalars['String']['output'];
+  measuredAt?: Maybe<Scalars['String']['output']>;
+  overall: Scalars['String']['output'];
+  peopleCount?: Maybe<Scalars['Int']['output']>;
+  ph: PoolMetricStatus;
+  scheduledTime?: Maybe<Scalars['String']['output']>;
+  shift: Scalars['String']['output'];
+  temperature: PoolMetricStatus;
+};
+
 /** URL set returned by mintUploadUrl. Frontend PUTs bytes to uploadUrl, then calls confirmUpload(publicUrl, name) once it succeeds. */
 export type PresignedUpload = {
   __typename?: 'PresignedUpload';
@@ -1742,6 +1790,8 @@ export type Query = {
   allAcademies?: Maybe<PlatformAcademyList>;
   bodyAssessment?: Maybe<BodyAssessment>;
   bodyAssessments?: Maybe<Array<Maybe<BodyAssessment>>>;
+  /** Resolve a Brazilian CEP to street/neighborhood/city/state (ViaCEP). Null when invalid or not found. Powers address autofill so the user only types the number. */
+  cepLookup?: Maybe<CepAddress>;
   classBooking?: Maybe<ClassBooking>;
   classBookings?: Maybe<Array<Maybe<ClassBooking>>>;
   classSchedule?: Maybe<ClassSchedule>;
@@ -1762,6 +1812,8 @@ export type Query = {
   leads?: Maybe<LeadListResult>;
   /** Returns the authenticated user's linked Student profile. */
   me?: Maybe<Student>;
+  /** Latest pool water-quality reading for the caller's academy (Piscina module). Null until the first inspection is recorded. Students see the status without admin access to the inspection log. */
+  myAcademyPoolStatus?: Maybe<PoolStatus>;
   /** Returns the Asaas configuration status for the caller's academy. Never reveals the actual credentials. */
   myAsaasSettings?: Maybe<AsaasSettingsStatus>;
   myBodyAssessments?: Maybe<Array<Maybe<BodyAssessment>>>;
@@ -1844,6 +1896,11 @@ export type QueryBodyAssessmentArgs = {
 
 export type QueryBodyAssessmentsArgs = {
   pagination?: InputMaybe<PaginationInput>;
+};
+
+
+export type QueryCepLookupArgs = {
+  cep: Scalars['String']['input'];
 };
 
 
@@ -2531,6 +2588,38 @@ export type AdminDeleteStudentMutationVariables = Exact<{
 
 export type AdminDeleteStudentMutation = { __typename?: 'Mutation', deleteStudent?: { __typename?: 'Student', documentId: string } | null };
 
+export type StudentsForAssessmentQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type StudentsForAssessmentQuery = { __typename?: 'Query', students?: Array<{ __typename?: 'Student', documentId: string, name: string } | null> | null };
+
+export type AdminCreateBodyAssessmentMutationVariables = Exact<{
+  data: BodyAssessmentInput;
+}>;
+
+
+export type AdminCreateBodyAssessmentMutation = { __typename?: 'Mutation', createBodyAssessment?: { __typename?: 'BodyAssessment', documentId: string } | null };
+
+export type AdminUpdateBodyAssessmentMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+  data: BodyAssessmentUpdateInput;
+}>;
+
+
+export type AdminUpdateBodyAssessmentMutation = { __typename?: 'Mutation', updateBodyAssessment?: { __typename?: 'BodyAssessment', documentId: string } | null };
+
+export type AdminBodyAssessmentsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AdminBodyAssessmentsQuery = { __typename?: 'Query', bodyAssessments?: Array<{ __typename?: 'BodyAssessment', documentId: string, date: string, instructor?: string | null, weight?: number | null, height?: number | null, bodyFat?: number | null, bmi?: number | null, notes?: string | null, measurements?: { __typename?: 'Measurements', chest?: number | null, waist?: number | null, hips?: number | null, arms?: number | null, thighs?: number | null, calves?: number | null, shoulders?: number | null } | null, student?: { __typename?: 'Student', documentId: string, name: string } | null } | null> | null };
+
+export type AdminDeleteBodyAssessmentMutationVariables = Exact<{
+  documentId: Scalars['ID']['input'];
+}>;
+
+
+export type AdminDeleteBodyAssessmentMutation = { __typename?: 'Mutation', deleteBodyAssessment?: { __typename?: 'BodyAssessment', documentId: string } | null };
+
 export type StudentsForWorkoutEditQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -2899,6 +2988,11 @@ export const AdminCreateStudentDocument = {"kind":"Document","definitions":[{"ki
 export const AdminBulkImportStudentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminBulkImportStudents"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"rows"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"StudentImportRow"}}}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"dryRun"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"bulkImportStudents"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"rows"},"value":{"kind":"Variable","name":{"kind":"Name","value":"rows"}}},{"kind":"Argument","name":{"kind":"Name","value":"dryRun"},"value":{"kind":"Variable","name":{"kind":"Name","value":"dryRun"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"skipped"}},{"kind":"Field","name":{"kind":"Name","value":"errors"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"rowNumber"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"studentDocumentId"}},{"kind":"Field","name":{"kind":"Name","value":"dependentDocumentId"}},{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]} as unknown as DocumentNode<AdminBulkImportStudentsMutation, AdminBulkImportStudentsMutationVariables>;
 export const AdminUpdateStudentStatusDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdateStudentStatus"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"StudentUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateStudent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<AdminUpdateStudentStatusMutation, AdminUpdateStudentStatusMutationVariables>;
 export const AdminDeleteStudentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminDeleteStudent"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteStudent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}}]}}]}}]} as unknown as DocumentNode<AdminDeleteStudentMutation, AdminDeleteStudentMutationVariables>;
+export const StudentsForAssessmentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"StudentsForAssessment"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"students"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"200"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<StudentsForAssessmentQuery, StudentsForAssessmentQueryVariables>;
+export const AdminCreateBodyAssessmentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCreateBodyAssessment"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"BodyAssessmentInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createBodyAssessment"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}}]}}]}}]} as unknown as DocumentNode<AdminCreateBodyAssessmentMutation, AdminCreateBodyAssessmentMutationVariables>;
+export const AdminUpdateBodyAssessmentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminUpdateBodyAssessment"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"BodyAssessmentUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateBodyAssessment"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}}]}}]}}]} as unknown as DocumentNode<AdminUpdateBodyAssessmentMutation, AdminUpdateBodyAssessmentMutationVariables>;
+export const AdminBodyAssessmentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AdminBodyAssessments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"bodyAssessments"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"100"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"instructor"}},{"kind":"Field","name":{"kind":"Name","value":"weight"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"bodyFat"}},{"kind":"Field","name":{"kind":"Name","value":"bmi"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"measurements"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"chest"}},{"kind":"Field","name":{"kind":"Name","value":"waist"}},{"kind":"Field","name":{"kind":"Name","value":"hips"}},{"kind":"Field","name":{"kind":"Name","value":"arms"}},{"kind":"Field","name":{"kind":"Name","value":"thighs"}},{"kind":"Field","name":{"kind":"Name","value":"calves"}},{"kind":"Field","name":{"kind":"Name","value":"shoulders"}}]}},{"kind":"Field","name":{"kind":"Name","value":"student"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<AdminBodyAssessmentsQuery, AdminBodyAssessmentsQueryVariables>;
+export const AdminDeleteBodyAssessmentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminDeleteBodyAssessment"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteBodyAssessment"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"documentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}}]}}]}}]} as unknown as DocumentNode<AdminDeleteBodyAssessmentMutation, AdminDeleteBodyAssessmentMutationVariables>;
 export const StudentsForWorkoutEditDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"StudentsForWorkoutEdit"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"students"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"200"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<StudentsForWorkoutEditQuery, StudentsForWorkoutEditQueryVariables>;
 export const StudentsForWorkoutDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"StudentsForWorkout"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"students"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"200"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<StudentsForWorkoutQuery, StudentsForWorkoutQueryVariables>;
 export const AdminCreateWorkoutPlanDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AdminCreateWorkoutPlan"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"WorkoutPlanInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createWorkoutPlan"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"documentId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<AdminCreateWorkoutPlanMutation, AdminCreateWorkoutPlanMutationVariables>;

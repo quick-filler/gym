@@ -2104,3 +2104,10 @@ Explicit no's so we don't re-argue them.
   máscaras puras `maskPhoneBR`/`maskCEP`/`maskDateBR` no `/profile/edit`;
   data de nascimento agora em DD/MM/AAAA (hidrata via `fmtDateBR`, salva
   via `brDateToISO`). `services/cep.ts` (7 testes) + 14 testes de máscara.
+- **2026-06-29** — Admin: aba **Avaliações** do `/admin/workouts` saiu
+  do placeholder "Em breve" e virou CRUD real de avaliação física
+  (peso/altura/gordura/IMC/medidas por aluno) — `AssessmentsTab` +
+  `AssessmentDialog` ligados nas mutations `createBodyAssessment` /
+  `updateBodyAssessment` / `deleteBodyAssessment` que já existiam (Fase 5).
+  **Sem mudança de backend.** Fecha o gap: era a única forma de alterar o
+  peso do aluno (antes só via painel do Strapi). O aluno vê no Perfil do app.
