@@ -53,3 +53,9 @@ logs/
 # Coverage
 coverage/
 .nyc_output/
+
+# Local planning docs / scratch (not part of the codebase)
+/APP-INTEGRATION-PLAN.md
+/PLATFORM-PLANS.md
+/plan_cadstro aluno.xlsx
+/COMMIT_MESSAGE.md
