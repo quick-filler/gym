@@ -172,7 +172,7 @@ fi
 # Tiny static server for the QR landing page. `-f` keeps it foregrounded
 # in the subshell so we can background the whole thing cleanly.
 #
-# The `httpd` applet is NOT in node:22-alpine's default busybox — it lives
+# The `httpd` applet is NOT in node:22.23.4-alpine's default busybox — it lives
 # in the `busybox-extras` package which the Dockerfile installs. Invoke
 # via `busybox-extras httpd` explicitly; there is no bare `httpd` symlink.
 busybox-extras httpd -f -p 0.0.0.0:80 -h /srv/www &

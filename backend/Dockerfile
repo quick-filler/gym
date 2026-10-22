@@ -15,7 +15,7 @@
 #     and a pruned, prod-only node_modules coming from `prod-deps`.
 #   - TS source, tests, docs, and dev deps are left in the builder stage.
 
-ARG NODE_VERSION=22-alpine
+ARG NODE_VERSION=22.23.4-alpine
 
 # ---- Shared base -----------------------------------------------------------
 FROM node:${NODE_VERSION} AS base

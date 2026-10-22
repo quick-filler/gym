@@ -12,7 +12,7 @@
 # This is a DEV/TEST image. It ships all dev dependencies, Metro, and the
 # full source tree. Do not deploy it as a production app binary.
 
-FROM node:22-alpine
+FROM node:22.23.4-alpine
 WORKDIR /app
 
 ENV NPM_CONFIG_FUND=false \
@@ -30,7 +30,7 @@ ENV EXPO_TOKEN=""
 
 # libqrencode-tools → `qrencode` CLI used by the entrypoint to draw the QR PNG
 # busybox-extras    → adds the `httpd` applet that the entrypoint uses to
-#                     serve /srv/www. The base `busybox` in node:22-alpine
+#                     serve /srv/www. The base `busybox` in node:22.23.4-alpine
 #                     does NOT ship httpd; installing this package provides
 #                     a second binary at /usr/bin/busybox-extras with the
 #                     extra applets enabled. Must be invoked explicitly as

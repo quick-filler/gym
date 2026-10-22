@@ -15,7 +15,7 @@
 #   - The runtime stage copies three small trees (standalone, static,
 #     public) and nothing else — no node_modules, no source, no dev deps.
 
-ARG NODE_VERSION=22-alpine
+ARG NODE_VERSION=22.23.4-alpine
 
 # ---- Shared base -----------------------------------------------------------
 FROM node:${NODE_VERSION} AS base
